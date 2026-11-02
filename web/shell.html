@@ -13,16 +13,18 @@ canvas{display:block;width:100%;height:100%;outline:none;touch-action:none}butto
 <canvas id="canvas" tabindex="0" aria-label="Starship Crawl first-person game"></canvas>
 <section id="intro" class="overlay">
   <div class="card"><div class="eyebrow">EXPLORATION LOG / 001</div><h1>Starship<br><span>Crawl.</span></h1>
-  <p>A cathedral of steel. A thousand forgotten decks.<br>Enter the loading bay. Find out what still lives inside.</p>
+  <p>A cathedral of steel. A thousand forgotten decks.<br>You are the reclaimer. Restore the beacon.<br>Bring the sleeping cities home.</p>
   <button class="primary" id="start" disabled>Preparing the ship…</button>
   <p id="status" role="status" class="small">Loading the engine</p>
-  <p class="small">WASD move · mouse aim · click fire · Ctrl crouch<br>F flashlight · E / Q grav lifts · 1 / 2 / 3 upgrades · Esc pause</p>
+  <p class="small">WASD move · mouse aim · click fire · Ctrl crouch<br>F flashlight · Z / X weapons · G use · I journal<br>E / Q grav lifts · 1 / 2 / 3 upgrades · Esc pause</p>
   </div>
 </section>
 <button id="menu" class="hidden" aria-expanded="false">MENU</button>
 <aside id="drawer" class="hidden" aria-label="Expedition menu">
   <div class="eyebrow">YOUR EXPEDITION</div><button id="resume">Resume exploration</button>
   <p>Spend an ascension point</p><div class="row"><button data-action="1">Damage</button><button data-action="2">Vitality</button><button data-action="3">Haste</button></div>
+  <button data-action="9">Next weapon (X)</button><button data-action="11">Character / mission journal (I)</button><button data-action="8">Use mission terminal (G)</button>
+  <div id="attributes"></div><div id="armory"></div><div id="records"></div>
   <button data-action="7">Toggle flashlight (F)</button><button data-action="4">Change armor color</button><button id="save">Save expedition</button>
   <button id="export">Export save</button><button id="import-button">Import save</button><input id="import" type="file" accept=".sav">
   <button data-action="5">Toggle optional split-screen</button><p class="small">A second player needs a gamepad.</p>
@@ -41,8 +43,13 @@ var Module={canvas,arguments:args,print:console.log,printErr:console.error,setSt
 window.scReady=()=>{start.disabled=false;start.textContent='Board the ship →';status.textContent=navigator.maxTouchPoints?'Touch controls ready · solo exploration':'Solo exploration · your progress stays with you'};
 function resume(){intro.classList.add('hidden');drawer.classList.add('hidden');menu.classList.remove('hidden');menu.setAttribute('aria-expanded','false');canvas.focus();if(!navigator.maxTouchPoints&&canvas.requestPointerLock)canvas.requestPointerLock()?.catch(()=>{});Module.ccall('sc_web_start',null,[],[])}
 start.onclick=resume;document.getElementById('resume').onclick=resume;
-menu.onclick=()=>{Module.ccall('sc_web_action',null,['number'],[0]);document.exitPointerLock?.();drawer.classList.toggle('hidden');menu.setAttribute('aria-expanded',String(!drawer.classList.contains('hidden')))};
-document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>Module.ccall('sc_web_action',null,['number'],[Number(b.dataset.action)]));
+menu.onclick=()=>{Module.ccall('sc_web_action',null,['number'],[0]);document.exitPointerLock?.();drawer.classList.toggle('hidden');const profile=JSON.parse(Module.ccall('sc_web_state','string',[],[]));document.querySelectorAll('#armory button').forEach((b,i)=>b.disabled=!(profile.weapons&(1<<i)));document.querySelectorAll('#records button').forEach((b,i)=>b.disabled=!(profile.logs&(1<<i)));menu.setAttribute('aria-expanded',String(!drawer.classList.contains('hidden')))};
+const attributes=['Damage','Vitality','Haste','Armor','Shield','Mobility','Precision','Recovery','Reactor','Salvage'];
+attributes.forEach((name,i)=>{const b=document.createElement('button');b.dataset.action=20+i;b.textContent='Upgrade '+name;document.getElementById('attributes').appendChild(b)});
+const weapons=['Pulse Carbine','Breach Shotgun','Nail Repeater','Reliquary Rail','Plasma Lance','Funeral Rocket','Ember Thrower','Cryo Needler','Arc Conductor','Siphon Rifle','Gravity Mortar','Sunburst Cannon','Void Scalpel','Flechette Fan','Seraph Beam','Storm Relic'];
+weapons.forEach((name,i)=>{const b=document.createElement('button');b.dataset.action=40+i;b.textContent='Equip '+name;b.title='Find this weapon aboard the ship to unlock it';document.getElementById('armory').appendChild(b)});
+for(let i=0;i<12;i++){const b=document.createElement('button');b.dataset.action=100+i;b.textContent='Read ship record '+(i+1);document.getElementById('records').appendChild(b)}
+document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const action=Number(b.dataset.action);Module.ccall('sc_web_action',null,['number'],[action]);if(action===11||action>=100){drawer.classList.add('hidden');menu.setAttribute('aria-expanded','false')}});
 document.getElementById('save').onclick=()=>{Module.ccall('sc_web_save',null,[],[]);document.getElementById('save-note').textContent='Saving…';const timer=setInterval(()=>{const s=window.scStorage.status;if(s!==2){document.getElementById('save-note').textContent=s===3?'Saved in this browser.':'Storage unavailable. Export a backup.';clearInterval(timer)}},100)};
 document.getElementById('new').onclick=()=>{if(confirm('Generate a new ship? This replaces the current expedition and retains your character.')){Module.ccall('sc_web_action',null,['number'],[6]);resume()}};
 document.getElementById('export').onclick=()=>{Module.ccall('sc_web_save',null,[],[]);try{const data=Module.FS.readFile('/persist/expedition.sav');const url=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));const a=document.createElement('a');a.href=url;a.download='starship-expedition.sav';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(e){document.getElementById('save-note').textContent='No save is available yet.'}};

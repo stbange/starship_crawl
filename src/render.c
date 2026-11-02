@@ -474,21 +474,28 @@ static void creature(Renderer *r, const Enemy *e, double time, double distance) 
         forward = fabs(up.z) < .9 ? v3(0, 0, 1) : v3(1, 0, 0);
     forward = vnorm(forward);
     Vec3 right = vnorm(vcross(up, forward));
-    double size = e->kind == 2 ? 1.15 : e->kind == 1 ? .82 : .68;
+    const EnemyDef *def = &sc_enemies[e->kind];
+    double size = def->size;
+    bool cloaked =
+        (def->flags & CLOAK) && distance > 12 && e->flash <= 0 && sin(time * 1.7 + e->id) > .1;
+    if (cloaked) {
+        octahedron(r, center, .06, rgb(.16f, .2f, .3f), .5f);
+        return;
+    }
     Color flesh = e->flash > 0 ? rgb(.62f, .63f, .49f) : rgb(.18f, .09f, .12f);
-    Color shell = e->flash > 0 ? rgb(.55f, .48f, .36f) : rgb(.12f, .17f, .145f);
+    Color shell = e->flash > 0 ? rgb(.55f, .48f, .36f) : def->color;
     float glow = e->flash > 0 ? .25f : -1;
     blob(r, center, vmul(right, size * .7), vmul(up, size * .65), vmul(forward, size), shell, glow);
     blob(r, vadd(center, vmul(forward, size * .56)), vmul(right, size * .45), vmul(up, size * .39),
          vmul(forward, size * .4), flesh, glow);
-    int limbs = distance > 55 ? 4 : (e->kind == 2 ? 8 : 6), segments = distance > 55 ? 2 : 3;
+    int limbs = distance > 55 ? 4 : (def->role == 2 ? 8 : 6), segments = distance > 55 ? 2 : 3;
     for (int arm = 0; arm < limbs; arm++) {
         double angle = arm * SC_PI * 2 / limbs + .4,
-               phase = time * (e->kind == 0 ? 13 : 5) + arm * 1.8 + e->id;
+               phase = time * (def->role == 0 ? 13 : 5) + arm * 1.8 + e->id;
         Vec3 outward = vadd(vmul(right, cos(angle)), vmul(forward, sin(angle)));
         Vec3 prev = vadd(center, vmul(outward, size * .45));
         for (int j = 1; j <= segments; j++) {
-            double t = (double)j / segments, reach = size * (e->kind == 2 ? 2.1 : 2.0);
+            double t = (double)j / segments, reach = size * (def->role == 2 ? 2.1 : 2.0);
             double bend = sin(t * SC_PI) * .65 - t * .55 + sin(phase + t * 2) * .10;
             Vec3 next =
                 vadd(center, vadd(vmul(outward, reach * t),
@@ -498,13 +505,39 @@ static void creature(Renderer *r, const Enemy *e, double time, double distance) 
             prev = next;
         }
     }
+    if (def->flags & ARMORED)
+        blob(r, vadd(center, vmul(up, size * .35)), vmul(right, size * .86), vmul(up, size * .4),
+             vmul(forward, size * .95), rgb(.25f, .24f, .21f), glow);
+    if (def->flags & HOVER)
+        for (int side = -1; side <= 1; side += 2) {
+            Vec3 wing =
+                vadd(center, vadd(vmul(right, side * size * 2.5), vmul(up, sin(time * 8) * .3)));
+            tube(r, center, wing, .12, .025, def->color, -1);
+            tube(r, wing, vadd(center, vmul(forward, -size)), .06, .02, def->color, -1);
+        }
+    if (def->flags & WARD)
+        for (int k = 0; k < 8; k++) {
+            double a = k * SC_PI / 4 + time * .5;
+            Vec3 p = vadd(center,
+                          vadd(vmul(right, cos(a) * size * 1.25), vmul(up, sin(a) * size * 1.25)));
+            blob(r, vadd(p, vmul(forward, size)), vmul(right, .07), vmul(up, .13),
+                 vmul(forward, .05), rgb(.2f, .55f, .8f), .7f);
+        }
+    if (def->flags & BROOD)
+        for (int k = 0; k < 4; k++)
+            blob(r, vadd(center, vadd(vmul(up, size * .7), vmul(right, (k - 1.5) * .35))),
+                 vmul(right, .25), vmul(up, .4), vmul(forward, .3), rgb(.30f, .21f, .12f), -1);
+    if (def->flags & HEALER)
+        octahedron(r, vadd(center, vmul(up, size * 1.2)), .18, rgb(.6f, .25f, .85f), 1.6f);
+    if (e->burn > 0)
+        octahedron(r, vadd(center, vmul(up, size * .8)), .15, rgb(1, .3f, .08f), 2);
     Vec3 face = vadd(center, vadd(vmul(forward, size * .88), vmul(up, size * .18)));
     for (int side = -1; side <= 1; side += 2) {
         Vec3 eye = vadd(face, vmul(right, side * size * .19));
         blob(r, eye, vmul(right, .045), vmul(up, .055), vmul(forward, .04), rgb(.50f, .58f, .31f),
              .9f);
     }
-    if (e->kind == 1 && e->windup > 0) {
+    if (e->windup > 0) {
         double charge = 1 - e->windup / .8, radius = .09 + .25 * charge;
         octahedron(r, vadd(face, vmul(forward, .26)), radius, rgb(.32f, .82f, .36f), 2.4f);
     }
@@ -531,8 +564,7 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                     const Projectile *p = &g->projectiles[i];
                     if (!p->active)
                         continue;
-                    light =
-                        (PointLight){position_absolute(p->pos), rgb(.28f, .85f, .35f), 9, 1.5f, 0};
+                    light = (PointLight){position_absolute(p->pos), p->color, 9, 1.5f, 0};
                 } else {
                     const Player *p = &g->players[i];
                     if (p->muzzle <= 0)
@@ -618,9 +650,41 @@ static void actors(Renderer *r, Game *g, int viewer) {
         Vec3 pos = position_absolute(p->pos);
         if (vlen(vsub(pos, r->origin)) > 140)
             continue;
-        Color color = rgb(.32f, .9f, .38f);
+        Color color = p->color;
         octahedron(r, pos, .20, color, 3);
         tube(r, pos, vsub(pos, vmul(vnorm(p->velocity), 1.1)), .13, .02, color, 1.3f);
+    }
+    for (int j = 0; j < g->world.count; j++) {
+        const Room *room = &g->world.rooms[j];
+        for (int k = 0; k < room->pickup_count; k++) {
+            const Pickup *loot = &room->pickups[k];
+            Vec3 p = position_absolute(loot->pos);
+            if (!loot->active || world_cell(p).y != cell.y || vlen(vsub(p, eye)) > 100)
+                continue;
+            p.y += .15 * sin(g->time * 2 + k);
+            Color colors[] = {{.8f, .2f, .18f},  {.2f, .5f, 1},     {.75f, .65f, .35f},
+                              {.85f, .5f, .15f}, {.65f, .3f, .85f}, {.2f, .9f, .6f},
+                              {.7f, .6f, .3f}};
+            Color col = colors[loot->kind];
+            if (loot->kind == PICK_MEDKIT) {
+                block(r, p, v3(.55, .2, .2), col, .7f);
+                block(r, p, v3(.2, .55, .2), col, .7f);
+            } else if (loot->kind == PICK_WEAPON) {
+                block(r, p, v3(.65, .25, .2), col, .7f);
+                block(r, vadd(p, v3(.25, .05, 0)), v3(.6, .1, .1), col, .4f);
+            } else
+                octahedron(r, p, loot->kind == PICK_LOG ? .25 : .35, col, .7f);
+        }
+    }
+    Cell target;
+    if (game_objective(g, &target) && target.y == cell.y && world_ready(&g->world, target)) {
+        Vec3 p = game_terminal(target);
+        if (vlen(vsub(p, eye)) < 170) {
+            block(r, vadd(p, v3(0, .6, 0)), v3(.9, 1.2, .7), rgb(.18f, .23f, .24f), 0);
+            block(r, vadd(p, v3(0, 1.4, 0)), v3(1.2, .6, .8), rgb(.25f, .7f, .65f), .8f);
+            octahedron(r, vadd(p, v3(0, 2.4 + sin(g->time) * .1, 0)), .23, rgb(.8f, .65f, .3f),
+                       1.5f);
+        }
     }
     for (int i = 0; i < g->player_count; i++)
         if (i != viewer) {
@@ -641,16 +705,25 @@ static void weapon(Renderer *r, const Player *p) {
     Vec3 center = vsub(
         vadd(player_eye(p), vadd(vmul(right, .35), vadd(vmul(up, -.3), vmul(f, .65 - p->muzzle)))),
         r->origin);
+    const WeaponDef *gun = &sc_weapons[p->weapon];
     Color tint = p->tint % 3 == 0
                      ? rgb(.18f, .39f, .4f)
                      : (p->tint % 3 == 1 ? rgb(.55f, .32f, .15f) : rgb(.41f, .25f, .53f));
-    cube(&r->mesh, center, vmul(right, .19), vmul(up, .20), vmul(f, .62), rgb(.23f, .27f, .28f), 0);
+    cube(&r->mesh, center, vmul(right, .19), vmul(up, .20), vmul(f, .42 + gun->damage * .002),
+         rgb(.23f, .27f, .28f), 0);
     cube(&r->mesh, vadd(center, vmul(up, -.1)), vmul(right, .23), vmul(up, .15), vmul(f, .28), tint,
          .3f);
     cube(&r->mesh, vadd(center, vmul(up, .12)), vmul(right, .05), vmul(up, .05), vmul(f, .4),
-         rgb(.78f, .56f, .25f), .5f);
+         gun->color, .5f);
     cube(&r->mesh, vadd(center, vmul(f, .32)), vmul(right, .12), vmul(up, .12), vmul(f, .18),
          rgb(.12f, .18f, .19f), 0);
+    if (gun->pellets > 1)
+        for (int side = -1; side <= 1; side += 2)
+            cube(&r->mesh, vadd(center, vadd(vmul(right, side * .12), vmul(f, .27))),
+                 vmul(right, .1), vmul(up, .1), vmul(f, .4), tint, 0);
+    if (gun->flags & W_PROJECTILE)
+        cube(&r->mesh, vadd(center, vmul(f, .2)), vmul(right, .35), vmul(up, .3), vmul(f, .3), tint,
+             .1f);
     if (p->muzzle > 0) {
         Vec3 flash = vadd(center, vmul(f, .48));
         cube(&r->mesh, flash, vmul(right, .18), vmul(up, .18), vmul(f, .18), rgb(1, .8f, .3f), 3);
@@ -732,7 +805,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     Room *room = world_find(&g->world, cell);
     const char *name = position_absolute(p->pos).z < 0
                            ? "THE SILENT EXPANSE"
-                           : (room ? world_room_name(room->type) : "BETWEEN DECKS");
+                           : (room ? sc_themes[room->theme].name : "BETWEEN DECKS");
     centered(r, w * .5f, pad, 1.6f * s, name, gold);
     snprintf(label, sizeof(label), "DEPTH %03u  /  DECK %+d",
              position_absolute(p->pos).z < 0 ? 0 : world_difficulty(cell), cell.y);
@@ -755,8 +828,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         rect(r, cx, cy - 8 * s, 1, 5 * s, ink);
         rect(r, cx, cy + 4 * s, 1, 5 * s, ink);
     }
-    float by = h - 74 * s;
-    rect(r, pad - 8 * s, by - 10 * s, 255 * s, 62 * s, panel);
+    float by = h - 94 * s;
+    rect(r, pad - 8 * s, by - 10 * s, 270 * s, 86 * s, panel);
     snprintf(label, sizeof(label), "VITALITY  %03d / %03d", (int)ceilf(p->health),
              (int)player_max_health(p));
     text_at(r, pad, by, 1.6f * s, label, ink);
@@ -765,11 +838,43 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
          p->hurt > 0 ? rgb(.9f, .25f, .19f) : mint);
     snprintf(label, sizeof(label), "RANK %02u  /  %u ELIMINATED", p->level, p->kills);
     text_at(r, pad, by + 34 * s, 1.1f * s, label, gold);
+    snprintf(label, sizeof(label), "SHIELD %03.0f  ARMOR %03.0f  SALVAGE %u", p->shield, p->armor,
+             p->credits);
+    text_at(r, pad, by + 50 * s, .9f * s, label, dim);
+    rect(r, pad, by + 65 * s, 230 * s * p->shield / player_max_shield(p), 4 * s,
+         rgb(.25f, .5f, .9f));
+    Cell objective;
+    if (game_objective(g, &objective)) {
+        snprintf(label, sizeof(label), "%s  /  [%d,%d,%d]", game_mission(g), objective.x,
+                 objective.y, objective.z);
+        centered(r, w * .5f, 96 * s, .85f * s, label, gold);
+        if (vlen(vsub(position_absolute(p->pos), game_terminal(objective))) < 4)
+            centered(r, w * .5f, h * .58f, 1.2f * s, "G / USE MISSION TERMINAL", gold);
+    }
+    const Enemy *aimed = NULL;
+    double nearest = 55;
+    Vec3 eye = player_eye(p), aim = facing(p->yaw, p->pitch);
+    for (int j = 0; j < g->world.count; j++)
+        for (int i = 0; i < g->world.rooms[j].enemy_count; i++) {
+            const Enemy *e = &g->world.rooms[j].enemies[i];
+            Vec3 delta = vsub(enemy_center(e), eye);
+            double distance = vlen(delta);
+            if (e->alive && distance < nearest && vdot(vnorm(delta), aim) > .985 &&
+                world_raycast(&g->world, eye, vnorm(delta), distance) >= distance - .1) {
+                aimed = e;
+                nearest = distance;
+            }
+        }
+    if (aimed && !paused) {
+        snprintf(label, sizeof(label), "%s / %.0f", sc_enemies[aimed->kind].name, aimed->health);
+        centered(r, w * .5f, h * .43f, s, label, mint);
+    }
     float exp = (float)p->xp / (float)player_next_level(p);
     rect(r, 0, h - 3, w * exp, 3, gold);
     if (!touch) {
-        text_at(r, w - 260 * s, by, 1.3f * s, "RELIQUARY / PULSE CARBINE", ink);
-        snprintf(label, sizeof(label), "DAMAGE %u   CORE %u", 27 + 11 * p->power, p->points);
+        text_at(r, w - 260 * s, by, 1.3f * s, sc_weapons[p->weapon].name, ink);
+        snprintf(label, sizeof(label), "DMG %.0f  ENERGY %.0f  CORE %u",
+                 sc_weapons[p->weapon].damage * (1 + .35f * p->power), p->energy, p->points);
         text_at(r, w - 260 * s, by + 19 * s, 1.1f * s, label, gold);
         text_at(r, w - 260 * s, by + 36 * s, 1 * s,
                 p->flashlight ? "F LAMP ON / F5 SAVE / ESC PAUSE"
@@ -779,8 +884,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     if (p->points) {
         centered(r, w * .5f, h - 115 * s, 1.4f * s, "ASCENSION AVAILABLE", gold);
         centered(r, w * .5f, h - 97 * s, 1.1f * s,
-                 touch ? "OPEN MENU TO CHOOSE AN UPGRADE" : "1 DAMAGE  /  2 VITALITY  /  3 HASTE",
-                 ink);
+                 touch ? "OPEN MENU TO CHOOSE AN UPGRADE" : "I JOURNAL / 1 THROUGH 0 UPGRADE", ink);
     }
     Vec3 lift = world_lift(cell), d = vsub(position_absolute(p->pos), lift);
     d.y = 0;
@@ -808,10 +912,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         float size = fminf(w, h) * .12f;
         frame(r, w * .13f - size * .5f, h * .73f - size * .5f, size, size, dim);
         centered(r, w * .13f, h * .73f - 3 * s, 1.1f * s, "MOVE", dim);
-        const char *names[] = {"FIRE", "JUMP", "CROUCH", "UP", "DOWN", "LAMP"};
-        const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f},
-                    ys[] = {.72f, .85f, .85f, .48f, .48f, .48f};
-        for (int i = 0; i < 6; i++) {
+        const char *names[] = {"FIRE", "JUMP", "CROUCH", "UP", "DOWN", "LAMP", "USE", "GUN"};
+        const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f},
+                    ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f};
+        for (int i = 0; i < 8; i++) {
             float x = w * xs[i], y = h * ys[i];
             rect(r, x - size * .5f, y - size * .5f, size, size, panel);
             frame(r, x - size * .5f, y - size * .5f, size, size, dim);
@@ -854,13 +958,71 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         centered(r, w * .5f, my + 135 * s, 1.1f * s, "WASD MOVE   MOUSE AIM   CLICK FIRE", ink);
         centered(r, w * .5f, my + 154 * s, 1.1f * s, "SPACE JUMP   CTRL CROUCH   SHIFT SPRINT",
                  dim);
-        centered(r, w * .5f, my + 173 * s, 1.1f * s, "E / Q LIFTS   1 / 2 / 3 UPGRADES   C COLOR",
-                 dim);
+        centered(r, w * .5f, my + 173 * s, 1.1f * s,
+                 "E / Q LIFTS   G USE   I JOURNAL   Z / X WEAPONS", dim);
         centered(r, w * .5f, my + 192 * s, 1.1f * s, "F2 OPTIONAL CO-OP   F5 SAVE   F9 LOAD", dim);
         centered(r, w * .5f, my + 223 * s, 1.1f * s, "N + ENTER / NEW SHIP WITH THIS CHARACTER",
                  gold);
         if (g->message_time > 0)
             centered(r, w * .5f, my + 242 * s, .9f * s, g->message, mint);
+    }
+    if (p->journal) {
+        float pw = fminf(w - 24, 740 * s), ph = fminf(h - 32, 450 * s), px = (w - pw) * .5f,
+              py = (h - ph) * .5f;
+        rect(r, px, py, pw, ph, panel);
+        frame(r, px, py, pw, ph, gold);
+        text_at(r, px + 18 * s, py + 16 * s, 1.4f * s, "RECLAIMER / CHARACTER AND MISSION JOURNAL",
+                gold);
+        snprintf(label, sizeof(label), "RANK %u  POINTS %u  SALVAGE %u  BEACONS %u", p->level,
+                 p->points, p->credits, p->victories);
+        text_at(r, px + 18 * s, py + 40 * s, s, label, ink);
+        for (int i = 0; i < SC_ATTRIBUTES; i++) {
+            unsigned level = *player_attribute(p, i);
+            snprintf(label, sizeof(label), "%d %s %u / COST %u", (i + 1) % 10, sc_attributes[i],
+                     level, 60 + level * 25);
+            text_at(r, px + 18 * s + (i / 5) * pw * .5f, py + (64 + (i % 5) * 20) * s, s, label,
+                    mint);
+        }
+        text_at(r, px + 18 * s, py + 160 * s, .8f * s,
+                "UPGRADE WITH 1 POINT OR THE LISTED SALVAGE COST", dim);
+        text_at(r, px + 18 * s, py + 175 * s, s, game_mission(g), gold);
+        if (game_objective(g, &objective)) {
+            Cell here = world_cell(position_absolute(p->pos));
+            snprintf(label, sizeof(label), "TARGET [%d,%d,%d]  DELTA [%d,%d,%d] / G AT TERMINAL",
+                     objective.x, objective.y, objective.z, objective.x - here.x,
+                     objective.y - here.y, objective.z - here.z);
+            text_at(r, px + 18 * s, py + 195 * s, .85f * s, label, ink);
+        }
+        snprintf(label, sizeof(label), "CONTRACTS / PURGE %u/12  SALVAGE %u/8  SYSTEMS %u/3",
+                 g->mission_kills, g->mission_loot, g->mission);
+        text_at(r, px + 18 * s, py + 218 * s, .85f * s, label, mint);
+        text_at(r, px + 18 * s, py + 240 * s, s,
+                "Z / X SWITCH WEAPONS / EACH USES RECHARGING ENERGY", dim);
+        snprintf(label, sizeof(label), "EQUIPPED: %s / ARMORY:", sc_weapons[p->weapon].name);
+        text_at(r, px + 18 * s, py + 262 * s, s, label, gold);
+        int row = 0;
+        for (int i = 0; i < SC_WEAPONS; i++)
+            if (p->weapons & (1u << i)) {
+                if (row < 16)
+                    text_at(r, px + 18 * s + (row / 4) * pw * .25f, py + (282 + (row % 4) * 17) * s,
+                            .8f * s, sc_weapons[i].name, ink);
+                row++;
+            }
+        unsigned logs = 0;
+        for (int i = 0; i < 12; i++)
+            logs += (p->logs >> i) & 1;
+        snprintf(label, sizeof(label), "%d WEAPONS / %u RECORDS / L NEXT LOG / ENTER CLOSE", row,
+                 logs);
+        text_at(r, px + 18 * s, py + 365 * s, .9f * s, label, dim);
+        int reading = p->reading;
+        if (!(p->logs & (1u << reading)))
+            for (int i = 0; i < 12; i++)
+                if (p->logs & (1u << i)) {
+                    reading = i;
+                    break;
+                }
+        if (p->logs)
+            text_at(r, px + 18 * s, py + 390 * s, .72f * s, sc_logs[reading], gold);
     }
     flush(r);
 }

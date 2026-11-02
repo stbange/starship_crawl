@@ -1,9 +1,9 @@
 #ifndef SC_WORLD_H
 #define SC_WORLD_H
-#include "math3d.h"
+#include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 2u
+#define SC_GENERATOR_VERSION 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
 #define SC_REGION 4
@@ -22,8 +22,6 @@ typedef struct {
     Cell sector;
     Vec3 local;
 } Position;
-typedef enum { BAY, NAVE, ENGINE, CREW, CONDUIT, GARDEN, ROOM_TYPES } RoomType;
-typedef enum { HABITAT, MACHINERY, SANCTUM, DISTRICT_TYPES } District;
 typedef enum { WEST, EAST, SOUTH, NORTH } Direction;
 typedef struct {
     bool open, crouch;
@@ -34,6 +32,7 @@ typedef struct {
     Cell cell;
     RoomType type;
     District district;
+    uint8_t theme;
     uint8_t span_x, span_z;
     double width, depth, height;
     uint32_t hash;
@@ -53,14 +52,14 @@ typedef struct {
 } Box;
 typedef struct {
     Cell cell;
-    uint32_t killed;
+    uint32_t killed, collected;
 } RoomRecord;
 typedef struct {
     Position pos;
     float health, cooldown, flash;
-    float windup, climb_time, vertical_speed;
+    float windup, climb_time, vertical_speed, special, slow, burn;
     Vec3 aim, normal, heading;
-    uint8_t kind, id;
+    uint8_t kind, id, last_player;
     bool alive, climbing;
 } Enemy;
 typedef struct {
@@ -77,12 +76,21 @@ typedef struct {
     float scale;
 } Dressing;
 typedef struct {
+    Position pos;
+    uint8_t kind, item, id;
+    bool active;
+} Pickup;
+enum { PICK_MEDKIT, PICK_SHIELD, PICK_ARMOR, PICK_WEAPON, PICK_LOG, PICK_ENERGY, PICK_SALVAGE };
+typedef struct {
     Cell cell;
     RoomType type;
     District district;
+    uint8_t theme;
     uint8_t span_x, span_z;
     double width, depth, height;
     uint32_t hash;
+    int pickup_count;
+    Pickup pickups[5];
     size_t record;
     bool ready;
     int enemy_count;
@@ -146,6 +154,7 @@ Vec3 world_lift(Cell cell);
 bool world_overlap(const World *w, Vec3 feet, double radius, double height);
 double world_raycast(const World *w, Vec3 origin, Vec3 direction, double limit);
 void world_kill(World *w, Room *room, int enemy);
+void world_collect(World *w, Room *room, int pickup);
 bool world_index_records(World *w);
 float world_lamp_power(uint32_t phase, double time);
 #endif

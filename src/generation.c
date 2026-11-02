@@ -1,5 +1,6 @@
 #include "world.h"
 #include <string.h>
+#include <stdlib.h>
 
 /* Fixed-width unsigned arithmetic and category salts: no mutable RNG state. */
 uint32_t world_hash(uint32_t seed, Cell c, uint32_t salt) {
@@ -71,7 +72,9 @@ const char *world_room_name(RoomType t) {
     return t >= BAY && t < ROOM_TYPES ? names[t] : "UNKNOWN";
 }
 const char *world_district_name(District d) {
-    static const char *names[] = {"HABITAT DISTRICT", "MACHINERY DISTRICT", "SANCTUM DISTRICT"};
+    static const char *names[] = {"HABITATION",       "MACHINERY", "SANCTUM",
+                                  "LUXURY RESORT",    "COMMAND",   "RESEARCH",
+                                  "CARGO AND SUPPLY", "CRYONICS",  "BOTANICAL"};
     return d >= HABITAT && d < DISTRICT_TYPES ? names[d] : "UNSURVEYED";
 }
 Cell world_neighbor(Cell c, Direction d) {
@@ -110,7 +113,9 @@ void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
     memset(p, 0, sizeof(*p));
     p->origin = (Cell){region.x * 4, region.y, region.z * 4};
     uint32_t h = world_hash(seed ^ SC_GENERATOR_VERSION, region, 101);
-    p->district = (District)(h % DISTRICT_TYPES);
+    int layer = ((region.y % DISTRICT_TYPES) + DISTRICT_TYPES) % DISTRICT_TYPES;
+    p->district =
+        (District)((layer + (h % 4 == 0 ? (h >> 14) % DISTRICT_TYPES : 0)) % DISTRICT_TYPES);
     if (!region.x && !region.y && !region.z)
         p->district = SANCTUM;
     int hx = (int)((h >> 5) % 3), hz = (int)((h >> 9) % 3);
@@ -137,14 +142,14 @@ void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
             r->hash = world_hash(seed ^ SC_GENERATOR_VERSION, r->cell, 123);
             r->district = p->district;
             r->span_x = r->span_z = (uint8_t)(x == hx && z == hz ? 2 : 1);
-            unsigned roll = r->hash % 10;
-            r->type = p->district == HABITAT ? (roll < 8 ? CREW : CONDUIT)
-                      : p->district == MACHINERY
-                          ? (roll < 8 ? ENGINE : CONDUIT)
-                          : (roll < 7 ? NAVE : (roll < 9 ? GARDEN : CONDUIT));
-            if (r->span_x == 2)
-                r->type =
-                    p->district == MACHINERY ? ENGINE : (p->district == HABITAT ? GARDEN : NAVE);
+            unsigned choices[SC_THEMES], count = 0;
+            for (unsigned t = 1; t < SC_THEMES; t++)
+                if (sc_themes[t].sector == p->district)
+                    choices[count++] = t;
+            r->theme = (uint8_t)(count ? choices[r->hash % count] : 1);
+            r->type = sc_themes[r->theme].architecture;
+            if (r->span_x == 2 && r->type == CREW)
+                r->type = GARDEN;
             if (!r->cell.x && !r->cell.y && !r->cell.z)
                 r->type = BAY;
             if (!r->cell.x && !r->cell.y && r->cell.z == 1)
@@ -157,6 +162,10 @@ void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
                 r->type = GARDEN;
             if (!r->cell.x && r->cell.y == -1 && !r->cell.z)
                 r->type = CONDUIT;
+            /* The arrival routes retain their familiar architectural examples. */
+            if ((!r->cell.x && !r->cell.z) || (!r->cell.y && !r->cell.z && abs(r->cell.x) == 1) ||
+                (!r->cell.x && !r->cell.y && r->cell.z == 1))
+                r->theme = (uint8_t)r->type;
             static const double sizes[][3] = {{84, 92, 28}, {82, 84, 52},  {64, 72, 36},
                                               {76, 80, 8},  {7, 68, 1.55}, {78, 80, 36}};
             r->width = sizes[r->type][0];
@@ -263,6 +272,7 @@ uint32_t world_fingerprint(uint32_t seed, Cell region) {
                              (uint32_t)r->cell.z,
                              r->type,
                              r->district,
+                             r->theme,
                              r->span_x,
                              r->span_z,
                              (uint32_t)(r->width * 100),

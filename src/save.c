@@ -73,7 +73,8 @@ static Position location(Stream *s, Position p, bool read, bool legacy) {
         s->ok = false;
     return p;
 }
-static void profile(Stream *s, Player *p, bool read, bool legacy) {
+static void profile(Stream *s, Player *p, bool read, unsigned version) {
+    bool legacy = version == 1;
     p->pos = location(s, p->pos, read, legacy);
     p->checkpoint = location(s, p->checkpoint, read, legacy);
     p->yaw = real(s, p->yaw, read);
@@ -87,6 +88,37 @@ static void profile(Stream *s, Player *p, bool read, bool legacy) {
     p->haste = number(s, p->haste, read);
     p->tint = number(s, p->tint, read);
     p->health = (float)real(s, p->health, read);
+    if (version >= 3) {
+        for (int i = 0; i < 7; i++)
+            p->mods[i] = number(s, p->mods[i], read);
+        p->weapons = number(s, p->weapons, read);
+        p->weapon = number(s, p->weapon, read);
+        p->credits = number(s, p->credits, read);
+        p->logs = number(s, p->logs, read);
+        p->victories = number(s, p->victories, read);
+        p->pickups = number(s, p->pickups, read);
+        p->shield = (float)real(s, p->shield, read);
+        p->armor = (float)real(s, p->armor, read);
+        p->energy = (float)real(s, p->energy, read);
+    } else if (read) {
+        p->weapons = 7;
+        p->shield = 50;
+        p->armor = 25;
+        p->energy = 100;
+    }
+    if (read) {
+        for (int i = 0; i < 7; i++)
+            if (p->mods[i] > 50)
+                s->ok = false;
+        if (!p->weapons || p->weapons >= (1u << SC_WEAPONS) || p->weapon >= SC_WEAPONS ||
+            !(p->weapons & (1u << p->weapon)) || p->credits > 1000000000 || p->logs >= 4096 ||
+            p->victories > 1000000000 || p->pickups > 1000000000 || !isfinite(p->shield) ||
+            p->shield < 0 || p->shield > player_max_shield(p) || !isfinite(p->armor) ||
+            p->armor < 0 || p->armor > player_max_armor(p) || !isfinite(p->energy) ||
+            p->energy < 0 || p->energy > player_max_energy(p))
+            s->ok = false;
+    }
+
     if (read) {
         if (!valid_vector(position_absolute(p->pos)) ||
             !valid_vector(position_absolute(p->checkpoint)) || !isfinite(p->yaw) ||
@@ -115,14 +147,18 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 2, false);
+    number(&s, 3, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player p = g->players[i];
-        profile(&s, &p, false, false);
+        profile(&s, &p, false, 3);
     }
+    number(&s, g->mission, false);
+    number(&s, g->mission_kills, false);
+    number(&s, g->mission_loot, false);
+    number(&s, g->contracts, false);
     number(&s, (uint32_t)g->world.record_count, false);
     for (size_t i = 0; i < g->world.record_count; i++) {
         const RoomRecord *r = &g->world.records[i];
@@ -130,6 +166,7 @@ bool game_save(const Game *g, const char *path) {
         number(&s, (uint32_t)r->cell.y, false);
         number(&s, (uint32_t)r->cell.z, false);
         number(&s, r->killed, false);
+        number(&s, r->collected, false);
     }
     uint32_t hash = s.hash;
     number(&s, hash, false);
@@ -156,14 +193,23 @@ bool game_load(Game *g, const char *path) {
         return false;
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
-    uint32_t generator = version == 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version != 1 && version != 2) ||
-        (version == 2 && generator != SC_GENERATOR_VERSION))
+    uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 3) ||
+        (version == 2 && generator != 2) || (version == 3 && generator != SC_GENERATOR_VERSION))
         s.ok = false;
     Player players[SC_PLAYERS];
     memset(players, 0, sizeof(players));
     for (int i = 0; i < SC_PLAYERS; i++)
-        profile(&s, &players[i], true, version == 1);
+        profile(&s, &players[i], true, version);
+    uint32_t mission = 0, kills = 0, loot = 0, contracts = 0;
+    if (version >= 3) {
+        mission = number(&s, 0, true);
+        kills = number(&s, 0, true);
+        loot = number(&s, 0, true);
+        contracts = number(&s, 0, true);
+        if (mission > 6 || contracts > 7 || kills > 1000000000 || loot > 1000000000)
+            s.ok = false;
+    }
     uint32_t count = number(&s, 0, true);
     if (count > 1000000)
         s.ok = false;
@@ -179,6 +225,9 @@ bool game_load(Game *g, const char *path) {
         r->cell.y = (int32_t)number(&s, 0, true);
         r->cell.z = (int32_t)number(&s, 0, true);
         r->killed = number(&s, 0, true);
+        r->collected = version >= 3 ? number(&s, 0, true) : 0;
+        if (r->collected >= 32)
+            s.ok = false;
         if (r->cell.x < -10000000 || r->cell.x > 10000000 || r->cell.y < -10000000 ||
             r->cell.y > 10000000 || r->cell.z < 0 || r->cell.z > 10000000 ||
             r->killed >= (UINT32_C(1) << SC_MAX_ENEMIES))
@@ -192,7 +241,7 @@ bool game_load(Game *g, const char *path) {
         free(records);
         return false;
     }
-    if (version == 1) {
+    if (version < 3) {
         /* Incompatible geometry must not reinterpret old doors, kills or positions.
            Keep both profiles and visibly begin a new expedition instead. */
         free(records);
@@ -228,8 +277,12 @@ bool game_load(Game *g, const char *path) {
     memcpy(g->players, players, sizeof(players));
     g->player_count = 1;
     memset(g->projectiles, 0, sizeof(g->projectiles));
-    g->dirty = version == 1;
-    game_message(g, version == 1 ? "SHIP GENERATOR UPDATED / CHARACTERS RETAINED / NEW EXPEDITION"
-                                 : "EXPEDITION RESUMED / WELCOME BACK");
+    g->mission = mission;
+    g->mission_kills = kills;
+    g->mission_loot = loot;
+    g->contracts = contracts;
+    g->dirty = version < 3;
+    game_message(g, version < 3 ? "SHIP GENERATOR UPDATED / CHARACTERS RETAINED / NEW EXPEDITION"
+                                : "EXPEDITION RESUMED / WELCOME BACK");
     return true;
 }

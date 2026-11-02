@@ -128,7 +128,7 @@ static void test_topology(void) {
             CHECK(tail == 16);
             CHECK(world_fingerprint(seed, key) != world_fingerprint(seed + 1, key));
         }
-    CHECK(districts == 7 && loops > 100 && closed > 100);
+    CHECK(districts == ((1u << DISTRICT_TYPES) - 1) && loops > 100 && closed > 100);
     CHECK(world_difficulty((Cell){0, 0, 0}) == 0);
     CHECK(world_difficulty((Cell){0, 1, 0}) > 0);
     CHECK(world_difficulty((Cell){10, 0, 0}) > world_difficulty((Cell){1, 0, 0}));
@@ -273,6 +273,8 @@ static void test_movement(void) {
     CHECK(g != NULL);
     game_init(g, 17);
     settle_game(g);
+    for (int r = 0; r < g->world.count; r++)
+        g->world.rooms[r].enemy_count = 0;
     CHECK(g->player_count == 1);
     step(g, (Actions){.forward = 1}, 700);
     CHECK(position_absolute(g->players[0].pos).z > 55);
@@ -281,6 +283,8 @@ static void test_movement(void) {
     Player *p = &g->players[0];
     p->pos = position_from(v3(10, -SC_DECK + .02, 48));
     settle_game(g);
+    for (int r = 0; r < g->world.count; r++)
+        g->world.rooms[r].enemy_count = 0;
     p->velocity = v3(0, 0, 0);
     p->yaw = -SC_PI * .5;
     step(g, (Actions){.forward = 1}, 80);
@@ -297,6 +301,8 @@ static void test_movement(void) {
     game_leave(g);
     p->pos = position_from(world_lift((Cell){0, 0, 0}));
     settle_game(g);
+    for (int r = 0; r < g->world.count; r++)
+        g->world.rooms[r].enemy_count = 0;
     p->velocity = v3(0, 0, 0);
     step(g, (Actions){.lift_up = true}, 1);
     CHECK(position_absolute(p->pos).y > 31);
@@ -394,18 +400,15 @@ static void test_save(void) {
     g->players[0].flashlight = false;
     CHECK(game_load(g, SC_FIXTURE_DIR "/generator-v2.sav"));
     settle_game(g);
-    CHECK(g->world.seed == 713 && g->world.generator == 2 && !g->dirty);
+    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->dirty);
     CHECK(g->players[0].level == 7 && g->players[0].kills == 81 && g->players[0].power == 3);
     CHECK(g->players[1].level == 4 && g->players[1].haste == 2);
-    CHECK(vlen(vsub(position_absolute(g->players[0].pos), v3(96, .02, 23))) < .0001);
-    CHECK(vlen(vsub(position_absolute(g->players[0].checkpoint), world_lift((Cell){1, 0, 0}))) <
-          .0001);
+    CHECK(position_absolute(g->players[0].pos).z == -34);
+    CHECK(g->world.record_count == 0 && g->players[0].weapons == 7);
     CHECK(g->players[0].flashlight && !g->projectiles[0].active);
-    r = world_find(&g->world, (Cell){1, 0, 0});
-    CHECK(r && !r->enemies[1].alive);
     game_destroy(g);
     free(g);
-    puts("PASS save round-trip, pre-infestation v2 compatibility, solo default, both profiles, "
+    puts("PASS save round-trip, v2 character migration, solo default, both profiles, "
          "corruption and failure safety");
 }
 static void test_migration_and_precision(void) {
@@ -468,6 +471,9 @@ static void test_migration_and_precision(void) {
 static Room *quiet_encounter(Game *g) {
     game_init(g, 713);
     g->players[0].pos = position_from(vadd(world_center((Cell){1, 0, 0}), v3(0, .02, -24)));
+    g->players[0].hurt = 10;
+    g->players[0].shield = 0;
+    g->players[0].armor = 0;
     settle_game(g);
     for (int r = 0; r < g->world.count; r++)
         g->world.rooms[r].enemy_count = 0;
@@ -512,7 +518,7 @@ static void test_infestation(void) {
     room = quiet_encounter(g);
     Vec3 eye = player_eye(&g->players[0]);
     g->projectiles[0] =
-        (Projectile){position_from(vadd(eye, v3(0, 0, -5))), {0, 0, 200}, 2, 12, true};
+        (Projectile){position_from(vadd(eye, v3(0, 0, -5))), {0, 0, 200}, 2, 12, true, -1};
     Actions none[2] = {{0}, {0}};
     game_step(g, none, .05);
     CHECK(g->projectile_hits == 1 && g->players[0].health == 88 && !g->projectiles[0].active);
@@ -523,14 +529,18 @@ static void test_infestation(void) {
                      {-200, 0, 0},
                      2,
                      12,
-                     true};
+                     true,
+                     -1};
     game_step(g, none, .05);
     CHECK(!g->projectiles[0].active && g->players[0].health == 100);
     game_join(g);
+    g->players[1].hurt = 10;
+    g->players[1].shield = 0;
+    g->players[1].armor = 0;
     g->players[1].pos = g->players[0].pos;
     position_move(&g->players[1].pos, v3(0, 0, -2));
     g->projectiles[0] =
-        (Projectile){position_from(vadd(eye, v3(0, 0, -5))), {0, 0, 200}, 2, 12, true};
+        (Projectile){position_from(vadd(eye, v3(0, 0, -5))), {0, 0, 200}, 2, 12, true, -1};
     game_step(g, none, .05);
     CHECK(g->players[0].health == 100 && g->players[1].health == 88);
     g->projectiles[0].active = true;
@@ -571,6 +581,178 @@ static void test_infestation(void) {
     puts("PASS charged dodgeable shots, swept player/wall collision, co-op projectile ownership, "
          "wall climbing, fast crawlers, flashlight controls, bounded dressing and broken lamps");
 }
+static void test_expansion(void) {
+    uint32_t themes = 0, enemies = 0;
+    for (unsigned seed = 1; seed <= 24; seed++)
+        for (int y = -4; y <= 9; y++) {
+            RegionPlan p;
+            world_plan(seed, (Cell){2, y, 2}, &p);
+            for (int i = 0; i < p.count; i++) {
+                CHECK(p.rooms[i].theme < SC_THEMES);
+                themes |= 1u << p.rooms[i].theme;
+            }
+        }
+    CHECK((themes | 1u) == ((1u << SC_THEMES) - 1));
+    Game *g = malloc(sizeof(*g));
+    CHECK(g);
+    Room *room = quiet_encounter(g);
+    Player *p = &g->players[0];
+    p->shield = 50;
+    p->armor = 40;
+    game_hurt(g, 0, 30, 0);
+    CHECK(p->health == 100 && p->shield == 20 && p->armor == 40);
+    game_hurt(g, 0, 40, CHILL | DRAIN);
+    CHECK(p->shield == 0 && p->armor < 40 && p->health < 100 && p->slow > 0 && p->energy == 60);
+    float health = p->health, shield = p->shield;
+    step(g, (Actions){0}, 180);
+    CHECK(p->shield > shield && p->health > health);
+    for (int a = 0; a < SC_ATTRIBUTES; a++) {
+        p->points = 1;
+        unsigned old = *player_attribute(p, a);
+        CHECK(game_upgrade(g, 0, a));
+        CHECK(*player_attribute(p, a) == old + 1);
+    }
+    p->points = 0;
+    p->credits = 1000;
+    CHECK(game_upgrade(g, 0, 9));
+    CHECK(p->credits < 1000);
+    p->weapons = 1;
+    game_weapon(g, 0, 1);
+    CHECK(p->weapon == 0);
+    p->weapons = 7;
+    game_weapon(g, 0, 1);
+    CHECK(p->weapon == 1);
+    game_destroy(g);
+    for (int weapon = 0; weapon < SC_WEAPONS; weapon++) {
+        room = quiet_encounter(g);
+        p = &g->players[0];
+        p->weapon = weapon;
+        p->weapons = (1u << SC_WEAPONS) - 1;
+        p->energy = 100;
+        p->pitch = atan2(.65 - 1.62, 16);
+        Enemy *e = place_enemy(room, 1, v3(0, .02, -8));
+        e->health = 500;
+        e->cooldown = 100;
+        step(g, (Actions){.fire = true}, 1);
+        CHECK(g->shots == 1);
+        step(g, (Actions){0}, 75);
+        CHECK(e->health < 500 || !e->alive);
+        CHECK(p->energy >= 0 && p->energy <= player_max_energy(p));
+        game_destroy(g);
+    }
+    /* All species execute under collision, plus specific ability regressions. */
+    for (int kind = 0; kind < SC_ENEMY_TYPES; kind++) {
+        room = quiet_encounter(g);
+        Enemy *e = place_enemy(room, kind, v3(0, .02, -8));
+        e->health = 30;
+        e->special = 0;
+        step(g, (Actions){0}, 90);
+        CHECK(isfinite(position_absolute(e->pos).x) && isfinite(e->health));
+        enemies |= 1u << kind;
+        if (sc_enemies[kind].flags & BROOD)
+            CHECK(room->enemy_count > 1);
+        if (sc_enemies[kind].flags & REGENERATE)
+            CHECK(e->health > 30);
+        if (sc_enemies[kind].flags & HOVER)
+            CHECK(position_absolute(e->pos).y > .8);
+        if (sc_enemies[kind].flags & TURRET)
+            CHECK(fabs(position_absolute(e->pos).z - (world_center(room->cell).z - 8)) < .01);
+        game_destroy(g);
+    }
+    CHECK(enemies == ((1u << SC_ENEMY_TYPES) - 1));
+    room = quiet_encounter(g);
+    p = &g->players[0];
+    Pickup *loot = &room->pickups[3];
+    p->pos = loot->pos;
+    uint32_t mask = p->weapons;
+    step(g, (Actions){0}, 1);
+    CHECK(!loot->active && (p->weapons & mask) == mask && p->pickups > 0);
+    unsigned gun = p->weapon;
+    size_t records = g->world.record_count;
+    step(g, (Actions){0}, 1);
+    CHECK(g->world.record_count == records && p->weapon == gun);
+    /* Shared loot has a single owner, independent of the co-op profile. */
+    game_join(g);
+    g->players[1].pos = p->pos;
+    unsigned second = g->players[1].pickups;
+    step(g, (Actions){0}, 1);
+    CHECK(g->players[1].pickups == second);
+    game_leave(g);
+    CHECK(game_save(g, "sc-cache-check.sav"));
+    CHECK(game_load(g, "sc-cache-check.sav"));
+    settle_game(g);
+    room = world_find(&g->world, (Cell){1, 0, 0});
+    CHECK(room && !room->pickups[3].active);
+    remove("sc-cache-check.sav");
+    for (int stage = 0; stage < 6; stage++) {
+        Cell target;
+        CHECK(game_objective(g, &target));
+        p->pos = position_from(game_terminal(target));
+        settle_game(g);
+        for (int r = 0; r < g->world.count; r++)
+            g->world.rooms[r].enemy_count = 0;
+        unsigned before = g->mission;
+        game_interact(g, 0);
+        CHECK(g->mission == before + 1);
+    }
+    /* A living Warden blocks the heart even when lured away from its console. */
+    unsigned victories = p->victories;
+    g->mission = 4;
+    Cell heartcell = {2, 1, 2};
+    p->pos = position_from(game_terminal(heartcell));
+    settle_game(g);
+    for (int r = 0; r < g->world.count; r++)
+        g->world.rooms[r].enemy_count = 0;
+    Room *heart = world_find(&g->world, heartcell);
+    CHECK(heart);
+    Enemy *warden = place_enemy(heart, 26, v3(0, .02, 0));
+    warden->pos = p->pos;
+    position_move(&warden->pos, v3(0, 0, 4));
+    warden->health = 1;
+    game_interact(g, 0);
+    CHECK(g->mission == 4);
+    p->weapon = 0;
+    p->yaw = 0;
+    p->pitch = atan2(.65 - 1.62, 4);
+    p->cooldown = 0;
+    step(g, (Actions){.fire = true}, 1);
+    CHECK(!warden->alive);
+    game_interact(g, 0);
+    CHECK(g->mission == 5 && (p->weapons & (1u << 15)));
+    g->mission = 6;
+    p->victories = victories;
+    Cell target;
+    CHECK(!game_objective(g, &target) && p->victories == 1);
+    g->mission_kills = 12;
+    g->mission_loot = 8;
+    game_progression_step(g, .01);
+    CHECK(g->contracts == 7);
+    unsigned points = p->points;
+    game_progression_step(g, .01);
+    CHECK(p->points == points);
+    p->mods[0] = 4;
+    p->mods[1] = 3;
+    p->weapons = (1u << SC_WEAPONS) - 1;
+    p->weapon = 15;
+    p->logs = 4095;
+    p->armor = player_max_armor(p);
+    p->shield = player_max_shield(p);
+    p->energy = player_max_energy(p);
+    CHECK(game_save(g, "sc-expansion.sav"));
+    game_new_ship(g, 88);
+    CHECK(game_load(g, "sc-expansion.sav"));
+    settle_game(g);
+    CHECK(g->mission == 6 && g->contracts == 7 && p->weapon == 15 && p->mods[0] == 4 &&
+          p->mods[1] == 3 && p->logs == 4095 && p->victories == 1);
+    game_new_ship(g, 89);
+    CHECK(g->mission == 0 && g->contracts == 0 && p->weapon == 15 && p->logs == 4095 &&
+          p->victories == 1);
+    remove("sc-expansion.sav");
+    game_destroy(g);
+    free(g);
+    puts("PASS 28 themes, 27 species, 16 functional weapons, 10 attributes, shield/armor, shared "
+         "persistent loot, six-stage story, contracts, v3 saves");
+}
 static void fingerprints(void) {
     uint32_t seeds[] = {1, 713, UINT32_MAX};
     Cell regions[] = {
@@ -597,6 +779,7 @@ int main(int argc, char **argv) {
     test_save();
     test_migration_and_precision();
     test_infestation();
+    test_expansion();
     printf("PASS %d assertions\n", checks);
     return 0;
 }

@@ -78,6 +78,8 @@ static void save_game(void) {
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_start(void) {
     app.started = true;
+    for (int i = 0; i < SC_PLAYERS; i++)
+        app.game.players[i].journal = false;
     app.new_armed = false;
     set_pause(false);
 }
@@ -95,7 +97,40 @@ EMSCRIPTEN_KEEPALIVE int sc_web_import(void) {
     return 1;
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
-    if (action >= 1 && action <= 3)
+    if (action >= 100 && action < 112) {
+        Player *p = &app.game.players[0];
+        if (p->logs & (1u << (action - 100))) {
+            p->reading = (uint8_t)(action - 100);
+            p->journal = true;
+            set_pause(true);
+        }
+    } else if (action == 12) {
+        Player *p = &app.game.players[0];
+        for (int i = 0; i < 12; i++) {
+            p->reading = (p->reading + 1) % 12;
+            if (p->logs & (1u << p->reading))
+                break;
+        }
+    } else if (action >= 20 && action < 20 + SC_ATTRIBUTES)
+        game_upgrade(&app.game, 0, action - 20);
+    else if (action >= 40 && action < 40 + SC_WEAPONS) {
+        Player *p = &app.game.players[0];
+        unsigned gun = (unsigned)(action - 40);
+        if (p->weapons & (1u << gun)) {
+            p->weapon = gun;
+            p->cooldown = .15f;
+            app.game.dirty = true;
+        }
+    } else if (action == 8)
+        game_interact(&app.game, 0);
+    else if (action == 9)
+        game_weapon(&app.game, 0, 1);
+    else if (action == 10)
+        game_weapon(&app.game, 0, -1);
+    else if (action == 11) {
+        app.game.players[0].journal = !app.game.players[0].journal;
+        set_pause(app.game.players[0].journal);
+    } else if (action >= 1 && action <= 3)
         game_upgrade(&app.game, 0, action - 1);
     else if (action == 4) {
         app.game.players[0].tint = (app.game.players[0].tint + 1) % 3;
@@ -120,7 +155,7 @@ EMSCRIPTEN_KEEPALIVE uint32_t sc_web_fingerprint(uint32_t seed, int x, int y, in
     return world_fingerprint(seed, (Cell){x, y, z});
 }
 EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
-    static char result[1024];
+    static char result[2048];
     const Player *p = &app.game.players[0];
     Vec3 feet = position_absolute(p->pos);
     unsigned projectiles = 0, climbers = 0;
@@ -136,7 +171,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"x\":%.5f,\"y\":%.5f,\"z\":%.5f,\"rank\":%u,\"kills\":%u,\"shots\":%u,\"failed\":%s,"
         "\"generator\":%u,\"chunks\":%d,\"pending\":%d,\"generated\":%u,\"work\":%u,\"uploads\":%u,"
         "\"span\":%d,\"ready\":%s,\"fingerprint\":%u,\"flashlight\":%s,\"projectiles\":%u,\"enemy_"
-        "shots\":%u,\"projectile_hits\":%u,\"climbers\":%u}",
+        "shots\":%u,\"projectile_hits\":%u,\"climbers\":%u,\"mission\":%u,\"weapon\":%u,"
+        "\"weapons\":%u,\"shield\":%.2f,\"armor\":%.2f,\"energy\":%.2f,\"credits\":%u,\"pickups\":%"
+        "u,\"contracts\":%u,\"theme\":%u,\"logs\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -145,7 +182,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         room && room->ready ? "true" : "false",
         world_fingerprint(app.game.world.seed, world_region(world_cell(feet))),
         p->flashlight ? "true" : "false", projectiles, app.game.enemy_shots,
-        app.game.projectile_hits, climbers);
+        app.game.projectile_hits, climbers, app.game.mission, p->weapon, p->weapons, p->shield,
+        p->armor, p->energy, p->credits, p->pickups, app.game.contracts, room ? room->theme : 0,
+        p->logs);
     return result;
 }
 static void audio_frame(void) {
@@ -184,6 +223,11 @@ static void audio_frame(void) {
                        (sin(t * SC_PI * 2 * 37.5) + .45 * sin(t * SC_PI * 2 * 112.5)) * .014;
             ambient += app.ambience[SANCTUM] *
                        (sin(t * SC_PI * 2 * 65.4) + sin(t * SC_PI * 2 * 98.1)) * .007;
+            for (int d = LUXURY; d < DISTRICT_TYPES; d++)
+                ambient +=
+                    app.ambience[d] *
+                    (sin(t * SC_PI * 2 * (42 + d * 5)) + .25 * sin(t * SC_PI * 2 * (84 + d * 7))) *
+                    .007;
             double shot = 0;
             if (app.shot_sample < 1800) {
                 double age = (double)app.shot_sample++ / 22050;
@@ -217,12 +261,12 @@ static float axis(SDL_Gamepad *pad, SDL_GamepadAxis axis_id) {
     return fabsf(v) < .16f ? 0 : (v > 0 ? (v - .16f) / .84f : (v + .16f) / .84f);
 }
 static int finger_role(float x, float y) {
-    const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f},
-                ys[] = {.72f, .85f, .85f, .48f, .48f, .48f};
+    const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f},
+                ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f};
     int w, h;
     SDL_GetWindowSize(app.window, &w, &h);
     float radius = fminf((float)w, (float)h) * .075f;
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 8; i++)
         if (fabsf((x - xs[i]) * w) < radius && fabsf((y - ys[i]) * h) < radius)
             return i + 2;
     if (x < .42f)
@@ -242,6 +286,10 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
                     (Finger){e->fingerID, true, finger_role(e->x, e->y), e->x, e->y, e->x, e->y};
                 if (app.fingers[i].role == 7)
                     game_flashlight(&app.game, 0);
+                if (app.fingers[i].role == 8)
+                    game_interact(&app.game, 0);
+                if (app.fingers[i].role == 9)
+                    game_weapon(&app.game, 0, 1);
                 break;
             }
     } else
@@ -309,6 +357,10 @@ static void events(void) {
                         app.started = true;
                         set_pause(!app.paused);
                     }
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+                        game_weapon(&app.game, pad_player(i), 1);
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_DOWN)
+                        game_interact(&app.game, pad_player(i));
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_RIGHT_STICK)
                         game_flashlight(&app.game, pad_player(i));
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_LEFT)
@@ -318,6 +370,10 @@ static void events(void) {
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
                         game_upgrade(&app.game, pad_player(i), 2);
                 }
+            break;
+        case SDL_EVENT_MOUSE_WHEEL:
+            if (e.wheel.y != 0)
+                game_weapon(&app.game, 0, e.wheel.y > 0 ? 1 : -1);
             break;
         case SDL_EVENT_KEY_DOWN:
             if (e.key.repeat)
@@ -343,6 +399,21 @@ static void events(void) {
                 break;
             case SDLK_F2:
                 sc_web_action(5);
+                break;
+            case SDLK_L:
+                sc_web_action(12);
+                break;
+            case SDLK_G:
+                game_interact(&app.game, 0);
+                break;
+            case SDLK_Z:
+                game_weapon(&app.game, 0, -1);
+                break;
+            case SDLK_X:
+                game_weapon(&app.game, 0, 1);
+                break;
+            case SDLK_I:
+                sc_web_action(11);
                 break;
             case SDLK_F:
                 game_flashlight(&app.game, 0);
@@ -371,7 +442,16 @@ static void events(void) {
             case SDLK_1:
             case SDLK_2:
             case SDLK_3:
+            case SDLK_4:
+            case SDLK_5:
+            case SDLK_6:
+            case SDLK_7:
+            case SDLK_8:
+            case SDLK_9:
                 game_upgrade(&app.game, 0, (int)(e.key.key - SDLK_1));
+                break;
+            case SDLK_0:
+                game_upgrade(&app.game, 0, 9);
                 break;
             default:
                 break;
@@ -590,7 +670,8 @@ int main(int argc, char **argv) {
         } else if (!strcmp(argv[i], "--help")) {
             puts("Starship Crawl\n  --seed NUMBER --new --no-save --save-dir DIRECTORY\n  --touch "
                  "--split --smoke FRAMES --capture FILE.ppm\n  --scene "
-                 "bay|hall|engine|crew|tunnel|atrium|distant|encounter\nSolo by default. F2 "
+                 "bay|hall|engine|crew|tunnel|atrium|distant|encounter|luxury|bridge|lab|cargo|"
+                 "cryonics|botany\nSolo by default. F2 "
                  "explicitly "
                  "toggles local "
                  "split-screen.");
@@ -673,6 +754,22 @@ int main(int argc, char **argv) {
             c.y = 1;
         else if (!strcmp(scene, "distant"))
             c = (Cell){3000000, 2000, 3000000};
+        const char *sector_scenes[] = {"luxury", "bridge", "lab", "cargo", "cryonics", "botany"};
+        const District sectors[] = {LUXURY, COMMAND, RESEARCH, LOGISTICS, CRYONICS, BOTANY};
+        for (int sector = 0; sector < 6; sector++)
+            if (!strcmp(scene, sector_scenes[sector])) {
+                bool found = false;
+                for (int y = 0; y < 9 && !found; y++)
+                    for (int z = 0; z < 12 && !found; z++)
+                        for (int x = -8; x < 8 && !found; x++) {
+                            RoomSpec spec = world_describe(seed, (Cell){x, y, z});
+                            if (spec.district == sectors[sector] && spec.theme >= 6 &&
+                                spec.span_x == 1) {
+                                c = spec.cell;
+                                found = true;
+                            }
+                        }
+            }
         app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, -25)));
         app.game.players[0].crouched = world_describe(seed, c).type == CONDUIT;
         app.game.players[0].pitch = .03;

@@ -60,7 +60,7 @@ def run():
             page.goto(base + "?seed=713")
             wait_ready(page)
             assert state(page)["players"] == 1
-            assert state(page)["generator"] == 2
+            assert state(page)["generator"] == 3
             native = Path(os.environ.get("SC_CORE_TEST", str(ROOT / "build" / "sc_tests")))
             assert native.is_file(), "Build sc_tests or set SC_CORE_TEST for native/WASM generation parity"
             probes = json.loads(subprocess.check_output([str(native), "--fingerprints"]))
@@ -101,14 +101,14 @@ def run():
             assert page.evaluate("Module.ccall('sc_web_import','number',[],[])") == 1
             page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0")
             resumed = state(page)
-            assert resumed["seed"] == 713 and resumed["rank"] == 7 and resumed["kills"] == 81
-            assert abs(resumed["x"] - 96) < .001 and abs(resumed["z"] - 23) < .001
+            assert resumed["seed"] != 713 and resumed["rank"] == 7 and resumed["kills"] == 81
+            assert abs(resumed["x"]) < .001 and abs(resumed["z"] + 34) < .001
             assert resumed["flashlight"] and resumed["projectiles"] == 0
             # A malformed import must not mutate the current expedition.
             page.evaluate("Module.FS.writeFile('/persist/import.sav',new Uint8Array([1,2,3]))")
             assert page.evaluate("Module.ccall('sc_web_import','number',[],[])") == 0
-            assert state(page)["seed"] == 713
-            for scene in ["hall", "engine", "crew", "tunnel", "atrium", "encounter"]:
+            assert state(page)["seed"] == resumed["seed"]
+            for scene in ["hall", "engine", "crew", "tunnel", "atrium", "encounter", "luxury", "bridge", "lab", "cargo", "cryonics", "botany"]:
                 page.goto(base + "?seed=713&scene=" + scene)
                 wait_ready(page)
                 if scene == "encounter":
@@ -127,6 +127,8 @@ def run():
                 page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 5")
                 page.screenshot(path=str(ARTIFACTS / (scene + ".png")))
                 assert not state(page)["failed"]
+                if scene in ["luxury", "bridge", "lab", "cargo", "cryonics", "botany"]:
+                    assert state(page)["theme"] >= 6
                 if scene == "encounter":
                     page.wait_for_function("window.sawClimber", timeout=15000)
                     page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).projectiles > 0", timeout=15000)
@@ -154,6 +156,30 @@ def run():
                     assert current["ready"] and current["span"] == 4 and current["y"] < .2
                     assert current["generated"] >= start_generated
                     page.screenshot(path=str(ARTIFACTS / "hall-across-chunks.png"))
+            # Play the first mission and spend its reward, without test-only hooks.
+            page.goto(base + "?seed=713&scene=bay")
+            wait_ready(page)
+            page.locator("#start").click()
+            page.keyboard.down("w")
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > 40", timeout=15000)
+            page.keyboard.up("w")
+            page.keyboard.press("g")
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).mission === 1")
+            assert state(page)["credits"] >= 75
+            page.keyboard.press("i")
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
+            page.keyboard.press("4")
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).armor > 40")
+            page.keyboard.press("x")
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).weapon === 1")
+            page.screenshot(path=str(ARTIFACTS / "character-journal.png"))
+            page.keyboard.press("Enter")
+            page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
+            page.evaluate("Module.ccall('sc_web_save',null,[],[])")
+            page.wait_for_function("window.scStorage.status === 3")
+            page.goto(base)
+            wait_ready(page)
+            assert state(page)["mission"] == 1 and state(page)["weapon"] == 1 and state(page)["armor"] > 40
             # Independent camera origins: one player deep inside a distant district,
             # the other at the entrance, sharing bounded generation and upload work.
             page.goto(base + "?seed=713&scene=distant&split")
@@ -200,6 +226,8 @@ def run():
             page.touchscreen.tap(844 * .64, 390 * .48)
             page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
             page.screenshot(path=str(ARTIFACTS / "mobile-touch.png"))
+            page.touchscreen.tap(844 * .77, 390 * .27)
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).weapon === 1")
             page.set_viewport_size({"width": 390, "height": 844})
             page.wait_for_timeout(300)
             page.screenshot(path=str(ARTIFACTS / "mobile-portrait.png"))
@@ -208,7 +236,7 @@ def run():
             assert not errors, errors
             mobile.close()
             browser.close()
-            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, five interiors, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
+            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, eleven interiors, first mission and rewarded armor upgrade, weapon cycling, journal, v3 reload, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
     finally:
         server.shutdown()
         server.server_close()

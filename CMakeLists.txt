@@ -10,7 +10,7 @@ endif()
 option(SC_BUILD_GAME "Build the SDL/OpenGL application" ON)
 option(SC_SANITIZE "Enable address and undefined behavior sanitizers" OFF)
 
-add_library(sc_core src/generation.c src/world.c src/game.c src/save.c)
+add_library(sc_core src/content.c src/generation.c src/world.c src/progression.c src/game.c src/save.c)
 set_target_properties(sc_core PROPERTIES C_EXTENSIONS OFF)
 target_include_directories(sc_core PUBLIC src)
 if(NOT MSVC)

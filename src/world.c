@@ -60,7 +60,7 @@ static size_t record_for(World *w, Cell c, bool create) {
         w->record_cap = cap;
     }
     size_t i = w->record_count++;
-    w->records[i] = (RoomRecord){c, 0};
+    w->records[i] = (RoomRecord){.cell = c};
     w->record_index[slot] = i + 1;
     if (w->record_count * 2 >= w->index_cap && !world_index_records(w))
         w->failed = true;
@@ -303,15 +303,96 @@ static void room_dressing(Builder *b, const Room *r) {
                      r->hash + (uint32_t)(side + 7));
         }
 }
+static void theme_geometry(Builder *b, const Room *r) {
+    if (r->theme < 6)
+        return;
+    Vec3 c = world_room_center(r);
+    Color metal = rgb(.19f, .23f, .24f), gold = rgb(.38f, .29f, .13f),
+          glass = rgb(.12f, .32f, .33f);
+    /* Furniture leaves an eight-metre cross and every lift unobstructed. */
+    for (int sx = -1; sx <= 1; sx += 2)
+        for (int sz = -1; sz <= 1; sz += 2) {
+            double x = sx * (r->width * .5 - 13), z = sz * (r->depth * .5 - 15);
+            int theme = r->theme;
+            if (theme == 6 || theme == 7 || theme == 9 || theme == 15) {
+                local(b, c, x, .7, z, 8, 1.4, 4, gold, 0, true);
+                local(b, c, x, 1.5, z + sz * 1.7, 8, 1.2, .5, metal, 0, false);
+                local(b, c, x - sx * 6, 1, z, 2, 2, 2, glass, .15f, false);
+                if (theme == 7)
+                    local(b, c, x, r->height - 6, z, 10, 1, 10, gold, .25f, false);
+                if (theme == 9)
+                    for (int k = 0; k < 4; k++)
+                        local(b, c, x + (k - 1.5) * 1.5, 2, z, 1, 1.7, .7, glass, .35f, false);
+            } else if (theme == 8) {
+                for (int k = -1; k <= 1; k += 2) {
+                    local(b, c, x + k * 4, .4, z, .6, .8, 10, gold, 0, true);
+                    local(b, c, x, .4, z + k * 5, 8, .8, .6, gold, 0, true);
+                }
+                local(b, c, x, .04, z, 7, .06, 9, glass, .35f, false);
+            } else if (theme == 10 || theme == 11 || theme == 12 || theme == 13) {
+                for (int k = 0; k < 3; k++) {
+                    local(b, c, x + (k - 1) * 2.2, theme == 12 ? .7 : 2.5, z, 1.7,
+                          theme == 12 ? 1.4 : 5, theme == 13 ? 9 : 5, metal, 0, true);
+                    local(b, c, x + (k - 1) * 2.2, 5.1, z, 1.5, .25, 4, theme == 11 ? glass : gold,
+                          .3f, false);
+                    if (theme == 10)
+                        local(b, c, x + (k - 1) * 2.2, 2, z - sz * 2.6, 1.3, 2, .15,
+                              rgb(.8f, .18f, .04f), .4f, false);
+                    if (theme == 11)
+                        for (int j = 0; j < 3; j++)
+                            local(b, c, x + (k - 1) * 2.2, 2 + j, z - sz * 2.6, 1.8, .15, .2, glass,
+                                  .2f, false);
+                    local(b, c, x + (k - 1) * 2.2, 7, z, .7, 3, .7, metal, 0, false);
+                }
+            } else if (theme == 14 || theme == 16 || theme == 17) {
+                local(b, c, x, 1, z, 10, 2, 3, metal, 0, true);
+                for (int k = 0; k < 4; k++)
+                    local(b, c, x + (k - 1.5) * 2, 2.8, z + .5, 1.5, 1.4, .2, glass, .35f, false);
+                if (theme == 17)
+                    local(b, c, x, 7, z, 2, 10, 2, gold, 0, true);
+            } else if (theme == 18 || theme == 19 || theme == 20 || theme == 26) {
+                for (int k = 0; k < 4; k++) {
+                    local(b, c, x + (k - 1.5) * 2.3, 1, z, 1.7, 2, 5, metal, 0, true);
+                    local(b, c, x + (k - 1.5) * 2.3, 2.8, z, 1.5, 1.5, 4, glass,
+                          theme == 26 ? .2f : 0, false);
+                    if (theme == 19)
+                        local(b, c, x + (k - 1.5) * 2.3, 3, z - sz * 2.6, .15, 5, .3,
+                              rgb(.7f, .4f, .1f), .15f, false);
+                    local(b, c, x + (k - 1.5) * 2.3, 4, z + 2, 1.7, .3, .4, gold, 0, false);
+                }
+            } else if (theme == 21 || theme == 27) {
+                local(b, c, x, .5, z, 10, 1, 10, metal, 0, true);
+                for (int k = 0; k < 6; k++) {
+                    local(b, c, x + (k % 3 - 1) * 2.7, 2 + k % 2, z + (k / 3 * 2 - 1) * 2, .6,
+                          4 + k % 2 * 2, .6, glass, 0, false);
+                    local(b, c, x + (k % 3 - 1) * 2.7, 4 + k % 2, z + (k / 3 * 2 - 1) * 2, 2.5, 1.5,
+                          2.5, rgb(.13f, .25f, .10f), 0, false);
+                }
+            } else if (theme == 22) {
+                for (int k = 0; k < 5; k++)
+                    local(b, c, x + (k % 2) * 5, 2 + (k / 2) * 4, z, 4, 4, 7, k % 2 ? metal : gold,
+                          0, true);
+            } else if (theme == 23 || theme == 24 || theme == 25) {
+                for (int k = 0; k < 4; k++) {
+                    local(b, c, x + (k - 1.5) * 2.5, 3, z, 1.8, 6, 3, metal, 0, true);
+                    for (int j = 0; j < 5; j++)
+                        local(b, c, x + (k - 1.5) * 2.5, 1 + j, z - sz * 1.6, 1.5, .18, .3,
+                              theme == 25 ? gold : glass, .15f, false);
+                }
+            }
+        }
+}
 static void geometry(World *w, Chunk *chunk, const Room *r) {
     Vec3 c = world_room_center(r), tile = world_center(chunk->cell);
     Builder b = {w, chunk, tile};
     double x = r->width * .5, z = r->depth * .5, h = r->height;
     Color stone = rgb(.17f, .20f, .23f), trim = rgb(.27f, .25f, .22f),
           floor = rgb(.13f, .17f, .19f);
-    Color light = r->district == HABITAT     ? rgb(.22f, .68f, .79f)
-                  : r->district == MACHINERY ? rgb(1, .34f, .1f)
-                                             : rgb(.60f, .43f, .91f);
+    const Color palettes[DISTRICT_TYPES] = {
+        {.22f, .68f, .79f}, {1, .34f, .1f},    {.6f, .43f, .91f},
+        {.8f, .6f, .22f},   {.2f, .48f, .85f}, {.3f, .75f, .55f},
+        {.8f, .4f, .16f},   {.28f, .7f, .9f},  {.4f, .65f, .16f}};
+    Color light = palettes[r->district];
     if (r->type == ENGINE)
         stone = rgb(.22f, .16f, .14f);
     if (r->type == GARDEN) {
@@ -377,7 +458,7 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
             local(&b, c, 0, h - 15, 0, 2, 2, 24, light, 1.5f, false);
         }
     }
-    if (r->type == ENGINE) {
+    if (r->type == ENGINE && r->theme < 6) {
         for (int s = -1; s <= 1; s += 2)
             for (int j = -1; j <= 1; j += 2) {
                 double rx = r->span_x == 2 ? 27 : x - 9;
@@ -400,8 +481,10 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
                          stone);
                     local(&b, c, sx * (x + 8) * .5, 3.4, sz * (8 + depth * i), x - 8, 6.8, .5,
                           stone, 0, true);
-                    local(&b, c, sx * (x - 4), 1, mid, 5, 2, depth - 3, trim, 0, true);
-                    local(&b, c, sx * (x - 4), 2.1, mid, 4, .15, depth - 4, light, .4f, false);
+                    if (r->theme < 6 || r->theme == 15 || r->theme == 18 || r->theme == 19) {
+                        local(&b, c, sx * (x - 4), 1, mid, 5, 2, depth - 3, trim, 0, true);
+                        local(&b, c, sx * (x - 4), 2.1, mid, 4, .15, depth - 4, light, .4f, false);
+                    }
                     local(&b, c, sx * 8.1, 3.9, mid, .12, .3, 1.5, light, 1.4f, false);
                 }
     }
@@ -415,6 +498,7 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
         local(&b, tile, 0, .065, -10 + s * 2, 4, .08, .1, rgb(.1f, .8f, .9f), 2, false);
     }
     local(&b, tile, 0, .025, -10, 4, .04, 4, rgb(.07f, .16f, .18f), .3f, false);
+    theme_geometry(&b, r);
     room_dressing(&b, r);
 }
 
@@ -509,6 +593,7 @@ static Room *room_create(World *w, RoomSpec spec) {
     r->cell = spec.cell;
     r->type = spec.type;
     r->district = spec.district;
+    r->theme = spec.theme;
     r->span_x = spec.span_x;
     r->span_z = spec.span_z;
     r->width = spec.width;
@@ -520,6 +605,17 @@ static Room *room_create(World *w, RoomSpec spec) {
 }
 static void populate(World *w, Room *r) {
     r->ready = true;
+    r->pickup_count = 5;
+    for (int i = 0; i < 5; i++) {
+        uint32_t h = world_hash(w->seed, r->cell, 25000 + (uint32_t)i);
+        Pickup *p = &r->pickups[i];
+        p->id = (uint8_t)i;
+        p->kind = (uint8_t)(i == 3 ? PICK_WEAPON : i == 4 ? PICK_LOG : h % 7);
+        p->item = (uint8_t)(i == 3 ? 1 + h % (SC_WEAPONS - 1) : h % 12);
+        p->pos = position_from(vadd(world_lift(r->cell), v3(i % 2 ? 1.5 : -1.5, .45, 3 + i * 1.6)));
+        p->active = r->record == SIZE_MAX || !(w->records[r->record].collected & (1u << i));
+    }
+
     unsigned difficulty = world_difficulty(r->cell);
     r->enemy_count = r->type == BAY ? 0 : (int)(5 + (difficulty > 12 ? 12 : difficulty));
     for (int i = 0; i < r->enemy_count; i++) {
@@ -528,8 +624,18 @@ static void populate(World *w, Room *r) {
         e->id = (uint8_t)i;
         e->normal = v3(0, 1, 0);
         e->heading = v3(0, 0, 1);
-        e->kind = (uint8_t)(h % 3);
-        e->health = (float)(e->kind == 2 ? 65 : 26) + (float)difficulty * 4;
+        e->kind = (uint8_t)(h % (SC_ENEMY_TYPES - 1));
+        for (int retry = 0; retry < SC_ENEMY_TYPES - 1 && sc_enemies[e->kind].tier > difficulty;
+             retry++)
+            e->kind = (uint8_t)((e->kind + 1) % (SC_ENEMY_TYPES - 1));
+        if (r->height < 3 && sc_enemies[e->kind].size > .8f)
+            e->kind = (uint8_t)(h % 2 ? 0 : 3);
+        e->health = sc_enemies[e->kind].health + (float)difficulty * 5;
+        e->special = 2 + (h % 300) / 100.0f;
+        if (i == 0 && contains(r, (Cell){2, 1, 2})) {
+            e->kind = 26;
+            e->health = sc_enemies[26].health + (float)difficulty * 5;
+        }
         e->cooldown = (float)(h % 200) / 100;
         e->alive = r->record == SIZE_MAX || !(w->records[r->record].killed & (UINT32_C(1) << i));
         for (unsigned attempt = 0; attempt < 64; attempt++) {
@@ -541,6 +647,8 @@ static void populate(World *w, Room *r) {
             if (!world_overlap(w, position_absolute(e->pos), .42, 1.25))
                 break;
         }
+        if (i == 0 && e->kind == 26 && contains(r, (Cell){2, 1, 2}))
+            e->pos = position_from(vadd(world_lift((Cell){2, 1, 2}), v3(0, 0, 9)));
         if (world_overlap(w, position_absolute(e->pos), .42, 1.25))
             e->pos = position_from(vadd(world_center(r->cell), v3(0, .02, 2 + (i % 4) * 2)));
     }
@@ -721,4 +829,14 @@ void world_kill(World *w, Room *r, int i) {
         return;
     r->enemies[i].alive = false;
     w->records[r->record].killed |= UINT32_C(1) << i;
+}
+
+void world_collect(World *w, Room *r, int pickup) {
+    if (pickup < 0 || pickup >= r->pickup_count || !r->pickups[pickup].active)
+        return;
+    r->record = record_for(w, r->cell, true);
+    if (r->record == SIZE_MAX)
+        return;
+    w->records[r->record].collected |= 1u << pickup;
+    r->pickups[pickup].active = false;
 }

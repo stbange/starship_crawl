@@ -5,14 +5,16 @@ Starship Crawl is a playable first-person prototype in C17, SDL3, and OpenGL / W
 The prototype includes:
 
 - A space approach and safe level-0 loading bay with left, right, inward, upper, and lower routes.
-- Deterministic habitat, machinery, and sanctum districts with connected routes, branches, loops, and vertical grav lifts.
+- Nine themed ship sectors and 28 room themes, including luxury resorts, command decks, research wards, cryonics, cargo, and botanical spaces, with connected routes, loops, and vertical grav lifts.
 - Landmark halls spanning four chunks (180 × 180 × 58 metres), cabin clusters inside single chunks, crouching passages, and atriums with lighter gravity.
 - Incremental chunk generation and GPU uploads, retained neighborhoods during backtracking, and one shared bounded cache for optional co-op.
 - Rusted panels, damaged vents, hanging cables, reactor pipework, cabin furnishings, egg nests, and branching growths in generated rooms.
 - Dark district materials, mostly dead light fittings, weak colored pools of flickering light, a player flashlight, ambient drones, and an F3 district map with streaming diagnostics.
 - Movement, collision, jumping, crouching, sprinting, and grav lifts that activate checkpoints.
-- Animated, tentacled creatures: fast wall-climbing crawlers, charging spitters, and hulking melee enemies. Glowing enemy projectiles travel through the world, illuminate nearby surfaces, stop at walls, and can be dodged.
-- A pulse carbine, hit feedback, procedural weapon audio, experience, and damage/health/fire-rate upgrades.
+- 27 enemy species built from climbing, leaping, charging, strafing, armor, directional wards, regeneration, healing, brood spawning, cloaking, hovering, turrets, bursts, frost, energy drain, and explosive attacks.
+- 16 weapons with spread, piercing, rockets, plasma, burning, freezing, chaining, and life siphoning; regenerating weapon energy keeps combat moving.
+- Ten upgradeable attributes, armor durability, a regenerating energy shield, shared collectible caches, salvage currency, and 12 ship records.
+- A six-stage story expedition, three side contracts, an end boss, beacon extraction, and persistent victory counts.
 - Three armor/weapon colors, forgiving respawns, new ships that retain character progression, and persistent defeated enemies.
 - Native saves, browser IndexedDB saves, and browser save import/export.
 - Low-resolution 3D rendering, procedural panel surfaces, fog, emissive details, and a separately rendered HUD.
@@ -74,7 +76,11 @@ python3 tests/test_browser.py --site-dir build-pages-preview --url-path /starshi
 | Crouch / descend outside | Left Ctrl | B / east button |
 | Sprint | Left Shift | Left shoulder |
 | Grav lift up / down | E / Q while on the cyan pad | X / Y |
-| Damage / health / rate upgrade | 1 / 2 / 3 | D-pad left / up / right |
+| Switch weapon | Z / X or mouse wheel | Right shoulder |
+| Use mission terminal | G | D-pad down |
+| Character / mission journal | I; Enter closes | Browser menu or keyboard |
+| Read next collected record | L while in journal | Browser menu or keyboard |
+| Upgrade attribute 1 through 10 | 1 through 9, then 0 | D-pad left / up / right for the first three |
 | Change armor color | C | Browser menu or keyboard |
 | Pause / resume | Esc, Tab, Enter | Start |
 | Optional second player | F2 | Browser menu or keyboard |
@@ -88,9 +94,9 @@ Spitters visibly charge for 0.8 seconds before launching a slow glowing shot tow
 
 Grav lifts currently transfer instantly between decks and establish a checkpoint. Death retains experience, skills, and equipment, restores health, and returns that player to the latest checkpoint. New expeditions replace the ship while retaining both characters. Re-entering a generated room preserves defeated enemies; partially injured enemies reset when their room unloads.
 
-**Generator 2 save migration.** Loading a prototype version-1 save preserves both characters’ ranks, experience, upgrades, points, kills, and appearance, and explicitly starts a new expedition at the entrance. Old geometry, positions, and encounter records cannot be reused with the new layouts. Version-2 saves include the generator version and preserve the current ship normally. Unknown generator versions are rejected without replacing the running game.
+**The Reclaimer expansion uses generator and save version 3.** Version-1 and version-2 saves preserve both characters' existing ranks, experience, skills, points, kills, and colors, and visibly start a fresh expedition because the ship layouts and enemy identities changed. New characters and migrated profiles begin with a carbine, shotgun, nail repeater, armor, and a shield. Version-3 saves retain the ship, both profiles, weapon ownership, defensive resources, collected records, consumed caches, defeated enemies, missions, contracts, and victory counts. Loading opens solo with the flashlight on and clears in-flight shots. Unknown versions or corrupt data leave the current game unchanged.
 
-The infestation update keeps generator and save version 2. Room dressing is cosmetic: existing collision, layouts, enemy identities, character progress, positions, and defeated-enemy records remain compatible. Active projectiles and flashlight switches are transient; loading clears shots and turns the lamps on.
+Start the story at the gold-marked console beside the loading bay's lift. Press **G** nearby, then follow the target cell and deck in **I**. Use **E/Q** to change decks from a cyan lift pad. Each mission awards upgrade points and salvage; later missions unlock weapons. Read [EXPANSION.md](EXPANSION.md) for the sector guide, combat systems, attribute effects, and mission route.
 
 **Saves** are versioned, checksummed, and validated before replacing the current session. Native writes replace a temporary file; the default location comes from SDL's application preference directory (`Stbange/StarshipCrawl`). `--save-dir DIRECTORY` selects another location. Browser saves are local to the site's origin and browser profile; the HUD confirms completion after IndexedDB synchronization. Export a save to move it to another browser or device. A successful disk write alone is not reported as completed browser persistence.
 
@@ -105,6 +111,7 @@ Autosaves occur every 20 seconds of active play. Save explicitly before closing 
 # Inspect a specific room type.
 ./build/starship_crawl --seed 713 --scene hall --no-save
 # Other scenes: bay, engine, crew, tunnel, atrium, distant, encounter.
+# New sectors: luxury, bridge, lab, cargo, cryonics, botany.
 # Reproducible crawler/spitter/heavy encounter, with saving disabled.
 ./build/starship_crawl --seed 713 --scene encounter
 # Distant co-op diagnostic: player 1 is 288 million metres away; player 2 is at the bay.
@@ -130,7 +137,7 @@ python3 tests/test_browser.py
 
 Build `sc_tests` before running the browser suite; use `SC_CORE_TEST` to select a different native test executable. The suite compares its semantic generation fingerprints against the running WASM build. Use `SC_BROWSER` to select an existing Chromium executable. The browser test starts and closes its own local HTTP server. Screenshots are written under `build-web/test-artifacts/`. Web query parameters `?seed=713&scene=hall` provide the same inspection workflow. Scene/seed overrides begin a fresh expedition; use them in a separate browser profile when keeping an existing expedition matters.
 
-The core suite checks 384 district layouts across 128 seeds for connected routes, disjoint footprints, loops, matching portals and traversal requirements. Collision tests walk connector paths and check floors; streaming tests cover load-order independence, fair scheduling, publication of complete halls, backtracking reuse, 100 moves with separated players, and persistent kills. Combat tests exercise charged shots, dodging, swept player/wall collision, nearest-player hits in co-op, surface climbing, and fast pursuit. Save tests include real version-1 and pre-infestation version-2 fixtures, generator mismatch rejection, and distant coordinates. Browser tests exercise actual WASM/WebGL, native/WASM generation parity, crossing chunk boundaries inside a hall, distant split-screen cameras, IndexedDB save/reload, migration, wall-climbing and projectile rendering, keyboard/menu/touch flashlight controls, mobile multitouch, and resizing. Real mobile GPU performance, Safari compatibility, physical gamepads, and Windows runtime behavior still need device testing.
+The core suite checks 384 district layouts across 128 seeds for connected routes, disjoint footprints, loops, matching portals and traversal requirements. Collision tests walk connector paths and check floors; streaming tests cover load-order independence, fair scheduling, publication of complete halls, backtracking reuse, 100 moves with separated players, and persistent kills. Combat tests exercise charged shots, dodging, swept player/wall collision, nearest-player hits in co-op, surface climbing, and fast pursuit. Expansion tests cover all 28 themes, 27 species, 16 weapons, defense/attribute effects, shared loot ownership, the full mission chain, contracts, and version-3 persistence. Save tests include real version-1 and pre-infestation version-2 fixtures, generator mismatch rejection, and distant coordinates. Browser tests exercise actual WASM/WebGL, native/WASM generation parity, crossing chunk boundaries inside a hall, distant split-screen cameras, IndexedDB save/reload, migration, wall-climbing and projectile rendering, keyboard/menu/touch flashlight controls, six new sectors, mission interaction and reward spending, journal and weapon switching, version-3 reload, mobile multitouch, and resizing. Real mobile GPU performance, Safari compatibility, physical gamepads, and Windows runtime behavior still need device testing.
 
 **In the managed cloud workspace**, `scripts/setup-cloud.sh` prepares local build tools and graphics headers without requiring a system installation. It uses signed Debian package metadata and the allowed Debian/Python/GitHub download hosts. It is specific to the Debian 13 cloud image. After setup:
 
@@ -142,6 +149,6 @@ ctest --test-dir build --output-on-failure
 SC_BROWSER=/usr/lib/chromium/chromium python3 tests/test_browser.py
 ```
 
-The engine modules are `generation.c` (pure district plans and connector contracts), `world.c` (chunk geometry, streaming, population, collision, and world records), `game.c` (movement, combat, and progression), `save.c` (versioned persistence), `render.c` (chunk meshes, independent camera origins, and HUD), and `main.c` (SDL lifecycle, input, and mixed audio). The core has no SDL dependency. Players and enemies use integer sectors plus local double coordinates. Every static mesh uses chunk-local coordinates and receives a separate camera-relative offset for each viewport.
+The engine modules are `content.c` (room, enemy, weapon, and lore definitions), `progression.c` (attributes, defenses, loot, contracts, and story), `generation.c` (pure district plans and connector contracts), `world.c` (chunk geometry, streaming, population, collision, and world records), `game.c` (movement, combat, and progression), `save.c` (versioned persistence), `render.c` (chunk meshes, independent camera origins, and HUD), and `main.c` (SDL lifecycle, input, and mixed audio). The core has no SDL dependency. Players and enemies use integer sectors plus local double coordinates. Every static mesh uses chunk-local coordinates and receives a separate camera-relative offset for each viewport.
 
-Milestone 3 is implemented. See [WORLD_GENERATION.md](WORLD_GENERATION.md) for the generation rules, streaming limits, persistence policy, and diagnostics. The current district library uses axis-aligned architecture and one four-chunk landmark per region; more landmark shapes and structures spanning multiple decks belong to the content expansion milestone. Richer enemy navigation, traps, riddles, full equipment inventories, animated lifts, and comprehensive appearance customization remain in [the development plan](DEVELOPMENT_PLAN.md). Generation and uploads are capped by work units per frame; a sustained frame-rate target still requires profiling on named physical devices.
+Milestone 3 is implemented. See [WORLD_GENERATION.md](WORLD_GENERATION.md) for the generation rules, streaming limits, persistence policy, and diagnostics. The current district library uses axis-aligned architecture and one four-chunk landmark per region; more landmark shapes and structures spanning multiple decks belong to the content expansion milestone. Richer enemy navigation, traps, riddles, armor item inventories, animated lifts, and comprehensive appearance customization remain in [the development plan](DEVELOPMENT_PLAN.md). Generation and uploads are capped by work units per frame; a sustained frame-rate target still requires profiling on named physical devices.

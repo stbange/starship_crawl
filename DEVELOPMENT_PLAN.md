@@ -68,7 +68,9 @@ The implementation sequence is:
 
 4. **Make combat and progression enjoyable.**
 
-   The atmosphere/combat pass implements procedural infestation and room dressing, broken colored lamps, a per-player flashlight, animated tentacled enemy silhouettes, fast surface-climbing crawlers, and charged, dodgeable projectile attacks. It preserves generator-2 layouts and saves. Existing weapon feedback, experience, and upgrades remain available. Pickups, deeper progression, and richer navigation below are still planned.
+   The Reclaimer expansion adds nine sectors, 28 room themes, 27 enemy species, 16 weapons, ten attributes, armor and shields, persistent caches and lore, three contracts, and a six-stage story with a Warden encounter and beacon extraction. Version-3 saves retain those systems; previous characters migrate to a fresh ship. Broader navigation and equipment item inventories remain future work.
+
+   The earlier atmosphere/combat pass implements procedural infestation and room dressing, broken colored lamps, a per-player flashlight, animated tentacled enemy silhouettes, fast surface-climbing crawlers, and charged, dodgeable projectile attacks. That earlier release preserved generator-2 layouts and saves. Existing weapon feedback, experience, and upgrades remain available. Richer navigation and additional progression depth below remain planned.
 
    Add a responsive weapon, hit feedback, pickups, experience, and several upgrades with visible effects on combat. Use swarming melee enemies, ranged enemies, and heavy enemies with distinct silhouettes and readable attack cues. Build enemy movement on room connections and local navigation data; use shared navigation work for hordes where practical.
 
@@ -92,7 +94,7 @@ The implementation sequence is:
 
 6. **Expand the world and validate sustained play.**
 
-   Add luxury districts, distinctive landmarks, larger multi-level structures, more module variants, rare spaces, and gravity anomalies. Introduce traps and short riddles first in optional reward routes. Main exploration routes remain traversable and the combat pace remains energetic.
+   Luxury, command, research, logistics, cryonics, and botanical sectors with themed furnishings are implemented. Continue with distinctive landmarks, larger multi-level structures, more module variants, rare spaces, and gravity anomalies. Introduce traps and short riddles first in optional reward routes. Main exploration routes remain traversable and the combat pace remains energetic.
 
    Give each district a recognizable architectural vocabulary and progression of spaces. Use authored landmarks within procedural layouts, deliberate transitions between district types, and room arrangements that create memorable views. Generation quality is measured by interesting routes, coherent spaces, surprise, and scale, as well as validity.
 
@@ -102,7 +104,7 @@ The implementation sequence is:
 
    Completion means the chosen test hardware sustains a documented quality setting, active memory remains bounded during extended travel, save/resume works after long exploration, and both solo and split-screen preserve the intended combat and atmosphere.
 
-The first playable release combines milestones 1–4 with basic character and expedition saves from milestone 5. It includes the space approach, level-0 loading bay, five initial route directions, three generated district families, a giant hall and a crouching passage, three enemy roles, one satisfying weapon, a small upgrade set, checkpoints, and one- or two-player play. Linux, Windows, desktop web, and mobile touch are exercised throughout development rather than deferred to a final port.
+The first playable release combines milestones 1–4 with basic character and expedition saves from milestone 5. It includes the space approach, level-0 loading bay, five initial route directions, nine sector families and 28 room themes, giant halls and crouching passages, 27 enemy species, 16 weapons, ten attributes, defenses, collectible caches, and the Reclaimer story, checkpoints, and one- or two-player play. Linux, Windows, desktop web, and mobile touch are exercised throughout development rather than deferred to a final port.
 
 The practical constraints are rendering each split-screen view, bounded browser memory, asynchronous browser saves, and producing coherent structures that span chunk boundaries. The early milestones deliberately exercise these constraints before a large content library depends on the engine. Arbitrarily rotated gravity, four-player split-screen, elaborate character models, and a broad puzzle system can follow the first playable release.
 

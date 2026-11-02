@@ -30,6 +30,10 @@ static void player_init(Player *p) {
     p->health = 100;
     p->pitch = -.04;
     p->flashlight = true;
+    p->weapons = 7;
+    p->shield = 50;
+    p->armor = 25;
+    p->energy = 100;
 }
 void game_init(Game *g, uint32_t seed) {
     memset(g, 0, sizeof(*g));
@@ -75,6 +79,7 @@ void game_new_ship(Game *g, uint32_t seed) {
     world_destroy(&g->world);
     world_init(&g->world, seed);
     memset(g->projectiles, 0, sizeof(g->projectiles));
+    g->mission = g->mission_kills = g->mission_loot = g->contracts = 0;
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player *p = &g->players[i];
         p->pos = position_from(v3(i * 1.4, 4, -34));
@@ -83,8 +88,13 @@ void game_new_ship(Game *g, uint32_t seed) {
         p->yaw = 0;
         p->pitch = -.04;
         p->health = player_max_health(p);
+        p->shield = player_max_shield(p);
+        p->armor = player_max_armor(p);
+        p->energy = player_max_energy(p);
         p->grounded = false;
         p->crouched = false;
+        p->slow = p->hurt = p->cooldown = 0;
+        p->journal = false;
     }
     Vec3 positions[2] = {position_absolute(g->players[0].pos),
                          position_absolute(g->players[1].pos)};
@@ -93,32 +103,42 @@ void game_new_ship(Game *g, uint32_t seed) {
     game_message(g, "NEW SHIP / YOUR CHARACTER ENDURES");
 }
 bool game_upgrade(Game *g, int player, int upgrade) {
-    if (player < 0 || player >= g->player_count || upgrade < 0 || upgrade > 2)
+    if (player < 0 || player >= g->player_count || upgrade < 0 || upgrade >= SC_ATTRIBUTES)
         return false;
     Player *p = &g->players[player];
-    if (!p->points)
+    uint32_t *attribute = player_attribute(p, upgrade);
+    unsigned cost = 60 + *attribute * 25;
+    if (!p->points && p->credits < cost)
         return false;
-    uint32_t *attribute = upgrade == 0 ? &p->power : (upgrade == 1 ? &p->vitality : &p->haste);
     if (*attribute >= 50)
         return false;
     (*attribute)++;
-    p->points--;
+    if (p->points)
+        p->points--;
+    else
+        p->credits -= cost;
     p->health = player_max_health(p);
     g->dirty = true;
-    game_message(g, upgrade == 0 ? "CORE UPGRADED / WEAPON DAMAGE"
-                                 : (upgrade == 1 ? "CORE UPGRADED / MAXIMUM HEALTH"
-                                                 : "CORE UPGRADED / FIRE RATE"));
+    p->shield = player_max_shield(p);
+    p->armor = player_max_armor(p);
+    p->energy = player_max_energy(p);
+    game_message(g, sc_attributes[upgrade]);
     return true;
 }
 static void award(Game *g, Player *p, unsigned xp) {
     p->kills++;
+    g->mission_kills++;
+    p->credits += 5 + 2 * p->mods[6];
     p->xp += xp;
     while (p->xp >= player_next_level(p) && p->level < 1000) {
         p->xp -= player_next_level(p);
         p->level++;
         p->points++;
         p->health = player_max_health(p);
-        game_message(g, "ASCENSION / CHOOSE AN UPGRADE WITH 1, 2 OR 3");
+        p->shield = player_max_shield(p);
+        p->armor = player_max_armor(p);
+        p->energy = player_max_energy(p);
+        game_message(g, "ASCENSION / OPEN JOURNAL WITH I / CHOOSE AN UPGRADE");
     }
     g->dirty = true;
 }
@@ -142,45 +162,134 @@ static void move_body(World *w, Position *p, Vec3 delta, double radius, double h
                 *grounded = true;
         }
 }
+static void damage_enemy(Game *g, Room *room, int index, int owner, float damage, uint32_t flags) {
+    Enemy *e = &room->enemies[index];
+    if (!e->alive)
+        return;
+    const EnemyDef *def = &sc_enemies[e->kind];
+    if (def->flags & ARMORED)
+        damage *= .72f;
+    if (def->flags & WARD) {
+        Vec3 toward = vnorm(position_delta(g->players[owner].pos, e->pos));
+        if (vdot(toward, e->heading) > .6 && e->windup <= 0)
+            damage *= .5f;
+    }
+    e->health -= damage;
+    e->flash = .12f;
+    e->last_player = (uint8_t)owner;
+    if (flags & W_CHILL)
+        e->slow = 3;
+    if (flags & W_BURN)
+        e->burn = 3;
+    if (flags & W_LEECH) {
+        Player *p = &g->players[owner];
+        p->health = fminf(player_max_health(p), p->health + damage * .12f);
+    }
+    g->hits++;
+    if (e->health <= 0) {
+        world_kill(&g->world, room, index);
+        award(g, &g->players[owner],
+              20 + def->tier * 5 + (unsigned)fmin(world_difficulty(room->cell), 30));
+    }
+}
+static void blast_enemies(Game *g, Vec3 pos, int owner, float damage, double radius,
+                          uint32_t flags) {
+    for (int r = 0; r < g->world.count; r++)
+        for (int i = 0; i < g->world.rooms[r].enemy_count; i++) {
+            Enemy *e = &g->world.rooms[r].enemies[i];
+            Vec3 diff = vsub(enemy_center(e), pos);
+            double distance = vlen(diff);
+            if (e->alive && distance < radius &&
+                world_raycast(&g->world, pos, vnorm(diff), distance) >= distance - .1)
+                damage_enemy(g, &g->world.rooms[r], i, owner,
+                             damage * (float)(1 - .65 * distance / radius), flags);
+        }
+}
+static bool launch(Game *g, Vec3 origin, Vec3 direction, int owner, float damage,
+                   const WeaponDef *w) {
+    for (int i = 0; i < SC_MAX_PROJECTILES; i++)
+        if (!g->projectiles[i].active) {
+            g->projectiles[i] = (Projectile){.pos = position_from(origin),
+                                             .velocity = vmul(direction, 32),
+                                             .life = w->range / 32,
+                                             .damage = damage,
+                                             .active = true,
+                                             .owner = owner,
+                                             .flags = w->flags,
+                                             .blast = w->blast,
+                                             .color = w->color};
+            return true;
+        }
+    return false;
+}
 static void shoot(Game *g, Player *p) {
-    p->cooldown = (float)(.19 / (1 + .10 * p->haste));
+    const WeaponDef *w = &sc_weapons[p->weapon];
+    if (p->energy < w->cost) {
+        p->cooldown = .2f;
+        game_message(g, "ENERGY RECHARGING / Z OR X SWITCHES WEAPONS");
+        return;
+    }
+    int owner = (int)(p - g->players);
+    Vec3 origin = player_eye(p);
+    /* Refuse a projectile shot before charging energy if the shared pool is full. */
+    int free = 0;
+    for (int i = 0; i < SC_MAX_PROJECTILES; i++)
+        free += !g->projectiles[i].active;
+    if ((w->flags & W_PROJECTILE) && free < w->pellets) {
+        p->cooldown = .15f;
+        return;
+    }
+    p->energy -= w->cost;
+    p->cooldown = w->interval / (1 + .10f * p->haste);
     p->muzzle = .075f;
     g->shots++;
-    Vec3 origin = player_eye(p), dir = facing(p->yaw, p->pitch);
-    double nearest = world_raycast(&g->world, origin, dir, 110);
-    Room *target_room = NULL;
-    int target = -1;
-    for (int r = 0; r < g->world.count; r++) {
-        Room *room = &g->world.rooms[r];
-        for (int i = 0; i < room->enemy_count; i++) {
-            Enemy *e = &room->enemies[i];
-            if (!e->alive)
-                continue;
-            Vec3 center = enemy_center(e), oc = vsub(origin, center);
-            double radius = e->kind == 2 ? 1.05 : .70;
-            double b = vdot(oc, dir), c = vdot(oc, oc) - radius * radius, disc = b * b - c;
-            if (disc < 0)
-                continue;
-            double t = -b - sqrt(disc);
-            if (t < 0)
-                t = -b + sqrt(disc);
-            if (t >= 0 && t < nearest) {
-                nearest = t;
-                target_room = room;
-                target = i;
-            }
+    for (int pellet = 0; pellet < w->pellets; pellet++) {
+        uint32_t hash = world_hash(g->shots, p->pos.sector, (uint32_t)pellet * 31 + owner);
+        double spread = w->spread / (1 + .12 * p->mods[3]);
+        Vec3 dir = facing(p->yaw + ((int)(hash % 2001) - 1000) * spread / 1000,
+                          p->pitch + ((int)((hash >> 12) % 2001) - 1000) * spread / 1000);
+        float damage = w->damage * (1 + .35f * p->power);
+        if (hash % 100 < 3 + p->mods[3] * 2)
+            damage *= 1.75f;
+        if (w->flags & W_PROJECTILE) {
+            launch(g, origin, dir, owner, damage, w);
+            continue;
         }
-    }
-    if (target >= 0) {
-        Enemy *e = &target_room->enemies[target];
-        e->health -= 27 + 11 * p->power;
-        e->flash = .12f;
-        g->hits++;
-        if (e->health <= 0) {
-            unsigned xp =
-                20 + e->kind * 10 + (unsigned)fmin(world_difficulty(target_room->cell), 30);
-            world_kill(&g->world, target_room, target);
-            award(g, p, xp);
+        Vec3 ray = origin;
+        double remaining = w->range;
+        for (int pierce = 0; pierce < w->pierce; pierce++) {
+            double nearest = world_raycast(&g->world, ray, dir, remaining);
+            Room *target_room = NULL;
+            int target = -1;
+            for (int r = 0; r < g->world.count; r++)
+                for (int i = 0; i < g->world.rooms[r].enemy_count; i++) {
+                    Enemy *e = &g->world.rooms[r].enemies[i];
+                    if (!e->alive)
+                        continue;
+                    Vec3 oc = vsub(ray, enemy_center(e));
+                    double radius = fmax(.45, sc_enemies[e->kind].size * .92);
+                    double b = vdot(oc, dir), c = vdot(oc, oc) - radius * radius, disc = b * b - c;
+                    if (disc < 0)
+                        continue;
+                    double t = -b - sqrt(disc);
+                    /* After piercing, skip the body that the ray starts inside. */
+                    if (t >= 0 && t < nearest) {
+                        nearest = t;
+                        target_room = &g->world.rooms[r];
+                        target = i;
+                    }
+                }
+            if (target < 0)
+                break;
+            damage_enemy(g, target_room, target, owner, damage, w->flags);
+            if (w->flags & W_CHAIN)
+                blast_enemies(g, enemy_center(&target_room->enemies[target]), owner, damage * .55f,
+                              w->blast, w->flags & ~W_CHAIN);
+            double advance = nearest + sc_enemies[target_room->enemies[target].kind].size * 2 + .2;
+            ray = vadd(ray, vmul(dir, advance));
+            remaining -= advance;
+            if (remaining <= 0)
+                break;
         }
     }
 }
@@ -198,6 +307,7 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
     if (vlen(wish) > 1)
         wish = vnorm(wish);
     double speed = outside ? 14 : (p->crouched ? 3.4 : (a->sprint ? 11 : 7.5));
+    speed *= (1 + .025 * p->mods[2]) * (p->slow > 0 ? .55 : 1);
     if (outside)
         p->velocity = vmul(wish, speed);
     else {
@@ -282,45 +392,78 @@ static void projectiles_step(Game *g, double dt) {
             continue;
         shot->life -= (float)dt;
         Vec3 origin = position_absolute(shot->pos), dir = vnorm(shot->velocity);
-        double travel = vlen(shot->velocity) * dt;
-        double wall = world_raycast(&g->world, origin, dir, travel);
-        double nearest = wall;
-        int hit = -1;
-        for (int p = 0; p < g->player_count; p++)
-            if (vulnerable(&g->players[p])) {
-                double t = player_intercept(&g->players[p], origin, dir, nearest);
-                if (t < nearest) {
-                    nearest = t;
-                    hit = p;
+        double travel = vlen(shot->velocity) * dt,
+               wall = world_raycast(&g->world, origin, dir, travel), nearest = wall;
+        int player = -1, target = -1;
+        Room *target_room = NULL;
+        if (shot->owner < 0) {
+            for (int p = 0; p < g->player_count; p++)
+                if (vulnerable(&g->players[p])) {
+                    double t = player_intercept(&g->players[p], origin, dir, nearest);
+                    if (t < nearest) {
+                        nearest = t;
+                        player = p;
+                    }
                 }
-            }
-        position_move(&shot->pos, vmul(dir, nearest));
-        if (hit >= 0) {
-            Player *p = &g->players[hit];
-            p->health -= shot->damage;
-            p->hurt = .8f;
-            g->projectile_hits++;
-            shot->active = false;
+        } else {
+            for (int r = 0; r < g->world.count; r++)
+                for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
+                    Enemy *enemy = &g->world.rooms[r].enemies[e];
+                    if (!enemy->alive)
+                        continue;
+                    double t = ray_sphere(origin, dir, enemy_center(enemy),
+                                          fmax(.45, sc_enemies[enemy->kind].size * .92), nearest);
+                    if (t < nearest) {
+                        nearest = t;
+                        target = e;
+                        target_room = &g->world.rooms[r];
+                    }
+                }
         }
+        position_move(&shot->pos, vmul(dir, nearest));
+        bool impact = wall < travel || player >= 0 || target >= 0;
+        if (player >= 0) {
+            game_hurt(g, player, shot->damage, shot->flags);
+            g->projectile_hits++;
+        }
+        if (target >= 0 && !(shot->flags & W_BLAST))
+            damage_enemy(g, target_room, target, shot->owner, shot->damage, shot->flags);
+        if (shot->owner >= 0 && impact && (shot->flags & W_BLAST))
+            blast_enemies(g, vsub(position_absolute(shot->pos), vmul(dir, .05)), shot->owner,
+                          shot->damage, shot->blast, shot->flags);
         Cell cell = world_cell(position_absolute(shot->pos));
-        if (wall < travel || shot->life <= 0 || !world_ready(&g->world, cell) ||
-            world_difficulty(cell) == 0)
+        if (impact || shot->life <= 0 || !world_ready(&g->world, cell) ||
+            (shot->owner < 0 && world_difficulty(cell) == 0))
             shot->active = false;
     }
 }
 static void spit(Game *g, const Room *room, Enemy *e) {
-    Vec3 center = enemy_center(e);
-    Vec3 direction = vnorm(vsub(e->aim, center));
-    if (world_raycast(&g->world, center, direction, .9) < .9)
-        return;
-    for (int i = 0; i < SC_MAX_PROJECTILES; i++)
-        if (!g->projectiles[i].active) {
-            g->projectiles[i] =
-                (Projectile){position_from(vadd(center, vmul(direction, .9))), vmul(direction, 12),
-                             5, 10 + (float)fmin(world_difficulty(room->cell), 12), true};
-            g->enemy_shots++;
-            break;
-        }
+    const EnemyDef *def = &sc_enemies[e->kind];
+    Vec3 center = enemy_center(e), direction = vnorm(vsub(e->aim, center));
+    int count = (def->flags & BURST) ? 5 : 1;
+    for (int n = 0; n < count; n++) {
+        double angle = (n - (count - 1) * .5) * .14;
+        Vec3 dir = vnorm(v3(direction.x * cos(angle) - direction.z * sin(angle), direction.y,
+                            direction.x * sin(angle) + direction.z * cos(angle)));
+        if (world_raycast(&g->world, center, dir, .9) < .9)
+            continue;
+        for (int i = 0; i < SC_MAX_PROJECTILES; i++)
+            if (!g->projectiles[i].active) {
+                g->projectiles[i] = (Projectile){
+                    .pos = position_from(vadd(center, vmul(dir, .9))),
+                    .velocity = vmul(dir, e->kind == 7 ? 19 : 12),
+                    .life = 5,
+                    .damage = def->damage + (float)fmin(world_difficulty(room->cell), 12),
+                    .active = true,
+                    .owner = -1,
+                    .flags = def->flags,
+                    .color = (def->flags & CHILL) ? rgb(.25f, .65f, 1)
+                                                  : ((def->flags & DRAIN) ? rgb(.7f, .2f, .8f)
+                                                                          : rgb(.32f, .9f, .38f))};
+                g->enemy_shots++;
+                break;
+            }
+    }
 }
 static Vec3 nearby_wall(const World *w, const Enemy *e) {
     Vec3 center = enemy_center(e), normal = v3(0, 0, 0);
@@ -367,7 +510,8 @@ static void move_crawler(Game *g, Room *room, Enemy *e, Vec3 direction, double d
             return;
         }
     }
-    double speed = 5.2 + 1.5 * sin(g->time * 5 + e->id);
+    double speed =
+        (sc_enemies[e->kind].speed + 1.5 * sin(g->time * 5 + e->id)) * (e->slow > 0 ? .4 : 1);
     if (distance > 1.15) {
         Vec3 delta = vmul(direction, speed * dt);
         move_body(&g->world, &e->pos, delta, .42, 1.25, NULL);
@@ -392,13 +536,21 @@ static void enemies_step(Game *g, double dt) {
             Enemy *e = &room->enemies[i];
             if (!e->alive)
                 continue;
+            const EnemyDef *def = &sc_enemies[e->kind];
             e->flash = fmaxf(0, e->flash - (float)dt);
             e->cooldown = fmaxf(0, e->cooldown - (float)dt);
+            e->slow = fmaxf(0, e->slow - (float)dt);
+            if (e->burn > 0) {
+                e->burn -= dt;
+                damage_enemy(g, room, i, e->last_player, (float)dt * 7, 0);
+                if (!e->alive)
+                    continue;
+            }
             Player *target = NULL;
-            double best = 48;
+            double best = 55;
             for (int p = 0; p < g->player_count; p++) {
                 Player *t = &g->players[p];
-                if (!vulnerable(t) || fabs(position_delta(t->pos, e->pos).y) > 8)
+                if (!vulnerable(t) || fabs(position_delta(t->pos, e->pos).y) > 9)
                     continue;
                 double distance = vlen(position_delta(t->pos, e->pos));
                 if (distance < best) {
@@ -410,37 +562,115 @@ static void enemies_step(Game *g, double dt) {
                 e->windup = 0;
                 continue;
             }
+            double maxhealth = def->health + world_difficulty(room->cell) * 5;
+            if ((def->flags & REGENERATE) && e->flash <= 0)
+                e->health = fminf((float)maxhealth, e->health + (float)dt * 5);
+            e->special -= (float)dt;
             Vec3 diff = position_delta(target->pos, e->pos);
             diff.y = 0;
             Vec3 direction = vnorm(diff);
+            if ((def->flags & STRAFE) && def->role == 0 && best > 5)
+                direction = vnorm(vadd(direction, vmul(vcross(direction, v3(0, 1, 0)),
+                                                       sin(g->time * 2 + e->id) * .65)));
             e->heading = direction;
             Vec3 to = vsub(player_eye(target), enemy_center(e));
             bool sight =
                 world_raycast(&g->world, enemy_center(e), vnorm(to), vlen(to)) >= vlen(to) - .1;
-            if (e->kind == 1) {
+            double speed = def->speed * (e->slow > 0 ? .4 : 1);
+            if ((def->flags & HEALER) && e->special <= 0) {
+                for (int j = 0; j < room->enemy_count; j++) {
+                    Enemy *ally = &room->enemies[j];
+                    if (ally->alive && j != i && vlen(position_delta(ally->pos, e->pos)) < 14)
+                        ally->health =
+                            fminf(sc_enemies[ally->kind].health + world_difficulty(room->cell) * 5,
+                                  ally->health + 18);
+                }
+                e->special = 3;
+                e->flash = .3f;
+            }
+            if ((def->flags & BROOD) && e->special <= 0 && room->enemy_count < SC_MAX_ENEMIES) {
+                int id = room->enemy_count;
+                Position spawn = e->pos;
+                position_move(&spawn, v3(1.5, 0, 1.5));
+                if (!world_overlap(&g->world, position_absolute(spawn), .42, 1.25)) {
+                    room->enemies[id] = (Enemy){.pos = spawn,
+                                                .health = 24,
+                                                .kind = 3,
+                                                .id = (uint8_t)id,
+                                                .alive = true,
+                                                .normal = {0, 1, 0},
+                                                .heading = {0, 0, 1}};
+                    if (room->record == SIZE_MAX ||
+                        !(g->world.records[room->record].killed & (1u << id)))
+                        room->enemy_count++;
+                }
+                e->special = 5;
+                e->flash = .3f;
+            }
+            if (def->flags & HOVER) {
+                double floor = room->cell.y * SC_DECK;
+                double wanted = floor + 1.5 + sin(g->time * 2 + e->id) * .5;
+                move_body(&g->world, &e->pos,
+                          v3(0, clampd(wanted - position_absolute(e->pos).y, -2 * dt, 2 * dt), 0),
+                          .42, 1.25, NULL);
+            }
+            if (def->role == 1) {
                 if (e->windup > 0) {
                     e->windup = fmaxf(0, e->windup - (float)dt);
                     if (e->windup <= 0) {
                         spit(g, room, e);
-                        e->cooldown = 2.2f;
+                        e->cooldown = def->interval;
                     }
-                } else if (best < 30 && best > 3 && e->cooldown <= 0 && sight) {
+                } else if (best < (e->kind == 7 ? 48 : 30) && best > 3 && e->cooldown <= 0 &&
+                           sight) {
                     e->aim = player_eye(target);
                     e->windup = .8f;
-                } else if (best > 16 || !sight) {
-                    move_body(&g->world, &e->pos, vmul(direction, 2.6 * dt), .42, 1.25, NULL);
-                } else if (best < 7) {
-                    move_body(&g->world, &e->pos, vmul(direction, -2.4 * dt), .42, 1.25, NULL);
+                } else if (!(def->flags & TURRET)) {
+                    if (best > 16 || !sight)
+                        move_body(&g->world, &e->pos, vmul(direction, speed * dt), .42, 1.25, NULL);
+                    else if (best < 7)
+                        move_body(&g->world, &e->pos, vmul(direction, -speed * dt), .42, 1.25,
+                                  NULL);
+                    else if (def->flags & STRAFE)
+                        move_body(
+                            &g->world, &e->pos,
+                            vmul(vcross(direction, v3(0, 1, 0)), sin(g->time + e->id) * speed * dt),
+                            .42, 1.25, NULL);
                 }
             } else {
-                if (e->kind == 0)
+                if ((def->flags & CHARGE) && best > 4 && best < 24 && sight && e->special <= 0) {
+                    e->aim = direction;
+                    e->windup = .6f;
+                    e->special = 4;
+                }
+                if ((def->flags & CHARGE) && e->windup > 0)
+                    e->windup = fmaxf(0, e->windup - (float)dt);
+                else if ((def->flags & CHARGE) && e->special > 2.5f)
+                    move_body(&g->world, &e->pos, vmul(e->aim, 13 * dt * (e->slow > 0 ? .4 : 1)),
+                              .42, 1.25, NULL);
+                else if (def->flags & CLIMB)
                     move_crawler(g, room, e, direction, best, dt);
-                else if (best > 1.7)
-                    move_body(&g->world, &e->pos, vmul(direction, 2.8 * dt), .42, 1.25, NULL);
-                if (best < (e->kind == 2 ? 2.5 : 1.6) && e->cooldown <= 0 && sight) {
-                    target->health -= e->kind == 2 ? 13 : 7;
-                    target->hurt = .8f;
-                    e->cooldown = e->kind == 2 ? 1.4f : .9f;
+                else {
+                    if ((def->flags & LEAP) && e->special <= 0 && best > 3 && best < 15 && sight) {
+                        e->vertical_speed = 7;
+                        e->special = 3;
+                    }
+                    if (best > 1.4)
+                        move_body(&g->world, &e->pos, vmul(direction, speed * dt), .42, 1.25, NULL);
+                    bool grounded = false;
+                    e->vertical_speed = fmaxf(-16, e->vertical_speed - 22 * (float)dt);
+                    move_body(&g->world, &e->pos, v3(0, e->vertical_speed * dt, 0), .42, 1.25,
+                              &grounded);
+                    if (grounded)
+                        e->vertical_speed = 0;
+                }
+                if ((def->flags & DETONATE) && best < 3 && sight) {
+                    game_hurt(g, (int)(target - g->players),
+                              def->damage + (float)world_difficulty(room->cell), 0);
+                    damage_enemy(g, room, i, (int)(target - g->players), 10000, 0);
+                } else if (best < (def->role == 2 ? 2.8 : 1.7) && e->cooldown <= 0 && sight) {
+                    game_hurt(g, (int)(target - g->players), def->damage, def->flags);
+                    e->cooldown = def->interval;
                 }
             }
         }
@@ -464,11 +694,13 @@ void game_step(Game *g, const Actions *actions, double dt) {
         p->muzzle = fmaxf(0, p->muzzle - (float)dt);
         p->hurt = fmaxf(0, p->hurt - (float)dt);
         if (p->hurt <= 0 && p->health > 0)
-            p->health = fminf(player_max_health(p), p->health + (float)dt * 3);
+            p->health =
+                fminf(player_max_health(p), p->health + (float)dt * (3 + 1.5f * p->mods[4]));
         move_player(g, p, &actions[i], dt);
         if (actions[i].fire && p->cooldown <= 0)
             shoot(g, p);
     }
+    game_progression_step(g, dt);
     enemies_step(g, dt);
     projectiles_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {
@@ -477,7 +709,11 @@ void game_step(Game *g, const Actions *actions, double dt) {
             p->pos = p->checkpoint;
             p->velocity = v3(0, 0, 0);
             p->health = player_max_health(p);
+            p->shield = player_max_shield(p);
+            p->armor = player_max_armor(p);
+            p->energy = player_max_energy(p);
             p->hurt = 0;
+            p->slow = 0;
             p->crouched = true;
             for (int j = 0; j < SC_MAX_PROJECTILES; j++)
                 if (vlen(position_delta(g->projectiles[j].pos, p->pos)) < 12)

@@ -14,5 +14,6 @@ and encounter records, announce a new expedition, and resume in solo mode.
 - Player 1: rank 7, damage 3, 81 kills, position `(96, 0.02, 23)`, checkpoint at that room's lift.
 - Player 2: rank 4, haste 2.
 
-Loading must retain the expedition, positions, checkpoint, defeated enemy, and
-both profiles. It starts solo with flashlights on and no in-flight projectiles.
+Generator 3 must retain both character profiles and announce a fresh expedition,
+discarding the incompatible old ship, positions, checkpoint, and encounter records.
+The new profile receives starter weapons, armor, and a shield.
