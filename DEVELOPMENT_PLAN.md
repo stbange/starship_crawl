@@ -10,7 +10,7 @@ The agreed design is:
 - Character builds start with equipment and freely chosen skills, accompanied by simple appearance customization.
 - Linux, Windows, and browsers through Emscripten are target platforms. Mobile browsers should have on-screen controls.
 - Multiplayer is local split-screen. Players share one machine and one simulated world.
-- Graphics are dark, gloomy, retro, and pixelated. Early enemies use basic geometry and distinct colors.
+- Graphics are dark, gloomy, retro, and pixelated. The ship feels infested, with detailed rooms, broken colored lighting, and a flashlight. Enemies have dark, strange silhouettes, tentacles, fast movement, wall climbing, and avoidable glowing shots.
 - World generation and architectural variety are central features, with strong differences in room scale.
 
 The initial defaults below resolve details that were not specified. They can be adjusted without changing the overall direction:
@@ -68,7 +68,9 @@ The implementation sequence is:
 
 4. **Make combat and progression enjoyable.**
 
-   Add a responsive weapon, hit feedback, pickups, experience, and several upgrades with visible effects on combat. Start with swarming melee enemies, ranged enemies, and heavy enemies represented by different basic shapes and colors. Build enemy movement on room connections and local navigation data; use shared navigation work for hordes where practical.
+   The atmosphere/combat pass implements procedural infestation and room dressing, broken colored lamps, a per-player flashlight, animated tentacled enemy silhouettes, fast surface-climbing crawlers, and charged, dodgeable projectile attacks. It preserves generator-2 layouts and saves. Existing weapon feedback, experience, and upgrades remain available. Pickups, deeper progression, and richer navigation below are still planned.
+
+   Add a responsive weapon, hit feedback, pickups, experience, and several upgrades with visible effects on combat. Use swarming melee enemies, ranged enemies, and heavy enemies with distinct silhouettes and readable attack cues. Build enemy movement on room connections and local navigation data; use shared navigation work for hordes where practical.
 
    Difficulty grows with distance from the entrance. Define understandable distance bands and tune enemy health, damage, density, compositions, and rewards together. Keep early regions useful as places where stronger characters can feel powerful. New behaviors and hazards provide additional challenge alongside statistical growth. Maintain encounter and simulation budgets even at large distances.
 

@@ -2,6 +2,7 @@
 #define SC_RENDER_H
 #include "game.h"
 #include "gl_api.h"
+#define SC_VIEW_LIGHTS 12
 typedef struct {
     float x, y, z, nx, ny, nz, r, g, b, e;
 } Vertex;
@@ -13,6 +14,7 @@ typedef struct {
 typedef struct {
     GLuint program, vao, vbo, framebuffer, texture, depth;
     GLint mvp, eye, grid, ui, offset;
+    GLint torch, time, lamp_count, lamp_pos, lamp_color;
     int width, height;
     uint32_t world_revision;
     size_t world_vertices;

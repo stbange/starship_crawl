@@ -38,6 +38,7 @@ typedef struct {
     Renderer renderer;
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
+    bool demo_encounter;
     int frame, smoke_frames;
     double last, accumulator, fps, autosave, audio_time;
     float ambience[DISTRICT_TYPES];
@@ -108,7 +109,9 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
         game_new_ship(&app.game, new_seed());
         app.renderer.world_revision = 0;
         save_game();
-    } else if (action == 0)
+    } else if (action == 7)
+        game_flashlight(&app.game, 0);
+    else if (action == 0)
         set_pause(true);
 }
 EMSCRIPTEN_KEEPALIVE uint32_t sc_web_fingerprint(uint32_t seed, int x, int y, int z) {
@@ -120,20 +123,29 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
     static char result[1024];
     const Player *p = &app.game.players[0];
     Vec3 feet = position_absolute(p->pos);
+    unsigned projectiles = 0, climbers = 0;
+    for (int i = 0; i < SC_MAX_PROJECTILES; i++)
+        projectiles += app.game.projectiles[i].active;
+    for (int i = 0; i < app.game.world.count; i++)
+        for (int j = 0; j < app.game.world.rooms[i].enemy_count; j++)
+            climbers += app.game.world.rooms[i].enemies[j].climbing;
     Room *room = world_find(&app.game.world, world_cell(feet));
     snprintf(
         result, sizeof(result),
         "{\"seed\":%u,\"players\":%d,\"paused\":%s,\"frames\":%d,\"rooms\":%d,"
         "\"x\":%.5f,\"y\":%.5f,\"z\":%.5f,\"rank\":%u,\"kills\":%u,\"shots\":%u,\"failed\":%s,"
         "\"generator\":%u,\"chunks\":%d,\"pending\":%d,\"generated\":%u,\"work\":%u,\"uploads\":%u,"
-        "\"span\":%d,\"ready\":%s,\"fingerprint\":%u}",
+        "\"span\":%d,\"ready\":%s,\"fingerprint\":%u,\"flashlight\":%s,\"projectiles\":%u,\"enemy_"
+        "shots\":%u,\"projectile_hits\":%u,\"climbers\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
         app.game.world.pending, app.game.world.generated, app.game.world.last_work,
         app.renderer.last_uploads, room ? room->span_x * room->span_z : 0,
         room && room->ready ? "true" : "false",
-        world_fingerprint(app.game.world.seed, world_region(world_cell(feet))));
+        world_fingerprint(app.game.world.seed, world_region(world_cell(feet))),
+        p->flashlight ? "true" : "false", projectiles, app.game.enemy_shots,
+        app.game.projectile_hits, climbers);
     return result;
 }
 static void audio_frame(void) {
@@ -205,11 +217,12 @@ static float axis(SDL_Gamepad *pad, SDL_GamepadAxis axis_id) {
     return fabsf(v) < .16f ? 0 : (v > 0 ? (v - .16f) / .84f : (v + .16f) / .84f);
 }
 static int finger_role(float x, float y) {
-    const float xs[] = {.90f, .77f, .64f, .90f, .77f}, ys[] = {.72f, .85f, .85f, .48f, .48f};
+    const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f},
+                ys[] = {.72f, .85f, .85f, .48f, .48f, .48f};
     int w, h;
     SDL_GetWindowSize(app.window, &w, &h);
     float radius = fminf((float)w, (float)h) * .075f;
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 6; i++)
         if (fabsf((x - xs[i]) * w) < radius && fabsf((y - ys[i]) * h) < radius)
             return i + 2;
     if (x < .42f)
@@ -227,6 +240,8 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
             if (!app.fingers[i].active) {
                 app.fingers[i] =
                     (Finger){e->fingerID, true, finger_role(e->x, e->y), e->x, e->y, e->x, e->y};
+                if (app.fingers[i].role == 7)
+                    game_flashlight(&app.game, 0);
                 break;
             }
     } else
@@ -294,6 +309,8 @@ static void events(void) {
                         app.started = true;
                         set_pause(!app.paused);
                     }
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_RIGHT_STICK)
+                        game_flashlight(&app.game, pad_player(i));
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_LEFT)
                         game_upgrade(&app.game, pad_player(i), 0);
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_UP)
@@ -326,6 +343,9 @@ static void events(void) {
                 break;
             case SDLK_F2:
                 sc_web_action(5);
+                break;
+            case SDLK_F:
+                game_flashlight(&app.game, 0);
                 break;
             case SDLK_F3:
                 app.debug = !app.debug;
@@ -449,6 +469,26 @@ static void frame(void *unused) {
                                 position_absolute(app.game.players[1].pos)};
     world_refresh(&app.game.world, stream_positions, app.game.player_count);
     world_stream(&app.game.world, SC_STREAM_BUDGET);
+    if (app.demo_encounter) {
+        Room *room = world_find(&app.game.world, (Cell){1, 0, 0});
+        if (room && room->ready) {
+            room->enemy_count = 3;
+            const Vec3 positions[] = {{-8, .02, 5}, {8, .02, -8}, {0, .02, 12}};
+            for (int i = 0; i < 3; i++) {
+                Enemy *e = &room->enemies[i];
+                *e = (Enemy){.pos = position_from(vadd(world_center(room->cell), positions[i])),
+                             .health = 100,
+                             .kind = (uint8_t)i,
+                             .id = (uint8_t)i,
+                             .normal = {0, 1, 0},
+                             .heading = {0, 0, -1},
+                             .alive = true};
+            }
+            room->enemies[0].pos = position_from(
+                vadd(world_center(room->cell), v3(-(room->width * .5 - 13.6), .02, -20)));
+            app.demo_encounter = false;
+        }
+    }
     if (!app.paused) {
         Actions actions[2];
         read_actions(actions, dt);
@@ -550,7 +590,8 @@ int main(int argc, char **argv) {
         } else if (!strcmp(argv[i], "--help")) {
             puts("Starship Crawl\n  --seed NUMBER --new --no-save --save-dir DIRECTORY\n  --touch "
                  "--split --smoke FRAMES --capture FILE.ppm\n  --scene "
-                 "bay|hall|engine|crew|tunnel|atrium|distant\nSolo by default. F2 explicitly "
+                 "bay|hall|engine|crew|tunnel|atrium|distant|encounter\nSolo by default. F2 "
+                 "explicitly "
                  "toggles local "
                  "split-screen.");
             return 0;
@@ -620,7 +661,11 @@ int main(int argc, char **argv) {
             c.z = 1;
         else if (!strcmp(scene, "engine"))
             c.x = 1;
-        else if (!strcmp(scene, "crew"))
+        else if (!strcmp(scene, "encounter")) {
+            c.x = 1;
+            app.demo_encounter = true;
+            app.no_save = true;
+        } else if (!strcmp(scene, "crew"))
             c.x = -1;
         else if (!strcmp(scene, "tunnel"))
             c.y = -1;

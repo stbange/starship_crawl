@@ -16,21 +16,40 @@ static const char *vertex_source = "layout(location=0) in vec3 aPosition;\n"
                                    "vPosition,1.0);}\n";
 static const char *fragment_source =
     "in vec3 vPosition;in vec3 vNormal;in vec3 vColor;in float vGlow;\n"
-    "uniform vec3 uEye;uniform vec3 uGrid;uniform int uUI;out vec4 result;\n"
+    "uniform vec3 uEye;uniform vec3 uGrid;uniform int uUI;uniform float uTime;\n"
+    "uniform vec4 uTorch;uniform int uLampCount;uniform vec4 uLampPos[12];uniform vec4 "
+    "uLampColor[12];out vec4 result;\n"
+    "float lamp(float phase){if(mod(phase,4.0)<0.5)return 0.0;float "
+    "t=mod(uTime+phase*.37,7.0+phase*.13);if(t<.3)return .06;if(t<.55)return .4;if(t<1.1)return "
+    ".02;return .75+.25*sin(t*2.0+phase);}\n"
     "void main(){if(uUI==1){result=vec4(vColor,1.0);return;}\n"
-    " vec3 n=normalize(vNormal);vec3 p=vPosition+uGrid;\n"
-    " float diffuse=0.44+0.56*max(dot(n,normalize(vec3(-0.35,0.8,-0.5))),0.0);\n"
-    " float nearLight=1.0/(1.0+0.0018*dot(vPosition-uEye,vPosition-uEye));\n"
-    " vec2 tile=abs(n.y)>0.5?p.xz:(abs(n.x)>0.5?p.zy:p.xy);\n"
-    " vec2 cell=fract(tile/4.0);float seam=step(cell.x,0.018)+step(cell.y,0.018);\n"
-    " float grain=fract(sin(dot(floor(p*7.0),vec3(12.9898,78.233,39.425)))*43758.5453);\n"
-    " vec3 color=vColor*(diffuse+nearLight*0.55)*(0.90+grain*0.12);\n"
-    " if(vGlow<0.1)color*=1.0-min(seam,1.0)*0.34;\n"
-    " color=mix(color,vColor*(1.0+vGlow*0.3),min(vGlow,1.0));\n"
-    " float fog=1.0-exp(-length(vPosition-uEye)*0.0065);\n"
-    " color=mix(color,vec3(0.018,0.035,0.051),fog);\n"
-    " float d=mod(gl_FragCoord.x,2.0)*0.25+mod(gl_FragCoord.y,2.0)*0.5;\n"
-    " color=floor(color*35.0+d)/35.0;result=vec4(color,1.0);}\n";
+    " vec3 n=normalize(vNormal);vec3 p=vPosition+uGrid;vec3 fromEye=vPosition-uEye;\n"
+    " float distance=length(fromEye);vec3 view=-fromEye/max(distance,.001);\n"
+    " vec3 illumination=vec3(.045,.055,.062)*(0.45+0.55*max(n.y,0.0));\n"
+    " for(int i=0;i<12;i++){if(i>=uLampCount)break;vec3 delta=uLampPos[i].xyz-vPosition;float "
+    "d2=dot(delta,delta);float radius=uLampPos[i].w;\n"
+    "  if(d2<radius*radius){float d=sqrt(d2);float falloff=pow(1.0-d/radius,2.0);float "
+    "diffuse=max(dot(n,delta/max(d,.001)),0.0);\n"
+    "   illumination+=uLampColor[i].rgb*uLampColor[i].w*falloff*(.12+diffuse);}}\n"
+    " float cone=smoothstep(.79,.95,dot(fromEye/max(distance,.001),uTorch.xyz));\n"
+    " float beam=uTorch.w*cone/(1.0+.0025*distance*distance)*max(0.0,1.0-distance/70.0);\n"
+    " illumination+=vec3(1.5,1.35,1.05)*beam*(.15+.95*max(dot(n,view),0.0));\n"
+    " vec2 tile=abs(n.y)>.5?p.xz:(abs(n.x)>.5?p.zy:p.xy);vec2 panel=fract(tile/3.0);\n"
+    " float seam=step(panel.x,.018)+step(panel.y,.018);\n"
+    " float grain=fract(sin(dot(floor(p*9.0),vec3(12.9898,78.233,39.425)))*43758.5453);\n"
+    " float stain=smoothstep(.1,.8,sin(p.x*.21+sin(p.z*.17)*2.0)*sin(p.z*.29+p.y*.41));\n"
+    " vec3 surface=vColor*(.65+grain*.26)*(1.0-stain*.38);\n"
+    " if(vGlow>=0.0&&vGlow<.1){surface*=1.0-min(seam,1.0)*.48;surface=mix(surface,vec3(.10,.046,."
+    "023),stain*.28);}\n"
+    " if(vGlow<0.0)surface*=.75+.25*sin(p.x*14.0+p.z*9.0+sin(p.y*7.0));\n"
+    " vec3 color=surface*illumination;\n"
+    " float emissive=vGlow>=4.0?lamp(floor(vGlow-4.0))*.8:max(vGlow,0.0)*.55;\n"
+    " color+=vColor*emissive;\n"
+    " if(vGlow<0.0)color+=vec3(.13,.16,.12)*pow(max(dot(n,view),0.0),18.0)*beam*.16;\n"
+    " float fog=1.0-exp(-distance*.009);color=mix(color,vec3(.004,.008,.012),fog);\n"
+    " color=pow(max(color,vec3(0.0)),vec3(.75));\n"
+    " float d=mod(gl_FragCoord.x,2.0)*.25+mod(gl_FragCoord.y,2.0)*.5;\n"
+    " color=floor(color*42.0+d)/42.0;result=vec4(color,1.0);}\n";
 
 static GLuint shader(GLenum type, const char *source) {
 #ifdef __EMSCRIPTEN__
@@ -97,6 +116,11 @@ bool renderer_init(Renderer *r) {
     r->grid = gl.GetUniformLocation(r->program, "uGrid");
     r->ui = gl.GetUniformLocation(r->program, "uUI");
     r->offset = gl.GetUniformLocation(r->program, "uOffset");
+    r->torch = gl.GetUniformLocation(r->program, "uTorch");
+    r->time = gl.GetUniformLocation(r->program, "uTime");
+    r->lamp_count = gl.GetUniformLocation(r->program, "uLampCount");
+    r->lamp_pos = gl.GetUniformLocation(r->program, "uLampPos[0]");
+    r->lamp_color = gl.GetUniformLocation(r->program, "uLampColor[0]");
     gl.GenVertexArrays(1, &r->vao);
     gl.GenBuffers(1, &r->vbo);
     gl.GenFramebuffers(1, &r->framebuffer);
@@ -172,8 +196,90 @@ static void octahedron(Renderer *r, Vec3 center, double radius, Color col, float
     for (int i = 0; i < 4; i++)
         edge[i] = vadd(center, v3(cos(i * SC_PI * .5) * radius, 0, sin(i * SC_PI * .5) * radius));
     for (int i = 0; i < 4; i++) {
-        triangle(&r->mesh, top, edge[i], edge[(i + 1) % 4], col, glow);
-        triangle(&r->mesh, bottom, edge[(i + 1) % 4], edge[i], col, glow);
+        triangle(&r->mesh, top, edge[(i + 1) % 4], edge[i], col, glow);
+        triangle(&r->mesh, bottom, edge[i], edge[(i + 1) % 4], col, glow);
+    }
+}
+/* Low-sided tapered tubes make roots, cables and articulated limbs readable
+   at the game's pixel resolution without importing a model framework. */
+static void tube(Renderer *r, Vec3 a, Vec3 b, double ra, double rb, Color color, float glow) {
+    Vec3 dir = vnorm(vsub(b, a));
+    if (vlen(dir) < .5)
+        return;
+    Vec3 ref = fabs(dir.y) > .9 ? v3(1, 0, 0) : v3(0, 1, 0);
+    Vec3 x = vnorm(vcross(dir, ref)), z = vcross(dir, x), p[8];
+    for (int j = 0; j < 2; j++)
+        for (int i = 0; i < 4; i++) {
+            double angle = SC_PI * .5 * i, rad = j ? rb : ra;
+            p[j * 4 + i] =
+                vsub(vadd(j ? b : a, vadd(vmul(x, cos(angle) * rad), vmul(z, sin(angle) * rad))),
+                     r->origin);
+        }
+    for (int i = 0; i < 4; i++)
+        quad(&r->mesh, p[i], p[(i + 1) % 4], p[4 + (i + 1) % 4], p[4 + i], color, glow);
+}
+static void blob(Renderer *r, Vec3 center, Vec3 x, Vec3 up, Vec3 z, Color color, float glow) {
+    Vec3 top = vsub(vadd(center, up), r->origin), bottom = vsub(vsub(center, up), r->origin),
+         edge[4];
+    for (int i = 0; i < 4; i++)
+        edge[i] =
+            vsub(vadd(center, vadd(vmul(x, cos(i * SC_PI * .5)), vmul(z, sin(i * SC_PI * .5)))),
+                 r->origin);
+    for (int i = 0; i < 4; i++) {
+        triangle(&r->mesh, top, edge[(i + 1) % 4], edge[i], color, glow);
+        triangle(&r->mesh, bottom, edge[i], edge[(i + 1) % 4], color, glow);
+    }
+}
+static void dressing_mesh(Renderer *r, const Dressing *d) {
+    Vec3 up = d->normal;
+    Vec3 right = vnorm(vcross(up, fabs(up.y) > .8 ? v3(0, 0, 1) : v3(0, 1, 0))),
+         forward = vcross(right, up);
+    double scale = d->scale, phase = (d->hash % 1000) * .031;
+    Color skin = rgb(.20f, .105f, .11f), ridge = rgb(.26f, .19f, .14f);
+    if (d->kind == SCRAP) {
+        Vec3 ax = vmul(vadd(vmul(right, cos(phase)), vmul(forward, sin(phase))), scale * 1.4);
+        Vec3 az = vmul(vcross(vnorm(ax), up), scale * .7);
+        cube(&r->mesh, vsub(d->pos, r->origin), ax, vmul(up, .06), az, rgb(.18f, .14f, .10f), 0);
+        tube(r, d->pos, vadd(d->pos, vmul(vnorm(ax), scale)), .05, .025, ridge, 0);
+        return;
+    }
+    if (d->kind == CABLE) {
+        Vec3 prev = vadd(d->pos, vmul(up, scale * 3.4));
+        for (int j = 1; j <= 5; j++) {
+            double t = j / 5.0;
+            Vec3 next = vadd(d->pos, vadd(vmul(up, scale * 3.4 * (1 - t)),
+                                          vmul(right, sin(t * 4 + phase) * scale * .32)));
+            tube(r, prev, next, .065, .055, rgb(.085f, .09f, .08f), 0);
+            prev = next;
+        }
+        return;
+    }
+    int arms = d->kind == NEST ? 4 : 5;
+    for (int arm = 0; arm < arms; arm++) {
+        double angle = phase + arm * SC_PI * 2 / arms;
+        Vec3 outward = vadd(vmul(right, cos(angle)), vmul(forward, sin(angle)));
+        Vec3 prev = vadd(d->pos, vmul(up, .15));
+        for (int j = 1; j <= 4; j++) {
+            double t = j / 4.0;
+            Vec3 next = vadd(d->pos, vadd(vmul(outward, t * scale * 4.3),
+                                          vadd(vmul(right, sin(t * 5 + angle) * scale * .4),
+                                               vmul(up, .07 + sin(t * SC_PI) * .2))));
+            tube(r, prev, next, (1 - t) * scale * .22 + .035, (1 - t) * scale * .17 + .02, skin,
+                 -1);
+            prev = next;
+        }
+    }
+    int eggs = d->kind == NEST ? 7 : 2;
+    for (int i = 0; i < eggs; i++) {
+        double angle = i * 2.4 + phase, spread = d->kind == NEST ? scale : .3;
+        Vec3 p = vadd(d->pos,
+                      vadd(vmul(right, cos(angle) * spread * .8),
+                           vadd(vmul(forward, sin(angle) * spread * .8), vmul(up, scale * .25))));
+        blob(r, p, vmul(right, scale * .42), vmul(up, scale * .65), vmul(forward, scale * .36),
+             i % 2 ? skin : ridge, -1);
+        if (i == 2 || i == 5)
+            blob(r, vadd(p, vmul(up, scale * .6)), vmul(right, .05), vmul(up, .09),
+                 vmul(forward, .06), rgb(.31f, .43f, .19f), .6f);
     }
 }
 static void multiply(float *out, const float *a, const float *b) {
@@ -269,6 +375,8 @@ static void upload_world(Renderer *r, Game *g) {
                 const Box *b = &c->boxes[j];
                 block(r, vmul(vadd(b->min, b->max), .5), vsub(b->max, b->min), b->color, b->glow);
             }
+            for (int j = 0; j < c->dressing_count; j++)
+                dressing_mesh(r, &c->dressing[j]);
             if (!r->chunk_vbo[i])
                 gl.GenBuffers(1, &r->chunk_vbo[i]);
             layout(r->chunk_vbo[i]);
@@ -323,6 +431,8 @@ static void draw_chunks(Renderer *r, Game *g) {
         const Chunk *c = &w->chunks[i];
         if (!c->active || r->chunk_serial[i] != c->serial || !world_ready(w, c->cell))
             continue;
+        if (c->cell.y != world_cell(r->origin).y)
+            continue;
         Vec3 delta = vsub(world_center(c->cell), r->origin);
         if (fabs(delta.x) > 520 || fabs(delta.y) > 480 || fabs(delta.z) > 520)
             continue;
@@ -357,21 +467,161 @@ static void draw_chunks(Renderer *r, Game *g) {
             }
     }
 }
+static void creature(Renderer *r, const Enemy *e, double time, double distance) {
+    Vec3 center = enemy_center(e), up = e->climbing ? e->normal : v3(0, 1, 0);
+    Vec3 forward = vsub(e->heading, vmul(up, vdot(e->heading, up)));
+    if (vlen(forward) < .1)
+        forward = fabs(up.z) < .9 ? v3(0, 0, 1) : v3(1, 0, 0);
+    forward = vnorm(forward);
+    Vec3 right = vnorm(vcross(up, forward));
+    double size = e->kind == 2 ? 1.15 : e->kind == 1 ? .82 : .68;
+    Color flesh = e->flash > 0 ? rgb(.62f, .63f, .49f) : rgb(.18f, .09f, .12f);
+    Color shell = e->flash > 0 ? rgb(.55f, .48f, .36f) : rgb(.12f, .17f, .145f);
+    float glow = e->flash > 0 ? .25f : -1;
+    blob(r, center, vmul(right, size * .7), vmul(up, size * .65), vmul(forward, size), shell, glow);
+    blob(r, vadd(center, vmul(forward, size * .56)), vmul(right, size * .45), vmul(up, size * .39),
+         vmul(forward, size * .4), flesh, glow);
+    int limbs = distance > 55 ? 4 : (e->kind == 2 ? 8 : 6), segments = distance > 55 ? 2 : 3;
+    for (int arm = 0; arm < limbs; arm++) {
+        double angle = arm * SC_PI * 2 / limbs + .4,
+               phase = time * (e->kind == 0 ? 13 : 5) + arm * 1.8 + e->id;
+        Vec3 outward = vadd(vmul(right, cos(angle)), vmul(forward, sin(angle)));
+        Vec3 prev = vadd(center, vmul(outward, size * .45));
+        for (int j = 1; j <= segments; j++) {
+            double t = (double)j / segments, reach = size * (e->kind == 2 ? 2.1 : 2.0);
+            double bend = sin(t * SC_PI) * .65 - t * .55 + sin(phase + t * 2) * .10;
+            Vec3 next =
+                vadd(center, vadd(vmul(outward, reach * t),
+                                  vadd(vmul(up, bend), vmul(forward, sin(phase) * .17 * t))));
+            tube(r, prev, next, size * (1 - t) * .14 + .035, size * (1 - t) * .10 + .012,
+                 arm % 2 ? flesh : shell, glow);
+            prev = next;
+        }
+    }
+    Vec3 face = vadd(center, vadd(vmul(forward, size * .88), vmul(up, size * .18)));
+    for (int side = -1; side <= 1; side += 2) {
+        Vec3 eye = vadd(face, vmul(right, side * size * .19));
+        blob(r, eye, vmul(right, .045), vmul(up, .055), vmul(forward, .04), rgb(.50f, .58f, .31f),
+             .9f);
+    }
+    if (e->kind == 1 && e->windup > 0) {
+        double charge = 1 - e->windup / .8, radius = .09 + .25 * charge;
+        octahedron(r, vadd(face, vmul(forward, .26)), radius, rgb(.32f, .82f, .36f), 2.4f);
+    }
+}
+static void lights(Renderer *r, const Game *g, const Player *viewer) {
+    PointLight selected[SC_VIEW_LIGHTS];
+    double scores[SC_VIEW_LIGHTS];
+    int count = 0;
+    Vec3 eye = player_eye(viewer);
+    for (int group = 0; group < 3; group++) {
+        int total = group == 0 ? SC_MAX_CHUNKS : group == 1 ? SC_MAX_PROJECTILES : g->player_count;
+        for (int i = 0; i < total; i++) {
+            const Chunk *chunk = group == 0 ? &g->world.chunks[i] : NULL;
+            if (chunk && (!chunk->active || chunk->cell.y != world_cell(eye).y))
+                continue;
+            int lamps = chunk ? chunk->light_count : 1;
+            for (int j = 0; j < lamps; j++) {
+                PointLight light;
+                if (chunk) {
+                    light = chunk->lights[j];
+                    light.pos = vadd(world_center(chunk->cell), light.pos);
+                    light.power *= world_lamp_power(light.phase, g->time);
+                } else if (group == 1) {
+                    const Projectile *p = &g->projectiles[i];
+                    if (!p->active)
+                        continue;
+                    light =
+                        (PointLight){position_absolute(p->pos), rgb(.28f, .85f, .35f), 9, 1.5f, 0};
+                } else {
+                    const Player *p = &g->players[i];
+                    if (p->muzzle <= 0)
+                        continue;
+                    light = (PointLight){vadd(player_eye(p), facing(p->yaw, p->pitch)),
+                                         rgb(1, .5f, .15f), 12, 1.2f, 0};
+                }
+                double distance = vlen(vsub(light.pos, eye));
+                if (distance > 65 || light.power < .01f)
+                    continue;
+                double score = distance / (light.radius + 1) - (group ? 2 : 0);
+                int slot = count;
+                if (count < SC_VIEW_LIGHTS)
+                    count++;
+                else if (score >= scores[count - 1])
+                    continue;
+                else
+                    slot = count - 1;
+                while (slot > 0 && score < scores[slot - 1]) {
+                    selected[slot] = selected[slot - 1];
+                    scores[slot] = scores[slot - 1];
+                    slot--;
+                }
+                selected[slot] = light;
+                scores[slot] = score;
+            }
+        }
+    }
+    GLfloat positions[SC_VIEW_LIGHTS * 4] = {0}, colors[SC_VIEW_LIGHTS * 4] = {0};
+    for (int i = 0; i < count; i++) {
+        Vec3 p = vsub(selected[i].pos, r->origin);
+        positions[i * 4] = (float)p.x;
+        positions[i * 4 + 1] = (float)p.y;
+        positions[i * 4 + 2] = (float)p.z;
+        positions[i * 4 + 3] = selected[i].radius;
+        colors[i * 4] = selected[i].color.r;
+        colors[i * 4 + 1] = selected[i].color.g;
+        colors[i * 4 + 2] = selected[i].color.b;
+        colors[i * 4 + 3] = selected[i].power;
+    }
+    Vec3 dir = facing(viewer->yaw, viewer->pitch);
+    GLfloat torch[] = {(float)dir.x, (float)dir.y, (float)dir.z, viewer->flashlight ? 1.0f : 0.0f};
+    gl.Uniform4fv(r->torch, 1, torch);
+    gl.Uniform1f(r->time, (float)fmod(g->time, 4096));
+    gl.Uniform1i(r->lamp_count, count);
+    gl.Uniform4fv(r->lamp_pos, count, positions);
+    gl.Uniform4fv(r->lamp_color, count, colors);
+}
 static void actors(Renderer *r, Game *g, int viewer) {
+    const Enemy *visible[128];
+    double distances[128];
+    int count = 0;
+    Vec3 eye = player_eye(&g->players[viewer]);
+    Cell cell = world_cell(eye);
     for (int j = 0; j < g->world.count; j++)
         for (int i = 0; i < g->world.rooms[j].enemy_count; i++) {
             Enemy *e = &g->world.rooms[j].enemies[i];
-            if (!e->alive || vlen(vsub(position_absolute(e->pos), r->origin)) > 430)
+            double distance = vlen(vsub(enemy_center(e), eye));
+            if (!e->alive || distance > 130 || world_cell(enemy_center(e)).y != cell.y)
                 continue;
-            Color colors[] = {{.88f, .16f, .21f}, {.65f, .27f, .92f}, {.96f, .53f, .13f}};
-            Color col = e->flash > 0 ? rgb(1, .9f, .6f) : colors[e->kind];
-            Vec3 pos = vadd(position_absolute(e->pos), v3(0, .78 + sin(g->time * 2 + i) * .08, 0));
-            if (e->kind == 2)
-                block(r, pos, v3(1.4, 1.4, 1.4), col, .2f);
+            /* Reserve the bounded draw budget for the closest threats. */
+            int slot = count;
+            if (count < 128)
+                count++;
+            else if (distance >= distances[count - 1])
+                continue;
             else
-                octahedron(r, pos, e->kind == 0 ? .7 : .85, col, .4f);
-            block(r, vadd(pos, v3(0, .1, -.71)), v3(.55, .12, .08), rgb(1, .8f, .4f), 2);
+                slot = count - 1;
+            while (slot > 0 && distance < distances[slot - 1]) {
+                visible[slot] = visible[slot - 1];
+                distances[slot] = distances[slot - 1];
+                slot--;
+            }
+            visible[slot] = e;
+            distances[slot] = distance;
         }
+    for (int i = 0; i < count; i++)
+        creature(r, visible[i], g->time, distances[i]);
+    for (int i = 0; i < SC_MAX_PROJECTILES; i++) {
+        const Projectile *p = &g->projectiles[i];
+        if (!p->active)
+            continue;
+        Vec3 pos = position_absolute(p->pos);
+        if (vlen(vsub(pos, r->origin)) > 140)
+            continue;
+        Color color = rgb(.32f, .9f, .38f);
+        octahedron(r, pos, .20, color, 3);
+        tube(r, pos, vsub(pos, vmul(vnorm(p->velocity), 1.1)), .13, .02, color, 1.3f);
+    }
     for (int i = 0; i < g->player_count; i++)
         if (i != viewer) {
             Player *p = &g->players[i];
@@ -521,7 +771,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         text_at(r, w - 260 * s, by, 1.3f * s, "RELIQUARY / PULSE CARBINE", ink);
         snprintf(label, sizeof(label), "DAMAGE %u   CORE %u", 27 + 11 * p->power, p->points);
         text_at(r, w - 260 * s, by + 19 * s, 1.1f * s, label, gold);
-        text_at(r, w - 260 * s, by + 36 * s, 1 * s, "ESC PAUSE  /  F5 SAVE  /  TAB HELP", dim);
+        text_at(r, w - 260 * s, by + 36 * s, 1 * s,
+                p->flashlight ? "F LAMP ON / F5 SAVE / ESC PAUSE"
+                              : "F LAMP OFF / F5 SAVE / ESC PAUSE",
+                dim);
     }
     if (p->points) {
         centered(r, w * .5f, h - 115 * s, 1.4f * s, "ASCENSION AVAILABLE", gold);
@@ -555,9 +808,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         float size = fminf(w, h) * .12f;
         frame(r, w * .13f - size * .5f, h * .73f - size * .5f, size, size, dim);
         centered(r, w * .13f, h * .73f - 3 * s, 1.1f * s, "MOVE", dim);
-        const char *names[] = {"FIRE", "JUMP", "CROUCH", "UP", "DOWN"};
-        const float xs[] = {.90f, .77f, .64f, .90f, .77f}, ys[] = {.72f, .85f, .85f, .48f, .48f};
-        for (int i = 0; i < 5; i++) {
+        const char *names[] = {"FIRE", "JUMP", "CROUCH", "UP", "DOWN", "LAMP"};
+        const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f},
+                    ys[] = {.72f, .85f, .85f, .48f, .48f, .48f};
+        for (int i = 0; i < 6; i++) {
             float x = w * xs[i], y = h * ys[i];
             rect(r, x - size * .5f, y - size * .5f, size, size, panel);
             frame(r, x - size * .5f, y - size * .5f, size, size, dim);
@@ -649,6 +903,7 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         gl.Uniform3f(r->eye, (float)eye.x, (float)eye.y, (float)eye.z);
         gl.Uniform3f(r->grid, (float)fmod(r->origin.x, 4096), (float)fmod(r->origin.y, 4096),
                      (float)fmod(r->origin.z, 4096));
+        lights(r, g, player);
         draw_chunks(r, g);
         actors(r, g, p);
         flush(r);

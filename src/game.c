@@ -11,6 +11,13 @@ unsigned player_next_level(const Player *p) {
 Vec3 player_eye(const Player *p) {
     return vadd(position_absolute(p->pos), v3(0, p->crouched ? .85 : 1.62, 0));
 }
+Vec3 enemy_center(const Enemy *e) {
+    return vadd(position_absolute(e->pos), v3(0, .65, 0));
+}
+void game_flashlight(Game *g, int player) {
+    if (player >= 0 && player < g->player_count)
+        g->players[player].flashlight = !g->players[player].flashlight;
+}
 void game_message(Game *g, const char *s) {
     snprintf(g->message, sizeof(g->message), "%s", s);
     g->message_time = 4;
@@ -22,6 +29,7 @@ static void player_init(Player *p) {
     p->level = 1;
     p->health = 100;
     p->pitch = -.04;
+    p->flashlight = true;
 }
 void game_init(Game *g, uint32_t seed) {
     memset(g, 0, sizeof(*g));
@@ -66,6 +74,7 @@ void game_leave(Game *g) {
 void game_new_ship(Game *g, uint32_t seed) {
     world_destroy(&g->world);
     world_init(&g->world, seed);
+    memset(g->projectiles, 0, sizeof(g->projectiles));
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player *p = &g->players[i];
         p->pos = position_from(v3(i * 1.4, 4, -34));
@@ -147,7 +156,7 @@ static void shoot(Game *g, Player *p) {
             Enemy *e = &room->enemies[i];
             if (!e->alive)
                 continue;
-            Vec3 center = vadd(position_absolute(e->pos), v3(0, .75, 0)), oc = vsub(origin, center);
+            Vec3 center = enemy_center(e), oc = vsub(origin, center);
             double radius = e->kind == 2 ? 1.05 : .70;
             double b = vdot(oc, dir), c = vdot(oc, oc) - radius * radius, disc = b * b - c;
             if (disc < 0)
@@ -233,6 +242,210 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
         g->dirty = true;
     }
 }
+/* All enemy shots are finite-lived world objects, with a swept collision test.
+   A bright charge locks aim before release, so movement can avoid every shot. */
+static double ray_sphere(Vec3 origin, Vec3 dir, Vec3 center, double radius, double limit) {
+    Vec3 oc = vsub(origin, center);
+    double b = vdot(oc, dir), c = vdot(oc, oc) - radius * radius, disc = b * b - c;
+    if (c <= 0)
+        return 0;
+    if (disc < 0)
+        return limit;
+    double t = -b - sqrt(disc);
+    return t >= 0 && t < limit ? t : limit;
+}
+static double player_intercept(const Player *p, Vec3 origin, Vec3 dir, double limit) {
+    Vec3 feet = position_absolute(p->pos);
+    double radius = .53, lo = feet.y + .34, hi = feet.y + (p->crouched ? .65 : 1.40);
+    double best = ray_sphere(origin, dir, v3(feet.x, lo, feet.z), radius, limit);
+    best = ray_sphere(origin, dir, v3(feet.x, hi, feet.z), radius, best);
+    double x = origin.x - feet.x, z = origin.z - feet.z, a = dir.x * dir.x + dir.z * dir.z;
+    double b = x * dir.x + z * dir.z, c = x * x + z * z - radius * radius;
+    if (c <= 0 && origin.y >= lo && origin.y <= hi)
+        return 0;
+    double disc = b * b - a * c;
+    if (a > 1e-12 && disc >= 0) {
+        double t = (-b - sqrt(disc)) / a, y = origin.y + t * dir.y;
+        if (t >= 0 && t < best && y >= lo && y <= hi)
+            best = t;
+    }
+    return best;
+}
+static bool vulnerable(const Player *p) {
+    Vec3 feet = position_absolute(p->pos);
+    return feet.z >= 0 && world_difficulty(world_cell(feet)) != 0 && p->health > 0;
+}
+static void projectiles_step(Game *g, double dt) {
+    for (int i = 0; i < SC_MAX_PROJECTILES; i++) {
+        Projectile *shot = &g->projectiles[i];
+        if (!shot->active)
+            continue;
+        shot->life -= (float)dt;
+        Vec3 origin = position_absolute(shot->pos), dir = vnorm(shot->velocity);
+        double travel = vlen(shot->velocity) * dt;
+        double wall = world_raycast(&g->world, origin, dir, travel);
+        double nearest = wall;
+        int hit = -1;
+        for (int p = 0; p < g->player_count; p++)
+            if (vulnerable(&g->players[p])) {
+                double t = player_intercept(&g->players[p], origin, dir, nearest);
+                if (t < nearest) {
+                    nearest = t;
+                    hit = p;
+                }
+            }
+        position_move(&shot->pos, vmul(dir, nearest));
+        if (hit >= 0) {
+            Player *p = &g->players[hit];
+            p->health -= shot->damage;
+            p->hurt = .8f;
+            g->projectile_hits++;
+            shot->active = false;
+        }
+        Cell cell = world_cell(position_absolute(shot->pos));
+        if (wall < travel || shot->life <= 0 || !world_ready(&g->world, cell) ||
+            world_difficulty(cell) == 0)
+            shot->active = false;
+    }
+}
+static void spit(Game *g, const Room *room, Enemy *e) {
+    Vec3 center = enemy_center(e);
+    Vec3 direction = vnorm(vsub(e->aim, center));
+    if (world_raycast(&g->world, center, direction, .9) < .9)
+        return;
+    for (int i = 0; i < SC_MAX_PROJECTILES; i++)
+        if (!g->projectiles[i].active) {
+            g->projectiles[i] =
+                (Projectile){position_from(vadd(center, vmul(direction, .9))), vmul(direction, 12),
+                             5, 10 + (float)fmin(world_difficulty(room->cell), 12), true};
+            g->enemy_shots++;
+            break;
+        }
+}
+static Vec3 nearby_wall(const World *w, const Enemy *e) {
+    Vec3 center = enemy_center(e), normal = v3(0, 0, 0);
+    double best = 1.1;
+    const Vec3 dirs[] = {{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}};
+    for (int d = 0; d < 4; d++) {
+        double hit = world_raycast(w, center, dirs[d], best);
+        if (hit < best && hit > .25) {
+            best = hit;
+            normal = vmul(dirs[d], -1);
+        }
+    }
+    return normal;
+}
+static void move_crawler(Game *g, Room *room, Enemy *e, Vec3 direction, double distance,
+                         double dt) {
+    Vec3 before = position_absolute(e->pos);
+    Vec3 wall = nearby_wall(&g->world, e);
+    double floor = room->cell.y * SC_DECK;
+    if (!e->climbing && vlen(wall) > .5 && e->cooldown < .9 && distance > 4 && room->height > 5) {
+        e->climbing = true;
+        e->normal = wall;
+        e->climb_time = 2.5f;
+        e->vertical_speed = 0;
+    }
+    if (e->climbing) {
+        e->climb_time -= (float)dt;
+        if (vlen(wall) < .5 || e->climb_time <= 0 || distance < 3 ||
+            before.y > floor + fmin(room->height - 2, 5.5)) {
+            e->climbing = false;
+            e->normal = v3(0, 1, 0);
+            e->vertical_speed = -2;
+            e->cooldown = 1.2f;
+        } else {
+            e->normal = wall;
+            Vec3 along = vsub(direction, vmul(wall, vdot(direction, wall)));
+            if (vlen(along) < .1)
+                along = vcross(v3(0, 1, 0), wall);
+            Vec3 delta = vadd(vmul(vnorm(along), 3 * dt), v3(0, 3.8 * dt, 0));
+            /* Gentle adhesion keeps the body near a real surface. */
+            delta = vsub(delta, vmul(wall, .5 * dt));
+            move_body(&g->world, &e->pos, delta, .42, 1.25, NULL);
+            e->heading = vnorm(delta);
+            return;
+        }
+    }
+    double speed = 5.2 + 1.5 * sin(g->time * 5 + e->id);
+    if (distance > 1.15) {
+        Vec3 delta = vmul(direction, speed * dt);
+        move_body(&g->world, &e->pos, delta, .42, 1.25, NULL);
+        if (vlen(vsub(position_absolute(e->pos), before)) < vlen(delta) * .4) {
+            Vec3 side = vcross(direction, v3(0, 1, 0));
+            if (e->id % 2)
+                side = vmul(side, -1);
+            move_body(&g->world, &e->pos, vmul(side, speed * .7 * dt), .42, 1.25, NULL);
+        }
+    }
+    bool grounded = false;
+    e->vertical_speed = fmaxf(-16, e->vertical_speed - (float)(22 * dt));
+    move_body(&g->world, &e->pos, v3(0, e->vertical_speed * dt, 0), .42, 1.25, &grounded);
+    if (grounded)
+        e->vertical_speed = 0;
+    e->heading = direction;
+}
+static void enemies_step(Game *g, double dt) {
+    for (int r = 0; r < g->world.count; r++) {
+        Room *room = &g->world.rooms[r];
+        for (int i = 0; i < room->enemy_count; i++) {
+            Enemy *e = &room->enemies[i];
+            if (!e->alive)
+                continue;
+            e->flash = fmaxf(0, e->flash - (float)dt);
+            e->cooldown = fmaxf(0, e->cooldown - (float)dt);
+            Player *target = NULL;
+            double best = 48;
+            for (int p = 0; p < g->player_count; p++) {
+                Player *t = &g->players[p];
+                if (!vulnerable(t) || fabs(position_delta(t->pos, e->pos).y) > 8)
+                    continue;
+                double distance = vlen(position_delta(t->pos, e->pos));
+                if (distance < best) {
+                    best = distance;
+                    target = t;
+                }
+            }
+            if (!target) {
+                e->windup = 0;
+                continue;
+            }
+            Vec3 diff = position_delta(target->pos, e->pos);
+            diff.y = 0;
+            Vec3 direction = vnorm(diff);
+            e->heading = direction;
+            Vec3 to = vsub(player_eye(target), enemy_center(e));
+            bool sight =
+                world_raycast(&g->world, enemy_center(e), vnorm(to), vlen(to)) >= vlen(to) - .1;
+            if (e->kind == 1) {
+                if (e->windup > 0) {
+                    e->windup = fmaxf(0, e->windup - (float)dt);
+                    if (e->windup <= 0) {
+                        spit(g, room, e);
+                        e->cooldown = 2.2f;
+                    }
+                } else if (best < 30 && best > 3 && e->cooldown <= 0 && sight) {
+                    e->aim = player_eye(target);
+                    e->windup = .8f;
+                } else if (best > 16 || !sight) {
+                    move_body(&g->world, &e->pos, vmul(direction, 2.6 * dt), .42, 1.25, NULL);
+                } else if (best < 7) {
+                    move_body(&g->world, &e->pos, vmul(direction, -2.4 * dt), .42, 1.25, NULL);
+                }
+            } else {
+                if (e->kind == 0)
+                    move_crawler(g, room, e, direction, best, dt);
+                else if (best > 1.7)
+                    move_body(&g->world, &e->pos, vmul(direction, 2.8 * dt), .42, 1.25, NULL);
+                if (best < (e->kind == 2 ? 2.5 : 1.6) && e->cooldown <= 0 && sight) {
+                    target->health -= e->kind == 2 ? 13 : 7;
+                    target->hurt = .8f;
+                    e->cooldown = e->kind == 2 ? 1.4f : .9f;
+                }
+            }
+        }
+    }
+}
 void game_step(Game *g, const Actions *actions, double dt) {
     if (!isfinite(dt) || dt <= 0 || dt > .05)
         return;
@@ -256,50 +469,8 @@ void game_step(Game *g, const Actions *actions, double dt) {
         if (actions[i].fire && p->cooldown <= 0)
             shoot(g, p);
     }
-    for (int r = 0; r < g->world.count; r++) {
-        Room *room = &g->world.rooms[r];
-        for (int i = 0; i < room->enemy_count; i++) {
-            Enemy *e = &room->enemies[i];
-            if (!e->alive)
-                continue;
-            e->flash = fmaxf(0, e->flash - (float)dt);
-            e->cooldown = fmaxf(0, e->cooldown - (float)dt);
-            Player *target = NULL;
-            double best = 48;
-            for (int p = 0; p < g->player_count; p++) {
-                Player *t = &g->players[p];
-                if (position_absolute(t->pos).z < 0 ||
-                    world_difficulty(world_cell(position_absolute(t->pos))) == 0)
-                    continue;
-                if (fabs(position_delta(t->pos, e->pos).y) > 3)
-                    continue;
-                double distance = vlen(position_delta(t->pos, e->pos));
-                if (distance < best) {
-                    best = distance;
-                    target = t;
-                }
-            }
-            if (!target)
-                continue;
-            Vec3 diff = position_delta(target->pos, e->pos);
-            diff.y = 0;
-            Vec3 direction = vnorm(diff);
-            double range = e->kind == 1 ? 14 : 1.6;
-            if (best > range * .85) {
-                double speed = e->kind == 2 ? 2.0 : 3.5;
-                move_body(&g->world, &e->pos, vmul(direction, speed * dt), .42, 1.25, NULL);
-            }
-            if (best < range && e->cooldown <= 0) {
-                Vec3 eye = vadd(position_absolute(e->pos), v3(0, .8, 0)),
-                     to = vsub(player_eye(target), eye);
-                if (world_raycast(&g->world, eye, vnorm(to), vlen(to)) >= vlen(to) - .1) {
-                    target->health -= 8 + (float)fmin(world_difficulty(room->cell) * 1.5, 24);
-                    target->hurt = .8f;
-                    e->cooldown = e->kind == 1 ? 1.8f : .9f;
-                }
-            }
-        }
-    }
+    enemies_step(g, dt);
+    projectiles_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         if (p->health <= 0 || position_absolute(p->pos).z < -400) {
@@ -308,6 +479,9 @@ void game_step(Game *g, const Actions *actions, double dt) {
             p->health = player_max_health(p);
             p->hurt = 0;
             p->crouched = true;
+            for (int j = 0; j < SC_MAX_PROJECTILES; j++)
+                if (vlen(position_delta(g->projectiles[j].pos, p->pos)) < 12)
+                    g->projectiles[j].active = false;
             g->respawns++;
             g->dirty = true;
             game_message(g, "RECONSTITUTED / YOUR PROGRESS IS SAFE");

@@ -96,6 +96,7 @@ static void profile(Stream *s, Player *p, bool read, bool legacy) {
             fabs(p->pitch) > 1.5 || fabs(p->yaw) > SC_PI + 1e-6)
             s->ok = false;
         p->crouched = true;
+        p->flashlight = true;
     }
 }
 bool game_save(const Game *g, const char *path) {
@@ -226,6 +227,7 @@ bool game_load(Game *g, const char *path) {
     free(replacement);
     memcpy(g->players, players, sizeof(players));
     g->player_count = 1;
+    memset(g->projectiles, 0, sizeof(g->projectiles));
     g->dirty = version == 1;
     game_message(g, version == 1 ? "SHIP GENERATOR UPDATED / CHARACTERS RETAINED / NEW EXPEDITION"
                                  : "EXPEDITION RESUMED / WELCOME BACK");

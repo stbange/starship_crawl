@@ -96,17 +96,51 @@ def run():
             page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).players === 1")
             assert state(page)["players"] == 1
             page.evaluate("Module.ccall('sc_web_action',null,['number'],[0])")
+            compatible = list((ROOT / "tests" / "fixtures" / "generator-v2.sav").read_bytes())
+            page.evaluate("data => Module.FS.writeFile('/persist/import.sav',new Uint8Array(data))", compatible)
+            assert page.evaluate("Module.ccall('sc_web_import','number',[],[])") == 1
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0")
+            resumed = state(page)
+            assert resumed["seed"] == 713 and resumed["rank"] == 7 and resumed["kills"] == 81
+            assert abs(resumed["x"] - 96) < .001 and abs(resumed["z"] - 23) < .001
+            assert resumed["flashlight"] and resumed["projectiles"] == 0
             # A malformed import must not mutate the current expedition.
             page.evaluate("Module.FS.writeFile('/persist/import.sav',new Uint8Array([1,2,3]))")
             assert page.evaluate("Module.ccall('sc_web_import','number',[],[])") == 0
             assert state(page)["seed"] == 713
-            for scene in ["hall", "engine", "crew", "tunnel", "atrium"]:
+            for scene in ["hall", "engine", "crew", "tunnel", "atrium", "encounter"]:
                 page.goto(base + "?seed=713&scene=" + scene)
                 wait_ready(page)
+                if scene == "encounter":
+                    # Observe from the first simulation tick; a screenshot can
+                    # take longer than the initial climb on software rendering.
+                    page.evaluate("""() => {
+                        window.sawClimber = false;
+                        const observer = setInterval(() => {
+                            if (JSON.parse(Module.ccall('sc_web_state','string',[],[])).climbers > 0) {
+                                window.sawClimber = true;
+                                clearInterval(observer);
+                            }
+                        }, 25);
+                    }""")
                 page.locator("#start").click()
                 page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 5")
                 page.screenshot(path=str(ARTIFACTS / (scene + ".png")))
                 assert not state(page)["failed"]
+                if scene == "encounter":
+                    page.wait_for_function("window.sawClimber", timeout=15000)
+                    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).projectiles > 0", timeout=15000)
+                    assert state(page)["enemy_shots"] > 0
+                    # Freeze the same rendered scene to inspect both lighting states.
+                    page.evaluate("Module.ccall('sc_web_action',null,['number'],[0])")
+                    page.keyboard.press("f")
+                    page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
+                    page.screenshot(path=str(ARTIFACTS / "flashlight-off.png"))
+                    page.locator("#menu").click()
+                    page.locator("[data-action='7']").click()
+                    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
+                    page.locator("#menu").click()
+                    page.screenshot(path=str(ARTIFACTS / "flashlight-on.png"))
                 if scene == "hall":
                     assert state(page)["span"] == 4 and state(page)["ready"]
                     # Cross a storage chunk boundary inside one continuous hall.
@@ -160,6 +194,11 @@ def run():
             page.wait_for_function(f"JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > {start_z + 3}", timeout=20000)
             page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).shots > 0", timeout=10000)
             client.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+            assert state(page)["flashlight"]
+            page.touchscreen.tap(844 * .64, 390 * .48)
+            page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
+            page.touchscreen.tap(844 * .64, 390 * .48)
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
             page.screenshot(path=str(ARTIFACTS / "mobile-touch.png"))
             page.set_viewport_size({"width": 390, "height": 844})
             page.wait_for_timeout(300)
@@ -169,7 +208,7 @@ def run():
             assert not errors, errors
             mobile.close()
             browser.close()
-            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, five interiors, hall traversal across chunks, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
+            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, five interiors, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
     finally:
         server.shutdown()
         server.server_close()

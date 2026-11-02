@@ -137,44 +137,45 @@ static void test_topology(void) {
 }
 static void test_generation(void) {
     for (uint32_t seed = 1; seed <= 12; seed++) {
-        World a, b;
-        world_init(&a, seed);
-        world_init(&b, seed);
+        World *a = malloc(sizeof(*a)), *b = malloc(sizeof(*b));
+        CHECK(a && b);
+        world_init(a, seed);
+        world_init(b, seed);
         Vec3 start = world_center((Cell){0, 0, 1}), far = world_center((Cell){8, 2, 8});
         start.y += .02;
-        CHECK(world_refresh(&a, &start, 1));
-        settle(&a);
-        CHECK(world_refresh(&b, &far, 1));
-        settle(&b);
-        CHECK(world_refresh(&b, &start, 1));
-        settle(&b);
-        for (int i = 0; i < a.count; i++) {
-            Room *r = &a.rooms[i], *other = world_find(&b, r->cell);
+        CHECK(world_refresh(a, &start, 1));
+        settle(a);
+        CHECK(world_refresh(b, &far, 1));
+        settle(b);
+        CHECK(world_refresh(b, &start, 1));
+        settle(b);
+        for (int i = 0; i < a->count; i++) {
+            Room *r = &a->rooms[i], *other = world_find(b, r->cell);
             CHECK(other && other->ready && r->ready);
             CHECK(other->hash == r->hash && other->type == r->type && other->width == r->width);
             for (int j = 0; j < r->enemy_count; j++) {
-                CHECK(!world_overlap(&a, position_absolute(r->enemies[j].pos), .42, 1.25));
+                CHECK(!world_overlap(a, position_absolute(r->enemies[j].pos), .42, 1.25));
                 CHECK(vlen(position_delta(r->enemies[j].pos, other->enemies[j].pos)) < 1e-9);
             }
         }
         for (int i = 0; i < SC_MAX_CHUNKS; i++) {
-            const Chunk *c = &a.chunks[i];
+            const Chunk *c = &a->chunks[i];
             if (!c->active)
                 continue;
-            const Chunk *other = world_chunk(&b, c->cell);
+            const Chunk *other = world_chunk(b, c->cell);
             CHECK(other && other->box_count == c->box_count);
             for (size_t j = 0; j < c->box_count; j++) {
                 CHECK(vlen(vsub(c->boxes[j].min, other->boxes[j].min)) == 0);
                 CHECK(vlen(vsub(c->boxes[j].max, other->boxes[j].max)) == 0);
             }
             Vec3 center = world_center(c->cell);
-            CHECK(!world_overlap(&a, world_lift(c->cell), .34, 1));
+            CHECK(!world_overlap(a, world_lift(c->cell), .34, 1));
             for (int d = 0; d < 4; d++) {
                 if (!world_door(seed, c->cell, (Direction)d))
                     continue;
                 /* Real collision and floor checks across the entire connector,
                    including the shared seam, not just abstract graph edges. */
-                bool neighbor = world_ready(&a, world_neighbor(c->cell, (Direction)d));
+                bool neighbor = world_ready(a, world_neighbor(c->cell, (Direction)d));
                 for (int k = 0; k <= 24; k++) {
                     double at = k * 2.0;
                     Vec3 p = vadd(center, v3(d == WEST   ? -at
@@ -186,81 +187,84 @@ static void test_generation(void) {
                                                           : 0));
                     if (k == 24 && !neighbor)
                         continue;
-                    CHECK(!world_overlap(&a, p, .3, 1));
-                    CHECK(world_raycast(&a, p, v3(0, -1, 0), 2) < .03);
+                    CHECK(!world_overlap(a, p, .3, 1));
+                    CHECK(world_raycast(a, p, v3(0, -1, 0), 2) < .03);
                 }
             }
         }
-        CHECK(a.record_count == 0); /* Immutable exploration creates no save records. */
-        world_destroy(&a);
-        world_destroy(&b);
+        CHECK(a->record_count == 0); /* Immutable exploration creates no save records. */
+        world_destroy(a);
+        world_destroy(b);
+        free(a);
+        free(b);
     }
     puts("PASS geometry and population independent of load order; walkable connectors and floors "
          "(12 seeds)");
 }
 static void test_streaming(void) {
-    World w;
-    world_init(&w, 51);
+    World *w = malloc(sizeof(*w));
+    CHECK(w);
+    world_init(w, 51);
     Vec3 origin = world_center((Cell){0, 0, 1});
     origin.y += .02;
-    CHECK(world_refresh(&w, &origin, 1));
-    CHECK(w.chunk_count == 0 && w.pending > 0);
-    CHECK(world_overlap(&w, origin, .34, 1.78));
-    CHECK(world_stream(&w, 1) == 1);
-    CHECK(!world_ready(&w, (Cell){0, 0, 1})); /* Hall publication is atomic. */
-    settle(&w);
-    Room *r = world_find(&w, (Cell){0, 0, 1});
+    CHECK(world_refresh(w, &origin, 1));
+    CHECK(w->chunk_count == 0 && w->pending > 0);
+    CHECK(world_overlap(w, origin, .34, 1.78));
+    CHECK(world_stream(w, 1) == 1);
+    CHECK(!world_ready(w, (Cell){0, 0, 1})); /* Hall publication is atomic. */
+    settle(w);
+    Room *r = world_find(w, (Cell){0, 0, 1});
     CHECK(r && r->ready && r->enemy_count > 0);
-    world_kill(&w, r, 0);
-    CHECK(w.record_count == 1);
+    world_kill(w, r, 0);
+    CHECK(w->record_count == 1);
     /* Repeated seam crossing should reuse the retained neighborhood. */
     Vec3 seam = world_center((Cell){1, 0, 1});
-    CHECK(world_refresh(&w, &seam, 1));
-    settle(&w);
-    CHECK(world_refresh(&w, &origin, 1));
-    settle(&w);
-    uint32_t generated = w.generated;
+    CHECK(world_refresh(w, &seam, 1));
+    settle(w);
+    CHECK(world_refresh(w, &origin, 1));
+    settle(w);
+    uint32_t generated = w->generated;
     for (int i = 0; i < 20; i++) {
-        CHECK(world_refresh(&w, i % 2 ? &seam : &origin, 1));
-        settle(&w);
-        CHECK(w.generated == generated);
+        CHECK(world_refresh(w, i % 2 ? &seam : &origin, 1));
+        settle(w);
+        CHECK(w->generated == generated);
     }
     for (int i = 1; i <= 100; i++) {
         Vec3 positions[] = {world_center((Cell){i * 3, 0, i * 3}),
                             world_center((Cell){-i * 3, 2, i * 3})};
-        CHECK(world_refresh(&w, positions, 2));
-        world_stream(&w, 2);
-        CHECK(world_chunk(&w, world_describe(w.seed, world_cell(positions[0])).cell) != NULL);
-        CHECK(world_chunk(&w, world_describe(w.seed, world_cell(positions[1])).cell) != NULL);
-        settle(&w);
-        CHECK(w.chunk_count <= SC_MAX_CHUNKS && w.count <= SC_MAX_ROOMS);
-        CHECK(w.box_count <= SC_MAX_CHUNKS * SC_CHUNK_BOXES);
-        CHECK(world_ready(&w, world_cell(positions[0])) &&
-              world_ready(&w, world_cell(positions[1])));
-        CHECK(w.record_count == 1);
-        for (int a = 0; a < w.count; a++)
-            for (int b = a + 1; b < w.count; b++)
-                CHECK(!cell_equal(w.rooms[a].cell, w.rooms[b].cell));
+        CHECK(world_refresh(w, positions, 2));
+        world_stream(w, 2);
+        CHECK(world_chunk(w, world_describe(w->seed, world_cell(positions[0])).cell) != NULL);
+        CHECK(world_chunk(w, world_describe(w->seed, world_cell(positions[1])).cell) != NULL);
+        settle(w);
+        CHECK(w->chunk_count <= SC_MAX_CHUNKS && w->count <= SC_MAX_ROOMS);
+        CHECK(w->box_count <= SC_MAX_CHUNKS * SC_CHUNK_BOXES);
+        CHECK(world_ready(w, world_cell(positions[0])) && world_ready(w, world_cell(positions[1])));
+        CHECK(w->record_count == 1);
+        for (int a = 0; a < w->count; a++)
+            for (int b = a + 1; b < w->count; b++)
+                CHECK(!cell_equal(w->rooms[a].cell, w->rooms[b].cell));
     }
-    CHECK(world_refresh(&w, &origin, 1));
-    settle(&w);
-    r = world_find(&w, (Cell){0, 0, 1});
+    CHECK(world_refresh(w, &origin, 1));
+    settle(w);
+    r = world_find(w, (Cell){0, 0, 1});
     CHECK(r && !r->enemies[0].alive);
     Vec3 same[] = {origin, origin};
-    CHECK(world_refresh(&w, same, 2));
-    settle(&w);
-    int count = w.chunk_count;
-    CHECK(world_refresh(&w, same, 1));
-    settle(&w);
-    CHECK(count == w.chunk_count);
+    CHECK(world_refresh(w, same, 2));
+    settle(w);
+    int count = w->chunk_count;
+    CHECK(world_refresh(w, same, 1));
+    settle(w);
+    CHECK(count == w->chunk_count);
     Vec3 extreme[] = {world_center((Cell){8000000, 0, 5000000}),
                       world_center((Cell){-8000000, 2, 5000000})};
-    CHECK(world_refresh(&w, extreme, 1));
-    settle(&w);
-    CHECK(world_refresh(&w, extreme, 2));
-    settle(&w);
-    CHECK(world_ready(&w, world_cell(extreme[0])) && world_ready(&w, world_cell(extreme[1])));
-    world_destroy(&w);
+    CHECK(world_refresh(w, extreme, 1));
+    settle(w);
+    CHECK(world_refresh(w, extreme, 2));
+    settle(w);
+    CHECK(world_ready(w, world_cell(extreme[0])) && world_ready(w, world_cell(extreme[1])));
+    world_destroy(w);
+    free(w);
     puts("PASS bounded fair streaming, atomic hall publication, shared co-op chunks, hysteresis, "
          "100 separated-player moves, persistent kills");
 }
@@ -385,9 +389,24 @@ static void test_save(void) {
     CHECK(g->players[0].level == 7);
     CHECK(!game_save(g, "/nonexistent/sc-save-dir/file.sav"));
     remove(path);
+    /* This file was written by the unmodified, pre-infestation v2 game. */
+    g->projectiles[0].active = true;
+    g->players[0].flashlight = false;
+    CHECK(game_load(g, SC_FIXTURE_DIR "/generator-v2.sav"));
+    settle_game(g);
+    CHECK(g->world.seed == 713 && g->world.generator == 2 && !g->dirty);
+    CHECK(g->players[0].level == 7 && g->players[0].kills == 81 && g->players[0].power == 3);
+    CHECK(g->players[1].level == 4 && g->players[1].haste == 2);
+    CHECK(vlen(vsub(position_absolute(g->players[0].pos), v3(96, .02, 23))) < .0001);
+    CHECK(vlen(vsub(position_absolute(g->players[0].checkpoint), world_lift((Cell){1, 0, 0}))) <
+          .0001);
+    CHECK(g->players[0].flashlight && !g->projectiles[0].active);
+    r = world_find(&g->world, (Cell){1, 0, 0});
+    CHECK(r && !r->enemies[1].alive);
     game_destroy(g);
     free(g);
-    puts("PASS save round-trip, solo default, both profiles, corruption and failure safety");
+    puts("PASS save round-trip, pre-infestation v2 compatibility, solo default, both profiles, "
+         "corruption and failure safety");
 }
 static void test_migration_and_precision(void) {
     Game *g = malloc(sizeof(*g));
@@ -446,6 +465,112 @@ static void test_migration_and_precision(void) {
     puts("PASS v1 character migration, generator compatibility, sector-local physics, distant "
          "co-op collision and save/resume");
 }
+static Room *quiet_encounter(Game *g) {
+    game_init(g, 713);
+    g->players[0].pos = position_from(vadd(world_center((Cell){1, 0, 0}), v3(0, .02, -24)));
+    settle_game(g);
+    for (int r = 0; r < g->world.count; r++)
+        g->world.rooms[r].enemy_count = 0;
+    return world_find(&g->world, (Cell){1, 0, 0});
+}
+static Enemy *place_enemy(Room *room, int kind, Vec3 local) {
+    room->enemy_count = 1;
+    room->enemies[0] = (Enemy){.pos = position_from(vadd(world_center(room->cell), local)),
+                               .health = 100,
+                               .normal = {0, 1, 0},
+                               .heading = {0, 0, -1},
+                               .kind = (uint8_t)kind,
+                               .alive = true};
+    return &room->enemies[0];
+}
+static void test_infestation(void) {
+    Game *g = malloc(sizeof(*g));
+    CHECK(g);
+    Room *room = quiet_encounter(g);
+    Enemy *e = place_enemy(room, 1, v3(0, .02, -8));
+    CHECK(g->players[0].flashlight);
+    game_flashlight(g, 0);
+    CHECK(!g->players[0].flashlight);
+    game_join(g);
+    CHECK(g->players[1].flashlight);
+    game_flashlight(g, 1);
+    CHECK(!g->players[1].flashlight);
+    game_leave(g);
+    step(g, (Actions){0}, 1);
+    CHECK(e->windup > 0 && g->enemy_shots == 0 && g->players[0].health == 100);
+    step(g, (Actions){.strafe = 1}, 120);
+    step(g, (Actions){0}, 45);
+    CHECK(g->enemy_shots == 1 && g->projectile_hits == 0 && g->players[0].health == 100);
+    game_destroy(g);
+    room = quiet_encounter(g);
+    e = place_enemy(room, 1, v3(0, .02, -8));
+    step(g, (Actions){0}, 60);
+    CHECK(g->enemy_shots == 1 && g->projectile_hits == 0 && g->players[0].health == 100);
+    step(g, (Actions){0}, 90);
+    CHECK(g->projectile_hits == 1 && g->players[0].health < 100);
+    game_destroy(g);
+    room = quiet_encounter(g);
+    Vec3 eye = player_eye(&g->players[0]);
+    g->projectiles[0] =
+        (Projectile){position_from(vadd(eye, v3(0, 0, -5))), {0, 0, 200}, 2, 12, true};
+    Actions none[2] = {{0}, {0}};
+    game_step(g, none, .05);
+    CHECK(g->projectile_hits == 1 && g->players[0].health == 88 && !g->projectiles[0].active);
+    /* A wall intercepts a fast shot before it can reach the player. */
+    g->players[0].health = 100;
+    g->projectiles[0] =
+        (Projectile){position_from(vadd(world_center(room->cell), v3(room->width * .5 + 4, 1, -8))),
+                     {-200, 0, 0},
+                     2,
+                     12,
+                     true};
+    game_step(g, none, .05);
+    CHECK(!g->projectiles[0].active && g->players[0].health == 100);
+    game_join(g);
+    g->players[1].pos = g->players[0].pos;
+    position_move(&g->players[1].pos, v3(0, 0, -2));
+    g->projectiles[0] =
+        (Projectile){position_from(vadd(eye, v3(0, 0, -5))), {0, 0, 200}, 2, 12, true};
+    game_step(g, none, .05);
+    CHECK(g->players[0].health == 100 && g->players[1].health == 88);
+    g->projectiles[0].active = true;
+    game_new_ship(g, 17);
+    CHECK(!g->projectiles[0].active);
+    game_destroy(g);
+    room = quiet_encounter(g);
+    e = place_enemy(room, 0, v3(-(room->width * .5 - 13.6), .02, -20));
+    step(g, (Actions){0}, 20);
+    CHECK(e->climbing && e->normal.x > .5 && position_absolute(e->pos).y > .8);
+    CHECK(!world_overlap(&g->world, position_absolute(e->pos), .42, 1.25));
+    step(g, (Actions){0}, 160);
+    CHECK(!e->climbing && position_absolute(e->pos).y >= -.001);
+    game_destroy(g);
+    room = quiet_encounter(g);
+    e = place_enemy(room, 0, v3(0, .02, -8));
+    Position before = e->pos;
+    step(g, (Actions){0}, 30);
+    CHECK(vlen(position_delta(e->pos, before)) > 2);
+    for (int c = 0; c < SC_MAX_CHUNKS; c++)
+        if (g->world.chunks[c].active) {
+            const Chunk *chunk = &g->world.chunks[c];
+            CHECK(chunk->light_count == SC_CHUNK_LIGHTS);
+            CHECK(chunk->dressing_count > 0 && chunk->dressing_count <= SC_CHUNK_DRESSING);
+        }
+    bool variation = false;
+    float previous = world_lamp_power(1, 0);
+    for (int i = 0; i < 200; i++) {
+        CHECK(world_lamp_power(0, i * .1) == 0);
+        float power = world_lamp_power(1, i * .1);
+        CHECK(power >= 0 && power <= 1);
+        if (fabsf(power - previous) > .1f)
+            variation = true;
+    }
+    CHECK(variation);
+    game_destroy(g);
+    free(g);
+    puts("PASS charged dodgeable shots, swept player/wall collision, co-op projectile ownership, "
+         "wall climbing, fast crawlers, flashlight controls, bounded dressing and broken lamps");
+}
 static void fingerprints(void) {
     uint32_t seeds[] = {1, 713, UINT32_MAX};
     Cell regions[] = {
@@ -471,6 +596,7 @@ int main(int argc, char **argv) {
     test_combat();
     test_save();
     test_migration_and_precision();
+    test_infestation();
     printf("PASS %d assertions\n", checks);
     return 0;
 }

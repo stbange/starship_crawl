@@ -14,7 +14,11 @@ Random choices use the fixed `uint32_t` hash in `generation.c`, with explicit co
 
 Chunks within a two-chunk retention neighborhood remain cached for backtracking. When the cache fills, only rooms outside the required set can be evicted. Eviction removes complete footprints, including their collision and GPU data. The limits are 192 resident chunks, 256 boxes per chunk, and 20 enemy slots per room. Dormant rooms leave the simulation. A new room remains collision-blocked until its complete footprint is available; visible bulkheads close unfinished passages. Lifts wait for a ready destination. These checks also apply during save loading and checkpoint travel.
 
+After collision geometry is complete, a separate cosmetic pass dresses each chunk with damaged service panels, vents, cables, room-specific furnishings, and infestation. Each chunk holds at most 32 organic/clutter groups and six light fittings; most fittings are dead. Roots and nests attach to room walls, furniture, and the floor. This pass does not change collision or enemy placement, so generator-2 expeditions retain their architecture and encounter identities. Both the fixtures and the light they cast use the same deterministic flicker phase.
+
 The renderer maintains one reusable GPU buffer per resident chunk and uploads at most two changed chunks per frame. Unchanged meshes are retained. All generation and GL uploads run on the main thread, without workers or cross-origin-isolation requirements. These are work budgets, not a guaranteed number of milliseconds on every device.
+
+Each viewport selects up to 12 nearby point lights, including moving projectiles and muzzle flashes, plus its own directional flashlight. Lighting uses distance attenuation and surface normals, without shadow maps. Static dressing is included in cached chunk meshes. Opaque decks limit static drawing to the viewer's deck; animated creatures use fewer limb segments at distance and a 128-creature draw limit per view. A shared pool caps enemy projectiles at 96, with finite lifetimes and collision against walls and players.
 
 Player and enemy positions store integer sectors and local double coordinates. Movement normalizes the local coordinates at sector boundaries. Collision boxes and static meshes are chunk-local; each viewport independently translates nearby geometry relative to its own camera before converting to GPU floats. Split-screen players can therefore travel far apart without sharing a distant floating origin. Objects outside a viewport's draw range are skipped before that conversion.
 
@@ -25,6 +29,7 @@ For inspection:
 - Press **F3** for the current district map, room dimensions, resident/queued chunks, generation work, and upload counts. Gold marks the current cell; passage marks show connected neighbors.
 - Run `./build/starship_crawl --seed 713 --scene hall --no-save` to inspect the four-chunk cathedral, or use `crew`, `engine`, `tunnel`, and `atrium`.
 - Run `./build/starship_crawl --seed 713 --scene distant --split --no-save` to put one camera in a distant district and one at the entrance.
+- Run `./build/starship_crawl --seed 713 --scene encounter` for a reproducible three-role encounter in the reactor room. This scene disables saving. Press **F** to inspect the room with and without the flashlight.
 - Browser equivalents use `?seed=713&scene=hall` or `?seed=713&scene=distant&split`. Scene overrides start a fresh expedition; use a separate browser profile when keeping your normal save matters.
 - Run `./build/sc_tests --fingerprints` for JSON semantic probes, or the regular core suite for topology, physical connector clearance, streaming, persistence, and coordinate checks.
 

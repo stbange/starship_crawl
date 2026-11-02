@@ -13,6 +13,8 @@
 #define SC_CHUNK_BOXES 256
 #define SC_STREAM_BUDGET 2
 #define SC_MAX_ENEMIES 20
+#define SC_CHUNK_LIGHTS 6
+#define SC_CHUNK_DRESSING 32
 typedef struct {
     int32_t x, y, z;
 } Cell;
@@ -56,9 +58,24 @@ typedef struct {
 typedef struct {
     Position pos;
     float health, cooldown, flash;
+    float windup, climb_time, vertical_speed;
+    Vec3 aim, normal, heading;
     uint8_t kind, id;
-    bool alive;
+    bool alive, climbing;
 } Enemy;
+typedef struct {
+    Vec3 pos;
+    Color color;
+    float radius, power;
+    uint32_t phase;
+} PointLight;
+typedef enum { GROWTH, NEST, CABLE, SCRAP } DressingKind;
+typedef struct {
+    Vec3 pos, normal;
+    uint32_t hash;
+    DressingKind kind;
+    float scale;
+} Dressing;
 typedef struct {
     Cell cell;
     RoomType type;
@@ -76,6 +93,9 @@ typedef struct {
     Cell cell, owner;
     Box *boxes;
     size_t box_count;
+    PointLight lights[SC_CHUNK_LIGHTS];
+    Dressing dressing[SC_CHUNK_DRESSING];
+    int light_count, dressing_count;
     uint32_t serial;
     bool active;
 } Chunk;
@@ -127,4 +147,5 @@ bool world_overlap(const World *w, Vec3 feet, double radius, double height);
 double world_raycast(const World *w, Vec3 origin, Vec3 direction, double limit);
 void world_kill(World *w, Room *room, int enemy);
 bool world_index_records(World *w);
+float world_lamp_power(uint32_t phase, double time);
 #endif

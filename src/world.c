@@ -149,6 +149,160 @@ static void wall(Builder *b, Vec3 c, bool xplane, double at, double lo, double h
     wall_piece(b, c, xplane, at, door + width * .5, hi, h * .5, h, col);
     wall_piece(b, c, xplane, at, door - width * .5, door + width * .5, (h + dh) * .5, h - dh, col);
 }
+float world_lamp_power(uint32_t phase, double time) {
+    if (phase % 4 == 0)
+        return 0; /* Most fixture clusters include dead fittings. */
+    double t = fmod(fmod(time, 4096) + phase * .37, 7 + phase * .13);
+    if (t < .3)
+        return .06f;
+    if (t < .55)
+        return .4f;
+    if (t < 1.1)
+        return .02f;
+    return (float)(.75 + .25 * sin(t * 2 + phase));
+}
+static void dressing(Chunk *chunk, DressingKind kind, Vec3 pos, Vec3 normal, float scale,
+                     uint32_t hash) {
+    if (chunk->dressing_count < SC_CHUNK_DRESSING)
+        chunk->dressing[chunk->dressing_count++] = (Dressing){pos, normal, hash, kind, scale};
+}
+static void detail(Builder *b, Vec3 p, Vec3 size, Color col, float glow) {
+    if (b->chunk->box_count < SC_CHUNK_BOXES)
+        box(b, vadd(b->origin, p), size, col, glow, false);
+}
+static void room_dressing(Builder *b, const Room *r) {
+    Chunk *chunk = b->chunk;
+    Vec3 room = vsub(world_room_center(r), b->origin);
+    double xmin = fmax(-45, room.x - r->width * .5 + 1),
+           xmax = fmin(45, room.x + r->width * .5 - 1);
+    double zmin = fmax(-45, room.z - r->depth * .5 + 1),
+           zmax = fmin(45, room.z + r->depth * .5 - 1);
+    Color iron = rgb(.15f, .17f, .16f), rust = rgb(.22f, .11f, .065f), bone = rgb(.26f, .25f, .19f);
+    /* Existing collision and saved layouts remain intact. Surface dressing is
+       attached to walls/furniture or lies flat enough to step over. */
+    for (size_t i = 0; i < chunk->box_count; i++)
+        if (!chunk->boxes[i].solid && chunk->boxes[i].glow > 0)
+            chunk->boxes[i].glow *= .16f;
+    for (int i = 0; i < SC_CHUNK_LIGHTS; i++) {
+        uint32_t h = world_hash(b->world->seed, chunk->cell, 18000 + (uint32_t)i);
+        double sx = i & 1 ? 1 : -1, sz = i & 2 ? 1 : -1;
+        Vec3 p;
+        if (r->type == CONDUIT)
+            p = v3(sx * 1.8, 1.2, (i - 2.5) * 10);
+        else if (r->type == CREW)
+            p = v3(sx * 7.6, 4.1, sz * (12 + (i / 4) * 15));
+        else if (r->type == ENGINE)
+            p = v3(sx * (r->span_x == 2 ? 22.8 : r->width * .5 - 13.2), 5, sz * 20);
+        else
+            p = v3(sx * (r->span_x == 2 ? 28.4 : r->width * .5 - 9.6), 4.8,
+                   sz * (r->span_z == 2 ? 30 : r->depth * .5 - 12));
+        if (i >= 4 && r->type != CONDUIT)
+            p = v3(sx * 3.2, 2.8, sz * (r->span_z == 2 ? 38 : r->depth * .5 - 2));
+        uint32_t phase = (h % 32);
+        if (i % 2 == 0)
+            phase = 0;
+        if (r->type == BAY && i == 4) {
+            p = v3(0, 5, -34);
+            phase = 1;
+        }
+        Color colors[] = {rgb(.38f, .62f, .68f), rgb(.85f, .35f, .12f), rgb(.30f, .56f, .25f),
+                          rgb(.52f, .24f, .46f)};
+        Color col = colors[(h >> 5) % 4];
+        float radius = r->type == CONDUIT ? 9 : 21;
+        chunk->lights[chunk->light_count++] = (PointLight){p, col, radius, .85f, phase};
+        detail(b, p, v3(.55, .18, .3), iron, 0);
+        detail(b, vadd(p, v3(0, -.11, 0)), v3(.36, .055, .21), col, 4 + (float)phase);
+        if (r->height > 5)
+            dressing(chunk, CABLE, vadd(p, v3(0, .2, 0)), v3(0, 1, 0),
+                     (float)((r->height - p.y - .2) / 3.4), h);
+    }
+    /* Low roots creep into the occupied aisles; the lift and exits stay clear. */
+    for (int side = -1; side <= 1; side += 2)
+        for (int end = -1; end <= 1; end += 2) {
+            uint32_t h = world_hash(b->world->seed, chunk->cell,
+                                    21000 + (uint32_t)(side + 2) * 3 + (uint32_t)(end + 1));
+            double x = side * (r->type == CONDUIT ? 2.6 : 5.8), z = end * 18;
+            dressing(chunk, GROWTH, v3(x, .07, z), v3(0, 1, 0), r->type == CONDUIT ? .38f : .9f, h);
+            if (r->type == CREW) {
+                double cabin = (r->depth * .5 - 8) / (2 + (int)((r->hash >> 9) % 2));
+                z = end * (8 + cabin * .18);
+                dressing(chunk, NEST, v3(side * 7.65, 2.3, z), v3(-side, 0, 0), .75f, h + 5);
+                for (int k = 0; k < 4; k++)
+                    detail(b, v3(side * 7.65, 3.6 + k * .18, z), v3(.12, .07, 1.2), iron, 0);
+            }
+        }
+    for (int side = 0; side < 2; side++) {
+        double edge = room.x + (side ? 1 : -1) * r->width * .5;
+        if (fabs(edge) > 48)
+            continue;
+        double x = side ? xmax : xmin, sign = side ? -1 : 1;
+        for (int j = 0; j < 5; j++) {
+            uint32_t h = world_hash(b->world->seed, chunk->cell, 19000 + (uint32_t)(side * 11 + j));
+            double z = zmin + (zmax - zmin) * (j + .5) / 5;
+            if (fabs(z) < 5)
+                continue;
+            double wall_height = fmin(r->height - 1, 4.0 + (h % 3));
+            if (r->type == CONDUIT)
+                wall_height = .65;
+            Vec3 p = v3(x, wall_height * .5, z);
+            /* Recessed service panels, riveted seams and broken vent slats. */
+            detail(b, p, v3(.12, wall_height, 3.7), iron, 0);
+            for (int slat = 0; slat < 4; slat++) {
+                if ((h >> (slat + 3)) % 5 == 0)
+                    continue;
+                detail(b, vadd(p, v3(sign * .12, -wall_height * .3 + slat * wall_height * .2, 0)),
+                       v3(.14, .075, 3.4), rust, 0);
+            }
+            if (j % 2 == 0) {
+                dressing(chunk, GROWTH, v3(x + sign * .18, .13, z), v3(0, 1, 0), 1.3f, h);
+                dressing(chunk, NEST, v3(x + sign * .25, fmin(r->height * .6, 4.5), z),
+                         v3(sign, 0, 0), 1, h ^ 99);
+            }
+        }
+    }
+    for (int i = 0; i < 8; i++) {
+        uint32_t h = world_hash(b->world->seed, chunk->cell, 20000 + (uint32_t)i);
+        double x = xmin + (xmax - xmin) * (h % 1000) / 1000.0,
+               z = zmin + (zmax - zmin) * ((h >> 10) % 1000) / 1000.0;
+        if (fabs(x) < 4 && fabs(z + 10) < 5)
+            continue;
+        dressing(chunk, i % 3 == 0 ? GROWTH : SCRAP, v3(x, .055, z), v3(0, 1, 0),
+                 .7f + (h % 5) * .2f, h);
+    }
+    /* Details reinforce each room's former purpose, beneath the infestation. */
+    if (r->type == ENGINE)
+        for (int side = -1; side <= 1; side += 2) {
+            double rx = side * (r->span_x == 2 ? 27 : r->width * .5 - 9);
+            for (int k = 0; k < 4; k++) {
+                detail(b, v3(rx + side * (k - 1.5), 11, 0), v3(.34, .34, 49), k % 2 ? rust : iron,
+                       0);
+                detail(b, v3(rx + side * (k - 1.5), 7, -24), v3(.34, 8, .34), iron, 0);
+            }
+            dressing(chunk, NEST, v3(rx, 7.5, 16), v3(0, 0, -1), 1.7f,
+                     r->hash + (uint32_t)(side + 2));
+        }
+    if (r->type == CREW)
+        for (int side = -1; side <= 1; side += 2)
+            for (int z = -1; z <= 1; z += 2) {
+                double mid = 8 + (r->depth * .5 - 8) / (2 + (int)((r->hash >> 9) % 2)) * .5;
+                detail(b, v3(side * (r->width * .5 - 3.8), 2.24, z * mid), v3(3.8, .2, 1.4), bone,
+                       0);
+                detail(b, v3(side * 8.3, 4.9, z * 16), v3(.12, .65, 1.1), rust, 0);
+                detail(b, v3(side * 8.15, 4.9, z * 16), v3(.08, .23, .7), rgb(.12f, .36f, .25f),
+                       .3f);
+            }
+    if (r->type == NAVE || r->type == GARDEN || r->type == BAY)
+        for (int side = -1; side <= 1; side += 2) {
+            double x = side * (r->span_x == 2 ? 30 : r->width * .5 - 8),
+                   z = r->span_z == 2 ? 30 : r->depth * .5 - 12;
+            for (int k = 0; k < 5; k++)
+                detail(b, v3(x, 3 + k * 3, -z), v3(3.1, .2, 3.1), k % 2 ? rust : bone, 0);
+            dressing(chunk, GROWTH, v3(x, 2, -z - 1.5), v3(0, 0, -1), 2,
+                     r->hash + (uint32_t)(side + 3));
+            dressing(chunk, CABLE, v3(x - 2, 2.5, -z), v3(0, 1, 0), 2,
+                     r->hash + (uint32_t)(side + 7));
+        }
+}
 static void geometry(World *w, Chunk *chunk, const Room *r) {
     Vec3 c = world_room_center(r), tile = world_center(chunk->cell);
     Builder b = {w, chunk, tile};
@@ -261,6 +415,7 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
         local(&b, tile, 0, .065, -10 + s * 2, 4, .08, .1, rgb(.1f, .8f, .9f), 2, false);
     }
     local(&b, tile, 0, .025, -10, 4, .04, 4, rgb(.07f, .16f, .18f), .3f, false);
+    room_dressing(&b, r);
 }
 
 static bool wanted(const World *w, Cell c) {
@@ -371,6 +526,8 @@ static void populate(World *w, Room *r) {
         uint32_t h = world_hash(w->seed ^ SC_GENERATOR_VERSION, r->cell, 1000 + (uint32_t)i * 31);
         Enemy *e = &r->enemies[i];
         e->id = (uint8_t)i;
+        e->normal = v3(0, 1, 0);
+        e->heading = v3(0, 0, 1);
         e->kind = (uint8_t)(h % 3);
         e->health = (float)(e->kind == 2 ? 65 : 26) + (float)difficulty * 4;
         e->cooldown = (float)(h % 200) / 100;

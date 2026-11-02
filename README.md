@@ -1,4 +1,4 @@
-Starship Crawl is a playable first-person prototype in C17, SDL3, and OpenGL / WebGL 2. Enter an enormous gothic ship from space, explore generated decks, fight geometric enemies, and grow a persistent character.
+Starship Crawl is a playable first-person prototype in C17, SDL3, and OpenGL / WebGL 2. Enter an enormous gothic ship from space, explore its infested decks, fight strange creatures, and grow a persistent character.
 
 **Play begins with one player.** Split-screen is optional: press F2, or use the browser menu, to explicitly add a second player. Loading a save always starts in solo mode and retains the second character's progression.
 
@@ -8,9 +8,11 @@ The prototype includes:
 - Deterministic habitat, machinery, and sanctum districts with connected routes, branches, loops, and vertical grav lifts.
 - Landmark halls spanning four chunks (180 × 180 × 58 metres), cabin clusters inside single chunks, crouching passages, and atriums with lighter gravity.
 - Incremental chunk generation and GPU uploads, retained neighborhoods during backtracking, and one shared bounded cache for optional co-op.
-- District materials, passage lighting, ambient drones, and an F3 district map with streaming diagnostics.
+- Rusted panels, damaged vents, hanging cables, reactor pipework, cabin furnishings, egg nests, and branching growths in generated rooms.
+- Dark district materials, mostly dead light fittings, weak colored pools of flickering light, a player flashlight, ambient drones, and an F3 district map with streaming diagnostics.
 - Movement, collision, jumping, crouching, sprinting, and grav lifts that activate checkpoints.
-- Three geometric enemy roles, a pulse carbine, hit feedback, procedural weapon audio, experience, and damage/health/fire-rate upgrades.
+- Animated, tentacled creatures: fast wall-climbing crawlers, charging spitters, and hulking melee enemies. Glowing enemy projectiles travel through the world, illuminate nearby surfaces, stop at walls, and can be dodged.
+- A pulse carbine, hit feedback, procedural weapon audio, experience, and damage/health/fire-rate upgrades.
 - Three armor/weapon colors, forgiving respawns, new ships that retain character progression, and persistent defeated enemies.
 - Native saves, browser IndexedDB saves, and browser save import/export.
 - Low-resolution 3D rendering, procedural panel surfaces, fog, emissive details, and a separately rendered HUD.
@@ -67,6 +69,7 @@ python3 tests/test_browser.py --site-dir build-pages-preview --url-path /starshi
 | Move | WASD | Left stick |
 | Look | Mouse | Right stick |
 | Fire | Hold left mouse | Right trigger |
+| Toggle flashlight | F | Right stick click |
 | Jump / rise outside | Space | A / south button |
 | Crouch / descend outside | Left Ctrl | B / east button |
 | Sprint | Left Shift | Left shoulder |
@@ -79,11 +82,15 @@ python3 tests/test_browser.py --site-dir build-pages-preview --url-path /starshi
 | New ship | N, then Enter to confirm; Esc cancels | Browser menu or keyboard |
 | District map / streaming diagnostics | F3 | Keyboard |
 
-With one gamepad and split-screen enabled, keyboard/mouse controls player one and the gamepad controls player two. With two gamepads, each player has one. Controller disconnects pause the game. Mobile uses a left movement pad, right-side drag to look, and on-screen fire/jump/crouch/lift buttons; upgrades and saves are available in the browser menu.
+With one gamepad and split-screen enabled, keyboard/mouse controls player one and the gamepad controls player two. With two gamepads, each player has one. Controller disconnects pause the game. Mobile uses a left movement pad, right-side drag to look, and on-screen fire/jump/crouch/lift/lamp buttons; upgrades and saves are available in the browser menu. Each player's flashlight starts on and can be toggled independently, without a battery limit.
+
+Spitters visibly charge for 0.8 seconds before launching a slow glowing shot toward the position they aimed at. Keep moving sideways to evade it. Crawlers climb nearby walls and machinery before dropping back into pursuit. Health regeneration, the safe loading bay, and checkpoint respawns keep early exploration forgiving.
 
 Grav lifts currently transfer instantly between decks and establish a checkpoint. Death retains experience, skills, and equipment, restores health, and returns that player to the latest checkpoint. New expeditions replace the ship while retaining both characters. Re-entering a generated room preserves defeated enemies; partially injured enemies reset when their room unloads.
 
 **Generator 2 save migration.** Loading a prototype version-1 save preserves both characters’ ranks, experience, upgrades, points, kills, and appearance, and explicitly starts a new expedition at the entrance. Old geometry, positions, and encounter records cannot be reused with the new layouts. Version-2 saves include the generator version and preserve the current ship normally. Unknown generator versions are rejected without replacing the running game.
+
+The infestation update keeps generator and save version 2. Room dressing is cosmetic: existing collision, layouts, enemy identities, character progress, positions, and defeated-enemy records remain compatible. Active projectiles and flashlight switches are transient; loading clears shots and turns the lamps on.
 
 **Saves** are versioned, checksummed, and validated before replacing the current session. Native writes replace a temporary file; the default location comes from SDL's application preference directory (`Stbange/StarshipCrawl`). `--save-dir DIRECTORY` selects another location. Browser saves are local to the site's origin and browser profile; the HUD confirms completion after IndexedDB synchronization. Export a save to move it to another browser or device. A successful disk write alone is not reported as completed browser persistence.
 
@@ -97,7 +104,9 @@ Autosaves occur every 20 seconds of active play. Save explicitly before closing 
 
 # Inspect a specific room type.
 ./build/starship_crawl --seed 713 --scene hall --no-save
-# Other scenes: bay, engine, crew, tunnel, atrium, distant.
+# Other scenes: bay, engine, crew, tunnel, atrium, distant, encounter.
+# Reproducible crawler/spitter/heavy encounter, with saving disabled.
+./build/starship_crawl --seed 713 --scene encounter
 # Distant co-op diagnostic: player 1 is 288 million metres away; player 2 is at the bay.
 ./build/starship_crawl --seed 713 --scene distant --split --no-save
 
@@ -121,7 +130,7 @@ python3 tests/test_browser.py
 
 Build `sc_tests` before running the browser suite; use `SC_CORE_TEST` to select a different native test executable. The suite compares its semantic generation fingerprints against the running WASM build. Use `SC_BROWSER` to select an existing Chromium executable. The browser test starts and closes its own local HTTP server. Screenshots are written under `build-web/test-artifacts/`. Web query parameters `?seed=713&scene=hall` provide the same inspection workflow. Scene/seed overrides begin a fresh expedition; use them in a separate browser profile when keeping an existing expedition matters.
 
-The core suite checks 384 district layouts across 128 seeds for connected routes, disjoint footprints, loops, matching portals and traversal requirements. Collision tests walk connector paths and check floors; streaming tests cover load-order independence, fair scheduling, publication of complete halls, backtracking reuse, 100 moves with separated players, and persistent kills. Save tests include a real version-1 fixture, generator mismatch rejection, and distant coordinates. Browser tests exercise actual WASM/WebGL, native/WASM generation parity, crossing chunk boundaries inside a hall, distant split-screen cameras, IndexedDB save/reload, migration, mobile multitouch, and resizing. Real mobile GPU performance, Safari compatibility, physical gamepads, and Windows runtime behavior still need device testing.
+The core suite checks 384 district layouts across 128 seeds for connected routes, disjoint footprints, loops, matching portals and traversal requirements. Collision tests walk connector paths and check floors; streaming tests cover load-order independence, fair scheduling, publication of complete halls, backtracking reuse, 100 moves with separated players, and persistent kills. Combat tests exercise charged shots, dodging, swept player/wall collision, nearest-player hits in co-op, surface climbing, and fast pursuit. Save tests include real version-1 and pre-infestation version-2 fixtures, generator mismatch rejection, and distant coordinates. Browser tests exercise actual WASM/WebGL, native/WASM generation parity, crossing chunk boundaries inside a hall, distant split-screen cameras, IndexedDB save/reload, migration, wall-climbing and projectile rendering, keyboard/menu/touch flashlight controls, mobile multitouch, and resizing. Real mobile GPU performance, Safari compatibility, physical gamepads, and Windows runtime behavior still need device testing.
 
 **In the managed cloud workspace**, `scripts/setup-cloud.sh` prepares local build tools and graphics headers without requiring a system installation. It uses signed Debian package metadata and the allowed Debian/Python/GitHub download hosts. It is specific to the Debian 13 cloud image. After setup:
 
