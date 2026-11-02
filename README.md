@@ -5,7 +5,10 @@ Starship Crawl is a playable first-person prototype in C17, SDL3, and OpenGL / W
 The prototype includes:
 
 - A space approach and safe level-0 loading bay with left, right, inward, upper, and lower routes.
-- Seeded room streaming across multiple decks: cathedral halls, reactors, crew quarters, crouching passages, and gilded atriums with lighter gravity.
+- Deterministic habitat, machinery, and sanctum districts with connected routes, branches, loops, and vertical grav lifts.
+- Landmark halls spanning four chunks (180 × 180 × 58 metres), cabin clusters inside single chunks, crouching passages, and atriums with lighter gravity.
+- Incremental chunk generation and GPU uploads, retained neighborhoods during backtracking, and one shared bounded cache for optional co-op.
+- District materials, passage lighting, ambient drones, and an F3 district map with streaming diagnostics.
 - Movement, collision, jumping, crouching, sprinting, and grav lifts that activate checkpoints.
 - Three geometric enemy roles, a pulse carbine, hit feedback, procedural weapon audio, experience, and damage/health/fire-rate upgrades.
 - Three armor/weapon colors, forgiving respawns, new ships that retain character progression, and persistent defeated enemies.
@@ -74,11 +77,13 @@ python3 tests/test_browser.py --site-dir build-pages-preview --url-path /starshi
 | Optional second player | F2 | Browser menu or keyboard |
 | Save / load | F5 / F9 | Browser menu or keyboard |
 | New ship | N, then Enter to confirm; Esc cancels | Browser menu or keyboard |
-| Debug display | F3 | Keyboard |
+| District map / streaming diagnostics | F3 | Keyboard |
 
 With one gamepad and split-screen enabled, keyboard/mouse controls player one and the gamepad controls player two. With two gamepads, each player has one. Controller disconnects pause the game. Mobile uses a left movement pad, right-side drag to look, and on-screen fire/jump/crouch/lift buttons; upgrades and saves are available in the browser menu.
 
 Grav lifts currently transfer instantly between decks and establish a checkpoint. Death retains experience, skills, and equipment, restores health, and returns that player to the latest checkpoint. New expeditions replace the ship while retaining both characters. Re-entering a generated room preserves defeated enemies; partially injured enemies reset when their room unloads.
+
+**Generator 2 save migration.** Loading a prototype version-1 save preserves both characters’ ranks, experience, upgrades, points, kills, and appearance, and explicitly starts a new expedition at the entrance. Old geometry, positions, and encounter records cannot be reused with the new layouts. Version-2 saves include the generator version and preserve the current ship normally. Unknown generator versions are rejected without replacing the running game.
 
 **Saves** are versioned, checksummed, and validated before replacing the current session. Native writes replace a temporary file; the default location comes from SDL's application preference directory (`Stbange/StarshipCrawl`). `--save-dir DIRECTORY` selects another location. Browser saves are local to the site's origin and browser profile; the HUD confirms completion after IndexedDB synchronization. Export a save to move it to another browser or device. A successful disk write alone is not reported as completed browser persistence.
 
@@ -92,7 +97,12 @@ Autosaves occur every 20 seconds of active play. Save explicitly before closing 
 
 # Inspect a specific room type.
 ./build/starship_crawl --seed 713 --scene hall --no-save
-# Other scenes: bay, engine, crew, tunnel, atrium.
+# Other scenes: bay, engine, crew, tunnel, atrium, distant.
+# Distant co-op diagnostic: player 1 is 288 million metres away; player 2 is at the bay.
+./build/starship_crawl --seed 713 --scene distant --split --no-save
+
+# Portable semantic generation records for native/WASM comparison.
+./build/sc_tests --fingerprints
 
 # Run core checks without SDL or a graphics device.
 cmake -S . -B build-core -DSC_BUILD_GAME=OFF -DSC_SANITIZE=ON
@@ -109,9 +119,9 @@ python3 -m playwright install chromium
 python3 tests/test_browser.py
 ```
 
-Use `SC_BROWSER` to select an existing Chromium executable. The browser test starts and closes its own local HTTP server. Screenshots are written under `build-web/test-artifacts/`. Web query parameters `?seed=713&scene=hall` provide the same inspection workflow. Scene/seed overrides begin a fresh expedition; use them in a separate browser profile when keeping an existing expedition matters.
+Build `sc_tests` before running the browser suite; use `SC_CORE_TEST` to select a different native test executable. The suite compares its semantic generation fingerprints against the running WASM build. Use `SC_BROWSER` to select an existing Chromium executable. The browser test starts and closes its own local HTTP server. Screenshots are written under `build-web/test-artifacts/`. Web query parameters `?seed=713&scene=hall` provide the same inspection workflow. Scene/seed overrides begin a fresh expedition; use them in a separate browser profile when keeping an existing expedition matters.
 
-The core suite exercises 24 generation seeds, shared portals, load-order independence, active streaming bounds for separated players, persistent kills, gravity, crouch clearance, lifts, respawns, raycast combat, upgrades, solo/co-op transitions, and save failure handling. The browser suite exercises actual WASM and WebGL rendering, keyboard movement, firing, browser save/reload, split-screen toggling, rejected imports, all five interior types, simultaneous touch movement/fire, and resizing. Real mobile GPU performance, Safari compatibility, physical gamepads, and Windows runtime behavior still need device testing.
+The core suite checks 384 district layouts across 128 seeds for connected routes, disjoint footprints, loops, matching portals and traversal requirements. Collision tests walk connector paths and check floors; streaming tests cover load-order independence, fair scheduling, publication of complete halls, backtracking reuse, 100 moves with separated players, and persistent kills. Save tests include a real version-1 fixture, generator mismatch rejection, and distant coordinates. Browser tests exercise actual WASM/WebGL, native/WASM generation parity, crossing chunk boundaries inside a hall, distant split-screen cameras, IndexedDB save/reload, migration, mobile multitouch, and resizing. Real mobile GPU performance, Safari compatibility, physical gamepads, and Windows runtime behavior still need device testing.
 
 **In the managed cloud workspace**, `scripts/setup-cloud.sh` prepares local build tools and graphics headers without requiring a system installation. It uses signed Debian package metadata and the allowed Debian/Python/GitHub download hosts. It is specific to the Debian 13 cloud image. After setup:
 
@@ -123,6 +133,6 @@ ctest --test-dir build --output-on-failure
 SC_BROWSER=/usr/lib/chromium/chromium python3 tests/test_browser.py
 ```
 
-The engine modules are `world.c` (deterministic cells, geometry, collision, records), `game.c` (players, combat, progression), `save.c` (portable persistence), `render.c` (OpenGL rendering and HUD), and `main.c` (SDL lifecycle and input). The core has no SDL dependency. Simulation coordinates use doubles; rendered positions are relative to the streamed world origin. Meshes rebuild when the active region set changes, with one simulation shared by optional player cameras.
+The engine modules are `generation.c` (pure district plans and connector contracts), `world.c` (chunk geometry, streaming, population, collision, and world records), `game.c` (movement, combat, and progression), `save.c` (versioned persistence), `render.c` (chunk meshes, independent camera origins, and HUD), and `main.c` (SDL lifecycle, input, and mixed audio). The core has no SDL dependency. Players and enemies use integer sectors plus local double coordinates. Every static mesh uses chunk-local coordinates and receives a separate camera-relative offset for each viewport.
 
-This is the first playable foundation. Generation currently assembles six room families on a connected cell grid. District-level composition, halls spanning several generation cells, authored landmarks, richer enemy navigation, traps, riddles, full equipment inventories, animated lifts, and comprehensive appearance customization remain in [the development plan](DEVELOPMENT_PLAN.md). Generation and mesh rebuilding currently run synchronously; streaming and lighting need further profiling before claiming a mobile performance target.
+Milestone 3 is implemented. See [WORLD_GENERATION.md](WORLD_GENERATION.md) for the generation rules, streaming limits, persistence policy, and diagnostics. The current district library uses axis-aligned architecture and one four-chunk landmark per region; more landmark shapes and structures spanning multiple decks belong to the content expansion milestone. Richer enemy navigation, traps, riddles, full equipment inventories, animated lifts, and comprehensive appearance customization remain in [the development plan](DEVELOPMENT_PLAN.md). Generation and uploads are capped by work units per frame; a sustained frame-rate target still requires profiling on named physical devices.

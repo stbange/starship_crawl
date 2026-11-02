@@ -39,7 +39,10 @@ typedef struct {
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
     int frame, smoke_frames;
-    double last, accumulator, fps, autosave;
+    double last, accumulator, fps, autosave, audio_time;
+    float ambience[DISTRICT_TYPES];
+    uint32_t audio_shots, audio_noise;
+    int shot_sample;
     char save_path[1024], save_status[96];
     const char *capture;
 } App;
@@ -108,30 +111,81 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     } else if (action == 0)
         set_pause(true);
 }
+EMSCRIPTEN_KEEPALIVE uint32_t sc_web_fingerprint(uint32_t seed, int x, int y, int z) {
+    if (x < -2000000 || x > 2000000 || y < -1000000 || y > 1000000 || z < 0 || z > 2000000)
+        return 0;
+    return world_fingerprint(seed, (Cell){x, y, z});
+}
 EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
-    static char result[512];
+    static char result[1024];
     const Player *p = &app.game.players[0];
-    snprintf(result, sizeof(result),
-             "{\"seed\":%u,\"players\":%d,\"paused\":%s,\"frames\":%d,\"rooms\":%d,\"x\":%.5f,"
-             "\"y\":%.5f,\"z\":%.5f,\"rank\":%u,\"kills\":%u,\"shots\":%u,\"failed\":%s}",
-             app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
-             app.game.world.count, p->pos.x, p->pos.y, p->pos.z, p->level, p->kills, app.game.shots,
-             app.failed ? "true" : "false");
+    Vec3 feet = position_absolute(p->pos);
+    Room *room = world_find(&app.game.world, world_cell(feet));
+    snprintf(
+        result, sizeof(result),
+        "{\"seed\":%u,\"players\":%d,\"paused\":%s,\"frames\":%d,\"rooms\":%d,"
+        "\"x\":%.5f,\"y\":%.5f,\"z\":%.5f,\"rank\":%u,\"kills\":%u,\"shots\":%u,\"failed\":%s,"
+        "\"generator\":%u,\"chunks\":%d,\"pending\":%d,\"generated\":%u,\"work\":%u,\"uploads\":%u,"
+        "\"span\":%d,\"ready\":%s,\"fingerprint\":%u}",
+        app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
+        app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
+        app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
+        app.game.world.pending, app.game.world.generated, app.game.world.last_work,
+        app.renderer.last_uploads, room ? room->span_x * room->span_z : 0,
+        room && room->ready ? "true" : "false",
+        world_fingerprint(app.game.world.seed, world_region(world_cell(feet))));
     return result;
 }
-static void tone(void) {
-    if (!app.audio || SDL_GetAudioStreamQueued(app.audio) > 22050)
+static void audio_frame(void) {
+    if (!app.audio)
         return;
-    float samples[1800];
-    uint32_t noise = 27;
-    for (int i = 0; i < 1800; i++) {
-        double t = (double)i / 22050, envelope = exp(-t * 65);
-        noise = noise * 1664525u + 1013904223u;
-        samples[i] =
-            (float)((sin(t * (1600 - t * 5000)) * 0.11 + ((double)(noise % 1000) / 500 - 1) * .05) *
-                    envelope);
+    if (app.paused) {
+        SDL_ClearAudioStream(app.audio);
+        app.audio_shots = app.game.shots;
+        app.shot_sample = 1800;
+        return;
     }
-    SDL_PutAudioStreamData(app.audio, samples, sizeof(samples));
+    if (app.audio_shots != app.game.shots) {
+        app.audio_shots = app.game.shots;
+        app.shot_sample = 0;
+        app.audio_noise = 27;
+    }
+    float target[DISTRICT_TYPES] = {0};
+    for (int i = 0; i < app.game.player_count; i++) {
+        Vec3 feet = position_absolute(app.game.players[i].pos);
+        Room *room = world_find(&app.game.world, world_cell(feet));
+        if (feet.z >= 0 && room && room->ready)
+            target[room->district] += (room->type == CONDUIT ? .45f : 1.0f) / app.game.player_count;
+    }
+    /* A small single mixed output: district drones crossfade, including co-op
+       views in different districts. Generation never touches the audio device. */
+    int queued = SDL_GetAudioStreamQueued(app.audio);
+    for (int block = 0; block < 4 && queued < 8192; block++) {
+        float samples[512];
+        for (int i = 0; i < 512; i++) {
+            double t = app.audio_time;
+            for (int d = 0; d < DISTRICT_TYPES; d++)
+                app.ambience[d] += (target[d] - app.ambience[d]) * .0005f;
+            double ambient = app.ambience[HABITAT] *
+                             (sin(t * SC_PI * 2 * 54) + .3 * sin(t * SC_PI * 2 * 81)) * .009;
+            ambient += app.ambience[MACHINERY] *
+                       (sin(t * SC_PI * 2 * 37.5) + .45 * sin(t * SC_PI * 2 * 112.5)) * .014;
+            ambient += app.ambience[SANCTUM] *
+                       (sin(t * SC_PI * 2 * 65.4) + sin(t * SC_PI * 2 * 98.1)) * .007;
+            double shot = 0;
+            if (app.shot_sample < 1800) {
+                double age = (double)app.shot_sample++ / 22050;
+                app.audio_noise = app.audio_noise * 1664525u + 1013904223u;
+                shot = (sin(age * (1600 - age * 5000)) * .11 +
+                        ((double)(app.audio_noise % 1000) / 500 - 1) * .05) *
+                       exp(-age * 65);
+            }
+            samples[i] = (float)(ambient + shot);
+            app.audio_time += 1.0 / 22050;
+        }
+        SDL_PutAudioStreamData(app.audio, samples, sizeof(samples));
+        queued += (int)sizeof(samples);
+    }
 }
 static void open_pad(SDL_JoystickID id) {
     for (int i = 0; i < 2; i++)
@@ -391,23 +445,25 @@ static void frame(void *unused) {
         dt = 1.0 / 60;
     app.fps = app.fps * .96 + (dt > 0 ? 1 / dt : 60) * .04;
     events();
+    Vec3 stream_positions[2] = {position_absolute(app.game.players[0].pos),
+                                position_absolute(app.game.players[1].pos)};
+    world_refresh(&app.game.world, stream_positions, app.game.player_count);
+    world_stream(&app.game.world, SC_STREAM_BUDGET);
     if (!app.paused) {
         Actions actions[2];
         read_actions(actions, dt);
         app.accumulator += dt;
-        uint32_t shots = app.game.shots;
         while (app.accumulator >= 1.0 / 60) {
             game_step(&app.game, actions, 1.0 / 60);
             app.accumulator -= 1.0 / 60;
         }
-        if (app.game.shots != shots)
-            tone();
         app.autosave += dt;
         if (app.autosave > 20) {
             save_game();
             app.autosave = 0;
         }
     }
+    audio_frame();
 #ifdef __EMSCRIPTEN__
     int status = browser_storage_status();
     if (status == 3)
@@ -455,6 +511,7 @@ int main(int argc, char **argv) {
     app.running = true;
     app.paused = true;
     app.fps = 60;
+    app.shot_sample = 1800;
     uint32_t seed = (uint32_t)time(NULL);
     bool fresh = false, split = false;
     const char *save_dir = NULL, *scene = NULL;
@@ -493,7 +550,8 @@ int main(int argc, char **argv) {
         } else if (!strcmp(argv[i], "--help")) {
             puts("Starship Crawl\n  --seed NUMBER --new --no-save --save-dir DIRECTORY\n  --touch "
                  "--split --smoke FRAMES --capture FILE.ppm\n  --scene "
-                 "bay|hall|engine|crew|tunnel|atrium\nSolo by default. F2 explicitly toggles local "
+                 "bay|hall|engine|crew|tunnel|atrium|distant\nSolo by default. F2 explicitly "
+                 "toggles local "
                  "split-screen.");
             return 0;
         } else {
@@ -568,14 +626,19 @@ int main(int argc, char **argv) {
             c.y = -1;
         else if (!strcmp(scene, "atrium"))
             c.y = 1;
-        app.game.players[0].pos = vadd(world_center(c), v3(0, .02, -25));
-        app.game.players[0].crouched = c.y == -1;
+        else if (!strcmp(scene, "distant"))
+            c = (Cell){3000000, 2000, 3000000};
+        app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, -25)));
+        app.game.players[0].crouched = world_describe(seed, c).type == CONDUIT;
         app.game.players[0].pitch = .03;
-        Vec3 p = app.game.players[0].pos;
+        Vec3 p = position_absolute(app.game.players[0].pos);
         world_refresh(&app.game.world, &p, 1);
     }
-    if (split)
+    if (split) {
         game_join(&app.game);
+        if (scene && !strcmp(scene, "distant"))
+            app.game.players[1].pos = position_from(v3(0, 4, -34));
+    }
     int count = 0;
     SDL_JoystickID *ids = SDL_GetGamepads(&count);
     for (int i = 0; i < count; i++)

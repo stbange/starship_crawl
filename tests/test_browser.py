@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import threading
+import subprocess
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,12 +20,16 @@ class QuietHandler(SimpleHTTPRequestHandler):
 
 
 def state(page):
-    return json.loads(page.evaluate("Module.ccall('sc_web_state','string',[],[])"))
+    result = json.loads(page.evaluate("Module.ccall('sc_web_state','string',[],[])"))
+    assert result["work"] <= 2 and result["uploads"] <= 2, result
+    assert result["chunks"] <= 192, result
+    return result
 
 
 def wait_ready(page):
     page.wait_for_function("typeof Module !== 'undefined' && !document.getElementById('start').disabled", timeout=60000)
     page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 2", timeout=30000)
+    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0", timeout=30000)
 
 
 def run():
@@ -55,6 +60,13 @@ def run():
             page.goto(base + "?seed=713")
             wait_ready(page)
             assert state(page)["players"] == 1
+            assert state(page)["generator"] == 2
+            native = Path(os.environ.get("SC_CORE_TEST", str(ROOT / "build" / "sc_tests")))
+            assert native.is_file(), "Build sc_tests or set SC_CORE_TEST for native/WASM generation parity"
+            probes = json.loads(subprocess.check_output([str(native), "--fingerprints"]))
+            for probe in probes:
+                actual = page.evaluate("args => Module.ccall('sc_web_fingerprint','number',['number','number','number','number'],args) >>> 0", [probe["seed"], *probe["region"]])
+                assert actual == probe["hash"], (probe, actual)
             page.screenshot(path=str(ARTIFACTS / "arrival-menu.png"))
             page.locator("#start").click()
             page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
@@ -81,6 +93,7 @@ def run():
             page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).players === 2")
             page.screenshot(path=str(ARTIFACTS / "optional-split.png"))
             page.keyboard.press("F2")
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).players === 1")
             assert state(page)["players"] == 1
             page.evaluate("Module.ccall('sc_web_action',null,['number'],[0])")
             # A malformed import must not mutate the current expedition.
@@ -94,6 +107,42 @@ def run():
                 page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 5")
                 page.screenshot(path=str(ARTIFACTS / (scene + ".png")))
                 assert not state(page)["failed"]
+                if scene == "hall":
+                    assert state(page)["span"] == 4 and state(page)["ready"]
+                    # Cross a storage chunk boundary inside one continuous hall.
+                    start_generated = state(page)["generated"]
+                    page.keyboard.down("w")
+                    page.keyboard.down("Shift")
+                    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > 195", timeout=30000)
+                    page.keyboard.up("w")
+                    page.keyboard.up("Shift")
+                    current = state(page)
+                    assert current["ready"] and current["span"] == 4 and current["y"] < .2
+                    assert current["generated"] >= start_generated
+                    page.screenshot(path=str(ARTIFACTS / "hall-across-chunks.png"))
+            # Independent camera origins: one player deep inside a distant district,
+            # the other at the entrance, sharing bounded generation and upload work.
+            page.goto(base + "?seed=713&scene=distant&split")
+            wait_ready(page)
+            assert state(page)["players"] == 2 and state(page)["x"] > 287999000
+            page.locator("#start").click()
+            page.screenshot(path=str(ARTIFACTS / "distant-split.png"))
+            assert not state(page)["failed"]
+            page.evaluate("Module.ccall('sc_web_action',null,['number'],[0])")
+            page.evaluate("Module.ccall('sc_web_save',null,[],[])")
+            page.wait_for_function("window.scStorage.status === 3", timeout=10000)
+            far_saved = state(page)
+            page.goto(base)
+            wait_ready(page)
+            assert state(page)["players"] == 1 and abs(state(page)["x"]-far_saved["x"]) < .1
+            # A real save from generator v1 keeps character progress and starts a new ship.
+            legacy = list((ROOT / "tests" / "fixtures" / "generator-v1.sav").read_bytes())
+            page.evaluate("data => Module.FS.writeFile('/persist/import.sav',new Uint8Array(data))", legacy)
+            assert page.evaluate("Module.ccall('sc_web_import','number',[],[])") == 1
+            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0")
+            migrated = state(page)
+            assert migrated["rank"] == 7 and migrated["kills"] == 81 and migrated["z"] == -34
+            assert migrated["players"] == 1 and migrated["seed"] != 123456
             assert not errors, errors
             context.close()
 
@@ -120,7 +169,7 @@ def run():
             assert not errors, errors
             mobile.close()
             browser.close()
-            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, five interiors, multitouch, resize")
+            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, five interiors, hall traversal across chunks, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
     finally:
         server.shutdown()
         server.server_close()

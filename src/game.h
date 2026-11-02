@@ -3,7 +3,8 @@
 #include "world.h"
 #define SC_PLAYERS 2
 typedef struct {
-    Vec3 pos, velocity, checkpoint;
+    Position pos, checkpoint;
+    Vec3 velocity;
     double yaw, pitch;
     float health, cooldown, hurt, muzzle, lift_cooldown;
     uint32_t xp, level, kills, points, power, vitality, haste, tint;

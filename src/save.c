@@ -54,9 +54,28 @@ static bool valid_vector(Vec3 v) {
     return isfinite(v.x) && isfinite(v.y) && isfinite(v.z) && fabs(v.x) < 9e8 && fabs(v.y) < 3e8 &&
            fabs(v.z) < 9e8;
 }
-static void profile(Stream *s, Player *p, bool read) {
-    p->pos = vector(s, p->pos, read);
-    p->checkpoint = vector(s, p->checkpoint, read);
+static Position location(Stream *s, Position p, bool read, bool legacy) {
+    if (legacy) {
+        Vec3 v = vector(s, position_absolute(p), read);
+        if (!valid_vector(v)) {
+            s->ok = false;
+            return (Position){0};
+        }
+        return position_from(v);
+    }
+    p.sector.x = (int32_t)number(s, (uint32_t)p.sector.x, read);
+    p.sector.y = (int32_t)number(s, (uint32_t)p.sector.y, read);
+    p.sector.z = (int32_t)number(s, (uint32_t)p.sector.z, read);
+    p.local = vector(s, p.local, read);
+    if (!valid_vector(p.local) || p.local.x < -48 || p.local.x >= 48 || p.local.y < 0 ||
+        p.local.y >= SC_DECK || p.local.z < -48 || p.local.z >= 48 ||
+        !valid_vector(position_absolute(p)))
+        s->ok = false;
+    return p;
+}
+static void profile(Stream *s, Player *p, bool read, bool legacy) {
+    p->pos = location(s, p->pos, read, legacy);
+    p->checkpoint = location(s, p->checkpoint, read, legacy);
     p->yaw = real(s, p->yaw, read);
     p->pitch = real(s, p->pitch, read);
     p->level = number(s, p->level, read);
@@ -69,7 +88,8 @@ static void profile(Stream *s, Player *p, bool read) {
     p->tint = number(s, p->tint, read);
     p->health = (float)real(s, p->health, read);
     if (read) {
-        if (!valid_vector(p->pos) || !valid_vector(p->checkpoint) || !isfinite(p->yaw) ||
+        if (!valid_vector(position_absolute(p->pos)) ||
+            !valid_vector(position_absolute(p->checkpoint)) || !isfinite(p->yaw) ||
             !isfinite(p->pitch) || p->level < 1 || p->level > 1000 || p->xp > 100000 ||
             p->points > 1000 || p->power > 50 || p->vitality > 50 || p->haste > 50 ||
             !isfinite(p->health) || p->health <= 0 || p->health > player_max_health(p) ||
@@ -94,12 +114,13 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 1, false);
+    number(&s, 2, false);
     number(&s, g->world.seed, false);
+    number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player p = g->players[i];
-        profile(&s, &p, false);
+        profile(&s, &p, false, false);
     }
     number(&s, (uint32_t)g->world.record_count, false);
     for (size_t i = 0; i < g->world.record_count; i++) {
@@ -134,12 +155,14 @@ bool game_load(Game *g, const char *path) {
         return false;
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
-    if (magic != UINT32_C(0x5343524c) || version != 1)
+    uint32_t generator = version == 2 ? number(&s, 0, true) : 1;
+    if (magic != UINT32_C(0x5343524c) || (version != 1 && version != 2) ||
+        (version == 2 && generator != SC_GENERATOR_VERSION))
         s.ok = false;
     Player players[SC_PLAYERS];
     memset(players, 0, sizeof(players));
     for (int i = 0; i < SC_PLAYERS; i++)
-        profile(&s, &players[i], true);
+        profile(&s, &players[i], true, version == 1);
     uint32_t count = number(&s, 0, true);
     if (count > 1000000)
         s.ok = false;
@@ -168,20 +191,43 @@ bool game_load(Game *g, const char *path) {
         free(records);
         return false;
     }
-    World replacement;
-    world_init(&replacement, seed);
-    replacement.records = records;
-    replacement.record_count = count;
-    replacement.record_cap = count;
-    if (!world_refresh(&replacement, &players[0].pos, 1)) {
-        world_destroy(&replacement);
+    if (version == 1) {
+        /* Incompatible geometry must not reinterpret old doors, kills or positions.
+           Keep both profiles and visibly begin a new expedition instead. */
+        free(records);
+        records = NULL;
+        count = 0;
+        seed = world_hash(seed, (Cell){0, 0, 0}, UINT32_C(0x4d494752));
+        for (int i = 0; i < SC_PLAYERS; i++) {
+            players[i].pos = position_from(v3(i * 1.4, 4, -34));
+            players[i].checkpoint = position_from(v3(0, .02, 12));
+            players[i].health = player_max_health(&players[i]);
+            players[i].yaw = 0;
+            players[i].pitch = -.04;
+        }
+    }
+    World *replacement = malloc(sizeof(*replacement));
+    if (!replacement) {
+        free(records);
+        return false;
+    }
+    world_init(replacement, seed);
+    replacement->records = records;
+    replacement->record_count = count;
+    replacement->record_cap = count;
+    Vec3 start = position_absolute(players[0].pos);
+    if (!world_index_records(replacement) || !world_refresh(replacement, &start, 1)) {
+        world_destroy(replacement);
+        free(replacement);
         return false;
     }
     world_destroy(&g->world);
-    g->world = replacement;
+    g->world = *replacement;
+    free(replacement);
     memcpy(g->players, players, sizeof(players));
     g->player_count = 1;
-    g->dirty = false;
-    game_message(g, "EXPEDITION RESUMED / WELCOME BACK");
+    g->dirty = version == 1;
+    game_message(g, version == 1 ? "SHIP GENERATOR UPDATED / CHARACTERS RETAINED / NEW EXPEDITION"
+                                 : "EXPEDITION RESUMED / WELCOME BACK");
     return true;
 }

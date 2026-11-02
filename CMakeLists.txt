@@ -10,7 +10,7 @@ endif()
 option(SC_BUILD_GAME "Build the SDL/OpenGL application" ON)
 option(SC_SANITIZE "Enable address and undefined behavior sanitizers" OFF)
 
-add_library(sc_core src/world.c src/game.c src/save.c)
+add_library(sc_core src/generation.c src/world.c src/game.c src/save.c)
 set_target_properties(sc_core PROPERTIES C_EXTENSIONS OFF)
 target_include_directories(sc_core PUBLIC src)
 if(NOT MSVC)
@@ -26,6 +26,7 @@ include(CTest)
 if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_executable(sc_tests tests/test_core.c)
   target_link_libraries(sc_tests PRIVATE sc_core)
+  target_compile_definitions(sc_tests PRIVATE SC_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
   add_test(NAME core COMMAND sc_tests)
 endif()
 
@@ -52,7 +53,7 @@ if(SC_BUILD_GAME)
       "-sMIN_WEBGL_VERSION=2" "-sMAX_WEBGL_VERSION=2"
       "-sALLOW_MEMORY_GROWTH=1" "-sINITIAL_MEMORY=67108864" "-sMAXIMUM_MEMORY=268435456"
       "-sMINIFY_HTML=0"
-      "-sEXPORTED_FUNCTIONS=['_main','_sc_web_start','_sc_web_save','_sc_web_state','_sc_web_action','_sc_web_import']"
+      "-sEXPORTED_FUNCTIONS=['_main','_sc_web_start','_sc_web_save','_sc_web_state','_sc_web_action','_sc_web_import','_sc_web_fingerprint']"
       "-sEXPORTED_RUNTIME_METHODS=['ccall','FS']" "-sFORCE_FILESYSTEM=1"
       "-lidbfs.js" "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html"
       "--pre-js=${CMAKE_CURRENT_SOURCE_DIR}/web/storage.js")

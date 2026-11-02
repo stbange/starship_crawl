@@ -9,7 +9,7 @@ unsigned player_next_level(const Player *p) {
     return 80 + 40 * (p->level - 1);
 }
 Vec3 player_eye(const Player *p) {
-    return vadd(p->pos, v3(0, p->crouched ? .85 : 1.62, 0));
+    return vadd(position_absolute(p->pos), v3(0, p->crouched ? .85 : 1.62, 0));
 }
 void game_message(Game *g, const char *s) {
     snprintf(g->message, sizeof(g->message), "%s", s);
@@ -17,8 +17,8 @@ void game_message(Game *g, const char *s) {
 }
 static void player_init(Player *p) {
     memset(p, 0, sizeof(*p));
-    p->pos = v3(0, 4, -34);
-    p->checkpoint = v3(0, .02, 12);
+    p->pos = position_from(v3(0, 4, -34));
+    p->checkpoint = position_from(v3(0, .02, 12));
     p->level = 1;
     p->health = 100;
     p->pitch = -.04;
@@ -29,7 +29,7 @@ void game_init(Game *g, uint32_t seed) {
     g->player_count = 1;
     for (int i = 0; i < SC_PLAYERS; i++)
         player_init(&g->players[i]);
-    Vec3 p = g->players[0].pos;
+    Vec3 p = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &p, 1);
     game_message(g, "THE BAY IS SAFE. THE SHIP BEYOND IT IS NOT.");
 }
@@ -44,11 +44,12 @@ void game_join(Game *g) {
     if (g->player_count == 2)
         return;
     Player *p = &g->players[1];
-    p->pos = vadd(g->players[0].pos, v3(1.4, 0, 0));
+    p->pos = g->players[0].pos;
+    position_move(&p->pos, v3(1.4, 0, 0));
     p->checkpoint = g->players[0].checkpoint;
-    if (world_overlap(&g->world, p->pos, .34, 1.78))
+    if (world_overlap(&g->world, position_absolute(p->pos), .34, 1.78))
         p->pos = g->players[0].pos;
-    p->crouched = world_overlap(&g->world, p->pos, .34, 1.78);
+    p->crouched = world_overlap(&g->world, position_absolute(p->pos), .34, 1.78);
     p->velocity = v3(0, 0, 0);
     p->yaw = g->players[0].yaw;
     p->pitch = 0;
@@ -67,8 +68,8 @@ void game_new_ship(Game *g, uint32_t seed) {
     world_init(&g->world, seed);
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player *p = &g->players[i];
-        p->pos = v3(i * 1.4, 4, -34);
-        p->checkpoint = v3(0, .02, 12);
+        p->pos = position_from(v3(i * 1.4, 4, -34));
+        p->checkpoint = position_from(v3(0, .02, 12));
         p->velocity = v3(0, 0, 0);
         p->yaw = 0;
         p->pitch = -.04;
@@ -76,7 +77,8 @@ void game_new_ship(Game *g, uint32_t seed) {
         p->grounded = false;
         p->crouched = false;
     }
-    Vec3 positions[2] = {g->players[0].pos, g->players[1].pos};
+    Vec3 positions[2] = {position_absolute(g->players[0].pos),
+                         position_absolute(g->players[1].pos)};
     world_refresh(&g->world, positions, g->player_count);
     g->dirty = true;
     game_message(g, "NEW SHIP / YOUR CHARACTER ENDURES");
@@ -111,7 +113,8 @@ static void award(Game *g, Player *p, unsigned xp) {
     }
     g->dirty = true;
 }
-static void move_body(World *w, Vec3 *p, Vec3 delta, double radius, double height, bool *grounded) {
+static void move_body(World *w, Position *p, Vec3 delta, double radius, double height,
+                      bool *grounded) {
     int steps = (int)ceil(vlen(delta) / .16);
     if (steps < 1)
         steps = 1;
@@ -120,14 +123,11 @@ static void move_body(World *w, Vec3 *p, Vec3 delta, double radius, double heigh
     delta = vmul(delta, 1.0 / steps);
     for (int i = 0; i < steps; i++)
         for (int axis = 0; axis < 3; axis++) {
-            Vec3 q = *p;
-            if (axis == 0)
-                q.x += delta.x;
-            else if (axis == 1)
-                q.z += delta.z;
-            else
-                q.y += delta.y;
-            if (!world_overlap(w, q, radius, height))
+            Position q = *p;
+            Vec3 part =
+                v3(axis == 0 ? delta.x : 0, axis == 2 ? delta.y : 0, axis == 1 ? delta.z : 0);
+            position_move(&q, part);
+            if (!world_overlap(w, position_absolute(q), radius, height))
                 *p = q;
             else if (axis == 2 && delta.y < 0 && grounded)
                 *grounded = true;
@@ -147,7 +147,7 @@ static void shoot(Game *g, Player *p) {
             Enemy *e = &room->enemies[i];
             if (!e->alive)
                 continue;
-            Vec3 center = vadd(e->pos, v3(0, .75, 0)), oc = vsub(origin, center);
+            Vec3 center = vadd(position_absolute(e->pos), v3(0, .75, 0)), oc = vsub(origin, center);
             double radius = e->kind == 2 ? 1.05 : .70;
             double b = vdot(oc, dir), c = vdot(oc, oc) - radius * radius, disc = b * b - c;
             if (disc < 0)
@@ -176,10 +176,10 @@ static void shoot(Game *g, Player *p) {
     }
 }
 static void move_player(Game *g, Player *p, const Actions *a, double dt) {
-    bool outside = p->pos.z < 0;
+    bool outside = position_absolute(p->pos).z < 0;
     if (a->crouch)
         p->crouched = true;
-    else if (!world_overlap(&g->world, p->pos, .34, 1.78))
+    else if (!world_overlap(&g->world, position_absolute(p->pos), .34, 1.78))
         p->crouched = false;
     Vec3 forward = outside ? facing(p->yaw, p->pitch) : v3(sin(p->yaw), 0, cos(p->yaw));
     Vec3 right = v3(cos(p->yaw), 0, -sin(p->yaw));
@@ -192,7 +192,7 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
     if (outside)
         p->velocity = vmul(wish, speed);
     else {
-        Room *room = world_find(&g->world, world_cell(p->pos));
+        Room *room = world_find(&g->world, world_cell(position_absolute(p->pos)));
         double gravity = room && room->type == GARDEN ? 9 : 22;
         p->velocity.x = wish.x * speed;
         p->velocity.z = wish.z * speed;
@@ -204,25 +204,30 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
         p->velocity.y = fmax(-30, p->velocity.y - gravity * dt);
     }
     p->grounded = false;
-    Vec3 before = p->pos;
+    double before_y = p->pos.local.y;
     move_body(&g->world, &p->pos, vmul(p->velocity, dt), .34, p->crouched ? 1.0 : 1.78,
               &p->grounded);
-    if (fabs(p->pos.y - before.y) < 1e-7 && p->velocity.y > 0)
+    if (fabs(p->pos.local.y - before_y) < 1e-7 && p->velocity.y > 0)
         p->velocity.y = 0;
     if (p->grounded)
         p->velocity.y = 0;
     p->lift_cooldown = fmaxf(0, p->lift_cooldown - (float)dt);
-    Cell cell = world_cell(p->pos);
-    Vec3 lift = world_lift(cell), diff = vsub(p->pos, lift);
+    Cell cell = world_cell(position_absolute(p->pos));
+    Vec3 lift = world_lift(cell), diff = vsub(position_absolute(p->pos), lift);
     diff.y = 0;
     if (!outside && vlen(diff) < 3.3 && p->lift_cooldown <= 0 && (a->lift_up || a->lift_down)) {
         cell.y += a->lift_up ? 1 : -1;
-        p->pos = world_lift(cell);
+        if (!world_ready(&g->world, cell)) {
+            game_message(g, "SURVEYING DESTINATION / LIFT CHARGING");
+            return;
+        }
+        p->pos = position_from(world_lift(cell));
         p->checkpoint = p->pos;
         p->velocity = v3(0, 0, 0);
         p->crouched = true;
         p->lift_cooldown = 1;
-        Vec3 positions[2] = {g->players[0].pos, g->players[1].pos};
+        Vec3 positions[2] = {position_absolute(g->players[0].pos),
+                             position_absolute(g->players[1].pos)};
         world_refresh(&g->world, positions, g->player_count);
         game_message(g, "GRAV LIFT / CHECKPOINT SYNCHRONIZED");
         g->dirty = true;
@@ -233,11 +238,15 @@ void game_step(Game *g, const Actions *actions, double dt) {
         return;
     g->time += dt;
     g->message_time = fmaxf(0, g->message_time - (float)dt);
-    Vec3 positions[2] = {g->players[0].pos, g->players[1].pos};
+    Vec3 positions[2] = {position_absolute(g->players[0].pos),
+                         position_absolute(g->players[1].pos)};
     if (!world_refresh(&g->world, positions, g->player_count))
         return;
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
+        if (position_absolute(p->pos).z >= 0 &&
+            !world_ready(&g->world, world_cell(position_absolute(p->pos))))
+            continue;
         p->cooldown = fmaxf(0, p->cooldown - (float)dt);
         p->muzzle = fmaxf(0, p->muzzle - (float)dt);
         p->hurt = fmaxf(0, p->hurt - (float)dt);
@@ -259,11 +268,12 @@ void game_step(Game *g, const Actions *actions, double dt) {
             double best = 48;
             for (int p = 0; p < g->player_count; p++) {
                 Player *t = &g->players[p];
-                if (t->pos.z < 0 || world_difficulty(world_cell(t->pos)) == 0)
+                if (position_absolute(t->pos).z < 0 ||
+                    world_difficulty(world_cell(position_absolute(t->pos))) == 0)
                     continue;
-                if (fabs(t->pos.y - e->pos.y) > 3)
+                if (fabs(position_delta(t->pos, e->pos).y) > 3)
                     continue;
-                double distance = vlen(vsub(t->pos, e->pos));
+                double distance = vlen(position_delta(t->pos, e->pos));
                 if (distance < best) {
                     best = distance;
                     target = t;
@@ -271,7 +281,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
             }
             if (!target)
                 continue;
-            Vec3 diff = vsub(target->pos, e->pos);
+            Vec3 diff = position_delta(target->pos, e->pos);
             diff.y = 0;
             Vec3 direction = vnorm(diff);
             double range = e->kind == 1 ? 14 : 1.6;
@@ -280,7 +290,8 @@ void game_step(Game *g, const Actions *actions, double dt) {
                 move_body(&g->world, &e->pos, vmul(direction, speed * dt), .42, 1.25, NULL);
             }
             if (best < range && e->cooldown <= 0) {
-                Vec3 eye = vadd(e->pos, v3(0, .8, 0)), to = vsub(player_eye(target), eye);
+                Vec3 eye = vadd(position_absolute(e->pos), v3(0, .8, 0)),
+                     to = vsub(player_eye(target), eye);
                 if (world_raycast(&g->world, eye, vnorm(to), vlen(to)) >= vlen(to) - .1) {
                     target->health -= 8 + (float)fmin(world_difficulty(room->cell) * 1.5, 24);
                     target->hurt = .8f;
@@ -291,7 +302,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     }
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
-        if (p->health <= 0 || p->pos.y < -1000000 || p->pos.z < -400) {
+        if (p->health <= 0 || position_absolute(p->pos).z < -400) {
             p->pos = p->checkpoint;
             p->velocity = v3(0, 0, 0);
             p->health = player_max_health(p);

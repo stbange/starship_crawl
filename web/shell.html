@@ -34,6 +34,7 @@ const query=new URLSearchParams(location.search);const args=[];
 if(query.has('seed'))args.push('--seed',query.get('seed'));
 if(query.has('scene'))args.push('--scene',query.get('scene'));
 if(query.has('touch'))args.push('--touch');
+if(query.has('split'))args.push('--split');
 function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(innerWidth*dpr);canvas.height=Math.round(innerHeight*dpr)}
 resize();window.addEventListener('resize',resize);
 var Module={canvas,arguments:args,print:console.log,printErr:console.error,setStatus(text){if(text)status.textContent=text},onAbort(reason){status.textContent='The engine could not start: '+reason;status.classList.add('error');start.textContent='Unable to board'}};

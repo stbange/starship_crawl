@@ -4,15 +4,16 @@
 #include <string.h>
 #include <ctype.h>
 
-static const char *vertex_source =
-    "layout(location=0) in vec3 aPosition;\n"
-    "layout(location=1) in vec3 aNormal;\n"
-    "layout(location=2) in vec3 aColor;\n"
-    "layout(location=3) in float aGlow;\n"
-    "uniform mat4 uMVP;out vec3 vPosition;out vec3 vNormal;out vec3 vColor;out float vGlow;\n"
-    "void "
-    "main(){vPosition=aPosition;vNormal=aNormal;vColor=aColor;vGlow=aGlow;gl_Position=uMVP*vec4("
-    "aPosition,1.0);}\n";
+static const char *vertex_source = "layout(location=0) in vec3 aPosition;\n"
+                                   "layout(location=1) in vec3 aNormal;\n"
+                                   "layout(location=2) in vec3 aColor;\n"
+                                   "layout(location=3) in float aGlow;\n"
+                                   "uniform mat4 uMVP;uniform vec3 uOffset;out vec3 vPosition;out "
+                                   "vec3 vNormal;out vec3 vColor;out float vGlow;\n"
+                                   "void "
+                                   "main(){vPosition=aPosition+uOffset;vNormal=aNormal;vColor="
+                                   "aColor;vGlow=aGlow;gl_Position=uMVP*vec4("
+                                   "vPosition,1.0);}\n";
 static const char *fragment_source =
     "in vec3 vPosition;in vec3 vNormal;in vec3 vColor;in float vGlow;\n"
     "uniform vec3 uEye;uniform vec3 uGrid;uniform int uUI;out vec4 result;\n"
@@ -95,9 +96,9 @@ bool renderer_init(Renderer *r) {
     r->eye = gl.GetUniformLocation(r->program, "uEye");
     r->grid = gl.GetUniformLocation(r->program, "uGrid");
     r->ui = gl.GetUniformLocation(r->program, "uUI");
+    r->offset = gl.GetUniformLocation(r->program, "uOffset");
     gl.GenVertexArrays(1, &r->vao);
     gl.GenBuffers(1, &r->vbo);
-    gl.GenBuffers(1, &r->world_vbo);
     gl.GenFramebuffers(1, &r->framebuffer);
     gl.GenTextures(1, &r->texture);
     gl.GenRenderbuffers(1, &r->depth);
@@ -114,14 +115,15 @@ void renderer_destroy(Renderer *r) {
         gl.DeleteVertexArrays(1, &r->vao);
     if (r->vbo)
         gl.DeleteBuffers(1, &r->vbo);
-    if (r->world_vbo)
-        gl.DeleteBuffers(1, &r->world_vbo);
     if (r->framebuffer)
         gl.DeleteFramebuffers(1, &r->framebuffer);
     if (r->texture)
         gl.DeleteTextures(1, &r->texture);
     if (r->depth)
         gl.DeleteRenderbuffers(1, &r->depth);
+    for (int i = 0; i < SC_MAX_CHUNKS; i++)
+        if (r->chunk_vbo[i])
+            gl.DeleteBuffers(1, &r->chunk_vbo[i]);
     free(r->mesh.vertices);
     memset(r, 0, sizeof(*r));
 }
@@ -245,36 +247,125 @@ static void resize_target(Renderer *r, int w, int h) {
     }
 }
 static void upload_world(Renderer *r, Game *g) {
-    if (r->world_revision == g->world.revision)
+    World *w = &g->world;
+    if (!r->world_revision)
+        memset(r->chunk_serial, 0, sizeof(r->chunk_serial));
+    r->last_uploads = 0;
+    r->world_vertices = 0;
+    for (int i = 0; i < SC_MAX_CHUNKS; i++) {
+        const Chunk *c = &w->chunks[i];
+        if (!c->active) {
+            if (r->chunk_vbo[i])
+                gl.DeleteBuffers(1, &r->chunk_vbo[i]);
+            r->chunk_vbo[i] = 0;
+            r->chunk_serial[i] = 0;
+            r->chunk_vertices[i] = 0;
+            continue;
+        }
+        if (r->chunk_serial[i] != c->serial && r->last_uploads < SC_STREAM_BUDGET) {
+            r->mesh.count = 0;
+            r->origin = v3(0, 0, 0);
+            for (size_t j = 0; j < c->box_count; j++) {
+                const Box *b = &c->boxes[j];
+                block(r, vmul(vadd(b->min, b->max), .5), vsub(b->max, b->min), b->color, b->glow);
+            }
+            if (!r->chunk_vbo[i])
+                gl.GenBuffers(1, &r->chunk_vbo[i]);
+            layout(r->chunk_vbo[i]);
+            gl.BufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(r->mesh.count * sizeof(Vertex)),
+                          r->mesh.vertices, GL_STATIC_DRAW);
+            r->chunk_vertices[i] = r->mesh.count;
+            r->chunk_serial[i] = c->serial;
+            r->mesh.count = 0;
+            r->last_uploads++;
+        }
+        if (r->chunk_serial[i] == c->serial)
+            r->world_vertices += r->chunk_vertices[i];
+    }
+    r->world_revision = w->revision ? w->revision : 1;
+}
+static void hull_view(Renderer *r) {
+    if (r->origin.z > 420)
         return;
-    r->origin = world_center(world_cell(g->players[0].pos));
-    r->mesh.count = 0;
-    for (size_t i = 0; i < g->world.box_count; i++) {
-        const Box *b = &g->world.boxes[i];
-        block(r, vmul(vadd(b->min, b->max), .5), vsub(b->max, b->min), b->color, b->glow);
+    Color hull = rgb(.10f, .14f, .18f), trim = rgb(.21f, .25f, .28f);
+    double left = r->origin.x - 1400, right = r->origin.x + 1400;
+    double bottom = r->origin.y - 1400, top = r->origin.y + 1400;
+    double a[4][4] = {{left, fmin(right, -42), bottom, top},
+                      {fmax(left, 42), right, bottom, top},
+                      {fmax(left, -42), fmin(right, 42), fmax(bottom, 28), top},
+                      {fmax(left, -42), fmin(right, 42), bottom, fmin(top, 0)}};
+    for (int i = 0; i < 4; i++)
+        if (a[i][1] > a[i][0] && a[i][3] > a[i][2])
+            block(r, v3((a[i][0] + a[i][1]) * .5, (a[i][2] + a[i][3]) * .5, -2),
+                  v3(a[i][1] - a[i][0], a[i][3] - a[i][2], 4), hull, 0);
+    if (fabs(r->origin.x) < 800 && fabs(r->origin.y) < 800) {
+        for (int s = -1; s <= 1; s += 2)
+            for (int k = 0; k < 12; k++) {
+                block(r, v3(s * (45 + k * 32), 65, -5), v3(4, 290, 10), trim, 0);
+                if (k)
+                    block(r, v3(s * (60 + k * 32), 40 + (k % 3) * 25, -4.2), v3(2, 35, 1),
+                          rgb(.08f, .22f, .3f), .7f);
+            }
+        block(r, v3(0, 28, -4), v3(84, 3, 8), trim, 0);
+        block(r, v3(0, 26.2, -8.1), v3(76, .25, .2), rgb(.24f, .78f, .73f), 2);
+        for (int i = 0; i < 180; i++) {
+            uint32_t h = world_hash(713, (Cell){i, 0, 0}, 0);
+            block(r,
+                  v3((double)(h % 2000) / 5 - 200, (double)((h >> 12) % 1000) / 4 - 100,
+                     -110 - (i % 5) * 20),
+                  v3(.15, .15, .15), rgb(.32f, .46f, .55f), 2);
+        }
     }
-    /* Small geometric stars remain visible when looking away from the hull. */
-    for (int i = 0; i < 180; i++) {
-        uint32_t h = world_hash(713, (Cell){i, 0, 0}, 0);
-        double x = (double)(h % 2000) / 5 - 200, y = (double)((h >> 12) % 1000) / 4 - 100;
-        block(r, v3(x, y, -110 - (i % 5) * 20), v3(.15, .15, .15), rgb(.32f, .46f, .55f), 2);
+}
+static void draw_chunks(Renderer *r, Game *g) {
+    World *w = &g->world;
+    for (int i = 0; i < SC_MAX_CHUNKS; i++) {
+        const Chunk *c = &w->chunks[i];
+        if (!c->active || r->chunk_serial[i] != c->serial || !world_ready(w, c->cell))
+            continue;
+        Vec3 delta = vsub(world_center(c->cell), r->origin);
+        if (fabs(delta.x) > 520 || fabs(delta.y) > 480 || fabs(delta.z) > 520)
+            continue;
+        gl.Uniform3f(r->offset, (float)delta.x, (float)delta.y, (float)delta.z);
+        layout(r->chunk_vbo[i]);
+        gl.DrawArrays(GL_TRIANGLES, 0, (GLsizei)r->chunk_vertices[i]);
     }
-    layout(r->world_vbo);
-    gl.BufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(r->mesh.count * sizeof(Vertex)), r->mesh.vertices,
-                  GL_STATIC_DRAW);
-    r->world_vertices = r->mesh.count;
-    r->mesh.count = 0;
-    r->world_revision = g->world.revision;
+    gl.Uniform3f(r->offset, 0, 0, 0);
+    hull_view(r);
+    /* Visible bulkheads match the collision guard at unfinished passages. */
+    for (int i = 0; i < SC_MAX_CHUNKS; i++) {
+        const Chunk *c = &w->chunks[i];
+        if (!c->active || !world_ready(w, c->cell))
+            continue;
+        Vec3 center = world_center(c->cell);
+        if (vlen(vsub(center, r->origin)) > 300)
+            continue;
+        for (int d = 0; d < 4; d++)
+            if (!world_ready(w, world_neighbor(c->cell, (Direction)d)) &&
+                world_door(w->seed, c->cell, (Direction)d)) {
+                Vec3 p = vadd(center, v3(d == WEST   ? -48
+                                         : d == EAST ? 48
+                                                     : 0,
+                                         2.4,
+                                         d == SOUTH   ? -48
+                                         : d == NORTH ? 48
+                                                      : 0));
+                block(r, p, d <= EAST ? v3(.12, 4.8, 7) : v3(7, 4.8, .12), rgb(.08f, .18f, .22f),
+                      .1f);
+                block(r, vadd(p, v3(0, -1.2, 0)), d <= EAST ? v3(.16, .12, 6) : v3(6, .12, .16),
+                      rgb(.12f, .6f, .7f), 1);
+            }
+    }
 }
 static void actors(Renderer *r, Game *g, int viewer) {
     for (int j = 0; j < g->world.count; j++)
         for (int i = 0; i < g->world.rooms[j].enemy_count; i++) {
             Enemy *e = &g->world.rooms[j].enemies[i];
-            if (!e->alive)
+            if (!e->alive || vlen(vsub(position_absolute(e->pos), r->origin)) > 430)
                 continue;
             Color colors[] = {{.88f, .16f, .21f}, {.65f, .27f, .92f}, {.96f, .53f, .13f}};
             Color col = e->flash > 0 ? rgb(1, .9f, .6f) : colors[e->kind];
-            Vec3 pos = vadd(e->pos, v3(0, .78 + sin(g->time * 2 + i) * .08, 0));
+            Vec3 pos = vadd(position_absolute(e->pos), v3(0, .78 + sin(g->time * 2 + i) * .08, 0));
             if (e->kind == 2)
                 block(r, pos, v3(1.4, 1.4, 1.4), col, .2f);
             else
@@ -284,11 +375,14 @@ static void actors(Renderer *r, Game *g, int viewer) {
     for (int i = 0; i < g->player_count; i++)
         if (i != viewer) {
             Player *p = &g->players[i];
+            if (vlen(vsub(position_absolute(p->pos), r->origin)) > 430)
+                continue;
             Color color = p->tint % 3 == 0
                               ? rgb(.22f, .65f, .65f)
                               : (p->tint % 3 == 1 ? rgb(.75f, .48f, .24f) : rgb(.62f, .39f, .73f));
-            block(r, vadd(p->pos, v3(0, .7, 0)), v3(.65, 1.35, .4), color, .1f);
-            octahedron(r, vadd(p->pos, v3(0, 1.5, 0)), .35, rgb(.7f, .72f, .65f), .2f);
+            block(r, vadd(position_absolute(p->pos), v3(0, .7, 0)), v3(.65, 1.35, .4), color, .1f);
+            octahedron(r, vadd(position_absolute(p->pos), v3(0, 1.5, 0)), .35, rgb(.7f, .72f, .65f),
+                       .2f);
         }
 }
 static void weapon(Renderer *r, const Player *p) {
@@ -375,6 +469,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     ortho(matrix, w, h);
     gl.UniformMatrix4fv(r->mvp, 1, GL_FALSE, matrix);
     gl.Uniform1i(r->ui, 1);
+    gl.Uniform3f(r->offset, 0, 0, 0);
     gl.Disable(GL_DEPTH_TEST);
     float pad = 24 * s;
     char label[160];
@@ -383,14 +478,19 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         text_at(r, pad + 12 * s, pad, 2 * s, "STARSHIP", ink);
         text_at(r, pad + 12 * s, pad + 17 * s, 1.3f * s, "C R A W L   /   0.1", dim);
     }
-    Cell cell = world_cell(p->pos);
+    Cell cell = world_cell(position_absolute(p->pos));
     Room *room = world_find(&g->world, cell);
-    const char *name = p->pos.z < 0 ? "THE SILENT EXPANSE"
-                                    : (room ? world_room_name(room->type) : "BETWEEN DECKS");
+    const char *name = position_absolute(p->pos).z < 0
+                           ? "THE SILENT EXPANSE"
+                           : (room ? world_room_name(room->type) : "BETWEEN DECKS");
     centered(r, w * .5f, pad, 1.6f * s, name, gold);
     snprintf(label, sizeof(label), "DEPTH %03u  /  DECK %+d",
-             p->pos.z < 0 ? 0 : world_difficulty(cell), cell.y);
+             position_absolute(p->pos).z < 0 ? 0 : world_difficulty(cell), cell.y);
     centered(r, w * .5f, pad + 18 * s, 1.1f * s, label, dim);
+    if (room && position_absolute(p->pos).z >= 0)
+        centered(r, w * .5f, pad + 33 * s, .9f * s, world_district_name(room->district), dim);
+    if (g->world.pending)
+        centered(r, w * .5f, h * .8f, 1 * s, "SURVEYING NEARBY PASSAGES", dim);
     snprintf(label, sizeof(label), "SHIP %08X", g->world.seed);
     if (w >= 600)
         text_at(r, w - pad - 13 * 7 * s, pad, 1.1f * s, label, dim);
@@ -429,14 +529,14 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                  touch ? "OPEN MENU TO CHOOSE AN UPGRADE" : "1 DAMAGE  /  2 VITALITY  /  3 HASTE",
                  ink);
     }
-    Vec3 lift = world_lift(cell), d = vsub(p->pos, lift);
+    Vec3 lift = world_lift(cell), d = vsub(position_absolute(p->pos), lift);
     d.y = 0;
-    if (p->pos.z >= 0 && vlen(d) < 3.3)
+    if (position_absolute(p->pos).z >= 0 && vlen(d) < 3.3)
         centered(r, w * .5f, h * .65f, 1.7f * s,
                  touch ? "GRAV LIFT / UP OR DOWN" : "GRAV LIFT  /  E UP  /  Q DOWN", mint);
     if (g->message_time > 0 && !paused)
         centered(r, w * .5f, h * .19f, 1.2f * s, g->message, gold);
-    if (p->pos.z < 0 && !paused)
+    if (position_absolute(p->pos).z < 0 && !paused)
         centered(r, w * .5f, h * .72f, 1.2f * s,
                  touch ? "DRAG LEFT TO DRIFT / RIGHT TO AIM"
                        : "WASD TO DRIFT / SPACE TO RISE / CTRL TO DESCEND",
@@ -465,9 +565,30 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         }
     }
     if (debug) {
-        snprintf(label, sizeof(label), "%.0f FPS / %d ROOMS / %zu BOXES / %.1f %.1f %.1f", fps,
-                 g->world.count, g->world.box_count, p->pos.x, p->pos.y, p->pos.z);
-        text_at(r, pad, 70 * s, s, label, mint);
+        snprintf(label, sizeof(label), "%.0f FPS / %d CHUNKS / %d QUEUED / %u BUILT / %u UPLOADS",
+                 fps, g->world.chunk_count, g->world.pending, g->world.last_work, r->last_uploads);
+        text_at(r, pad, 76 * s, s, label, mint);
+        RegionPlan plan;
+        world_plan(g->world.seed, world_region(cell), &plan);
+        float size = 22 * s, mx = w - pad - 4 * size, my = 100 * s;
+        for (int i = 0; i < 16; i++) {
+            RoomSpec *spec = &plan.rooms[plan.owner[i]];
+            Color colors[] = {{.4f, .5f, .5f}, {.4f, .3f, .5f}, {.5f, .3f, .15f},
+                              {.2f, .4f, .5f}, {.2f, .4f, .2f}, {.5f, .4f, .25f}};
+            float x = mx + (i % 4) * size, y = my + (i / 4) * size;
+            rect(r, x, y, size - 2 * s, size - 2 * s, colors[spec->type]);
+            if (plan.doors[i] & (1 << EAST))
+                rect(r, x + size - 3 * s, y + size * .4f, 5 * s, size * .2f, mint);
+            if (plan.doors[i] & (1 << NORTH))
+                rect(r, x + size * .4f, y + size - 3 * s, size * .2f, 5 * s, mint);
+            if (cell.x == plan.origin.x + i % 4 && cell.z == plan.origin.z + i / 4)
+                frame(r, x, y, size - 2 * s, size - 2 * s, gold);
+        }
+        if (room) {
+            snprintf(label, sizeof(label), "%.0f X %.0f X %.0f M", room->width, room->depth,
+                     room->height);
+            text_at(r, mx, my + 4 * size + 5 * s, .85f * s, label, gold);
+        }
     }
     if (paused) {
         float mw = fminf(530 * s, w - 40), mx = (w - mw) * .5f, my = h * .25f;
@@ -520,6 +641,7 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         gl.Enable(GL_DEPTH_TEST);
         gl.Uniform1i(r->ui, 0);
         Player *player = &g->players[p];
+        r->origin = world_center(world_cell(position_absolute(player->pos)));
         Vec3 eye = vsub(player_eye(player), r->origin);
         float m[16];
         camera(m, eye, player->yaw, player->pitch, (double)vw / vh);
@@ -527,8 +649,7 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         gl.Uniform3f(r->eye, (float)eye.x, (float)eye.y, (float)eye.z);
         gl.Uniform3f(r->grid, (float)fmod(r->origin.x, 4096), (float)fmod(r->origin.y, 4096),
                      (float)fmod(r->origin.z, 4096));
-        layout(r->world_vbo);
-        gl.DrawArrays(GL_TRIANGLES, 0, (GLsizei)r->world_vertices);
+        draw_chunks(r, g);
         actors(r, g, p);
         flush(r);
         if (!paused) {

@@ -43,6 +43,11 @@ jobs:
           source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
           emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
           cmake --build build-web --parallel 4
+      - name: Native generator reference
+        run: |
+          cmake -S . -B build-parity -DSC_BUILD_GAME=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-parity --parallel 4
+          ctest --test-dir build-parity --output-on-failure
       - name: Browser dependencies
         run: |
           python -m pip install playwright
@@ -50,6 +55,8 @@ jobs:
       - name: Package the Pages site
         run: python scripts/package-web.py --output build-pages-preview/starship_crawl
       - name: Test the deployed URL structure
+        env:
+          SC_CORE_TEST: build-parity/sc_tests
         run: python tests/test_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - uses: actions/upload-artifact@v4
         with:

@@ -52,6 +52,8 @@ The implementation sequence is:
 
 3. **Generate and stream a coherent ship.**
 
+   Implemented in generator version 2: three district families, reserved four-chunk landmarks, cabin clusters, a connected backbone with loops and matching portal contracts, fair bounded streaming with hysteresis, chunk-local meshes, independent camera origins, and persistent encounter changes. Version-1 characters migrate to a fresh expedition. The core and browser suites validate these behaviors; physical device performance targets remain part of milestone 6. See [WORLD_GENERATION.md](WORLD_GENERATION.md) for current rules and limits.
+
    Separate generation into district selection, structural layout, room and passage construction, and population. Initial district families are crew quarters, machinery, and great halls. Expand to luxury areas, storage, religious spaces, and unusual landmarks after the basic system produces convincing combinations.
 
    Districts determine architectural rules, room distributions, lighting, materials, sounds, and encounter possibilities. Layout generation creates a reachable backbone with branches, loops, and vertical connectors. Room definitions describe dimensions, occupied space, connector position and size, traversal requirements, and permitted neighbors. Traps, rewards, and decoration are placed only after structural validity is established.

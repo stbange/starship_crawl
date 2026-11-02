@@ -11,11 +11,15 @@ typedef struct {
     bool failed;
 } Mesh;
 typedef struct {
-    GLuint program, vao, vbo, world_vbo, framebuffer, texture, depth;
-    GLint mvp, eye, grid, ui;
+    GLuint program, vao, vbo, framebuffer, texture, depth;
+    GLint mvp, eye, grid, ui, offset;
     int width, height;
     uint32_t world_revision;
     size_t world_vertices;
+    GLuint chunk_vbo[SC_MAX_CHUNKS];
+    uint32_t chunk_serial[SC_MAX_CHUNKS];
+    size_t chunk_vertices[SC_MAX_CHUNKS];
+    unsigned last_uploads;
     Vec3 origin;
     Mesh mesh;
     bool failed;
