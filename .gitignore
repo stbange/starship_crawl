@@ -1,0 +1,6 @@
+/build*/
+/.cache/
+/.tools/
+*.tmp
+*.ppm
+__pycache__/

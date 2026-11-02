@@ -1,0 +1,600 @@
+#define SDL_MAIN_HANDLED
+#include "render.h"
+#include <SDL3/SDL_main.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <errno.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+EM_JS(void, browser_flush, (void), {
+    if (window.scStorage)
+        window.scStorage.flush();
+})
+EM_JS(int, browser_storage_status, (void),
+      { return window.scStorage ? window.scStorage.status : 0; })
+EM_JS(int, browser_touch, (void), { return navigator.maxTouchPoints > 0; })
+EM_JS(void, browser_ready, (void), {
+    if (window.scReady)
+        window.scReady();
+})
+#else
+#define EMSCRIPTEN_KEEPALIVE
+#endif
+
+typedef struct {
+    SDL_FingerID id;
+    bool active;
+    int role;
+    float x, y, start_x, start_y;
+} Finger;
+typedef struct {
+    SDL_Window *window;
+    SDL_GLContext context;
+    SDL_AudioStream *audio;
+    SDL_Gamepad *pads[2];
+    Game game;
+    Renderer renderer;
+    Finger fingers[10];
+    bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
+    int frame, smoke_frames;
+    double last, accumulator, fps, autosave;
+    char save_path[1024], save_status[96];
+    const char *capture;
+} App;
+static App app;
+
+static void set_pause(bool paused) {
+    app.paused = paused;
+    app.mouse_fire = false;
+    memset(app.fingers, 0, sizeof(app.fingers));
+    app.accumulator = 0;
+    if (app.window && !app.touch)
+        SDL_SetWindowRelativeMouseMode(app.window, !paused);
+}
+static uint32_t new_seed(void) {
+    return world_hash((uint32_t)time(NULL), (Cell){(int32_t)(SDL_GetTicks() % 1000000), 0, 0},
+                      app.game.world.seed + 13);
+}
+static void save_game(void) {
+    if (app.no_save || !*app.save_path)
+        return;
+    if (!game_save(&app.game, app.save_path)) {
+        snprintf(app.save_status, sizeof(app.save_status), "SAVE FAILED / PREVIOUS SAVE RETAINED");
+        return;
+    }
+#ifdef __EMSCRIPTEN__
+    browser_flush();
+    snprintf(app.save_status, sizeof(app.save_status), "SAVING TO THIS BROWSER...");
+#else
+    snprintf(app.save_status, sizeof(app.save_status), "EXPEDITION SAVED");
+#endif
+    app.game.dirty = false;
+}
+EMSCRIPTEN_KEEPALIVE void sc_web_start(void) {
+    app.started = true;
+    app.new_armed = false;
+    set_pause(false);
+}
+EMSCRIPTEN_KEEPALIVE void sc_web_save(void) {
+    save_game();
+}
+EMSCRIPTEN_KEEPALIVE int sc_web_import(void) {
+    if (!game_load(&app.game, "/persist/import.sav")) {
+        remove("/persist/import.sav");
+        return 0;
+    }
+    remove("/persist/import.sav");
+    app.renderer.world_revision = 0;
+    save_game();
+    return 1;
+}
+EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
+    if (action >= 1 && action <= 3)
+        game_upgrade(&app.game, 0, action - 1);
+    else if (action == 4) {
+        app.game.players[0].tint = (app.game.players[0].tint + 1) % 3;
+        app.game.dirty = true;
+    } else if (action == 5) {
+        if (app.game.player_count == 1)
+            game_join(&app.game);
+        else
+            game_leave(&app.game);
+    } else if (action == 6) {
+        game_new_ship(&app.game, new_seed());
+        app.renderer.world_revision = 0;
+        save_game();
+    } else if (action == 0)
+        set_pause(true);
+}
+EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
+    static char result[512];
+    const Player *p = &app.game.players[0];
+    snprintf(result, sizeof(result),
+             "{\"seed\":%u,\"players\":%d,\"paused\":%s,\"frames\":%d,\"rooms\":%d,\"x\":%.5f,"
+             "\"y\":%.5f,\"z\":%.5f,\"rank\":%u,\"kills\":%u,\"shots\":%u,\"failed\":%s}",
+             app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
+             app.game.world.count, p->pos.x, p->pos.y, p->pos.z, p->level, p->kills, app.game.shots,
+             app.failed ? "true" : "false");
+    return result;
+}
+static void tone(void) {
+    if (!app.audio || SDL_GetAudioStreamQueued(app.audio) > 22050)
+        return;
+    float samples[1800];
+    uint32_t noise = 27;
+    for (int i = 0; i < 1800; i++) {
+        double t = (double)i / 22050, envelope = exp(-t * 65);
+        noise = noise * 1664525u + 1013904223u;
+        samples[i] =
+            (float)((sin(t * (1600 - t * 5000)) * 0.11 + ((double)(noise % 1000) / 500 - 1) * .05) *
+                    envelope);
+    }
+    SDL_PutAudioStreamData(app.audio, samples, sizeof(samples));
+}
+static void open_pad(SDL_JoystickID id) {
+    for (int i = 0; i < 2; i++)
+        if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == id)
+            return;
+    for (int i = 0; i < 2; i++)
+        if (!app.pads[i]) {
+            app.pads[i] = SDL_OpenGamepad(id);
+            return;
+        }
+}
+static int pad_player(int slot) {
+    return app.game.player_count == 2 ? (app.pads[1] ? slot : 1) : 0;
+}
+static float axis(SDL_Gamepad *pad, SDL_GamepadAxis axis_id) {
+    float v = SDL_GetGamepadAxis(pad, axis_id) / 32767.0f;
+    return fabsf(v) < .16f ? 0 : (v > 0 ? (v - .16f) / .84f : (v + .16f) / .84f);
+}
+static int finger_role(float x, float y) {
+    const float xs[] = {.90f, .77f, .64f, .90f, .77f}, ys[] = {.72f, .85f, .85f, .48f, .48f};
+    int w, h;
+    SDL_GetWindowSize(app.window, &w, &h);
+    float radius = fminf((float)w, (float)h) * .075f;
+    for (int i = 0; i < 5; i++)
+        if (fabsf((x - xs[i]) * w) < radius && fabsf((y - ys[i]) * h) < radius)
+            return i + 2;
+    if (x < .42f)
+        return 0;
+    return 1;
+}
+static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
+    app.touch = true;
+    if (type == SDL_EVENT_FINGER_DOWN) {
+        if (app.paused) {
+            sc_web_start();
+            return;
+        }
+        for (int i = 0; i < 10; i++)
+            if (!app.fingers[i].active) {
+                app.fingers[i] =
+                    (Finger){e->fingerID, true, finger_role(e->x, e->y), e->x, e->y, e->x, e->y};
+                break;
+            }
+    } else
+        for (int i = 0; i < 10; i++)
+            if (app.fingers[i].active && app.fingers[i].id == e->fingerID) {
+                Finger *f = &app.fingers[i];
+                if (type == SDL_EVENT_FINGER_UP || type == SDL_EVENT_FINGER_CANCELED)
+                    f->active = false;
+                else {
+                    if (f->role == 1 && !app.paused)
+                        game_look(&app.game.players[0], (e->x - f->x) * 3.5, -(e->y - f->y) * 2.8);
+                    f->x = e->x;
+                    f->y = e->y;
+                }
+                break;
+            }
+}
+static void events(void) {
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        switch (e.type) {
+        case SDL_EVENT_QUIT:
+            app.running = false;
+            break;
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
+            set_pause(true);
+            break;
+        case SDL_EVENT_MOUSE_MOTION:
+            if (!app.paused && e.motion.which != SDL_TOUCH_MOUSEID)
+                game_look(&app.game.players[0], e.motion.xrel * .0023, -e.motion.yrel * .0023);
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            if (e.button.which == SDL_TOUCH_MOUSEID)
+                break;
+            if (app.paused && !app.new_armed)
+                sc_web_start();
+            else if (e.button.button == SDL_BUTTON_LEFT)
+                app.mouse_fire = true;
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (e.button.button == SDL_BUTTON_LEFT)
+                app.mouse_fire = false;
+            break;
+        case SDL_EVENT_FINGER_DOWN:
+        case SDL_EVENT_FINGER_UP:
+        case SDL_EVENT_FINGER_MOTION:
+        case SDL_EVENT_FINGER_CANCELED:
+            touch_event(&e.tfinger, e.type);
+            break;
+        case SDL_EVENT_GAMEPAD_ADDED:
+            open_pad(e.gdevice.which);
+            break;
+        case SDL_EVENT_GAMEPAD_REMOVED:
+            for (int i = 0; i < 2; i++)
+                if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == e.gdevice.which) {
+                    SDL_CloseGamepad(app.pads[i]);
+                    app.pads[i] = NULL;
+                    set_pause(true);
+                }
+            break;
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            for (int i = 0; i < 2; i++)
+                if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == e.gbutton.which) {
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_START) {
+                        app.started = true;
+                        set_pause(!app.paused);
+                    }
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_LEFT)
+                        game_upgrade(&app.game, pad_player(i), 0);
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_UP)
+                        game_upgrade(&app.game, pad_player(i), 1);
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
+                        game_upgrade(&app.game, pad_player(i), 2);
+                }
+            break;
+        case SDL_EVENT_KEY_DOWN:
+            if (e.key.repeat)
+                break;
+            switch (e.key.key) {
+            case SDLK_ESCAPE:
+                if (app.new_armed) {
+                    app.new_armed = false;
+                    game_message(&app.game, "NEW EXPEDITION CANCELLED");
+                } else
+                    set_pause(!app.paused);
+                break;
+            case SDLK_RETURN:
+                if (app.new_armed) {
+                    game_new_ship(&app.game, new_seed());
+                    app.renderer.world_revision = 0;
+                    save_game();
+                }
+                sc_web_start();
+                break;
+            case SDLK_TAB:
+                set_pause(!app.paused);
+                break;
+            case SDLK_F2:
+                sc_web_action(5);
+                break;
+            case SDLK_F3:
+                app.debug = !app.debug;
+                break;
+            case SDLK_F5:
+                save_game();
+                break;
+            case SDLK_F9:
+                if (!app.no_save && game_load(&app.game, app.save_path)) {
+                    app.renderer.world_revision = 0;
+                    set_pause(true);
+                } else
+                    game_message(&app.game, "NO VALID SAVE FOUND");
+                break;
+            case SDLK_N:
+                set_pause(true);
+                app.new_armed = true;
+                game_message(&app.game, "ENTER CONFIRMS A NEW SHIP / ESC CANCELS");
+                break;
+            case SDLK_C:
+                sc_web_action(4);
+                break;
+            case SDLK_1:
+            case SDLK_2:
+            case SDLK_3:
+                game_upgrade(&app.game, 0, (int)(e.key.key - SDLK_1));
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+}
+static void read_actions(Actions actions[2], double dt) {
+    memset(actions, 0, 2 * sizeof(*actions));
+    const bool *k = SDL_GetKeyboardState(NULL);
+    Actions *a = &actions[0];
+    a->forward = (float)(k[SDL_SCANCODE_W] - k[SDL_SCANCODE_S]);
+    a->strafe = (float)(k[SDL_SCANCODE_D] - k[SDL_SCANCODE_A]);
+    a->jump = k[SDL_SCANCODE_SPACE];
+    a->crouch = k[SDL_SCANCODE_LCTRL];
+    a->sprint = k[SDL_SCANCODE_LSHIFT];
+    a->fire = app.mouse_fire;
+    a->lift_up = k[SDL_SCANCODE_E];
+    a->lift_down = k[SDL_SCANCODE_Q];
+    for (int i = 0; i < 10; i++)
+        if (app.fingers[i].active) {
+            Finger *f = &app.fingers[i];
+            switch (f->role) {
+            case 0:
+                a->strafe = (float)clampd((f->x - f->start_x) * 9, -1, 1);
+                a->forward = (float)clampd((f->start_y - f->y) * 9, -1, 1);
+                break;
+            case 2:
+                a->fire = true;
+                break;
+            case 3:
+                a->jump = true;
+                break;
+            case 4:
+                a->crouch = true;
+                break;
+            case 5:
+                a->lift_up = true;
+                break;
+            case 6:
+                a->lift_down = true;
+                break;
+            default:
+                break;
+            }
+        }
+    for (int i = 0; i < 2; i++)
+        if (app.pads[i]) {
+            if (app.game.player_count == 1 && i == 1 && app.pads[0])
+                continue;
+            SDL_Gamepad *pad = app.pads[i];
+            int player = pad_player(i);
+            a = &actions[player];
+            a->strafe += axis(pad, SDL_GAMEPAD_AXIS_LEFTX);
+            a->forward -= axis(pad, SDL_GAMEPAD_AXIS_LEFTY);
+            game_look(&app.game.players[player], axis(pad, SDL_GAMEPAD_AXIS_RIGHTX) * dt * 2.3,
+                      -axis(pad, SDL_GAMEPAD_AXIS_RIGHTY) * dt * 1.8);
+            a->fire |= SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > 8000;
+            a->jump |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_SOUTH);
+            a->crouch |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_EAST);
+            a->lift_up |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_WEST);
+            a->lift_down |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_NORTH);
+            a->sprint |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
+        }
+}
+static void shutdown_app(void) {
+    if (!app.no_save && !app.failed)
+        save_game();
+    for (int i = 0; i < 2; i++)
+        if (app.pads[i])
+            SDL_CloseGamepad(app.pads[i]);
+    if (app.audio)
+        SDL_DestroyAudioStream(app.audio);
+    renderer_destroy(&app.renderer);
+    game_destroy(&app.game);
+    if (app.context)
+        SDL_GL_DestroyContext(app.context);
+    if (app.window)
+        SDL_DestroyWindow(app.window);
+    SDL_Quit();
+}
+static void frame(void *unused) {
+    (void)unused;
+    double now = (double)SDL_GetPerformanceCounter() / SDL_GetPerformanceFrequency();
+    double dt = clampd(now - app.last, 0, .1);
+    app.last = now;
+    if (app.smoke_frames)
+        dt = 1.0 / 60;
+    app.fps = app.fps * .96 + (dt > 0 ? 1 / dt : 60) * .04;
+    events();
+    if (!app.paused) {
+        Actions actions[2];
+        read_actions(actions, dt);
+        app.accumulator += dt;
+        uint32_t shots = app.game.shots;
+        while (app.accumulator >= 1.0 / 60) {
+            game_step(&app.game, actions, 1.0 / 60);
+            app.accumulator -= 1.0 / 60;
+        }
+        if (app.game.shots != shots)
+            tone();
+        app.autosave += dt;
+        if (app.autosave > 20) {
+            save_game();
+            app.autosave = 0;
+        }
+    }
+#ifdef __EMSCRIPTEN__
+    int status = browser_storage_status();
+    if (status == 3)
+        snprintf(app.save_status, sizeof(app.save_status), "SAVED IN THIS BROWSER");
+    if (status == 4)
+        snprintf(app.save_status, sizeof(app.save_status), "BROWSER SAVE FAILED / EXPORT A BACKUP");
+    if (status == 0)
+        snprintf(app.save_status, sizeof(app.save_status), "BROWSER STORAGE UNAVAILABLE");
+#endif
+    int w, h;
+    SDL_GetWindowSizeInPixels(app.window, &w, &h);
+    bool draw_pause = app.paused;
+#ifdef __EMSCRIPTEN__
+    draw_pause = app.paused && app.started;
+#endif
+    renderer_draw(&app.renderer, &app.game, w, h, draw_pause, app.touch, app.debug, app.fps,
+                  app.save_status);
+    GLenum error = gl.GetError();
+    if (error != GL_NO_ERROR || app.renderer.failed || app.game.world.failed) {
+        SDL_Log("Frame failed: GL error 0x%x", error);
+        app.failed = true;
+        app.running = false;
+    }
+    app.frame++;
+    if (app.smoke_frames && app.frame >= app.smoke_frames) {
+        if (app.capture && !renderer_capture(w, h, app.capture)) {
+            SDL_Log("Capture failed");
+            app.failed = true;
+        }
+        SDL_Log("SMOKE %s: %d frames, %d players, %d rooms, %u vertices",
+                app.failed ? "FAIL" : "PASS", app.frame, app.game.player_count,
+                app.game.world.count, (unsigned)app.renderer.world_vertices);
+        app.running = false;
+    }
+    SDL_GL_SwapWindow(app.window);
+#ifdef __EMSCRIPTEN__
+    if (!app.running) {
+        emscripten_cancel_main_loop();
+        shutdown_app();
+    }
+#endif
+}
+int main(int argc, char **argv) {
+    memset(&app, 0, sizeof(app));
+    app.running = true;
+    app.paused = true;
+    app.fps = 60;
+    uint32_t seed = (uint32_t)time(NULL);
+    bool fresh = false, split = false;
+    const char *save_dir = NULL, *scene = NULL;
+    for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "--seed") && i + 1 < argc) {
+            char *end;
+            errno = 0;
+            unsigned long n = strtoul(argv[++i], &end, 0);
+            if (errno || *end || n > UINT32_MAX) {
+                fprintf(stderr, "Invalid seed\n");
+                return 2;
+            }
+            seed = (uint32_t)n;
+            fresh = true;
+        } else if (!strcmp(argv[i], "--new"))
+            fresh = true;
+        else if (!strcmp(argv[i], "--split"))
+            split = true;
+        else if (!strcmp(argv[i], "--no-save"))
+            app.no_save = true;
+        else if (!strcmp(argv[i], "--touch"))
+            app.touch = true;
+        else if (!strcmp(argv[i], "--smoke") && i + 1 < argc) {
+            app.smoke_frames = atoi(argv[++i]);
+            app.no_save = true;
+            app.paused = false;
+            if (app.smoke_frames < 1)
+                return 2;
+        } else if (!strcmp(argv[i], "--capture") && i + 1 < argc)
+            app.capture = argv[++i];
+        else if (!strcmp(argv[i], "--save-dir") && i + 1 < argc)
+            save_dir = argv[++i];
+        else if (!strcmp(argv[i], "--scene") && i + 1 < argc) {
+            scene = argv[++i];
+            fresh = true;
+        } else if (!strcmp(argv[i], "--help")) {
+            puts("Starship Crawl\n  --seed NUMBER --new --no-save --save-dir DIRECTORY\n  --touch "
+                 "--split --smoke FRAMES --capture FILE.ppm\n  --scene "
+                 "bay|hall|engine|crew|tunnel|atrium\nSolo by default. F2 explicitly toggles local "
+                 "split-screen.");
+            return 0;
+        } else {
+            fprintf(stderr, "Unknown or incomplete argument: %s\n", argv[i]);
+            return 2;
+        }
+    }
+    SDL_SetMainReady();
+    SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+    SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
+        SDL_Log("SDL: %s", SDL_GetError());
+        return 1;
+    }
+#ifdef __EMSCRIPTEN__
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    save_dir = "/persist";
+    app.touch = app.touch || browser_touch();
+#else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+#endif
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    app.window =
+        SDL_CreateWindow("Starship Crawl", 1280, 720,
+                         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+    if (!app.window) {
+        SDL_Log("Window: %s", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+    app.context = SDL_GL_CreateContext(app.window);
+    if (!app.context) {
+        SDL_Log("OpenGL: %s", SDL_GetError());
+        SDL_DestroyWindow(app.window);
+        SDL_Quit();
+        return 1;
+    }
+    SDL_GL_SetSwapInterval(1);
+    if (!renderer_init(&app.renderer)) {
+        app.failed = true;
+        shutdown_app();
+        return 1;
+    }
+    game_init(&app.game, seed);
+    char *pref = NULL;
+    if (!save_dir) {
+        pref = SDL_GetPrefPath("Stbange", "StarshipCrawl");
+        save_dir = pref;
+    }
+    if (save_dir && strlen(save_dir) + 20 < sizeof(app.save_path)) {
+        SDL_CreateDirectory(save_dir);
+        snprintf(app.save_path, sizeof(app.save_path), "%s/expedition.sav", save_dir);
+        if (!fresh && !app.no_save)
+            game_load(&app.game, app.save_path);
+    }
+    SDL_free(pref);
+    if (scene) {
+        app.game.message_time = 0;
+        Cell c = {0, 0, 0};
+        if (!strcmp(scene, "hall"))
+            c.z = 1;
+        else if (!strcmp(scene, "engine"))
+            c.x = 1;
+        else if (!strcmp(scene, "crew"))
+            c.x = -1;
+        else if (!strcmp(scene, "tunnel"))
+            c.y = -1;
+        else if (!strcmp(scene, "atrium"))
+            c.y = 1;
+        app.game.players[0].pos = vadd(world_center(c), v3(0, .02, -25));
+        app.game.players[0].crouched = c.y == -1;
+        app.game.players[0].pitch = .03;
+        Vec3 p = app.game.players[0].pos;
+        world_refresh(&app.game.world, &p, 1);
+    }
+    if (split)
+        game_join(&app.game);
+    int count = 0;
+    SDL_JoystickID *ids = SDL_GetGamepads(&count);
+    for (int i = 0; i < count; i++)
+        open_pad(ids[i]);
+    SDL_free(ids);
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {
+        SDL_AudioSpec spec = {.format = SDL_AUDIO_F32, .channels = 1, .freq = 22050};
+        app.audio = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+        if (app.audio)
+            SDL_ResumeAudioStreamDevice(app.audio);
+    }
+    app.last = (double)SDL_GetPerformanceCounter() / SDL_GetPerformanceFrequency();
+#ifdef __EMSCRIPTEN__
+    browser_ready();
+    emscripten_set_main_loop_arg(frame, NULL, 0, 1);
+#else
+    while (app.running)
+        frame(NULL);
+    shutdown_app();
+#endif
+    return app.failed ? 1 : 0;
+}
