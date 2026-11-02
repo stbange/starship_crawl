@@ -7,6 +7,7 @@ import json
 import os
 import threading
 import subprocess
+import traceback
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -243,4 +244,10 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    except Exception:
+        if os.environ.get("GITHUB_ACTIONS"):
+            detail = traceback.format_exc().replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            print("::error title=Browser regression::" + detail, flush=True)
+        raise

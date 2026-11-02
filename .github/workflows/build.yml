@@ -58,6 +58,13 @@ jobs:
         env:
           SC_CORE_TEST: build-parity/sc_tests
         run: python tests/test_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Retain browser captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-captures
+          path: build-web/test-artifacts
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: web
