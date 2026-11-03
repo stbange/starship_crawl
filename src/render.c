@@ -467,6 +467,137 @@ static void draw_chunks(Renderer *r, Game *g) {
             }
     }
 }
+typedef struct {
+    Vec3 at, right, up, forward;
+    double size;
+} BodyPose;
+static Vec3 anatomical(const BodyPose *p, Vec3 local) {
+    return vadd(p->at, vmul(vadd(vmul(p->right, local.x),
+                                 vadd(vmul(p->up, local.y), vmul(p->forward, local.z))),
+                            p->size));
+}
+static void organ(Renderer *r, const BodyPose *p, Vec3 at, Vec3 dimensions, Color color,
+                  float glow) {
+    blob(r, anatomical(p, at), vmul(p->right, dimensions.x * p->size),
+         vmul(p->up, dimensions.y * p->size), vmul(p->forward, dimensions.z * p->size), color,
+         glow);
+}
+static void bone(Renderer *r, const BodyPose *p, Vec3 a, Vec3 b, double thickness, Color color,
+                 float glow) {
+    tube(r, anatomical(p, a), anatomical(p, b), thickness * p->size, thickness * p->size * .45,
+         color, glow);
+}
+static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double time, Color shell,
+                      Color flesh, float glow) {
+    EnemyBody body = sc_enemy_bodies[e->kind];
+    int v = body.variant;
+    double gait = sin(time * 7 + e->id) * .13;
+    if (body.form == HUSK) {
+        organ(r, p, v3(0, .15, 0), v3(.45, .65, .3), shell, glow);
+        organ(r, p, v3(0, .95, .04), v3(.28, .3, .26), flesh, glow);
+        for (int side = -1; side <= 1; side += 2) {
+            bone(r, p, v3(side * .22, -.2, 0), v3(side * .26, -.6, gait * side), .14, shell, glow);
+            bone(r, p, v3(side * .38, .5, 0), v3(side * .65, -.25, -gait * side), .11, flesh, glow);
+            if (v == 2)
+                organ(r, p, v3(side * .48, .55, 0), v3(.38, .28, .38), shell, .05f);
+            if (v == 3)
+                bone(r, p, v3(side * .18, 1.12, 0), v3(side * .48, 1.65, -.1), .11, shell, glow);
+            if (v == 4)
+                bone(r, p, v3(side * .3, .2, -.1), v3(side * .9, .4, .35), .09, flesh, glow);
+        }
+        if (v == 1)
+            organ(r, p, v3(.7, -.05, .3), v3(.16, .7, .15), rgb(.35f, .35f, .32f), .1f);
+        if (v == 4)
+            organ(r, p, v3(0, .65, -.4), v3(.5, .9, .2), rgb(.25f, .19f, .12f), glow);
+    } else if (body.form == GAZER) {
+        organ(r, p, v3(0, .25, 0), v3(.68, .68, .6), shell, glow);
+        organ(r, p, v3(0, .3, .55), v3(.36, .36, .1), rgb(.5f, .65f, .35f), .65f);
+        organ(r, p, v3(0, .3, .66), v3(.09, .24, .05), rgb(.05f, .07f, .03f), .1f);
+        int arms = v == 4 ? 8 : 3 + v;
+        for (int i = 0; i < arms; i++) {
+            double a = i * SC_PI * 2 / arms, phase = time * 2 + i;
+            Vec3 last = v3(cos(a) * .4, 0, sin(a) * .4);
+            for (int j = 1; j <= 3; j++) {
+                Vec3 next = v3(cos(a) * (.4 + j * .16) + sin(phase + j) * .12, -j * .26,
+                               sin(a) * (.4 + j * .16));
+                bone(r, p, last, next, .07, flesh, glow);
+                last = next;
+            }
+            if (v == 1)
+                bone(r, p, v3(cos(a) * .4, .6, sin(a) * .4), v3(cos(a) * .8, 1.1, sin(a) * .8), .12,
+                     shell, glow);
+            if (v == 3)
+                organ(r, p, v3(cos(a) * .65, .3, sin(a) * .65), v3(.25, .32, .25), flesh, glow);
+        }
+        if (v == 2)
+            for (int i = -1; i <= 1; i += 2)
+                bone(r, p, v3(i * .6, -.1, 0), v3(i * .6, 1.1, 0), .08, shell, .2f);
+    } else if (body.form == VOID_RAY) {
+        organ(r, p, v3(0, .2, 0), v3(.35, .2, .85), shell, glow);
+        int wings = v == 4 ? 3 : 1;
+        for (int row = 0; row < wings; row++)
+            for (int side = -1; side <= 1; side += 2) {
+                double span = v == 0 ? 1.05 : v == 2 ? 1.9 : 1.5;
+                Vec3 tip =
+                    v3(side * span, .2 + sin(time * 3 + row) * .13, row * .42 - (v == 1 ? .35 : 0));
+                organ(r, p, v3(side * span * .5, .2, row * .4),
+                      v3(span * .6, .08, v == 0 ? .8 : .65), shell, glow);
+                bone(r, p, v3(0, .25, row * .4), tip, .09, flesh, glow);
+                if (v == 1 || v == 3)
+                    for (int i = 0; i < 3; i++)
+                        bone(r, p, v3(side * (.6 + i * .3), .2, -.3),
+                             v3(side * (.8 + i * .4), .4, -.8), .07, shell, glow);
+            }
+        bone(r, p, v3(0, .2, -.65), v3(sin(time * 3) * .2, .25, -1.7), .1, flesh, glow);
+    } else if (body.form == WORM) {
+        int segments = v == 0 ? 3 : v == 4 ? 8 : 6;
+        for (int i = segments - 1; i >= 0; i--) {
+            double t = (double)i / segments, radius = v == 2 ? .32 : .55;
+            Vec3 at =
+                v3(sin(time * 3 - i * .6) * .14, -.1 + sin(i * .6 + time * 2) * .07, -i * .35);
+            organ(r, p, at, v3(radius * (1 - t * .5), radius * (1 - t * .5), .35),
+                  i % 2 ? shell : flesh, glow);
+            if (v == 1)
+                for (int side = -1; side <= 1; side += 2)
+                    bone(r, p, vadd(at, v3(side * .3, 0, 0)),
+                         vadd(at, v3(side * .85, -.5, gait * side)), .06, shell, glow);
+            if (v == 4)
+                bone(r, p, vadd(at, v3(0, .3, 0)), vadd(at, v3(0, .9, 0)), .12, shell, glow);
+        }
+        if (v == 3)
+            for (int i = 0; i < 8; i++) {
+                double a = i * SC_PI * .25;
+                bone(r, p, v3(cos(a) * .5, sin(a) * .5, .2), v3(cos(a) * .3, sin(a) * .3, .65), .09,
+                     rgb(.55f, .48f, .32f), .05f);
+            }
+        if (v == 2)
+            bone(r, p, v3(0, 0, .25), v3(0, .05, .95), .04, rgb(.5f, .18f, .2f), .1f);
+    } else {
+        organ(r, p, v3(0, .2, 0), v3(.5, .75, .5), shell, .1f);
+        if (v == 0)
+            for (int i = 0; i < 3; i++) {
+                double a = time + i * SC_PI * 2 / 3;
+                organ(r, p, v3(cos(a) * .75, .3, sin(a) * .75), v3(.18, .45, .18), shell, .15f);
+            }
+        if (v == 1)
+            organ(r, p, v3(0, .8, 0), v3(.35, 1.1, .35), shell, .1f);
+        if (v == 2)
+            for (int i = 0; i < 12; i++) {
+                double a = time + i * SC_PI / 6;
+                organ(r, p, v3(cos(a) * .95, sin(a) * .95, .1), v3(.12, .22, .15), shell, .25f);
+            }
+        if (v == 3)
+            for (int i = 0; i < 3; i++) {
+                double a = i * SC_PI * 2 / 3;
+                bone(r, p, v3(0, .1, 0), v3(cos(a) * 1.2, -.6, sin(a) * 1.2), .12, shell, .05f);
+            }
+        if (v == 4)
+            for (int i = -1; i <= 1; i++) {
+                organ(r, p, v3(i * .6, .55, 0), v3(.25, i == 0 ? 1.1 : .8, .35), shell, .1f);
+                organ(r, p, v3(i * .6, .65, .32), v3(.07, .3, .05), rgb(.25f, .6f, .8f), .75f);
+            }
+    }
+}
 static void creature(Renderer *r, const Enemy *e, double time, double distance) {
     Vec3 center = enemy_center(e), up = e->climbing ? e->normal : v3(0, 1, 0);
     Vec3 forward = vsub(e->heading, vmul(up, vdot(e->heading, up)));
@@ -485,26 +616,8 @@ static void creature(Renderer *r, const Enemy *e, double time, double distance) 
     Color flesh = e->flash > 0 ? rgb(.62f, .63f, .49f) : rgb(.18f, .09f, .12f);
     Color shell = e->flash > 0 ? rgb(.55f, .48f, .36f) : def->color;
     float glow = e->flash > 0 ? .25f : -1;
-    blob(r, center, vmul(right, size * .7), vmul(up, size * .65), vmul(forward, size), shell, glow);
-    blob(r, vadd(center, vmul(forward, size * .56)), vmul(right, size * .45), vmul(up, size * .39),
-         vmul(forward, size * .4), flesh, glow);
-    int limbs = distance > 55 ? 4 : (def->role == 2 ? 8 : 6), segments = distance > 55 ? 2 : 3;
-    for (int arm = 0; arm < limbs; arm++) {
-        double angle = arm * SC_PI * 2 / limbs + .4,
-               phase = time * (def->role == 0 ? 13 : 5) + arm * 1.8 + e->id;
-        Vec3 outward = vadd(vmul(right, cos(angle)), vmul(forward, sin(angle)));
-        Vec3 prev = vadd(center, vmul(outward, size * .45));
-        for (int j = 1; j <= segments; j++) {
-            double t = (double)j / segments, reach = size * (def->role == 2 ? 2.1 : 2.0);
-            double bend = sin(t * SC_PI) * .65 - t * .55 + sin(phase + t * 2) * .10;
-            Vec3 next =
-                vadd(center, vadd(vmul(outward, reach * t),
-                                  vadd(vmul(up, bend), vmul(forward, sin(phase) * .17 * t))));
-            tube(r, prev, next, size * (1 - t) * .14 + .035, size * (1 - t) * .10 + .012,
-                 arm % 2 ? flesh : shell, glow);
-            prev = next;
-        }
-    }
+    BodyPose pose = {center, right, up, forward, size};
+    body_form(r, e, &pose, time, shell, flesh, glow);
     if (def->flags & ARMORED)
         blob(r, vadd(center, vmul(up, size * .35)), vmul(right, size * .86), vmul(up, size * .4),
              vmul(forward, size * .95), rgb(.25f, .24f, .21f), glow);
@@ -724,8 +837,9 @@ static void actors(Renderer *r, Game *g, int viewer) {
         if (vlen(vsub(pos, r->origin)) > 140)
             continue;
         Color color = p->color;
-        octahedron(r, pos, .20, color, 3);
-        tube(r, pos, vsub(pos, vmul(vnorm(p->velocity), 1.1)), .13, .02, color, 1.3f);
+        octahedron(r, pos, p->owner < 0 ? .20 : .09, color, 2);
+        tube(r, pos, vsub(pos, vmul(vnorm(p->velocity), p->owner < 0 ? 1.1 : 1.8)), .055, .02,
+             color, 1.3f);
     }
     for (int j = 0; j < g->world.count; j++) {
         const Room *room = &g->world.rooms[j];
@@ -752,6 +866,19 @@ static void actors(Renderer *r, Game *g, int viewer) {
     if (g->shelter.deployed && world_cell(position_absolute(g->shelter.door)).y == cell.y &&
         vlen(vsub(position_absolute(g->shelter.door), eye)) < 100)
         fold_door(r, position_absolute(g->shelter.door), g->shelter.yaw);
+    for (int i = 0; i < g->player_count; i++) {
+        const Player *p = &g->players[i];
+        if (p->sheltered || p->nova_flash <= 0)
+            continue;
+        Vec3 at = position_absolute(p->pos);
+        double radius = 7 * (1 - p->nova_flash / .35);
+        for (int j = 0; j < 24; j++) {
+            double a = j * SC_PI / 12, b = (j + 1) * SC_PI / 12;
+            tube(r, vadd(at, v3(cos(a) * radius, .2, sin(a) * radius)),
+                 vadd(at, v3(cos(b) * radius, .2, sin(b) * radius)), .055, .055, rgb(.6f, .3f, 1),
+                 1.5f);
+        }
+    }
     Cell target;
     if (game_objective(g, &target) && target.y == cell.y && world_ready(&g->world, target)) {
         Vec3 p = game_terminal(target);
@@ -763,7 +890,7 @@ static void actors(Renderer *r, Game *g, int viewer) {
         }
     }
     for (int i = 0; i < g->player_count; i++)
-        if (i != viewer && !g->players[i].sheltered) {
+        if (i != viewer && !g->players[i].sheltered && !g->players[i].cloaked) {
             Player *p = &g->players[i];
             if (vlen(vsub(position_absolute(p->pos), r->origin)) > 430)
                 continue;
@@ -858,6 +985,107 @@ static void frame(Renderer *r, float x, float y, float w, float h, Color c) {
     rect(r, x + w - 1, y, 1, h, c);
 }
 
+static void map_marker(Renderer *r, const MapView *map, Vec3 point, float x, float y, float tile,
+                       Color color, bool edge) {
+    float cx = x + (float)(point.x / SC_CELL - map->origin.x + .5) * tile;
+    float cy = y + (float)(map->origin.z + map->side - point.z / SC_CELL) * tile;
+    float margin = tile * .3f, side = map->side * tile;
+    if (!edge && (cx < x || cx > x + side || cy < y || cy > y + side))
+        return;
+    cx = (float)clampd(cx, x + margin, x + side - margin);
+    cy = (float)clampd(cy, y + margin, y + side - margin);
+    rect(r, cx - 3, cy - 3, 6, 6, color);
+    frame(r, cx - 5, cy - 5, 10, 10, color);
+}
+static void deck_map(Renderer *r, Game *g, int player, float x, float y, float size, bool large) {
+    Player *p = &g->players[player];
+    MapView map;
+    Cell center = large ? p->map_center : world_cell(position_absolute(p->pos));
+    game_map_build(g, player, center, large ? 4 : 2, &map);
+    float tile = size / map.side;
+    float text_scale = fmaxf(1, size / (large ? 420 : 112));
+    Color panel = rgb(.018f, .035f, .043f), wall = rgb(.35f, .43f, .43f), gold = rgb(1, .7f, .25f),
+          mint = rgb(.3f, 1, .75f);
+    rect(r, x - 6, y - 21, size + 12, size + 46, panel);
+    frame(r, x - 6, y - 21, size + 12, size + 46, wall);
+    char label[120];
+    snprintf(label, sizeof(label), large ? "DECK %+d / SCHEMATIC" : "DECK %+d / M", map.origin.y);
+    text_at(r, x, y - 15, (large ? 1.1f : .8f) * text_scale, label, mint);
+    const Color colors[DISTRICT_TYPES] = {
+        {.12f, .2f, .2f},   {.23f, .17f, .12f}, {.2f, .16f, .27f},
+        {.27f, .22f, .13f}, {.14f, .22f, .29f}, {.17f, .25f, .22f},
+        {.22f, .2f, .16f},  {.16f, .22f, .3f},  {.16f, .25f, .13f}};
+    for (int z = 0; z < map.side; z++)
+        for (int xx = 0; xx < map.side; xx++) {
+            int at = z * map.side + xx;
+            if (!map.valid[at])
+                continue;
+            float left = x + xx * tile, top = y + (map.side - 1 - z) * tile;
+            rect(r, left, top, tile, tile, colors[map.rooms[at].district]);
+            unsigned doors = map.doors[at];
+            const int dx[4] = {-1, 1, 0, 0}, dz[4] = {0, 0, -1, 1};
+            for (int d = 0; d < 4; d++) {
+                int nx = xx + dx[d], nz = z + dz[d];
+                if (nx >= 0 && nx < map.side && nz >= 0 && nz < map.side &&
+                    map.valid[nz * map.side + nx] &&
+                    cell_equal(map.rooms[at].cell, map.rooms[nz * map.side + nx].cell))
+                    continue;
+                bool open = (doors & (1 << d)) != 0;
+                int pieces = open ? 2 : 1;
+                float length = open ? tile * .38f : tile;
+                for (int j = 0; j < pieces; j++) {
+                    float shift = j * tile * .62f;
+                    if (d <= EAST)
+                        rect(r, left + (d == EAST ? tile - 1.5f : 0), top + shift, 1.5f, length,
+                             wall);
+                    else
+                        rect(r, left + shift, top + (d == SOUTH ? tile - 1.5f : 0), length, 1.5f,
+                             wall);
+                }
+            }
+        }
+    if (map.has_shelter && map.shelter.y == map.origin.y)
+        map_marker(r, &map, position_absolute(g->shelter.door), x, y, tile, rgb(.65f, .4f, 1),
+                   false);
+    if (map.has_objective) {
+        map_marker(r, &map, game_terminal(map.objective), x, y, tile, gold, true);
+        if (map.objective.y != map.player.y && map.player.y == map.origin.y)
+            map_marker(r, &map, world_lift(map.player), x, y, tile, rgb(.2f, .7f, 1), false);
+        if (large)
+            snprintf(label, sizeof(label), "GOAL [%d,%d] DECK %+d / %+d FROM YOU", map.objective.x,
+                     map.objective.z, map.objective.y, map.objective.y - map.player.y);
+        else if (map.objective.y != map.player.y)
+            snprintf(label, sizeof(label), "GOAL %s %dD",
+                     map.objective.y > map.player.y ? "UP" : "DOWN",
+                     abs(map.objective.y - map.player.y));
+        else
+            snprintf(label, sizeof(label), "GOAL ON DECK");
+    } else
+        snprintf(label, sizeof(label), "BEACON LIT");
+    text_at(r, x, y + size + 6, .8f * text_scale, label, gold);
+    for (int i = 0; i < g->player_count; i++) {
+        const Player *other = &g->players[i];
+        Cell c = world_cell(position_absolute(other->pos));
+        if (c.y != map.origin.y || c.x < map.origin.x || c.x >= map.origin.x + map.side ||
+            c.z < map.origin.z || c.z >= map.origin.z + map.side)
+            continue;
+        Vec3 feet = position_absolute(other->pos);
+        float cx = x + (float)(feet.x / SC_CELL - map.origin.x + .5) * tile;
+        float cy = y + (float)(map.origin.z + map.side - feet.z / SC_CELL) * tile;
+        Color col = i == player ? mint : rgb(.4f, .65f, 1);
+        double yaw = other->sheltered ? other->return_yaw : other->yaw;
+        Vec3 a = v3(cx + sin(yaw) * 6, cy - cos(yaw) * 6, 0);
+        Vec3 b = v3(cx + sin(yaw + 2.4) * 5, cy - cos(yaw + 2.4) * 5, 0);
+        Vec3 c2 = v3(cx + sin(yaw - 2.4) * 5, cy - cos(yaw - 2.4) * 5, 0);
+        triangle(&r->mesh, a, b, c2, col, 0);
+    }
+    if (large) {
+        text_at(r, x, y + size + 32, .85f * text_scale,
+                "ARROWS PAN / PAGE UP-DOWN DECK / HOME RECENTER / M CLOSE", mint);
+        text_at(r, x, y + size + 49, .85f * text_scale,
+                "GREEN YOU / BLUE LIFT-ALLY / GOLD GOAL / VIOLET SHELTER", wall);
+    }
+}
 static void hud(Renderer *r, Game *g, int player, int width, int height, bool paused, bool touch,
                 bool debug, double fps, const char *save_status) {
     Player *p = &g->players[player];
@@ -872,11 +1100,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     gl.Disable(GL_DEPTH_TEST);
     float pad = 24 * s;
     char label[160];
-    if (w >= 600) {
-        rect(r, pad, pad, 3 * s, 25 * s, gold);
-        text_at(r, pad + 12 * s, pad, 2 * s, "STARSHIP", ink);
-        text_at(r, pad + 12 * s, pad + 17 * s, 1.3f * s, "C R A W L   /   0.1", dim);
-    }
+    deck_map(r, g, player, pad, pad + 16 * s, 112 * s, false);
     Cell cell = world_cell(position_absolute(p->pos));
     Room *room = world_find(&g->world, cell);
     const char *name = position_absolute(p->pos).z < 0
@@ -943,7 +1167,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
             }
         }
     if (aimed && !paused) {
-        snprintf(label, sizeof(label), "%s / %.0f", sc_enemies[aimed->kind].name, aimed->health);
+        EnemyBody body = sc_enemy_bodies[aimed->kind];
+        snprintf(label, sizeof(label), "%s / %s %s / %.0f", sc_enemies[aimed->kind].name,
+                 sc_body_names[body.form], sc_body_variants[body.form][body.variant],
+                 aimed->health);
         centered(r, w * .5f, h * .43f, s, label, mint);
     }
     float exp = (float)p->xp / (float)player_next_level(p);
@@ -989,6 +1216,15 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     if (!touch && !p->sheltered)
         text_at(r, w - 260 * s, by + 53 * s, .9f * s, "R SUMMON FOLD SHELTER / G USE", dim);
+    snprintf(label, sizeof(label), "V VEIL%s / B FLY %.0f / J LEAP %.0f / H NOVA %.0f",
+             p->cloaked ? " ON" : "", p->flight, p->leap, p->nova);
+    if (!touch)
+        centered(r, w * .5f, h - 158 * s, .85f * s, label, p->cloaked ? rgb(.65f, .45f, 1) : mint);
+    if (touch) {
+        snprintf(label, sizeof(label), "PSI: %s / %.0f ENERGY", sc_psionic_names[p->selected_power],
+                 sc_psionic_costs[p->selected_power]);
+        centered(r, w * .5f, 56 * s, .8f * s, label, mint);
+    }
     if (g->message_time > 0 && !paused)
         centered(r, w * .5f, h * .19f, 1.2f * s, g->message, gold);
     if (!p->sheltered && position_absolute(p->pos).z < 0 && !paused)
@@ -1010,11 +1246,11 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         float size = fminf(w, h) * .12f;
         frame(r, w * .13f - size * .5f, h * .73f - size * .5f, size, size, dim);
         centered(r, w * .13f, h * .73f - 3 * s, 1.1f * s, "MOVE", dim);
-        const char *names[] = {"FIRE", "JUMP", "CROUCH", "UP",  "DOWN",
-                               "LAMP", "USE",  "GUN",    "FOLD"};
-        const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f, .64f},
-                    ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f, .27f};
-        for (int i = 0; i < 9; i++) {
+        const char *names[] = {"FIRE", "JUMP", "CROUCH", "UP",   "DOWN",  "LAMP",
+                               "USE",  "GUN",  "FOLD",   "CAST", "POWER", "MAP"};
+        const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f, .64f, .51f, .51f, .51f},
+                    ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f, .27f, .27f, .48f, .1f};
+        for (int i = 0; i < 12; i++) {
             float x = w * xs[i], y = h * ys[i];
             rect(r, x - size * .5f, y - size * .5f, size, size, panel);
             frame(r, x - size * .5f, y - size * .5f, size, size, dim);
@@ -1024,7 +1260,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     if (debug) {
         snprintf(label, sizeof(label), "%.0f FPS / %d CHUNKS / %d QUEUED / %u BUILT / %u UPLOADS",
                  fps, g->world.chunk_count, g->world.pending, g->world.last_work, r->last_uploads);
-        text_at(r, pad, 76 * s, s, label, mint);
+        text_at(r, pad, 203 * s, .8f * s, label, mint);
         RegionPlan plan;
         world_plan(g->world.seed, world_region(cell), &plan);
         float size = 22 * s, mx = w - pad - 4 * size, my = 100 * s;
@@ -1122,6 +1358,20 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                 }
         if (p->logs)
             text_at(r, px + 18 * s, py + 390 * s, .72f * s, sc_logs[reading], gold);
+    }
+    if (p->cloaked && !paused)
+        frame(r, 3, 3, w - 6, h - 6, rgb(.35f, .2f, .6f));
+    if (p->map_open) {
+        float size = fminf(w - 90 * s, h - (touch ? 185 : 150) * s);
+        rect(r, 12 * s, 12 * s, w - 24 * s, h - 24 * s, panel);
+        centered(r, w * .5f, 25 * s, 1.2f * s, "SHIP CARTOGRAPH / NORTH UP", gold);
+        deck_map(r, g, player, (w - size) * .5f, (touch ? 85 : 65) * s, size, true);
+        if (touch) {
+            float cx = w * .51f, cy = h * .1f;
+            rect(r, cx - 30, cy - 10, 60, 20, panel);
+            frame(r, cx - 30, cy - 10, 60, 20, mint);
+            centered(r, cx, cy - 4, .9f, "CLOSE", mint);
+        }
     }
     flush(r);
 }

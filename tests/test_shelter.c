@@ -90,7 +90,9 @@ static void test_placement_and_return(void) {
     p->pos = position_from(v3(15, .02, 12));
     CHECK(game_shelter_near(g, 0) == SHELTER_NONE);
     game_summon(g, 0);
-    CHECK(vlen(position_delta(door, g->shelter.door)) > 10);
+    CHECK(!g->shelter.deployed);
+    game_summon(g, 0);
+    CHECK(g->shelter.deployed && vlen(position_delta(door, g->shelter.door)) > 10);
     destroy(g);
 }
 static void test_furniture_and_recovery(void) {

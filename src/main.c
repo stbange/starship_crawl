@@ -39,7 +39,7 @@ typedef struct {
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
     bool demo_encounter, inspect_shelter;
-    int frame, smoke_frames;
+    int frame, smoke_frames, inspect_form;
     double last, accumulator, fps, autosave, audio_time;
     Uint64 look_after;
     bool discard_look;
@@ -97,7 +97,7 @@ EMSCRIPTEN_KEEPALIVE void sc_web_capture(void) {
     app.discard_look = true;
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_look(double dx, double dy) {
-    if (app.paused || app.touch || !isfinite(dx) || !isfinite(dy) ||
+    if (app.paused || app.touch || app.game.players[0].map_open || !isfinite(dx) || !isfinite(dy) ||
         SDL_GetTicksNS() < app.look_after || (dx == 0 && dy == 0))
         return;
     if (app.discard_look) {
@@ -120,7 +120,14 @@ EMSCRIPTEN_KEEPALIVE int sc_web_import(void) {
     return 1;
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
-    if (action >= 100 && action < 112) {
+    if (action >= 60 && action < 60 + SC_PSIONICS)
+        game_psionic(&app.game, 0, (Psionic)(action - 60));
+    else if (action >= 30 && action < 36) {
+        const int pan[6][3] = {{-1, 0, 0}, {1, 0, 0}, {0, 0, 1}, {0, 0, -1}, {0, 1, 0}, {0, -1, 0}};
+        game_map_pan(&app.game, 0, pan[action - 30][0], pan[action - 30][1], pan[action - 30][2]);
+    } else if (action == 14)
+        game_map_toggle(&app.game, 0);
+    else if (action >= 100 && action < 112) {
         Player *p = &app.game.players[0];
         if (p->logs & (1u << (action - 100))) {
             p->reading = (uint8_t)(action - 100);
@@ -180,15 +187,23 @@ EMSCRIPTEN_KEEPALIVE uint32_t sc_web_fingerprint(uint32_t seed, int x, int y, in
     return world_fingerprint(seed, (Cell){x, y, z});
 }
 EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
-    static char result[2048];
+    static char result[3072];
     const Player *p = &app.game.players[0];
     Vec3 feet = position_absolute(p->pos);
-    unsigned projectiles = 0, climbers = 0;
+    unsigned projectiles = 0, climbers = 0, bodies = 0;
     for (int i = 0; i < SC_MAX_PROJECTILES; i++)
         projectiles += app.game.projectiles[i].active;
     for (int i = 0; i < app.game.world.count; i++)
         for (int j = 0; j < app.game.world.rooms[i].enemy_count; j++)
             climbers += app.game.world.rooms[i].enemies[j].climbing;
+    for (int r = 0; r < app.game.world.count; r++)
+        for (int j = 0; j < app.game.world.rooms[r].enemy_count; j++) {
+            const Enemy *e = &app.game.world.rooms[r].enemies[j];
+            if (e->alive && cell_equal(world_cell(position_absolute(e->pos)), world_cell(feet))) {
+                EnemyBody body = sc_enemy_bodies[e->kind];
+                bodies |= 1u << (body.form * 5 + body.variant);
+            }
+        }
     Room *room = world_find(&app.game.world, world_cell(feet));
     snprintf(
         result, sizeof(result),
@@ -200,7 +215,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"weapons\":%u,\"shield\":%.2f,\"armor\":%.2f,\"energy\":%.2f,\"credits\":%u,\"pickups\":%"
         "u,\"contracts\":%u,\"theme\":%u,\"logs\":%u,\"yaw\":%.4f,\"pitch\":%.4f,\"time\":%.3f,"
         "\"sheltered\":%s,\"shelter_deployed\":%s,\"sx\":%.3f,\"sz\":%.3f,\"resting\":%.2f,"
-        "\"nourished\":%.2f,\"health\":%.2f,\"facility\":%d,\"key_w\":%u}",
+        "\"nourished\":%.2f,\"health\":%.2f,\"facility\":%d,"
+        "\"map\":%s,\"map_x\":%d,\"map_y\":%d,\"map_z\":%d,\"veil\":%s,\"flight\":%.2f,\"leap\":%."
+        "2f,\"nova\":%.2f,\"power\":%u,\"bodies\":%u,\"key_w\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -214,6 +231,8 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         p->logs, p->yaw, p->pitch, app.game.time, p->sheltered ? "true" : "false",
         app.game.shelter.deployed ? "true" : "false", p->shelter_pos.x, p->shelter_pos.z,
         p->resting, p->nourished, p->health, (int)game_shelter_near(&app.game, 0),
+        p->map_open ? "true" : "false", p->map_center.x, p->map_center.y, p->map_center.z,
+        p->cloaked ? "true" : "false", p->flight, p->leap, p->nova, p->selected_power, bodies,
         (unsigned)SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W]);
     return result;
 }
@@ -291,12 +310,14 @@ static float axis(SDL_Gamepad *pad, SDL_GamepadAxis axis_id) {
     return fabsf(v) < .16f ? 0 : (v > 0 ? (v - .16f) / .84f : (v + .16f) / .84f);
 }
 static int finger_role(float x, float y) {
-    const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f, .64f},
-                ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f, .27f};
+    const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f, .64f, .51f, .51f, .51f},
+                ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f, .27f, .27f, .48f, .1f};
     int w, h;
     SDL_GetWindowSize(app.window, &w, &h);
     float radius = fminf((float)w, (float)h) * .075f;
-    for (int i = 0; i < 9; i++)
+    if (app.game.players[0].map_open)
+        return fabsf((x - .51f) * w) < radius && fabsf((y - .1f) * h) < radius ? 13 : -1;
+    for (int i = 0; i < 12; i++)
         if (fabsf((x - xs[i]) * w) < radius && fabsf((y - ys[i]) * h) < radius)
             return i + 2;
     if (x < .42f)
@@ -322,6 +343,13 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
                     game_weapon(&app.game, 0, 1);
                 if (app.fingers[i].role == 10)
                     game_summon(&app.game, 0);
+                if (app.fingers[i].role == 11)
+                    game_psionic(&app.game, 0, (Psionic)app.game.players[0].selected_power);
+                if (app.fingers[i].role == 12)
+                    app.game.players[0].selected_power =
+                        (app.game.players[0].selected_power + 1) % SC_PSIONICS;
+                if (app.fingers[i].role == 13)
+                    game_map_toggle(&app.game, 0);
                 break;
             }
     } else
@@ -331,7 +359,7 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
                 if (type == SDL_EVENT_FINGER_UP || type == SDL_EVENT_FINGER_CANCELED)
                     f->active = false;
                 else {
-                    if (f->role == 1 && !app.paused)
+                    if (f->role == 1 && !app.paused && !app.game.players[0].map_open)
                         game_look(&app.game.players[0], (e->x - f->x) * 3.5, -(e->y - f->y) * 2.8);
                     f->x = e->x;
                     f->y = e->y;
@@ -393,6 +421,50 @@ static void events(void) {
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
             for (int i = 0; i < 2; i++)
                 if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == e.gbutton.which) {
+                    int player = pad_player(i);
+                    Player *p = &app.game.players[player];
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_LEFT_STICK) {
+                        game_map_toggle(&app.game, player);
+                        continue;
+                    }
+                    if (p->map_open) {
+                        int b = e.gbutton.button;
+                        if (b == SDL_GAMEPAD_BUTTON_BACK)
+                            game_map_toggle(&app.game, player);
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_LEFT)
+                            game_map_pan(&app.game, player, -1, 0, 0);
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
+                            game_map_pan(&app.game, player, 1, 0, 0);
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_UP)
+                            game_map_pan(&app.game, player, 0, 0, 1);
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_DOWN)
+                            game_map_pan(&app.game, player, 0, 0, -1);
+                        if (b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+                            game_map_pan(&app.game, player, 0, 1, 0);
+                        if (b == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)
+                            game_map_pan(&app.game, player, 0, -1, 0);
+                        if (b != SDL_GAMEPAD_BUTTON_START)
+                            continue;
+                    }
+                    if (SDL_GetGamepadAxis(app.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16000) {
+                        int b = e.gbutton.button;
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_LEFT) {
+                            game_psionic(&app.game, player, PSI_VEIL);
+                            continue;
+                        }
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_UP) {
+                            game_psionic(&app.game, player, PSI_FLIGHT);
+                            continue;
+                        }
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_RIGHT) {
+                            game_psionic(&app.game, player, PSI_LEAP);
+                            continue;
+                        }
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_DOWN) {
+                            game_psionic(&app.game, player, PSI_NOVA);
+                            continue;
+                        }
+                    }
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_START) {
                         app.started = true;
                         set_pause(!app.paused);
@@ -422,6 +494,10 @@ static void events(void) {
                 break;
             switch (e.key.key) {
             case SDLK_ESCAPE:
+                if (app.game.players[0].map_open) {
+                    game_map_toggle(&app.game, 0);
+                    break;
+                }
                 if (app.new_armed) {
                     app.new_armed = false;
                     game_message(&app.game, "NEW EXPEDITION CANCELLED");
@@ -444,6 +520,45 @@ static void events(void) {
                 break;
             case SDLK_L:
                 sc_web_action(12);
+                break;
+            case SDLK_M:
+                game_map_toggle(&app.game, 0);
+                break;
+            case SDLK_V:
+                game_psionic(&app.game, 0, PSI_VEIL);
+                break;
+            case SDLK_B:
+                game_psionic(&app.game, 0, PSI_FLIGHT);
+                break;
+            case SDLK_J:
+                game_psionic(&app.game, 0, PSI_LEAP);
+                break;
+            case SDLK_H:
+                game_psionic(&app.game, 0, PSI_NOVA);
+                break;
+            case SDLK_LEFT:
+                game_map_pan(&app.game, 0, -1, 0, 0);
+                break;
+            case SDLK_RIGHT:
+                game_map_pan(&app.game, 0, 1, 0, 0);
+                break;
+            case SDLK_UP:
+                game_map_pan(&app.game, 0, 0, 0, 1);
+                break;
+            case SDLK_DOWN:
+                game_map_pan(&app.game, 0, 0, 0, -1);
+                break;
+            case SDLK_PAGEUP:
+                game_map_pan(&app.game, 0, 0, 1, 0);
+                break;
+            case SDLK_PAGEDOWN:
+                game_map_pan(&app.game, 0, 0, -1, 0);
+                break;
+            case SDLK_HOME:
+                if (app.game.players[0].map_open) {
+                    game_map_toggle(&app.game, 0);
+                    game_map_toggle(&app.game, 0);
+                }
                 break;
             case SDLK_R:
                 game_summon(&app.game, 0);
@@ -564,6 +679,9 @@ static void read_actions(Actions actions[2], double dt) {
             a->lift_down |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_NORTH);
             a->sprint |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
         }
+    for (int i = 0; i < app.game.player_count; i++)
+        if (app.game.players[i].map_open)
+            actions[i] = (Actions){0};
 }
 static void shutdown_app(void) {
     if (!app.no_save && !app.failed)
@@ -594,6 +712,25 @@ static void frame(void *unused) {
                                 position_absolute(app.game.players[1].pos)};
     world_refresh(&app.game.world, stream_positions, app.game.player_count);
     world_stream(&app.game.world, SC_STREAM_BUDGET);
+    if (app.inspect_form && !app.game.world.pending) {
+        Room *room = world_find(&app.game.world, (Cell){0, 0, 0});
+        if (room) {
+            room->enemy_count = 0;
+            for (int kind = 0; kind < 25; kind++)
+                if (sc_enemy_bodies[kind].form == app.inspect_form - 1) {
+                    int at = room->enemy_count++;
+                    Enemy *e = &room->enemies[at];
+                    *e = (Enemy){.pos = position_from(v3((at - 2) * 3.2, .02, 22)),
+                                 .health = sc_enemies[kind].health,
+                                 .kind = (uint8_t)kind,
+                                 .id = (uint8_t)at,
+                                 .normal = {0, 1, 0},
+                                 .heading = {0, 0, -1},
+                                 .alive = true};
+                }
+        }
+        app.inspect_form = 0;
+    }
     if (app.inspect_shelter && world_ready(&app.game.world, (Cell){0, 0, 0})) {
         game_summon(&app.game, 0);
         game_interact(&app.game, 0);
@@ -822,6 +959,11 @@ int main(int argc, char **argv) {
                         }
             }
         app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, -25)));
+        if (!strncmp(scene, "form", 4) && scene[4] >= '0' && scene[4] <= '4' && !scene[5]) {
+            app.game.players[0].pos = position_from(v3(0, .02, 14));
+            app.inspect_form = scene[4] - '0' + 1;
+            app.no_save = true;
+        }
         if (!strcmp(scene, "shelter")) {
             app.game.players[0].pos = position_from(v3(0, .02, 12));
             app.inspect_shelter = true;

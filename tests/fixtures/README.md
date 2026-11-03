@@ -23,3 +23,7 @@ The new profile receives starter weapons, armor, and a shield.
 room `(1, 0, 0)`, and player 1 at rank 7 with 81 kills and 123 salvage at `(96, 0.02, 24)`.
 Format 4 must retain this expedition, character, and record without changing the
 seed or mission. The sanctuary starts undeployed.
+
+`generator-v4.sav` was written by commit 5e1e9f6's format-4 writer. It holds
+seed 713, mission stage 2, rank 7, and a deployed shelter with player 1 inside.
+Format 5 retains the expedition and sanctuary, initializing psionic effects inactive.

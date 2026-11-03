@@ -2,7 +2,10 @@
 #define SC_GAME_H
 #include "world.h"
 #define SC_PLAYERS 2
-#define SC_MAX_PROJECTILES 96
+#define SC_MAX_PROJECTILES 192
+#define SC_MAP_SIDE 9
+#define SC_PSIONICS 4
+typedef enum { PSI_VEIL, PSI_FLIGHT, PSI_LEAP, PSI_NOVA } Psionic;
 typedef struct {
     Position pos, checkpoint;
     Vec3 velocity;
@@ -17,6 +20,10 @@ typedef struct {
     Vec3 shelter_pos;
     double return_yaw, return_pitch;
     float resting, nourished;
+    bool cloaked, map_open;
+    float flight, leap, nova, nova_tick, nova_flash;
+    uint8_t selected_power;
+    Cell map_center;
 } Player;
 typedef struct {
     Position door;
@@ -37,6 +44,9 @@ typedef struct {
     uint32_t flags;
     float blast;
     Color color;
+    int pierce, hit_count;
+    Cell hit_rooms[4];
+    uint8_t hit_ids[4];
 } Projectile;
 typedef struct {
     World world;
@@ -52,6 +62,21 @@ typedef struct {
     Shelter shelter;
     bool dirty;
 } Game;
+typedef struct {
+    Cell origin, player, objective, shelter;
+    RoomSpec rooms[SC_MAP_SIDE * SC_MAP_SIDE];
+    uint8_t doors[SC_MAP_SIDE * SC_MAP_SIDE];
+    bool valid[SC_MAP_SIDE * SC_MAP_SIDE], has_objective, has_shelter;
+    int side, plans;
+} MapView;
+void game_map_toggle(Game *g, int player);
+void game_map_pan(Game *g, int player, int x, int y, int z);
+bool game_map_build(const Game *g, int player, Cell center, int radius, MapView *view);
+void game_psionic(Game *g, int player, Psionic power);
+void game_psionics_step(Game *g, Player *p, double dt);
+void game_nova(Game *g, int player);
+extern const char *sc_psionic_names[SC_PSIONICS];
+extern const float sc_psionic_costs[SC_PSIONICS];
 void game_init(Game *g, uint32_t seed);
 void game_destroy(Game *g);
 void game_step(Game *g, const Actions *actions, double dt);

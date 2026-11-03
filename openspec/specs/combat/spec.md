@@ -6,7 +6,7 @@ Responsive combat with distinct enemy abilities, weapon effects, and collision.
 
 ### Requirement: Weapon and enemy catalog
 
-The game SHALL provide 16 usable weapons and 27 enemy species with their declared shared behavior systems and distance-based encounter gating.
+The game SHALL provide 16 usable weapons and 27 enemy species with their declared shared behavior systems and distance-based encounter gating. All 16 weapons SHALL emit finite visible projectiles with their original impact effects, and the catalog SHALL cover five body families with five structural variants each.
 
 #### Scenario: Armory effects
 

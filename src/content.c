@@ -71,16 +71,16 @@ const EnemyDef sc_enemies[SC_ENEMY_TYPES] = {
      6,
      {.32f, .15f, .23f}}};
 const WeaponDef sc_weapons[SC_WEAPONS] = {
-    {"PULSE CARBINE", 27, .19f, 110, 0, 0, 0, 1, 1, 0, {.3f, .8f, .75f}},
-    {"BREACH SHOTGUN", 16, .65f, 42, .065f, 0, 7, 8, 1, 0, {1, .6f, .2f}},
-    {"NAIL REPEATER", 14, .075f, 85, .012f, 0, 2, 1, 1, 0, {.8f, .7f, .4f}},
-    {"RELIQUARY RAIL", 110, .9f, 180, 0, 0, 12, 1, 4, 0, {.6f, .8f, 1}},
+    {"PULSE CARBINE", 27, .19f, 110, 0, 0, 0, 1, 1, W_PROJECTILE, {.3f, .8f, .75f}},
+    {"BREACH SHOTGUN", 16, .65f, 42, .065f, 0, 7, 8, 1, W_PROJECTILE, {1, .6f, .2f}},
+    {"NAIL REPEATER", 14, .075f, 85, .012f, 0, 2, 1, 1, W_PROJECTILE, {.8f, .7f, .4f}},
+    {"RELIQUARY RAIL", 110, .9f, 180, 0, 0, 12, 1, 4, W_PROJECTILE, {.6f, .8f, 1}},
     {"PLASMA LANCE", 55, .4f, 100, 0, 2.8f, 7, 1, 1, W_PROJECTILE | W_BLAST, {.3f, 1, .5f}},
     {"FUNERAL ROCKET", 125, 1.1f, 100, 0, 6, 18, 1, 1, W_PROJECTILE | W_BLAST, {1, .35f, .13f}},
-    {"EMBER THROWER", 8, .06f, 17, .08f, 0, 1, 3, 1, W_BURN, {1, .45f, .08f}},
-    {"CRYO NEEDLER", 18, .13f, 85, .008f, 0, 2, 1, 1, W_CHILL, {.3f, .8f, 1}},
-    {"ARC CONDUCTOR", 35, .4f, 58, 0, 7, 8, 1, 1, W_CHAIN, {.5f, .55f, 1}},
-    {"SIPHON RIFLE", 29, .32f, 90, 0, 0, 5, 1, 1, W_LEECH, {.85f, .25f, .55f}},
+    {"EMBER THROWER", 8, .06f, 17, .08f, 0, 1, 3, 1, W_PROJECTILE | W_BURN, {1, .45f, .08f}},
+    {"CRYO NEEDLER", 18, .13f, 85, .008f, 0, 2, 1, 1, W_PROJECTILE | W_CHILL, {.3f, .8f, 1}},
+    {"ARC CONDUCTOR", 35, .4f, 58, 0, 7, 8, 1, 1, W_PROJECTILE | W_CHAIN, {.5f, .55f, 1}},
+    {"SIPHON RIFLE", 29, .32f, 90, 0, 0, 5, 1, 1, W_PROJECTILE | W_LEECH, {.85f, .25f, .55f}},
     {"GRAVITY MORTAR",
      85,
      .85f,
@@ -103,10 +103,20 @@ const WeaponDef sc_weapons[SC_WEAPONS] = {
      1,
      W_PROJECTILE | W_BLAST | W_BURN,
      {1, .7f, .18f}},
-    {"VOID SCALPEL", 48, .24f, 32, 0, 0, 4, 1, 3, 0, {.75f, .35f, .9f}},
-    {"FLECHETTE FAN", 12, .22f, 65, .045f, 0, 4, 5, 2, 0, {.65f, .85f, .5f}},
-    {"SERAPH BEAM", 19, .11f, 120, 0, 0, 3, 1, 2, W_BURN, {1, .8f, .5f}},
-    {"STORM RELIC", 65, .6f, 100, 0, 10, 15, 1, 2, W_CHAIN | W_CHILL, {.4f, .9f, 1}}};
+    {"VOID SCALPEL", 48, .24f, 32, 0, 0, 4, 1, 3, W_PROJECTILE, {.75f, .35f, .9f}},
+    {"FLECHETTE FAN", 12, .22f, 65, .045f, 0, 4, 5, 2, W_PROJECTILE, {.65f, .85f, .5f}},
+    {"SERAPH BEAM", 19, .11f, 120, 0, 0, 3, 1, 2, W_PROJECTILE | W_BURN, {1, .8f, .5f}},
+    {"STORM RELIC",
+     65,
+     .6f,
+     100,
+     0,
+     10,
+     15,
+     1,
+     2,
+     W_PROJECTILE | W_CHAIN | W_CHILL,
+     {.4f, .9f, 1}}};
 const char *sc_attributes[SC_ATTRIBUTES] = {"DAMAGE",  "VITALITY", "HASTE",     "ARMOR",
                                             "SHIELD",  "MOBILITY", "PRECISION", "RECOVERY",
                                             "REACTOR", "SALVAGE"};
@@ -123,3 +133,20 @@ const char *sc_logs[12] = {
     "10 / ORISON is afraid of the beacon. It cannot dream beyond its light.",
     "11 / Cut the neural heart. Wake the beacon. Give the sleepers a sky.",
     "12 / If you can hear this, you are not the first reclaimer. Be the last."};
+
+const float sc_projectile_speeds[SC_WEAPONS] = {140, 78,  115, 220, 72,  32,  35,  100,
+                                                95,  110, 28,  45,  160, 105, 180, 100};
+const char *sc_body_names[SC_BODY_FORMS] = {"HUSK", "GAZER", "VOID RAY", "WORM", "CONSTRUCT"};
+const char *sc_body_variants[SC_BODY_FORMS][SC_BODY_VARIANTS] = {
+    {"DRUDGE", "CLEAVER", "BULWARK", "HORNED", "RELIQUARY"},
+    {"OCULUS", "CROWN", "LANTERN", "BROOD", "SIPHON"},
+    {"DART", "CRESCENT", "MANTA", "THORNWING", "SERAPH"},
+    {"GRUB", "CENTIPEDE", "SERPENT", "MAW", "LEVIATHAN"},
+    {"SHARD", "OBELISK", "GYRE", "TRIPOD", "CATHEDRAL"}};
+/* Stable species IDs keep saved encounters and behavior compositions intact. */
+const EnemyBody sc_enemy_bodies[SC_ENEMY_TYPES] = {
+    {WORM, 1},      {GAZER, 0}, {HUSK, 2},     {WORM, 0},     {HUSK, 0},      {HUSK, 1},
+    {CONSTRUCT, 0}, {GAZER, 1}, {GAZER, 3},    {WORM, 3},     {HUSK, 3},      {HUSK, 4},
+    {VOID_RAY, 2},  {WORM, 2},  {GAZER, 4},    {VOID_RAY, 0}, {CONSTRUCT, 3}, {VOID_RAY, 1},
+    {CONSTRUCT, 1}, {WORM, 4},  {VOID_RAY, 3}, {VOID_RAY, 4}, {GAZER, 2},     {CONSTRUCT, 2},
+    {CONSTRUCT, 4}, {GAZER, 3}, {CONSTRUCT, 4}};

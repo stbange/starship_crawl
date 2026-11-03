@@ -37,6 +37,12 @@ void game_summon(Game *g, int player) {
             game_message(g, "FOLD SHELTER OCCUPIED / THE DOOR CANNOT MOVE");
             return;
         }
+    if (g->shelter.deployed) {
+        g->shelter.deployed = false;
+        g->dirty = true;
+        game_message(g, "FOLD SHELTER PACKED / R TO DEPLOY AGAIN");
+        return;
+    }
     Player *p = &g->players[player];
     Vec3 feet = position_absolute(p->pos);
     Vec3 door = vadd(feet, v3(sin(p->yaw) * 2.2, 0, cos(p->yaw) * 2.2));

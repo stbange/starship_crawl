@@ -16,15 +16,18 @@ canvas{display:block;width:100%;height:100%;outline:none;touch-action:none}butto
   <p>A cathedral of steel. A thousand forgotten decks.<br>You are the reclaimer. Restore the beacon.<br>Bring the sleeping cities home.</p>
   <button class="primary" id="start" disabled>Preparing the ship…</button>
   <p id="status" role="status" class="small">Loading the engine</p>
-  <p class="small">WASD move · mouse aim · click fire · Ctrl crouch<br>F flashlight · Z / X weapons · G use · R shelter · I journal<br>E / Q grav lifts · 1 / 2 / 3 upgrades · Esc pause</p>
+  <p class="small">WASD move · mouse aim · click fire · Ctrl crouch<br>F flashlight · Z / X weapons · G use · R shelter · M map · I journal<br>V veil · B flight · J long jump · H nova<br>E / Q grav lifts · 1 / 2 / 3 upgrades · Esc pause</p>
   </div>
 </section>
 <button id="menu" class="hidden" aria-expanded="false">MENU</button>
 <aside id="drawer" class="hidden" aria-label="Expedition menu">
   <div class="eyebrow">YOUR EXPEDITION</div><button id="resume">Resume exploration</button>
   <p>Spend an ascension point</p><div class="row"><button data-action="1">Damage</button><button data-action="2">Vitality</button><button data-action="3">Haste</button></div>
-  <button data-action="13">Summon fold shelter (R)</button>
+  <button data-action="13">Deploy / pack shelter (R)</button>
   <button data-action="9">Next weapon (X)</button><button data-action="11">Character / mission journal (I)</button><button data-action="8">Use door / station / terminal (G)</button>
+  <button data-action="14">Deck map (M)</button>
+  <div class="row"><button data-action="30">Map west</button><button data-action="31">Map east</button><button data-action="32">Map north</button><button data-action="33">Map south</button><button data-action="34">Deck up</button><button data-action="35">Deck down</button></div>
+  <p>Psionics / uses rechargeable energy</p><div class="row"><button data-action="60">Veil (V)</button><button data-action="61">Flight (B)</button><button data-action="62">Long jumps (J)</button><button data-action="63">Nova aura (H)</button></div>
   <div id="attributes"></div><div id="armory"></div><div id="records"></div>
   <button data-action="7">Toggle flashlight (F)</button><button data-action="4">Change armor color</button><button id="save">Save expedition</button>
   <button id="export">Export save</button><button id="import-button">Import save</button><input id="import" type="file" accept=".sav">
@@ -52,7 +55,7 @@ attributes.forEach((name,i)=>{const b=document.createElement('button');b.dataset
 const weapons=['Pulse Carbine','Breach Shotgun','Nail Repeater','Reliquary Rail','Plasma Lance','Funeral Rocket','Ember Thrower','Cryo Needler','Arc Conductor','Siphon Rifle','Gravity Mortar','Sunburst Cannon','Void Scalpel','Flechette Fan','Seraph Beam','Storm Relic'];
 weapons.forEach((name,i)=>{const b=document.createElement('button');b.dataset.action=40+i;b.textContent='Equip '+name;b.title='Find this weapon aboard the ship to unlock it';document.getElementById('armory').appendChild(b)});
 for(let i=0;i<12;i++){const b=document.createElement('button');b.dataset.action=100+i;b.textContent='Read ship record '+(i+1);document.getElementById('records').appendChild(b)}
-document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const action=Number(b.dataset.action);Module.ccall('sc_web_action',null,['number'],[action]);if(action===11||action>=100){drawer.classList.add('hidden');menu.setAttribute('aria-expanded','false')}});
+document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const action=Number(b.dataset.action);Module.ccall('sc_web_action',null,['number'],[action]);if(action===14){resume()}else if(action===11||action>=100){drawer.classList.add('hidden');menu.setAttribute('aria-expanded','false')}});
 document.getElementById('save').onclick=()=>{Module.ccall('sc_web_save',null,[],[]);document.getElementById('save-note').textContent='Saving…';const timer=setInterval(()=>{const s=window.scStorage.status;if(s!==2){document.getElementById('save-note').textContent=s===3?'Saved in this browser.':'Storage unavailable. Export a backup.';clearInterval(timer)}},100)};
 document.getElementById('new').onclick=()=>{if(confirm('Generate a new ship? This replaces the current expedition and retains your character.')){Module.ccall('sc_web_action',null,['number'],[6]);resume()}};
 document.getElementById('export').onclick=()=>{Module.ccall('sc_web_save',null,[],[]);try{const data=Module.FS.readFile('/persist/expedition.sav');const url=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));const a=document.createElement('a');a.href=url;a.download='starship-expedition.sav';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(e){document.getElementById('save-note').textContent='No save is available yet.'}};

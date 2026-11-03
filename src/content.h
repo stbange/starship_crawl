@@ -19,6 +19,16 @@ typedef enum {
 #define SC_ENEMY_TYPES 27
 #define SC_WEAPONS 16
 #define SC_ATTRIBUTES 10
+#define SC_BODY_FORMS 5
+#define SC_BODY_VARIANTS 5
+typedef enum { HUSK, GAZER, VOID_RAY, WORM, CONSTRUCT } BodyForm;
+typedef struct {
+    uint8_t form, variant;
+} EnemyBody;
+extern const EnemyBody sc_enemy_bodies[SC_ENEMY_TYPES];
+extern const char *sc_body_names[SC_BODY_FORMS];
+extern const char *sc_body_variants[SC_BODY_FORMS][SC_BODY_VARIANTS];
+extern const float sc_projectile_speeds[SC_WEAPONS];
 typedef struct {
     const char *name;
     RoomType architecture;

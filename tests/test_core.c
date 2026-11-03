@@ -332,7 +332,8 @@ static void test_combat(void) {
     bay->enemies[0] =
         (Enemy){.pos = position_from(v3(0, .02, 24)), .health = 10, .kind = 0, .alive = true};
     step(g, (Actions){.fire = true}, 1);
-    CHECK(g->shots == 1);
+    CHECK(g->shots == 1 && g->hits == 0);
+    step(g, (Actions){0}, 8);
     CHECK(g->hits == 1);
     CHECK(p->kills == 1);
     CHECK(!bay->enemies[0].alive);
@@ -356,7 +357,7 @@ static void test_combat(void) {
     CHECK(position_absolute(p->pos).z < 0);
     game_destroy(g);
     free(g);
-    puts("PASS raycast combat, upgrades, optional co-op, new expedition progression");
+    puts("PASS swept projectile combat, upgrades, optional co-op, new expedition progression");
 }
 static void test_save(void) {
     const char *path = "sc-test-expedition.sav";
@@ -716,6 +717,7 @@ static void test_expansion(void) {
     p->pitch = atan2(.65 - 1.62, 4);
     p->cooldown = 0;
     step(g, (Actions){.fire = true}, 1);
+    step(g, (Actions){0}, 30);
     CHECK(!warden->alive);
     game_interact(g, 0);
     CHECK(g->mission == 5 && (p->weapons & (1u << 15)));

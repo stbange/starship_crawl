@@ -158,6 +158,22 @@ static void sanctuary(Stream *s, Shelter *shelter, Player *players, bool read) {
             s->ok = false;
     }
 }
+static void powers(Stream *s, Player *players, bool read) {
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        Player *p = &players[i];
+        uint32_t veil = number(s, p->cloaked, read);
+        p->cloaked = veil != 0;
+        p->flight = (float)real(s, p->flight, read);
+        p->leap = (float)real(s, p->leap, read);
+        p->nova = (float)real(s, p->nova, read);
+        p->nova_tick = (float)real(s, p->nova_tick, read);
+        if (veil > 1 || !isfinite(p->flight) || p->flight < 0 || p->flight > 18 ||
+            !isfinite(p->leap) || p->leap < 0 || p->leap > 45 || !isfinite(p->nova) ||
+            p->nova < 0 || p->nova > 8 || !isfinite(p->nova_tick) || p->nova_tick < 0 ||
+            p->nova_tick > .5 || (p->cloaked && p->nova > 0) || (p->nova == 0 && p->nova_tick != 0))
+            s->ok = false;
+    }
+}
 bool game_save(const Game *g, const char *path) {
     if (!path || g->world.record_count > 1000000)
         return false;
@@ -174,7 +190,7 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 4, false);
+    number(&s, 5, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -199,6 +215,7 @@ bool game_save(const Game *g, const char *path) {
     Player players[SC_PLAYERS];
     memcpy(players, g->players, sizeof(players));
     sanctuary(&s, &shelter, players, false);
+    powers(&s, players, false);
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -225,7 +242,7 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 4) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 5) ||
         (version == 2 && generator != 2) || (version >= 3 && generator != SC_GENERATOR_VERSION))
         s.ok = false;
     Player players[SC_PLAYERS];
@@ -267,6 +284,8 @@ bool game_load(Game *g, const char *path) {
     Shelter shelter = {0};
     if (version >= 4)
         sanctuary(&s, &shelter, players, true);
+    if (version >= 5)
+        powers(&s, players, true);
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
@@ -316,7 +335,7 @@ bool game_load(Game *g, const char *path) {
     g->mission_kills = kills;
     g->mission_loot = loot;
     g->contracts = contracts;
-    g->dirty = version < 4;
+    g->dirty = version < 5;
     game_message(g, version < 3 ? "SHIP GENERATOR UPDATED / CHARACTERS RETAINED / NEW EXPEDITION"
                                 : "EXPEDITION RESUMED / WELCOME BACK");
     return true;
