@@ -33,6 +33,14 @@ def wait_ready(page):
     page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0", timeout=30000)
 
 
+def start_play(page):
+    # Pointer capture and SDL focus changes finish asynchronously after the
+    # button click. Wait for real simulation ticks before sending held input.
+    before = state(page)["time"]
+    page.locator("#start").click()
+    page.wait_for_function("before => { const s=JSON.parse(Module.ccall('sc_web_state','string',[],[])); return !s.paused && s.time > before + .08; }", arg=before, timeout=15000)
+
+
 def run():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--site-dir", type=Path, default=BUILD)
@@ -69,7 +77,7 @@ def run():
                 actual = page.evaluate("args => Module.ccall('sc_web_fingerprint','number',['number','number','number','number'],args) >>> 0", [probe["seed"], *probe["region"]])
                 assert actual == probe["hash"], (probe, actual)
             page.screenshot(path=str(ARTIFACTS / "arrival-menu.png"))
-            page.locator("#start").click()
+            start_play(page)
             page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
             before = state(page)
             page.keyboard.down("w")
@@ -89,7 +97,7 @@ def run():
             assert loaded["seed"] == 713
             assert abs(loaded["z"] - saved["z"]) < .1
             assert loaded["players"] == 1
-            page.locator("#start").click()
+            start_play(page)
             page.keyboard.press("F2")
             page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).players === 2")
             page.screenshot(path=str(ARTIFACTS / "optional-split.png"))
@@ -124,7 +132,7 @@ def run():
                             }
                         }, 25);
                     }""")
-                page.locator("#start").click()
+                start_play(page)
                 page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 5")
                 page.screenshot(path=str(ARTIFACTS / (scene + ".png")))
                 assert not state(page)["failed"]
@@ -160,9 +168,13 @@ def run():
             # Play the first mission and spend its reward, without test-only hooks.
             page.goto(base + "?seed=713&scene=bay")
             wait_ready(page)
-            page.locator("#start").click()
+            start_play(page)
             page.keyboard.down("w")
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > 40", timeout=15000)
+            try:
+                page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > 40", timeout=15000)
+            except Exception as error:
+                page.screenshot(path=str(ARTIFACTS / "console-walk-failure.png"))
+                raise AssertionError(f"Console walk failed: {state(page)}") from error
             page.keyboard.up("w")
             page.keyboard.press("g")
             page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).mission === 1")
@@ -186,7 +198,7 @@ def run():
             page.goto(base + "?seed=713&scene=distant&split")
             wait_ready(page)
             assert state(page)["players"] == 2 and state(page)["x"] > 287999000
-            page.locator("#start").click()
+            start_play(page)
             page.screenshot(path=str(ARTIFACTS / "distant-split.png"))
             assert not state(page)["failed"]
             page.evaluate("Module.ccall('sc_web_action',null,['number'],[0])")

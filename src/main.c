@@ -173,7 +173,7 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"span\":%d,\"ready\":%s,\"fingerprint\":%u,\"flashlight\":%s,\"projectiles\":%u,\"enemy_"
         "shots\":%u,\"projectile_hits\":%u,\"climbers\":%u,\"mission\":%u,\"weapon\":%u,"
         "\"weapons\":%u,\"shield\":%.2f,\"armor\":%.2f,\"energy\":%.2f,\"credits\":%u,\"pickups\":%"
-        "u,\"contracts\":%u,\"theme\":%u,\"logs\":%u}",
+        "u,\"contracts\":%u,\"theme\":%u,\"logs\":%u,\"yaw\":%.4f,\"pitch\":%.4f,\"time\":%.3f}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -184,7 +184,7 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         p->flashlight ? "true" : "false", projectiles, app.game.enemy_shots,
         app.game.projectile_hits, climbers, app.game.mission, p->weapon, p->weapons, p->shield,
         p->armor, p->energy, p->credits, p->pickups, app.game.contracts, room ? room->theme : 0,
-        p->logs);
+        p->logs, p->yaw, p->pitch, app.game.time);
     return result;
 }
 static void audio_frame(void) {
