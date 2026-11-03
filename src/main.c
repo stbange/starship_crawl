@@ -246,14 +246,16 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "2f,\"nova\":%.2f,\"power\":%u,\"bodies\":%u,\"key_w\":%u,\"riding\":%u,\"rig_weapon\":%u,"
         "\"hull\":%.2f,\"drive_speed\":%.2f,\"mech_deployed\":%s,\"wagon_deployed\":%s,\"beams\":%"
         "u,\"flares\":%u,\"flare_lifetime\":%u,\"flare_strength\":%u,\"flare_life\":%.2f,\"flare_"
-        "power\":%.2f,\"points\":%u}",
+        "power\":%.2f,\"points\":%u,\"profile\":%u,\"layout\":%u,\"incident\":%u,\"intensity\":%u,"
+        "\"landmark\":%u,\"room_depth\":%.1f,\"cache_x\":%.3f,\"cache_z\":%.3f}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
         app.game.world.pending, app.game.world.generated, app.game.world.last_work,
         app.renderer.last_uploads, room ? room->span_x * room->span_z : 0,
         room && room->ready ? "true" : "false",
-        world_fingerprint(app.game.world.seed, world_region(world_cell(feet))),
+        world_fingerprint_version(app.game.world.seed, app.game.world.generator,
+                                  world_region(world_cell(feet))),
         p->flashlight ? "true" : "false", projectiles, app.game.enemy_shots,
         app.game.projectile_hits, climbers, app.game.mission, p->weapon, p->weapons, p->shield,
         p->armor, p->energy, p->credits, p->pickups, app.game.contracts, room ? room->theme : 0,
@@ -265,7 +267,11 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         (unsigned)SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W], p->riding, p->rig_weapon, hull,
         p->drive_speed, app.game.rigs[0][0].deployed ? "true" : "false",
         app.game.rigs[0][1].deployed ? "true" : "false", beams, flares, p->flare_lifetime,
-        p->flare_strength, flare_life, flare_power, p->points);
+        p->flare_strength, flare_life, flare_power, p->points, world_profile(app.game.world.seed),
+        room ? room->layout : 0, room ? room->incident : 0, room ? room->intensity : 0,
+        room ? room->landmark : 0, room ? room->depth : 0,
+        room && room->ready ? position_absolute(room->pickups[3].pos).x : 0,
+        room && room->ready ? position_absolute(room->pickups[3].pos).z : 0);
     return result;
 }
 static void audio_frame(void) {
@@ -819,7 +825,7 @@ static void frame(void *unused) {
                              .alive = true};
             }
             room->enemies[0].pos = position_from(
-                vadd(world_center(room->cell), v3(-(room->width * .5 - 13.6), .02, -20)));
+                vadd(world_center(room->cell), v3(-(room->width * .5 - 1.1), .02, -20)));
             app.demo_encounter = false;
         }
     }
@@ -1026,6 +1032,29 @@ int main(int argc, char **argv) {
                             }
                         }
             }
+        int inspect_layout = -1, inspect_incident = -1, inspect_landmark = -1;
+        if (!strncmp(scene, "layout", 6) && scene[6] >= '0' && scene[6] <= '2' && !scene[7])
+            inspect_layout = scene[6] - '0';
+        if (!strncmp(scene, "history", 7) && scene[7] >= '0' && scene[7] <= '5' && !scene[8])
+            inspect_incident = scene[7] - '0';
+        if (!strncmp(scene, "landmark", 8) && scene[8] >= '1' && scene[8] <= '4' && !scene[9])
+            inspect_landmark = scene[8] - '0';
+        bool interior_scene = inspect_layout >= 0 || inspect_incident >= 0 || inspect_landmark >= 0;
+        bool found = false;
+        for (int y = 0; interior_scene && y < 9 && !found; y++)
+            for (int z = 0; z < 24 && !found; z++)
+                for (int x = -12; x < 12 && !found; x++) {
+                    RoomSpec spec = world_describe(seed, (Cell){x, y, z});
+                    if (spec.type != BAY && spec.height >= 3 &&
+                        (inspect_layout < 0 ||
+                         (spec.layout == inspect_layout && spec.span_x == 1)) &&
+                        (inspect_incident < 0 ||
+                         (spec.incident == inspect_incident && spec.span_x == 1)) &&
+                        (inspect_landmark < 0 || spec.landmark == inspect_landmark)) {
+                        c = spec.cell;
+                        found = true;
+                    }
+                }
         app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, -25)));
         if (!strncmp(scene, "form", 4) && scene[4] >= '0' && scene[4] <= '4' && !scene[5]) {
             app.game.players[0].pos = position_from(v3(0, .02, 14));
@@ -1044,6 +1073,11 @@ int main(int argc, char **argv) {
         }
         app.game.players[0].crouched = world_describe(seed, c).type == CONDUIT;
         app.game.players[0].pitch = .03;
+        if (interior_scene) {
+            app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, 0)));
+            app.game.players[0].yaw = .78;
+            app.game.players[0].pitch = inspect_landmark >= 0 ? .26 : .015;
+        }
         Vec3 p = position_absolute(app.game.players[0].pos);
         world_refresh(&app.game.world, &p, 1);
     }

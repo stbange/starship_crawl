@@ -3,7 +3,8 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 3u
+#define SC_GENERATOR_VERSION 4u
+#define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
 #define SC_REGION 4
@@ -23,6 +24,17 @@ typedef struct {
     Vec3 local;
 } Position;
 typedef enum { WEST, EAST, SOUTH, NORTH } Direction;
+typedef enum { PILGRIM_ARK, CROWN_LINER, SIEGE_CARRIER, SEED_VAULT, SHIP_PROFILES } ShipProfile;
+typedef enum { SUITES, WORKBAYS, ARCADES, INTERIOR_LAYOUTS } InteriorLayout;
+typedef enum { QUIET, BLACKOUT, FROST, QUARANTINE, FIRE, BLOOM, INCIDENT_TYPES } Incident;
+typedef enum {
+    NO_LANDMARK,
+    BANQUET,
+    CONSERVATORY,
+    SUSPENDED_ENGINE,
+    RELIQUARY,
+    LANDMARK_TYPES
+} Landmark;
 typedef struct {
     bool open, crouch;
     double width, clearance;
@@ -32,7 +44,7 @@ typedef struct {
     Cell cell;
     RoomType type;
     District district;
-    uint8_t theme;
+    uint8_t theme, layout, incident, intensity, landmark;
     uint8_t span_x, span_z;
     double width, depth, height;
     uint32_t hash;
@@ -85,7 +97,7 @@ typedef struct {
     Cell cell;
     RoomType type;
     District district;
-    uint8_t theme;
+    uint8_t theme, layout, incident, intensity, landmark;
     uint8_t span_x, span_z;
     double width, depth, height;
     uint32_t hash;
@@ -142,6 +154,18 @@ bool world_door(uint32_t seed, Cell cell, Direction direction);
 Connector world_connector(uint32_t seed, Cell cell, Direction direction);
 Cell world_neighbor(Cell cell, Direction direction);
 uint32_t world_fingerprint(uint32_t seed, Cell region);
+/* Saved expeditions select their own generator; default wrappers create new ships. */
+void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPlan *plan);
+RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell cell);
+bool world_door_version(uint32_t seed, uint32_t generator, Cell cell, Direction direction);
+Connector world_connector_version(uint32_t seed, uint32_t generator, Cell cell,
+                                  Direction direction);
+uint32_t world_fingerprint_version(uint32_t seed, uint32_t generator, Cell region);
+ShipProfile world_profile(uint32_t seed);
+const char *world_profile_name(ShipProfile profile);
+const char *world_layout_name(unsigned layout);
+const char *world_incident_name(unsigned incident);
+const char *world_landmark_name(unsigned landmark);
 void world_init(World *w, uint32_t seed);
 void world_destroy(World *w);
 /* Request work only. Pump once per displayed frame, also while paused. */

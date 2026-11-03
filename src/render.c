@@ -452,7 +452,7 @@ static void draw_chunks(Renderer *r, Game *g) {
             continue;
         for (int d = 0; d < 4; d++)
             if (!world_ready(w, world_neighbor(c->cell, (Direction)d)) &&
-                world_door(w->seed, c->cell, (Direction)d)) {
+                world_door_version(w->seed, w->generator, c->cell, (Direction)d)) {
                 Vec3 p = vadd(center, v3(d == WEST   ? -48
                                          : d == EAST ? 48
                                                      : 0,
@@ -1119,6 +1119,15 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
                 continue;
             float left = x + xx * tile, top = y + (map.side - 1 - z) * tile;
             rect(r, left, top, tile, tile, colors[map.rooms[at].district]);
+            if (map.rooms[at].landmark) {
+                /* Pink corner brackets distinguish discoveries from gold goals. */
+                Color discovery = rgb(.86f, .42f, .63f);
+                float gap = tile * .22f;
+                frame(r, left + gap, top + gap, tile - 2 * gap, tile - 2 * gap, discovery);
+                if (large)
+                    text_at(r, left + tile * .42f, top + tile * .39f, .8f * text_scale, "!",
+                            discovery);
+            }
             unsigned doors = map.doors[at];
             const int dx[4] = {-1, 1, 0, 0}, dz[4] = {0, 0, -1, 1};
             for (int d = 0; d < 4; d++) {
@@ -1180,7 +1189,7 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
         text_at(r, x, y + size + 32, .85f * text_scale,
                 "ARROWS PAN / PAGE UP-DOWN DECK / HOME RECENTER / M CLOSE", mint);
         text_at(r, x, y + size + 49, .85f * text_scale,
-                "GREEN YOU / BLUE LIFT-ALLY / GOLD GOAL / VIOLET SHELTER", wall);
+                "GREEN YOU / BLUE LIFT / GOLD GOAL / VIOLET SHELTER / PINK DISCOVERY", wall);
     }
 }
 static void hud(Renderer *r, Game *g, int player, int width, int height, bool paused, bool touch,
@@ -1202,7 +1211,9 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     Room *room = world_find(&g->world, cell);
     const char *name = position_absolute(p->pos).z < 0
                            ? "THE SILENT EXPANSE"
-                           : (room ? sc_themes[room->theme].name : "BETWEEN DECKS");
+                           : (room ? (room->landmark ? world_landmark_name(room->landmark)
+                                                     : sc_themes[room->theme].name)
+                                   : "BETWEEN DECKS");
     centered(r, w * .5f, pad, 1.6f * s,
              p->sheltered         ? "THE FOLD / SANCTUARY"
              : p->riding == MECH  ? "REAVER / MECH PILOT LINK"
@@ -1213,16 +1224,25 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
              position_absolute(p->pos).z < 0 ? 0 : world_difficulty(cell), cell.y);
     centered(r, w * .5f, pad + 18 * s, 1.1f * s,
              p->sheltered ? "SAFE / THE INFESTATION CANNOT ENTER" : label, dim);
-    if (!p->sheltered && room && position_absolute(p->pos).z >= 0)
-        centered(r, w * .5f, pad + 33 * s, .9f * s, world_district_name(room->district), dim);
+    if (!p->sheltered && room && position_absolute(p->pos).z >= 0) {
+        snprintf(label, sizeof(label), "%s / %s", world_district_name(room->district),
+                 g->world.generator >= 4 ? world_incident_name(room->incident) : "UNSURVEYED");
+        centered(r, w * .5f, pad + 33 * s, .9f * s, label, dim);
+    }
     if (g->world.pending)
         centered(r, w * .5f, h * .8f, 1 * s, "SURVEYING NEARBY PASSAGES", dim);
     snprintf(label, sizeof(label), "SHIP %08X", g->world.seed);
-    if (w >= 600)
+    if (w >= 600) {
         text_at(r, w - pad - 13 * 7 * s, pad, 1.1f * s, label, dim);
+        const char *profile = g->world.generator >= 4
+                                  ? world_profile_name(world_profile(g->world.seed))
+                                  : "LEGACY EXPEDITION";
+        text_at(r, w - pad - (float)strlen(profile) * 5.4f * s, pad + 18 * s, .9f * s, profile,
+                dim);
+    }
     if (g->player_count == 2) {
         snprintf(label, sizeof(label), "PLAYER %d", player + 1);
-        text_at(r, w - pad - 90 * s, pad + 18 * s, 1.2f * s, label, mint);
+        text_at(r, w - pad - 90 * s, pad + 33 * s, 1.2f * s, label, mint);
     }
     if (!paused) {
         float cx = w * .5f, cy = h * .5f;
@@ -1395,7 +1415,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                  fps, g->world.chunk_count, g->world.pending, g->world.last_work, r->last_uploads);
         text_at(r, pad, 203 * s, .8f * s, label, mint);
         RegionPlan plan;
-        world_plan(g->world.seed, world_region(cell), &plan);
+        world_plan_version(g->world.seed, g->world.generator, world_region(cell), &plan);
         float size = 22 * s, mx = w - pad - 4 * size, my = 100 * s;
         for (int i = 0; i < 16; i++) {
             RoomSpec *spec = &plan.rooms[plan.owner[i]];

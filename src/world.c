@@ -1,4 +1,4 @@
-#include "world.h"
+#include "interior.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,12 +89,7 @@ bool world_ready(const World *w, Cell c) {
     return false;
 }
 
-typedef struct {
-    World *world;
-    Chunk *chunk;
-    Vec3 origin;
-} Builder;
-static void box(Builder *b, Vec3 center, Vec3 size, Color color, float glow, bool solid) {
+void world_box(Builder *b, Vec3 center, Vec3 size, Color color, float glow, bool solid) {
     if (size.x <= 0 || size.y <= 0 || size.z <= 0)
         return;
     center = vsub(center, b->origin);
@@ -113,7 +108,7 @@ static void box(Builder *b, Vec3 center, Vec3 size, Color color, float glow, boo
 }
 static void local(Builder *b, Vec3 c, double x, double y, double z, double sx, double sy, double sz,
                   Color col, float glow, bool solid) {
-    box(b, vadd(c, v3(x, y, z)), v3(sx, sy, sz), col, glow, solid);
+    world_box(b, vadd(c, v3(x, y, z)), v3(sx, sy, sz), col, glow, solid);
 }
 static void corridor(Builder *b, Vec3 c, bool along_x, double from, double to, double clearance,
                      Color light) {
@@ -168,7 +163,7 @@ static void dressing(Chunk *chunk, DressingKind kind, Vec3 pos, Vec3 normal, flo
 }
 static void detail(Builder *b, Vec3 p, Vec3 size, Color col, float glow) {
     if (b->chunk->box_count < SC_CHUNK_BOXES)
-        box(b, vadd(b->origin, p), size, col, glow, false);
+        world_box(b, vadd(b->origin, p), size, col, glow, false);
 }
 static void room_dressing(Builder *b, const Room *r) {
     Chunk *chunk = b->chunk;
@@ -414,7 +409,7 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
                                  : chunk->cell.z == r->cell.z + r->span_z - 1;
         if (!edge)
             continue;
-        Connector port = world_connector(w->seed, chunk->cell, (Direction)d);
+        Connector port = world_connector_version(w->seed, w->generator, chunk->cell, (Direction)d);
         bool open = port.open;
         double at = (d == WEST || d == SOUTH) ? -(xp ? x : z) : (xp ? x : z);
         double mid = xp ? tz : tx, half = xp ? z : x;
@@ -440,7 +435,7 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
         local(&b, c, 0, -.4, -47, 48, .8, 4, floor, 0, true);
     /* Per-chunk detail preserves human-scale references within a shared hall. */
     double px = r->span_x == 2 ? 30 : x - 8, pz = r->span_z == 2 ? 30 : z - 12;
-    if (r->type == BAY || r->type == NAVE || r->type == GARDEN) {
+    if (r->type == BAY || (w->generator == 3 && (r->type == NAVE || r->type == GARDEN))) {
         for (int s = -1; s <= 1; s += 2)
             for (int j = -1; j <= 1; j += 2) {
                 local(&b, tile, s * px, h * .45, j * pz, 2.8, h * .9, 2.8, trim, 0, true);
@@ -458,7 +453,7 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
             local(&b, c, 0, h - 15, 0, 2, 2, 24, light, 1.5f, false);
         }
     }
-    if (r->type == ENGINE && r->theme < 6) {
+    if (w->generator == 3 && r->type == ENGINE && r->theme < 6) {
         for (int s = -1; s <= 1; s += 2)
             for (int j = -1; j <= 1; j += 2) {
                 double rx = r->span_x == 2 ? 27 : x - 9;
@@ -470,7 +465,7 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
         if (r->span_x == 2)
             local(&b, c, 0, h * .5, 0, 8, h - 12, 8, light, .8f, true);
     }
-    if (r->type == CREW) {
+    if (w->generator == 3 && r->type == CREW) {
         int bays = 2 + (int)((r->hash >> 9) % 2);
         for (int sx = -1; sx <= 1; sx += 2)
             for (int sz = -1; sz <= 1; sz += 2)
@@ -498,8 +493,14 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
         local(&b, tile, 0, .065, -10 + s * 2, 4, .08, .1, rgb(.1f, .8f, .9f), 2, false);
     }
     local(&b, tile, 0, .025, -10, 4, .04, 4, rgb(.07f, .16f, .18f), .3f, false);
-    theme_geometry(&b, r);
-    room_dressing(&b, r);
+    if (w->generator == 3 || r->type == BAY || r->height < 3) {
+        theme_geometry(&b, r);
+        room_dressing(&b, r);
+        if (w->generator >= 4 && r->type == CONDUIT)
+            interior_conduit(&b, r);
+    } else {
+        interior_build(&b, r);
+    }
 }
 
 static bool wanted(const World *w, Cell c) {
@@ -558,7 +559,7 @@ bool world_refresh(World *w, const Vec3 *positions, int players) {
                     Cell c = {w->anchors[p].x + x, w->anchors[p].y + y, w->anchors[p].z + z};
                     if (c.z < 0)
                         continue;
-                    RoomSpec r = world_describe(w->seed, c);
+                    RoomSpec r = world_describe_version(w->seed, w->generator, c);
                     for (int dz = 0; dz < r.span_z; dz++)
                         for (int dx = 0; dx < r.span_x; dx++) {
                             Cell part = {r.cell.x + dx, r.cell.y, r.cell.z + dz};
@@ -594,6 +595,10 @@ static Room *room_create(World *w, RoomSpec spec) {
     r->type = spec.type;
     r->district = spec.district;
     r->theme = spec.theme;
+    r->layout = spec.layout;
+    r->incident = spec.incident;
+    r->intensity = spec.intensity;
+    r->landmark = spec.landmark;
     r->span_x = spec.span_x;
     r->span_z = spec.span_z;
     r->width = spec.width;
@@ -613,13 +618,15 @@ static void populate(World *w, Room *r) {
         p->kind = (uint8_t)(i == 3 ? PICK_WEAPON : i == 4 ? PICK_LOG : h % 7);
         p->item = (uint8_t)(i == 3 ? 1 + h % (SC_GENERATED_WEAPONS - 1) : h % 12);
         p->pos = position_from(vadd(world_lift(r->cell), v3(i % 2 ? 1.5 : -1.5, .45, 3 + i * 1.6)));
+        if (w->generator >= 4 && i >= 3 && r->type != BAY && r->height >= 3)
+            p->pos = position_from(interior_cache(r, i));
         p->active = r->record == SIZE_MAX || !(w->records[r->record].collected & (1u << i));
     }
 
     unsigned difficulty = world_difficulty(r->cell);
     r->enemy_count = r->type == BAY ? 0 : (int)(5 + (difficulty > 12 ? 12 : difficulty));
     for (int i = 0; i < r->enemy_count; i++) {
-        uint32_t h = world_hash(w->seed ^ SC_GENERATOR_VERSION, r->cell, 1000 + (uint32_t)i * 31);
+        uint32_t h = world_hash(w->seed ^ w->generator, r->cell, 1000 + (uint32_t)i * 31);
         Enemy *e = &r->enemies[i];
         e->id = (uint8_t)i;
         e->normal = v3(0, 1, 0);
@@ -639,8 +646,8 @@ static void populate(World *w, Room *r) {
         e->cooldown = (float)(h % 200) / 100;
         e->alive = r->record == SIZE_MAX || !(w->records[r->record].killed & (UINT32_C(1) << i));
         for (unsigned attempt = 0; attempt < 64; attempt++) {
-            uint32_t v = world_hash(w->seed ^ SC_GENERATOR_VERSION, r->cell,
-                                    7000 + (uint32_t)i * 131 + attempt);
+            uint32_t v =
+                world_hash(w->seed ^ w->generator, r->cell, 7000 + (uint32_t)i * 131 + attempt);
             e->pos = position_from(
                 vadd(world_room_center(r), v3(((v & 65535) / 65535.0 - .5) * (r->width - 4), .02,
                                               ((v >> 16) / 65535.0 - .5) * (r->depth - 4))));
@@ -660,7 +667,7 @@ unsigned world_stream(World *w, unsigned budget) {
     while (w->last_work < budget && w->pending) {
         int viewer = w->next_player % w->anchor_count, selected = -1, best = INT_MAX;
         w->next_player = (viewer + 1) % w->anchor_count;
-        RoomSpec focus = world_describe(w->seed, w->anchors[viewer]);
+        RoomSpec focus = world_describe_version(w->seed, w->generator, w->anchors[viewer]);
         for (int i = 0; i < w->desired_count; i++)
             if (!world_chunk(w, w->desired[i])) {
                 Cell c = w->desired[i];
@@ -704,7 +711,7 @@ unsigned world_stream(World *w, unsigned budget) {
             evict(w, victim);
         }
         Cell cell = w->desired[selected];
-        Room *r = room_create(w, world_describe(w->seed, cell));
+        Room *r = room_create(w, world_describe_version(w->seed, w->generator, cell));
         if (!r)
             break;
         Chunk *c = NULL;

@@ -6,12 +6,15 @@ Portable validated saves that preserve the active game when an operation fails.
 
 ### Requirement: Portable format and migration
 
-Saves SHALL use a versioned checksum and explicit generator compatibility across native and web. Format 6 SHALL retain validated sanctuary and psionic state, rig deployment/plating/mounted state, flare upgrades and attached lights. Compatible format-3/4/5 expeditions SHALL retain their ship and progress, initializing unavailable equipment to defaults.
+Saves SHALL use a versioned checksum and explicit generator compatibility across
+native and web. Format 6 SHALL retain sanctuary, psionics, rigs, flare upgrades and
+attached lights. Compatible format-3/4/5/6 expeditions using generator 3 SHALL retain
+their original ship and progress. New expeditions SHALL use generator 4.
 
 #### Scenario: Legacy profile
 
 - **WHEN** a supported version-1 or version-2 file is loaded
-- **THEN** both character profiles migrate to a visibly announced fresh version-3 ship.
+- **THEN** both character profiles migrate to a visibly announced fresh current-generator ship.
 
 #### Scenario: Unknown version
 
@@ -21,12 +24,17 @@ Saves SHALL use a versioned checksum and explicit generator compatibility across
 #### Scenario: Compatible format-3 expedition
 
 - **WHEN** a format-3 save using generator 3 is loaded
-- **THEN** its ship, records, missions, and character progress are retained with no deployed sanctuary.
+- **THEN** its original architecture, records, missions and character progress remain with no deployed sanctuary.
 
 #### Scenario: Compatible format-5 expedition
 
 - **WHEN** a format-5 save using generator 3 is loaded
-- **THEN** the ship, progress, sanctuary and powers remain, the four new personal guns unlock, and rigs start packed with full plating and no flare upgrades.
+- **THEN** ship, sanctuary and powers remain, new personal guns unlock, and rigs start packed with full plating and no flare upgrades.
+
+#### Scenario: New generation opt-in
+
+- **WHEN** a player starts a new ship after loading a generator-3 expedition
+- **THEN** the new ship uses generator 4 and keeps character progression.
 
 ### Requirement: Transactional validation
 

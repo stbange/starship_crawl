@@ -306,7 +306,8 @@ bool game_load(Game *g, const char *path) {
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
     if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 6) ||
-        (version == 2 && generator != 2) || (version >= 3 && generator != SC_GENERATOR_VERSION))
+        (version == 2 && generator != 2) ||
+        (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
     Player players[SC_PLAYERS];
     memset(players, 0, sizeof(players));
@@ -389,6 +390,8 @@ bool game_load(Game *g, const char *path) {
         return false;
     }
     world_init(replacement, seed);
+    if (version >= 3)
+        replacement->generator = generator;
     replacement->records = records;
     replacement->record_count = count;
     replacement->record_cap = count;

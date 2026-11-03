@@ -33,3 +33,15 @@ starting from the v4 fixture and activating player 1's veil and ten seconds of
 flight. It retains seed 713, mission 2, rank 7 and the occupied deployed shelter.
 Format 6 retains those states and records, grants the four new personal guns, and
 initializes both fold rigs packed with full plating and flare upgrades at zero.
+
+`generator-v6.sav` was written by the unmodified format-6 core from commit
+e3f5013, loading the v5 fixture first. It retains the occupied shelter, powers,
+rank 7, mission 2 and generator 3. Generator 4 must keep this expedition on the
+old generator, including save/reload, until the player requests a new ship.
+
+`generator-v3-fingerprints.txt` contains 12 region fingerprints captured from
+e3f5013 before generator changes. `generator-v3-geometry.txt` contains 14 chunk
+geometry/fixture/dressing fingerprints generated from that commit's source.
+The quantized field hashing is in `geometry_fingerprint.h`; it never hashes
+struct padding. Tests compare the supported generator-3 path against these
+pre-change references, including the bay, introduction rooms and all nine decks.

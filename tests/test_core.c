@@ -549,11 +549,12 @@ static void test_infestation(void) {
     CHECK(!g->projectiles[0].active);
     game_destroy(g);
     room = quiet_encounter(g);
-    e = place_enemy(room, 0, v3(-(room->width * .5 - 13.6), .02, -20));
+    e = place_enemy(room, 0, v3(-(room->width * .5 - 1.1), .02, -20));
     step(g, (Actions){0}, 20);
     CHECK(e->climbing && e->normal.x > .5 && position_absolute(e->pos).y > .8);
     CHECK(!world_overlap(&g->world, position_absolute(e->pos), .42, 1.25));
-    step(g, (Actions){0}, 160);
+    for (int frame = 0; frame < 180 && e->climbing; frame++)
+        step(g, (Actions){0}, 1);
     CHECK(!e->climbing && position_absolute(e->pos).y >= -.001);
     game_destroy(g);
     room = quiet_encounter(g);

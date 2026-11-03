@@ -11,7 +11,7 @@ option(SC_BUILD_GAME "Build the SDL/OpenGL application" ON)
 option(SC_SANITIZE "Enable address and undefined behavior sanitizers" OFF)
 option(SC_COVERAGE "Instrument native GCC unit-test coverage" OFF)
 
-set(SC_CORE_SOURCES src/content.c src/generation.c src/world.c src/progression.c src/game.c src/save.c src/shelter.c src/navigation.c src/psionics.c src/equipment.c)
+set(SC_CORE_SOURCES src/content.c src/generation.c src/interior.c src/world.c src/progression.c src/game.c src/save.c src/shelter.c src/navigation.c src/psionics.c src/equipment.c)
 add_library(sc_core ${SC_CORE_SOURCES})
 set_target_properties(sc_core PROPERTIES C_EXTENSIONS OFF)
 target_include_directories(sc_core PUBLIC src)
@@ -38,6 +38,11 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   target_compile_definitions(sc_tests PRIVATE SC_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
   add_test(NAME core COMMAND sc_tests)
   set_tests_properties(core PROPERTIES LABELS "unit" TIMEOUT 60)
+  add_executable(sc_interior_tests tests/test_interiors.c)
+  target_link_libraries(sc_interior_tests PRIVATE sc_core)
+  target_compile_definitions(sc_interior_tests PRIVATE SC_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
+  add_test(NAME generated_interiors COMMAND sc_interior_tests)
+  set_tests_properties(generated_interiors PROPERTIES LABELS "unit" TIMEOUT 60)
 
   # Compile the same core with test-only allocator/I/O wrappers. Production
   # builds do not contain fault injection or a test control API.

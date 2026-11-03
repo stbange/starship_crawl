@@ -91,7 +91,7 @@ Cell world_neighbor(Cell c, Direction d) {
 static bool bay_edge(Cell a, Cell b) {
     return (!a.x && !a.y && !a.z) || (!b.x && !b.y && !b.z);
 }
-static bool boundary(uint32_t seed, Cell c, Direction d) {
+static bool boundary(uint32_t seed, uint32_t generator, Cell c, Direction d) {
     Cell n = world_neighbor(c, d);
     if (n.z < 0)
         return false;
@@ -99,7 +99,7 @@ static bool boundary(uint32_t seed, Cell c, Direction d) {
         return true;
     /* Both sides hash the lower region and axis of their shared face. */
     Cell r = world_region(d == WEST || d == SOUTH ? n : c);
-    uint32_t h = world_hash(seed ^ SC_GENERATOR_VERSION, r, d <= EAST ? 801 : 802);
+    uint32_t h = world_hash(seed ^ generator, r, d <= EAST ? 801 : 802);
     int lane = d <= EAST ? c.z % 4 : c.x - floor_div(c.x, 4) * 4;
     int first = (int)(h % 4), second = (first + 1 + (int)((h >> 8) % 3)) % 4;
     return lane == first || lane == second;
@@ -109,13 +109,77 @@ static int root(int *parent, int i) {
         i = parent[i];
     return i;
 }
-void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
+ShipProfile world_profile(uint32_t seed) {
+    return (ShipProfile)(world_hash(seed, (Cell){0, 0, 0}, 41001) % SHIP_PROFILES);
+}
+const char *world_profile_name(ShipProfile profile) {
+    static const char *names[] = {"PILGRIM ARK", "CROWN LINER", "SIEGE CARRIER", "SEED VAULT"};
+    return names[(unsigned)profile % SHIP_PROFILES];
+}
+const char *world_layout_name(unsigned layout) {
+    static const char *names[] = {"ENCLOSED SUITES", "STAGGERED WORK BAYS", "OPEN ARCADES"};
+    return names[layout % INTERIOR_LAYOUTS];
+}
+const char *world_incident_name(unsigned incident) {
+    static const char *names[] = {"DORMANT",    "BLACKOUT",   "CRYO LEAK",
+                                  "QUARANTINE", "BURN SCARS", "BLOOM"};
+    return names[incident % INCIDENT_TYPES];
+}
+const char *world_landmark_name(unsigned landmark) {
+    static const char *names[] = {"", "THE LAST BANQUET", "SURVIVOR CONSERVATORY",
+                                  "THE HANGING HEART", "RELIQUARY OF VOICES"};
+    return names[landmark % LANDMARK_TYPES];
+}
+static void history(RegionPlan *p, uint32_t hash) {
+    /* Distances are over logical rooms, so a hall is one connected incident.
+       The safe bay is excluded from propagation as well as decoration. */
+    int distance[16], queue[16], head = 0, tail = 1;
+    for (int i = 0; i < p->count; i++)
+        distance[i] = 99;
+    int source = (int)(hash % (unsigned)p->count);
+    if (p->rooms[source].type == BAY)
+        source = (source + 1) % p->count;
+    distance[source] = 0;
+    queue[0] = source;
+    while (head < tail) {
+        int a = queue[head++];
+        for (int i = 0; i < 16; i++) {
+            if (p->owner[i] != a)
+                continue;
+            for (int d = 0; d < 4; d++) {
+                int x = i % 4 + (d == WEST ? -1 : d == EAST ? 1 : 0);
+                int z = i / 4 + (d == SOUTH ? -1 : d == NORTH ? 1 : 0);
+                if (x < 0 || x >= 4 || z < 0 || z >= 4 || !(p->doors[i] & (1 << d)))
+                    continue;
+                int b = p->owner[z * 4 + x];
+                if (distance[b] == 99 && p->rooms[b].type != BAY) {
+                    distance[b] = distance[a] + 1;
+                    queue[tail++] = b;
+                }
+            }
+        }
+    }
+    for (int i = 0; i < p->count; i++)
+        if (distance[i] < 4) {
+            p->rooms[i].incident = (uint8_t)(1 + (hash >> 8) % (INCIDENT_TYPES - 1));
+            p->rooms[i].intensity = (uint8_t)(distance[i] < 2 ? 3 - distance[i] : 1);
+        }
+}
+void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPlan *p) {
     memset(p, 0, sizeof(*p));
     p->origin = (Cell){region.x * 4, region.y, region.z * 4};
-    uint32_t h = world_hash(seed ^ SC_GENERATOR_VERSION, region, 101);
+    uint32_t h = world_hash(seed ^ generator, region, 101);
     int layer = ((region.y % DISTRICT_TYPES) + DISTRICT_TYPES) % DISTRICT_TYPES;
     p->district =
         (District)((layer + (h % 4 == 0 ? (h >> 14) % DISTRICT_TYPES : 0)) % DISTRICT_TYPES);
+    if (generator >= 4) {
+        static const District decks[SHIP_PROFILES][DISTRICT_TYPES] = {
+            {SANCTUM, HABITAT, CRYONICS, COMMAND, MACHINERY, RESEARCH, LUXURY, LOGISTICS, BOTANY},
+            {LUXURY, HABITAT, BOTANY, COMMAND, RESEARCH, SANCTUM, MACHINERY, LOGISTICS, CRYONICS},
+            {LOGISTICS, MACHINERY, COMMAND, HABITAT, RESEARCH, CRYONICS, SANCTUM, BOTANY, LUXURY},
+            {BOTANY, RESEARCH, CRYONICS, HABITAT, MACHINERY, SANCTUM, LUXURY, COMMAND, LOGISTICS}};
+        p->district = decks[world_profile(seed)][p->district];
+    }
     if (!region.x && !region.y && !region.z)
         p->district = SANCTUM;
     int hx = (int)((h >> 5) % 3), hz = (int)((h >> 9) % 3);
@@ -139,7 +203,7 @@ void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
             int id = p->count++;
             RoomSpec *r = &p->rooms[id];
             r->cell = (Cell){p->origin.x + x, region.y, p->origin.z + z};
-            r->hash = world_hash(seed ^ SC_GENERATOR_VERSION, r->cell, 123);
+            r->hash = world_hash(seed ^ generator, r->cell, 123);
             r->district = p->district;
             r->span_x = r->span_z = (uint8_t)(x == hx && z == hz ? 2 : 1);
             unsigned choices[SC_THEMES], count = 0;
@@ -171,6 +235,17 @@ void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
             r->width = sizes[r->type][0];
             r->depth = sizes[r->type][1];
             r->height = sizes[r->type][2];
+            if (generator >= 4) {
+                r->layout = (uint8_t)(((r->hash >> 22) + world_profile(seed)) % INTERIOR_LAYOUTS);
+                if (r->span_x == 2 && (h >> 18) % 4 == 0 && (region.x || region.y || region.z))
+                    r->landmark = (uint8_t)(p->district == LUXURY      ? BANQUET
+                                            : p->district == BOTANY    ? CONSERVATORY
+                                            : p->district == MACHINERY ? SUSPENDED_ENGINE
+                                            : p->district == SANCTUM   ? RELIQUARY
+                                                                       : 1 + (r->hash >> 24) % 4);
+            }
+            if (r->landmark)
+                r->layout = ARCADES;
             if (r->span_x == 2) {
                 r->width = 180;
                 r->depth = 180;
@@ -198,15 +273,15 @@ void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
             for (int d = 0; d < 4; d++) {
                 bool edge = (d == WEST && !x) || (d == EAST && x == 3) || (d == SOUTH && !z) ||
                             (d == NORTH && z == 3);
-                if (edge && boundary(seed, c, (Direction)d))
+                if (edge && boundary(seed, generator, c, (Direction)d))
                     p->doors[i] |= (uint8_t)(1 << d);
             }
             if (x < 3)
                 edges[count++] =
-                    (struct Edge){i, i + 1, EAST, world_hash(seed ^ SC_GENERATOR_VERSION, c, 301)};
+                    (struct Edge){i, i + 1, EAST, world_hash(seed ^ generator, c, 301)};
             if (z < 3)
                 edges[count++] =
-                    (struct Edge){i, i + 4, NORTH, world_hash(seed ^ SC_GENERATOR_VERSION, c, 302)};
+                    (struct Edge){i, i + 4, NORTH, world_hash(seed ^ generator, c, 302)};
         }
     /* Stable Kruskal over footprints provides a reachable backbone plus loops. */
     for (int i = 1; i < count; i++) {
@@ -229,22 +304,25 @@ void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
             parent[ra] = rb;
         }
     }
+    if (generator >= 4)
+        history(p, world_hash(seed, region, 42001));
 }
-RoomSpec world_describe(uint32_t seed, Cell c) {
+RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell c) {
     RegionPlan p;
-    world_plan(seed, world_region(c), &p);
+    world_plan_version(seed, generator, world_region(c), &p);
     return p.rooms[p.owner[(c.z - p.origin.z) * 4 + c.x - p.origin.x]];
 }
-bool world_door(uint32_t seed, Cell c, Direction d) {
+bool world_door_version(uint32_t seed, uint32_t generator, Cell c, Direction d) {
     if (c.z < 0 || (d == SOUTH && !c.z))
         return false;
     RegionPlan p;
-    world_plan(seed, world_region(c), &p);
+    world_plan_version(seed, generator, world_region(c), &p);
     return (p.doors[(c.z - p.origin.z) * 4 + c.x - p.origin.x] & (1 << d)) != 0;
 }
-Connector world_connector(uint32_t seed, Cell cell, Direction direction) {
+Connector world_connector_version(uint32_t seed, uint32_t generator, Cell cell,
+                                  Direction direction) {
     Connector c = {0};
-    c.open = world_door(seed, cell, direction);
+    c.open = world_door_version(seed, generator, cell, direction);
     c.local_center = v3(direction == WEST   ? -48
                         : direction == EAST ? 48
                                             : 0,
@@ -253,17 +331,17 @@ Connector world_connector(uint32_t seed, Cell cell, Direction direction) {
                         : direction == NORTH ? 48
                                              : 0);
     if (c.open) {
-        RoomSpec a = world_describe(seed, cell);
-        RoomSpec b = world_describe(seed, world_neighbor(cell, direction));
+        RoomSpec a = world_describe_version(seed, generator, cell);
+        RoomSpec b = world_describe_version(seed, generator, world_neighbor(cell, direction));
         c.width = 7;
         c.clearance = fmin(5, fmin(a.height, b.height));
         c.crouch = c.clearance < 1.78;
     }
     return c;
 }
-uint32_t world_fingerprint(uint32_t seed, Cell region) {
+uint32_t world_fingerprint_version(uint32_t seed, uint32_t generator, Cell region) {
     RegionPlan p;
-    world_plan(seed, region, &p);
+    world_plan_version(seed, generator, region, &p);
     uint32_t h = UINT32_C(2166136261);
     for (int i = 0; i < 16; i++) {
         const RoomSpec *r = &p.rooms[p.owner[i]];
@@ -279,12 +357,32 @@ uint32_t world_fingerprint(uint32_t seed, Cell region) {
                              (uint32_t)(r->depth * 100),
                              (uint32_t)(r->height * 100),
                              p.doors[i],
-                             r->hash};
-        for (size_t j = 0; j < sizeof(values) / sizeof(values[0]); j++)
+                             r->hash,
+                             r->layout,
+                             r->incident,
+                             r->intensity,
+                             r->landmark};
+        for (size_t j = 0; j < (generator == 3 ? 13 : sizeof(values) / sizeof(values[0])); j++)
             for (int byte = 0; byte < 4; byte++) {
                 h ^= (values[j] >> (byte * 8)) & 255;
                 h *= UINT32_C(16777619);
             }
     }
     return h;
+}
+
+void world_plan(uint32_t seed, Cell region, RegionPlan *p) {
+    world_plan_version(seed, SC_GENERATOR_VERSION, region, p);
+}
+RoomSpec world_describe(uint32_t seed, Cell cell) {
+    return world_describe_version(seed, SC_GENERATOR_VERSION, cell);
+}
+bool world_door(uint32_t seed, Cell cell, Direction direction) {
+    return world_door_version(seed, SC_GENERATOR_VERSION, cell, direction);
+}
+Connector world_connector(uint32_t seed, Cell cell, Direction direction) {
+    return world_connector_version(seed, SC_GENERATOR_VERSION, cell, direction);
+}
+uint32_t world_fingerprint(uint32_t seed, Cell region) {
+    return world_fingerprint_version(seed, SC_GENERATOR_VERSION, region);
 }

@@ -49,7 +49,7 @@ bool game_map_build(const Game *g, int player, Cell center, int radius, MapView 
                 }
             if (found < 0) {
                 found = view->plans++;
-                world_plan(g->world.seed, region, &plans[found]);
+                world_plan_version(g->world.seed, g->world.generator, region, &plans[found]);
             }
             int at = z * view->side + x;
             Cell origin = plans[found].origin;

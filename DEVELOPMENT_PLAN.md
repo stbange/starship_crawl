@@ -94,7 +94,7 @@ The implementation sequence is:
 
 6. **Expand the world and validate sustained play.**
 
-   Luxury, command, research, logistics, cryonics, and botanical sectors with themed furnishings are implemented. Continue with distinctive landmarks, larger multi-level structures, more module variants, rare spaces, and gravity anomalies. Introduce traps and short riddles first in optional reward routes. Main exploration routes remain traversable and the combat pace remains energetic.
+   Luxury, command, research, logistics, cryonics, and botanical sectors with themed furnishings are implemented. Generator 4 adds four ship identities, suites/work bays/arcades, connected environmental incidents, side-space caches and four rare hall interiors. Continue with larger multi-level structures, additional footprint shapes, interactive ship systems and gravity anomalies. Introduce traps and short riddles first in optional reward routes. Main exploration routes remain traversable and the combat pace remains energetic.
 
    Give each district a recognizable architectural vocabulary and progression of spaces. Use authored landmarks within procedural layouts, deliberate transitions between district types, and room arrangements that create memorable views. Generation quality is measured by interesting routes, coherent spaces, surprise, and scale, as well as validity.
 

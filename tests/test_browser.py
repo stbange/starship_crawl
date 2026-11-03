@@ -85,7 +85,7 @@ def run():
             page.goto(base + "?seed=713")
             wait_ready(page)
             assert state(page)["players"] == 1
-            assert state(page)["generator"] == 3
+            assert state(page)["generator"] == 4
             native = Path(os.environ.get("SC_CORE_TEST", str(ROOT / "build" / "sc_tests")))
             assert native.is_file(), "Build sc_tests or set SC_CORE_TEST for native/WASM generation parity"
             probes = json.loads(subprocess.check_output([str(native), "--fingerprints"]))
