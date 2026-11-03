@@ -51,8 +51,8 @@ def run():
             wait_for(page, f"JSON.parse(Module.ccall('sc_web_state','string',[],[])).map_x === {origin['map_x'] + 1} && JSON.parse(Module.ccall('sc_web_state','string',[],[])).map_y === {origin['map_y'] + 1}")
             page.screenshot(path=str(ARTIFACTS / 'deck-map.png'))
             page.keyboard.press('Home')
-            page.keyboard.press('Escape')
-            assert not state(page)['map'] and not state(page)['paused']
+            page.keyboard.press('m')
+            wait_for(page, "!JSON.parse(Module.ccall('sc_web_state','string',[],[])).map && !JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
             page.keyboard.press('v')
             wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).veil")
             page.screenshot(path=str(ARTIFACTS / 'psionic-veil.png'))

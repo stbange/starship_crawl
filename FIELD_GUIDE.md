@@ -2,7 +2,7 @@ The ship now has a deck schematic, five distinct creature anatomies, visible wea
 
 **Navigation.** The top-left HUD map is north-up and follows your position. Green marks your position and facing, gold marks the mission console, violet marks your deployed shelter, and blue marks an ally or the lift needed for a different deck. Off-map goals stay pinned to the appropriate edge. The goal caption states whether you need to change decks.
 
-Press **M** for the larger map. Arrows pan, **Page Up / Page Down** change the viewed deck, **Home** recenters, and **M / Esc** closes it. A controller uses left-stick click, D-pad panning and shoulder buttons for decks. Map controls are also available in the browser menu. Touch has a **MAP** button and a visible **CLOSE** control. A map blocks that player's movement/fire inputs while exterior simulation and the other player continue. It is a procedural schematic, not a record of explored rooms, and does not generate world chunks.
+Press **M** for the larger map. Arrows pan, **Page Up / Page Down** change the viewed deck, **Home** recenters, and **M** closes it. A controller uses left-stick click, D-pad panning and shoulder buttons for decks. Map controls are also available in the browser menu. Touch has a **MAP** button and a visible **CLOSE** control. A map blocks that player's movement/fire inputs while exterior simulation and the other player continue. It is a procedural schematic, not a record of explored rooms, and does not generate world chunks.
 
 **Shelter toggle.** **R / Back** deploys a doorway, or packs it away when already deployed and empty. Occupants prevent packing. To relocate, pack it and deploy again on clear flooring. **G / D-pad down / USE** still enters doors and uses recovery stations.
 
