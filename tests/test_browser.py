@@ -28,17 +28,29 @@ def state(page):
 
 
 def wait_ready(page):
-    page.wait_for_function("typeof Module !== 'undefined' && !document.getElementById('start').disabled", timeout=60000)
-    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 2", timeout=30000)
-    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0", timeout=30000)
+    wait_for(page, "typeof Module !== 'undefined' && !document.getElementById('start').disabled", timeout=60000)
+    wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 2", timeout=30000)
+    wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0", timeout=30000)
+
+
+def wait_for(page, predicate, **kwargs):
+    try:
+        return page.wait_for_function(predicate, **kwargs)
+    except Exception as error:
+        snapshot = state(page)
+        snapshot["browser"] = page.evaluate("({focus:document.activeElement?.id,lock:document.pointerLockElement?.id,visible:document.visibilityState})")
+        page.screenshot(path=str(ARTIFACTS / "last-failure.png"))
+        raise AssertionError(f"Browser wait failed: {predicate}; state={snapshot}") from error
 
 
 def start_play(page):
     # Pointer capture and SDL focus changes finish asynchronously after the
     # button click. Wait for real simulation ticks before sending held input.
-    before = state(page)["time"]
+    before = state(page)
     page.locator("#start").click()
-    page.wait_for_function("before => { const s=JSON.parse(Module.ccall('sc_web_state','string',[],[])); return !s.paused && s.time > before + .08; }", arg=before, timeout=15000)
+    wait_for(page, "before => { const s=JSON.parse(Module.ccall('sc_web_state','string',[],[])); return !s.paused && s.time > before + .08; }", arg=before["time"], timeout=15000)
+    after = state(page)
+    assert abs(after["yaw"] - before["yaw"]) < .05 and abs(after["pitch"] - before["pitch"]) < .05, (before, after)
 
 
 def run():
@@ -78,18 +90,18 @@ def run():
                 assert actual == probe["hash"], (probe, actual)
             page.screenshot(path=str(ARTIFACTS / "arrival-menu.png"))
             start_play(page)
-            page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
+            wait_for(page, "!JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
             before = state(page)
             page.keyboard.down("w")
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > -26", timeout=20000)
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > -26", timeout=20000)
             page.keyboard.up("w")
             assert state(page)["z"] > before["z"] + 5
             page.mouse.down()
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).shots > 0", timeout=10000)
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).shots > 0", timeout=10000)
             page.mouse.up()
             page.screenshot(path=str(ARTIFACTS / "arrival-game.png"))
             page.evaluate("Module.ccall('sc_web_save',null,[],[])")
-            page.wait_for_function("window.scStorage.status === 3", timeout=10000)
+            wait_for(page, "window.scStorage.status === 3", timeout=10000)
             saved = state(page)
             page.goto(base)
             wait_ready(page)
@@ -99,16 +111,16 @@ def run():
             assert loaded["players"] == 1
             start_play(page)
             page.keyboard.press("F2")
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).players === 2")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).players === 2")
             page.screenshot(path=str(ARTIFACTS / "optional-split.png"))
             page.keyboard.press("F2")
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).players === 1")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).players === 1")
             assert state(page)["players"] == 1
             page.evaluate("Module.ccall('sc_web_action',null,['number'],[0])")
             compatible = list((ROOT / "tests" / "fixtures" / "generator-v2.sav").read_bytes())
             page.evaluate("data => Module.FS.writeFile('/persist/import.sav',new Uint8Array(data))", compatible)
             assert page.evaluate("Module.ccall('sc_web_import','number',[],[])") == 1
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0")
             resumed = state(page)
             assert resumed["seed"] != 713 and resumed["rank"] == 7 and resumed["kills"] == 81
             assert abs(resumed["x"]) < .001 and abs(resumed["z"] + 34) < .001
@@ -133,23 +145,23 @@ def run():
                         }, 25);
                     }""")
                 start_play(page)
-                page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 5")
+                wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > 5")
                 page.screenshot(path=str(ARTIFACTS / (scene + ".png")))
                 assert not state(page)["failed"]
                 if scene in ["luxury", "bridge", "lab", "cargo", "cryonics", "botany"]:
                     assert state(page)["theme"] >= 6
                 if scene == "encounter":
-                    page.wait_for_function("window.sawClimber", timeout=15000)
-                    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).projectiles > 0", timeout=15000)
+                    wait_for(page, "window.sawClimber", timeout=15000)
+                    wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).projectiles > 0", timeout=15000)
                     assert state(page)["enemy_shots"] > 0
                     # Freeze the same rendered scene to inspect both lighting states.
                     page.evaluate("Module.ccall('sc_web_action',null,['number'],[0])")
                     page.keyboard.press("f")
-                    page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
+                    wait_for(page, "!JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
                     page.screenshot(path=str(ARTIFACTS / "flashlight-off.png"))
                     page.locator("#menu").click()
                     page.locator("[data-action='7']").click()
-                    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
+                    wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
                     page.locator("#menu").click()
                     page.screenshot(path=str(ARTIFACTS / "flashlight-on.png"))
                 if scene == "hall":
@@ -158,7 +170,7 @@ def run():
                     start_generated = state(page)["generated"]
                     page.keyboard.down("w")
                     page.keyboard.down("Shift")
-                    page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > 195", timeout=30000)
+                    wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > 195", timeout=30000)
                     page.keyboard.up("w")
                     page.keyboard.up("Shift")
                     current = state(page)
@@ -171,25 +183,25 @@ def run():
             start_play(page)
             page.keyboard.down("w")
             try:
-                page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > 40", timeout=15000)
+                wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > 40", timeout=15000)
             except Exception as error:
                 page.screenshot(path=str(ARTIFACTS / "console-walk-failure.png"))
                 raise AssertionError(f"Console walk failed: {state(page)}") from error
             page.keyboard.up("w")
             page.keyboard.press("g")
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).mission === 1")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).mission === 1")
             assert state(page)["credits"] >= 75
             page.keyboard.press("i")
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
             page.keyboard.press("4")
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).armor > 40")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).armor > 40")
             page.keyboard.press("x")
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).weapon === 1")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).weapon === 1")
             page.screenshot(path=str(ARTIFACTS / "character-journal.png"))
             page.keyboard.press("Enter")
-            page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
+            wait_for(page, "!JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
             page.evaluate("Module.ccall('sc_web_save',null,[],[])")
-            page.wait_for_function("window.scStorage.status === 3")
+            wait_for(page, "window.scStorage.status === 3")
             page.goto(base)
             wait_ready(page)
             assert state(page)["mission"] == 1 and state(page)["weapon"] == 1 and state(page)["armor"] > 40
@@ -203,7 +215,7 @@ def run():
             assert not state(page)["failed"]
             page.evaluate("Module.ccall('sc_web_action',null,['number'],[0])")
             page.evaluate("Module.ccall('sc_web_save',null,[],[])")
-            page.wait_for_function("window.scStorage.status === 3", timeout=10000)
+            wait_for(page, "window.scStorage.status === 3", timeout=10000)
             far_saved = state(page)
             page.goto(base)
             wait_ready(page)
@@ -212,7 +224,7 @@ def run():
             legacy = list((ROOT / "tests" / "fixtures" / "generator-v1.sav").read_bytes())
             page.evaluate("data => Module.FS.writeFile('/persist/import.sav',new Uint8Array(data))", legacy)
             assert page.evaluate("Module.ccall('sc_web_import','number',[],[])") == 1
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).pending === 0")
             migrated = state(page)
             assert migrated["rank"] == 7 and migrated["kills"] == 81 and migrated["z"] == -34
             assert migrated["players"] == 1 and migrated["seed"] != 123456
@@ -230,17 +242,17 @@ def run():
             start_z = state(page)["z"]
             client.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"id": 1, "x": 110, "y": 280}, {"id": 2, "x": 760, "y": 280}]})
             client.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"id": 1, "x": 110, "y": 230}, {"id": 2, "x": 760, "y": 280}]})
-            page.wait_for_function(f"JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > {start_z + 3}", timeout=20000)
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).shots > 0", timeout=10000)
+            wait_for(page, f"JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > {start_z + 3}", timeout=20000)
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).shots > 0", timeout=10000)
             client.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
             assert state(page)["flashlight"]
             page.touchscreen.tap(844 * .64, 390 * .48)
-            page.wait_for_function("!JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
+            wait_for(page, "!JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
             page.touchscreen.tap(844 * .64, 390 * .48)
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
             page.screenshot(path=str(ARTIFACTS / "mobile-touch.png"))
             page.touchscreen.tap(844 * .77, 390 * .27)
-            page.wait_for_function("JSON.parse(Module.ccall('sc_web_state','string',[],[])).weapon === 1")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).weapon === 1")
             page.set_viewport_size({"width": 390, "height": 844})
             page.wait_for_timeout(300)
             page.screenshot(path=str(ARTIFACTS / "mobile-portrait.png"))

@@ -41,6 +41,7 @@ typedef struct {
     bool demo_encounter;
     int frame, smoke_frames;
     double last, accumulator, fps, autosave, audio_time;
+    Uint64 look_after;
     float ambience[DISTRICT_TYPES];
     uint32_t audio_shots, audio_noise;
     int shot_sample;
@@ -56,6 +57,11 @@ static void set_pause(bool paused) {
     app.accumulator = 0;
     if (app.window && !app.touch)
         SDL_SetWindowRelativeMouseMode(app.window, !paused);
+    if (!paused) {
+        /* Discard menu motion and the browser's initial pointer-lock warp. */
+        SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
+        app.look_after = SDL_GetTicksNS() + UINT64_C(120000000);
+    }
 }
 static uint32_t new_seed(void) {
     return world_hash((uint32_t)time(NULL), (Cell){(int32_t)(SDL_GetTicks() % 1000000), 0, 0},
@@ -173,7 +179,8 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"span\":%d,\"ready\":%s,\"fingerprint\":%u,\"flashlight\":%s,\"projectiles\":%u,\"enemy_"
         "shots\":%u,\"projectile_hits\":%u,\"climbers\":%u,\"mission\":%u,\"weapon\":%u,"
         "\"weapons\":%u,\"shield\":%.2f,\"armor\":%.2f,\"energy\":%.2f,\"credits\":%u,\"pickups\":%"
-        "u,\"contracts\":%u,\"theme\":%u,\"logs\":%u,\"yaw\":%.4f,\"pitch\":%.4f,\"time\":%.3f}",
+        "u,\"contracts\":%u,\"theme\":%u,\"logs\":%u,\"yaw\":%.4f,\"pitch\":%.4f,\"time\":%.3f,"
+        "\"key_w\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -184,7 +191,8 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         p->flashlight ? "true" : "false", projectiles, app.game.enemy_shots,
         app.game.projectile_hits, climbers, app.game.mission, p->weapon, p->weapons, p->shield,
         p->armor, p->energy, p->credits, p->pickups, app.game.contracts, room ? room->theme : 0,
-        p->logs, p->yaw, p->pitch, app.game.time);
+        p->logs, p->yaw, p->pitch, app.game.time,
+        (unsigned)SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W]);
     return result;
 }
 static void audio_frame(void) {
@@ -318,7 +326,8 @@ static void events(void) {
             set_pause(true);
             break;
         case SDL_EVENT_MOUSE_MOTION:
-            if (!app.paused && e.motion.which != SDL_TOUCH_MOUSEID)
+            if (!app.paused && e.motion.which != SDL_TOUCH_MOUSEID &&
+                e.motion.timestamp >= app.look_after)
                 game_look(&app.game.players[0], e.motion.xrel * .0023, -e.motion.yrel * .0023);
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
