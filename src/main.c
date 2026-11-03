@@ -96,6 +96,16 @@ EMSCRIPTEN_KEEPALIVE void sc_web_capture(void) {
     SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
     app.discard_look = true;
 }
+EMSCRIPTEN_KEEPALIVE void sc_web_look(double dx, double dy) {
+    if (app.paused || app.touch || !isfinite(dx) || !isfinite(dy) ||
+        SDL_GetTicksNS() < app.look_after || (dx == 0 && dy == 0))
+        return;
+    if (app.discard_look) {
+        app.discard_look = false;
+        return;
+    }
+    game_look(&app.game.players[0], dx * .0023, -dy * .0023);
+}
 EMSCRIPTEN_KEEPALIVE void sc_web_save(void) {
     save_game();
 }
@@ -333,6 +343,7 @@ static void events(void) {
             set_pause(true);
             break;
         case SDL_EVENT_MOUSE_MOTION:
+#ifndef __EMSCRIPTEN__
             if (!app.paused && e.motion.which != SDL_TOUCH_MOUSEID &&
                 e.motion.timestamp >= app.look_after) {
                 if (app.discard_look) {
@@ -341,6 +352,7 @@ static void events(void) {
                 }
                 game_look(&app.game.players[0], e.motion.xrel * .0023, -e.motion.yrel * .0023);
             }
+#endif
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (e.button.which == SDL_TOUCH_MOUSEID)

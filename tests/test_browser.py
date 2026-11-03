@@ -73,6 +73,10 @@ def run():
             options = {"headless": True, "args": ["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]}
             if os.environ.get("SC_BROWSER"):
                 options["executable_path"] = os.environ["SC_BROWSER"]
+            else:
+                # Exercise the full browser's headless mode for WebGL/pointer
+                # capture, matching the desktop Chromium used in local checks.
+                options["channel"] = "chromium"
             browser = p.chromium.launch(**options)
             context = browser.new_context(viewport={"width": 1280, "height": 720}, accept_downloads=True)
             page = context.new_page()
