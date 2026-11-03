@@ -100,6 +100,10 @@ SDL_VIDEODRIVER=offscreen EGL_PLATFORM=surfaceless SDL_AUDIODRIVER=dummy ./build
 
 These are automated Chromium/Mesa checks; physical gamepad, mobile GPU and Windows graphics behavior still require device testing.
 
+The browser CI job uses `ubuntu-24.04` so the pinned Playwright dependencies do
+not change when GitHub migrates `ubuntu-latest`. Installation failures expose
+their error tail as a job annotation before any game tests run.
+
 The generated-interiors unit suite samples 640 plans for ship/profile diversity,
 rare-hall frequency and source-connected incident trails. A 24-seed geometry
 sweep covers all nine furnishing roles, three floor plans, all incidents and

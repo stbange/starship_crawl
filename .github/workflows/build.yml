@@ -69,7 +69,8 @@ jobs:
             build/starship_crawl
             build/Release/starship_crawl.exe
   web:
-    runs-on: ubuntu-latest
+    # Keep Playwright's system packages stable during hosted-runner migrations.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Pinned Emscripten SDK
@@ -87,10 +88,20 @@ jobs:
           cmake -S . -B build-parity -DSC_BUILD_GAME=OFF -DCMAKE_BUILD_TYPE=Release
           cmake --build build-parity --parallel 4
           ctest --test-dir build-parity --output-on-failure
+      - name: Python browser tooling
+        run: python -m pip install -r tests/requirements.txt
       - name: Browser dependencies
         run: |
-          python -m pip install -r tests/requirements.txt
-          python -m playwright install --with-deps chromium
+          if ! python -m playwright install --with-deps chromium > "$RUNNER_TEMP/browser-install.log" 2>&1; then
+            cat "$RUNNER_TEMP/browser-install.log"
+            python - <<'PY'
+          import os
+          from pathlib import Path
+          detail = (Path(os.environ['RUNNER_TEMP']) / 'browser-install.log').read_text()[-4000:]
+          print('::error title=Browser dependency installation::' + detail.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
+          PY
+            exit 1
+          fi
       - name: Package the Pages site
         run: python scripts/package-web.py --output build-pages-preview/starship_crawl
       - name: Test the deployed URL structure
