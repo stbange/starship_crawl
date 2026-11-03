@@ -13,7 +13,17 @@ typedef struct {
     float shield, armor, energy, slow;
     uint8_t reading;
     bool grounded, crouched, flashlight, journal;
+    bool sheltered;
+    Vec3 shelter_pos;
+    double return_yaw, return_pitch;
+    float resting, nourished;
 } Player;
+typedef struct {
+    Position door;
+    double yaw;
+    bool deployed;
+} Shelter;
+typedef enum { SHELTER_NONE, SHELTER_DOOR, SHELTER_BED, SHELTER_MED, SHELTER_KITCHEN } ShelterUse;
 typedef struct {
     float forward, strafe, vertical;
     bool fire, jump, crouch, lift_up, lift_down, sprint;
@@ -39,6 +49,7 @@ typedef struct {
     Projectile projectiles[SC_MAX_PROJECTILES];
     uint32_t enemy_shots, projectile_hits;
     uint32_t mission, mission_kills, mission_loot, contracts;
+    Shelter shelter;
     bool dirty;
 } Game;
 void game_init(Game *g, uint32_t seed);
@@ -66,6 +77,13 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags);
 bool game_objective(const Game *g, Cell *cell);
 const char *game_mission(const Game *g);
 Vec3 game_terminal(Cell cell);
+void game_summon(Game *g, int player);
+ShelterUse game_shelter_near(const Game *g, int player);
+bool game_shelter_interact(Game *g, int player);
+void game_shelter_step(Game *g, Player *p, const Actions *a, double dt);
+const Box *shelter_furniture(size_t *count);
+Vec3 shelter_station(ShelterUse use);
+bool shelter_clear(Vec3 feet);
 bool game_save(const Game *g, const char *path);
 bool game_load(Game *g, const char *path);
 #endif

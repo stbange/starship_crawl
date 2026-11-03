@@ -131,6 +131,33 @@ static void profile(Stream *s, Player *p, bool read, unsigned version) {
         p->flashlight = true;
     }
 }
+/* The v4 appendix preserves the v3 profile/record layout and expedition. */
+static void sanctuary(Stream *s, Shelter *shelter, Player *players, bool read) {
+    uint32_t deployed = number(s, shelter->deployed, read);
+    shelter->deployed = deployed != 0;
+    shelter->door = location(s, shelter->door, read, false);
+    shelter->yaw = real(s, shelter->yaw, read);
+    if (deployed > 1 || !isfinite(shelter->yaw) || fabs(shelter->yaw) > SC_PI + 1e-6 ||
+        (deployed && position_absolute(shelter->door).z < 0))
+        s->ok = false;
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        Player *p = &players[i];
+        uint32_t inside = number(s, p->sheltered, read);
+        p->sheltered = inside != 0;
+        p->shelter_pos = vector(s, p->shelter_pos, read);
+        p->return_yaw = real(s, p->return_yaw, read);
+        p->return_pitch = real(s, p->return_pitch, read);
+        p->resting = (float)real(s, p->resting, read);
+        p->nourished = (float)real(s, p->nourished, read);
+        if (inside > 1 || !shelter_clear(p->shelter_pos) || !isfinite(p->return_yaw) ||
+            fabs(p->return_yaw) > SC_PI + 1e-6 || !isfinite(p->return_pitch) ||
+            fabs(p->return_pitch) > 1.5 || !isfinite(p->resting) || p->resting < 0 ||
+            p->resting > 6 || !isfinite(p->nourished) || p->nourished < 0 || p->nourished > 120 ||
+            (inside && (!deployed || position_absolute(p->pos).z < 0)) ||
+            (!inside && p->resting != 0))
+            s->ok = false;
+    }
+}
 bool game_save(const Game *g, const char *path) {
     if (!path || g->world.record_count > 1000000)
         return false;
@@ -147,7 +174,7 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 3, false);
+    number(&s, 4, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -168,6 +195,10 @@ bool game_save(const Game *g, const char *path) {
         number(&s, r->killed, false);
         number(&s, r->collected, false);
     }
+    Shelter shelter = g->shelter;
+    Player players[SC_PLAYERS];
+    memcpy(players, g->players, sizeof(players));
+    sanctuary(&s, &shelter, players, false);
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -194,8 +225,8 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 3) ||
-        (version == 2 && generator != 2) || (version == 3 && generator != SC_GENERATOR_VERSION))
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 4) ||
+        (version == 2 && generator != 2) || (version >= 3 && generator != SC_GENERATOR_VERSION))
         s.ok = false;
     Player players[SC_PLAYERS];
     memset(players, 0, sizeof(players));
@@ -233,6 +264,9 @@ bool game_load(Game *g, const char *path) {
             r->killed >= (UINT32_C(1) << SC_MAX_ENEMIES))
             s.ok = false;
     }
+    Shelter shelter = {0};
+    if (version >= 4)
+        sanctuary(&s, &shelter, players, true);
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
@@ -275,13 +309,14 @@ bool game_load(Game *g, const char *path) {
     g->world = *replacement;
     free(replacement);
     memcpy(g->players, players, sizeof(players));
+    g->shelter = shelter;
     g->player_count = 1;
     memset(g->projectiles, 0, sizeof(g->projectiles));
     g->mission = mission;
     g->mission_kills = kills;
     g->mission_loot = loot;
     g->contracts = contracts;
-    g->dirty = version < 3;
+    g->dirty = version < 4;
     game_message(g, version < 3 ? "SHIP GENERATOR UPDATED / CHARACTERS RETAINED / NEW EXPEDITION"
                                 : "EXPEDITION RESUMED / WELCOME BACK");
     return true;

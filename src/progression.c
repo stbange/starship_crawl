@@ -35,6 +35,8 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags) {
     if (player < 0 || player >= g->player_count || !isfinite(damage) || damage <= 0)
         return;
     Player *p = &g->players[player];
+    if (p->sheltered)
+        return;
     if (flags & CHILL)
         p->slow = 2;
     if (flags & DRAIN)
@@ -73,6 +75,8 @@ void game_interact(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
     Player *p = &g->players[player];
+    if (game_shelter_interact(g, player))
+        return;
     Cell target;
     if (!game_objective(g, &target)) {
         game_message(g, "BEACON LIT / N THEN ENTER BEGINS ANOTHER EXPEDITION");
@@ -123,10 +127,13 @@ void game_interact(Game *g, int player) {
 void game_progression_step(Game *g, double dt) {
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
+        p->nourished = fmaxf(0, p->nourished - (float)dt);
         p->slow = fmaxf(0, p->slow - (float)dt);
         p->energy = fminf(player_max_energy(p), p->energy + (float)dt * (12 + 2 * p->mods[5]));
         if (p->hurt <= 0)
             p->shield = fminf(player_max_shield(p), p->shield + (float)dt * (9 + 2 * p->mods[1]));
+        if (p->sheltered)
+            continue;
         for (int r = 0; r < g->world.count; r++) {
             Room *room = &g->world.rooms[r];
             if (!room->ready)

@@ -9,7 +9,8 @@ unsigned player_next_level(const Player *p) {
     return 80 + 40 * (p->level - 1);
 }
 Vec3 player_eye(const Player *p) {
-    return vadd(position_absolute(p->pos), v3(0, p->crouched ? .85 : 1.62, 0));
+    return vadd(p->sheltered ? p->shelter_pos : position_absolute(p->pos),
+                v3(0, p->crouched ? .85 : 1.62, 0));
 }
 Vec3 enemy_center(const Enemy *e) {
     return vadd(position_absolute(e->pos), v3(0, .65, 0));
@@ -59,6 +60,11 @@ void game_join(Game *g) {
     p->pos = g->players[0].pos;
     position_move(&p->pos, v3(1.4, 0, 0));
     p->checkpoint = g->players[0].checkpoint;
+    p->sheltered = g->players[0].sheltered;
+    p->shelter_pos = g->players[0].shelter_pos;
+    p->return_yaw = g->players[0].return_yaw;
+    p->return_pitch = g->players[0].return_pitch;
+    p->resting = 0;
     if (world_overlap(&g->world, position_absolute(p->pos), .34, 1.78))
         p->pos = g->players[0].pos;
     p->crouched = world_overlap(&g->world, position_absolute(p->pos), .34, 1.78);
@@ -71,6 +77,8 @@ void game_join(Game *g) {
     game_message(g, "LOCAL CO-OP JOINED / PLAYER TWO USES A GAMEPAD");
 }
 void game_leave(Game *g) {
+    g->players[1].sheltered = false;
+    g->players[1].resting = 0;
     g->player_count = 1;
     g->dirty = true;
     game_message(g, "SOLO EXPLORATION");
@@ -80,6 +88,7 @@ void game_new_ship(Game *g, uint32_t seed) {
     world_init(&g->world, seed);
     memset(g->projectiles, 0, sizeof(g->projectiles));
     g->mission = g->mission_kills = g->mission_loot = g->contracts = 0;
+    memset(&g->shelter, 0, sizeof(g->shelter));
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player *p = &g->players[i];
         p->pos = position_from(v3(i * 1.4, 4, -34));
@@ -95,6 +104,8 @@ void game_new_ship(Game *g, uint32_t seed) {
         p->crouched = false;
         p->slow = p->hurt = p->cooldown = 0;
         p->journal = false;
+        p->sheltered = false;
+        p->resting = p->nourished = 0;
     }
     Vec3 positions[2] = {position_absolute(g->players[0].pos),
                          position_absolute(g->players[1].pos)};
@@ -383,7 +394,7 @@ static double player_intercept(const Player *p, Vec3 origin, Vec3 dir, double li
 }
 static bool vulnerable(const Player *p) {
     Vec3 feet = position_absolute(p->pos);
-    return feet.z >= 0 && world_difficulty(world_cell(feet)) != 0 && p->health > 0;
+    return !p->sheltered && feet.z >= 0 && world_difficulty(world_cell(feet)) != 0 && p->health > 0;
 }
 static void projectiles_step(Game *g, double dt) {
     for (int i = 0; i < SC_MAX_PROJECTILES; i++) {
@@ -687,7 +698,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
         return;
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
-        if (position_absolute(p->pos).z >= 0 &&
+        if (!p->sheltered && position_absolute(p->pos).z >= 0 &&
             !world_ready(&g->world, world_cell(position_absolute(p->pos))))
             continue;
         p->cooldown = fmaxf(0, p->cooldown - (float)dt);
@@ -695,7 +706,12 @@ void game_step(Game *g, const Actions *actions, double dt) {
         p->hurt = fmaxf(0, p->hurt - (float)dt);
         if (p->hurt <= 0 && p->health > 0)
             p->health =
-                fminf(player_max_health(p), p->health + (float)dt * (3 + 1.5f * p->mods[4]));
+                fminf(player_max_health(p),
+                      p->health + (float)dt * (3 + 1.5f * p->mods[4] + (p->nourished > 0 ? 3 : 0)));
+        if (p->sheltered) {
+            game_shelter_step(g, p, &actions[i], dt);
+            continue;
+        }
         move_player(g, p, &actions[i], dt);
         if (actions[i].fire && p->cooldown <= 0)
             shoot(g, p);

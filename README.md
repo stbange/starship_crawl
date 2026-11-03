@@ -43,7 +43,7 @@ ctest --test-dir build -C Release --output-on-failure
 .\build\Release\starship_crawl.exe
 ```
 
-SDL is linked statically. A Windows x86-64 executable has also been cross-compiled with MinGW-w64; it imports only standard Windows system DLLs. The CI configuration builds both Windows and Linux. Actual Windows runtime and physical controller testing remain separate checks from compilation.
+SDL is linked statically. A Windows x86-64 executable has also been cross-compiled with MinGW-w64; it imports only standard Windows system DLLs. The CI configuration builds both Windows and Linux. Physical controller and Windows graphics testing remain device checks.
 
 **Build for browsers.** Activate Emscripten first. CI specifies SDK 4.0.23; the cloud prototype has also been compiled and browser-tested with Debian's Emscripten 3.1.69 and LLVM 19.
 
@@ -77,7 +77,8 @@ python3 tests/test_browser.py --site-dir build-pages-preview --url-path /starshi
 | Sprint | Left Shift | Left shoulder |
 | Grav lift up / down | E / Q while on the cyan pad | X / Y |
 | Switch weapon | Z / X or mouse wheel | Right shoulder |
-| Use mission terminal | G | D-pad down |
+| Use shelter door, recovery station, or mission terminal | G | D-pad down |
+| Summon fold shelter | R | Back / Select |
 | Character / mission journal | I; Enter closes | Browser menu or keyboard |
 | Read next collected record | L while in journal | Browser menu or keyboard |
 | Upgrade attribute 1 through 10 | 1 through 9, then 0 | D-pad left / up / right for the first three |
@@ -94,15 +95,17 @@ Spitters visibly charge for 0.8 seconds before launching a slow glowing shot tow
 
 Grav lifts currently transfer instantly between decks and establish a checkpoint. Death retains experience, skills, and equipment, restores health, and returns that player to the latest checkpoint. New expeditions replace the ship while retaining both characters. Re-entering a generated room preserves defeated enemies; partially injured enemies reset when their room unloads.
 
-**The Reclaimer expansion uses generator and save version 3.** Version-1 and version-2 saves preserve both characters' existing ranks, experience, skills, points, kills, and colors, and visibly start a fresh expedition because the ship layouts and enemy identities changed. New characters and migrated profiles begin with a carbine, shotgun, nail repeater, armor, and a shield. Version-3 saves retain the ship, both profiles, weapon ownership, defensive resources, collected records, consumed caches, defeated enemies, missions, contracts, and victory counts. Loading opens solo with the flashlight on and clears in-flight shots. Unknown versions or corrupt data leave the current game unchanged.
+**The game uses generator 3 and save format 4.** Version-1 and version-2 saves preserve both characters' existing ranks, experience, skills, points, kills, and colors, and visibly start a fresh expedition because the ship layouts and enemy identities changed. New characters and migrated profiles begin with a carbine, shotgun, nail repeater, armor, and a shield. Existing version-3 expeditions retain their ship and progress when loaded. Version-4 saves also retain the fold shelter, interior locations, return anchors, and recovery timers, alongside both profiles, weapon ownership, defensive resources, collected records, consumed caches, defeated enemies, missions, contracts, and victory counts. Loading opens solo with the flashlight on and clears in-flight shots. Unknown versions or corrupt data leave the current game unchanged.
 
 Start the story at the gold-marked console beside the loading bay's lift. Press **G** nearby, then follow the target cell and deck in **I**. Use **E/Q** to change decks from a cyan lift pad. Each mission awards upgrade points and salvage; later missions unlock weapons. Read [EXPANSION.md](EXPANSION.md) for the sector guide, combat systems, attribute effects, and mission route.
+
+**Fold shelter.** Press **R** on clear ship flooring to summon a small doorway, then **G** nearby to enter an 18 × 16 metre sanctuary. Use **G** beside the bed to rest, the medical station to heal and repair armor, or the kitchen to cook a recovery meal. Return through the interior door to your entry position. Touch players have **FOLD** and **USE** buttons; the browser menu also offers summoning. Enemies stay outside, and the exterior continues for an outside co-op player. The doorway cannot move while occupied. See [SHELTER.md](SHELTER.md).
 
 **Saves** are versioned, checksummed, and validated before replacing the current session. Native writes replace a temporary file; the default location comes from SDL's application preference directory (`Stbange/StarshipCrawl`). `--save-dir DIRECTORY` selects another location. Browser saves are local to the site's origin and browser profile; the HUD confirms completion after IndexedDB synchronization. Export a save to move it to another browser or device. A successful disk write alone is not reported as completed browser persistence.
 
 Autosaves occur every 20 seconds of active play. Save explicitly before closing a tab; asynchronous browser writes cannot be guaranteed during tab shutdown. Imported saves with an unsupported version or corrupt payload leave the running expedition unchanged.
 
-**Specifications and automated quality.** OpenSpec 1.16.0 and Codex workflows are checked in, with validated specifications under `openspec/specs`. Native unit tests measure **97.93% core line coverage** and enforce **95% overall and in every measured source file**. A separate automated campaign plays three seeds through all six objectives and extraction. The existing browser suite tests the compiled WASM/WebGL game, input, saves, and mobile controls. Coverage reports and browser captures are retained in CI, and Pages requires all quality, native, and web jobs to pass. See [TESTING.md](TESTING.md) for commands, scope, reports, and the specification workflow.
+**Specifications and automated quality.** OpenSpec 1.16.0 and Codex workflows are checked in, with validated specifications under `openspec/specs`. Native unit tests measure **98.10% core line coverage** and enforce **95% overall and in every measured source file**. A separate automated campaign plays three seeds through all six objectives and extraction; a shelter journey walks through every recovery facility and returns to the ship. The existing browser suite tests the compiled WASM/WebGL game, input, saves, and mobile controls. Coverage reports and browser captures are retained in CI, and Pages requires all quality, native, and web jobs to pass. See [TESTING.md](TESTING.md) for commands, scope, reports, and the specification workflow.
 
 **Development commands**
 
@@ -114,6 +117,8 @@ Autosaves occur every 20 seconds of active play. Save explicitly before closing 
 ./build/starship_crawl --seed 713 --scene hall --no-save
 # Other scenes: bay, engine, crew, tunnel, atrium, distant, encounter.
 # New sectors: luxury, bridge, lab, cargo, cryonics, botany.
+# Sanctuary inspection (saving disabled); add --split for an exterior second view.
+./build/starship_crawl --seed 713 --scene shelter --no-save
 # Reproducible crawler/spitter/heavy encounter, with saving disabled.
 ./build/starship_crawl --seed 713 --scene encounter
 # Distant co-op diagnostic: player 1 is 288 million metres away; player 2 is at the bay.
@@ -139,7 +144,7 @@ python3 tests/test_browser.py
 
 Build `sc_tests` before running the browser suite; use `SC_CORE_TEST` to select a different native test executable. The suite compares its semantic generation fingerprints against the running WASM build. Use `SC_BROWSER` to select an existing Chromium executable. The browser test starts and closes its own local HTTP server. Screenshots are written under `build-web/test-artifacts/`. Web query parameters `?seed=713&scene=hall` provide the same inspection workflow. Scene/seed overrides begin a fresh expedition; use them in a separate browser profile when keeping an existing expedition matters.
 
-The core suite checks 384 district layouts across 128 seeds for connected routes, disjoint footprints, loops, matching portals and traversal requirements. Collision tests walk connector paths and check floors; streaming tests cover load-order independence, fair scheduling, publication of complete halls, backtracking reuse, 100 moves with separated players, and persistent kills. Combat tests exercise charged shots, dodging, swept player/wall collision, nearest-player hits in co-op, surface climbing, and fast pursuit. Expansion tests cover all 28 themes, 27 species, 16 weapons, defense/attribute effects, shared loot ownership, the full mission chain, contracts, and version-3 persistence. Save tests include real version-1 and pre-infestation version-2 fixtures, generator mismatch rejection, and distant coordinates. Browser tests exercise actual WASM/WebGL, native/WASM generation parity, crossing chunk boundaries inside a hall, distant split-screen cameras, IndexedDB save/reload, migration, wall-climbing and projectile rendering, keyboard/menu/touch flashlight controls, six new sectors, mission interaction and reward spending, journal and weapon switching, version-3 reload, mobile multitouch, and resizing. Real mobile GPU performance, Safari compatibility, physical gamepads, and Windows runtime behavior still need device testing.
+The core suite checks 384 district layouts across 128 seeds for connected routes, disjoint footprints, loops, matching portals and traversal requirements. Collision tests walk connector paths and check floors; streaming tests cover load-order independence, fair scheduling, publication of complete halls, backtracking reuse, 100 moves with separated players, and persistent kills. Combat tests exercise charged shots, dodging, swept player/wall collision, nearest-player hits in co-op, surface climbing, and fast pursuit. Expansion tests cover all 28 themes, 27 species, 16 weapons, defense/attribute effects, shared loot ownership, the full mission chain, contracts, and version-4 persistence. Save tests include real version-1 and pre-infestation version-2 and compatible version-3 fixtures, generator mismatch rejection, and distant coordinates. Browser tests exercise actual WASM/WebGL, native/WASM generation parity, crossing chunk boundaries inside a hall, distant split-screen cameras, IndexedDB save/reload, migration, wall-climbing and projectile rendering, keyboard/menu/touch flashlight controls, six new sectors, mission interaction and reward spending, journal and weapon switching, version-4 reload, mobile multitouch, and resizing. Real mobile GPU performance, Safari compatibility, physical gamepads, and Windows graphics still need device testing.
 
 **In the managed cloud workspace**, `scripts/setup-cloud.sh` prepares local build tools and graphics headers without requiring a system installation. It uses signed Debian package metadata and the allowed Debian/Python/GitHub download hosts. It is specific to the Debian 13 cloud image. After setup:
 

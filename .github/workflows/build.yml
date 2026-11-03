@@ -22,7 +22,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_quality_tools.py'
       - name: Unit coverage gate
         run: python scripts/check-coverage.py
-      - name: Complete solo expedition
+      - name: Complete expeditions and sanctuary journey
         run: ctest --test-dir build-coverage -L gameplay --output-on-failure
       - name: Core sanitizers
         run: |
@@ -55,7 +55,9 @@ jobs:
           SDL_VIDEODRIVER: offscreen
           SDL_AUDIODRIVER: dummy
           EGL_PLATFORM: surfaceless
-        run: ./build/starship_crawl --seed 713 --smoke 10 --no-save
+        run: |
+          ./build/starship_crawl --seed 713 --smoke 10 --no-save
+          ./build/starship_crawl --seed 713 --scene shelter --split --smoke 60 --no-save
       - uses: actions/upload-artifact@v4
         with:
           name: native-${{ runner.os }}
@@ -91,6 +93,8 @@ jobs:
         env:
           SC_CORE_TEST: build-parity/sc_tests
         run: python tests/test_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Play sanctuary recovery and return
+        run: python tests/test_shelter_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Retain browser captures
         if: always()
         uses: actions/upload-artifact@v4

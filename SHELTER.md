@@ -1,0 +1,20 @@
+The Fold is a portable refuge: a compact, freestanding doorway opens into an 18 by 16 metre sanctuary with warm steady lamps, a star window, dining furniture, a bed, medical equipment, and a stocked kitchen.
+
+Press **R** on clear, supported ship flooring, then **G** near the doorway. On a controller use **Back / Select** to summon and **D-pad down** to use. Touch players have **FOLD** and **USE** buttons; summoning is also available in the browser menu. Space, cramped passages, obstructions, and unfinished rooms require moving to a wider, surveyed floor. Summoning is free.
+
+Inside, approach a facility and press **G / USE**:
+
+| Facility | Effect |
+| --- | --- |
+| Bed, ahead left | Six seconds of rest restores health, shield, and energy. Movement, jumping, or firing input wakes you. |
+| Medical station, ahead right | Restores health and repairs armor immediately. |
+| Kitchen, on the left | Cooks stocked stargrain stew, heals 30% of maximum health, and adds 3 health per second to normal recovery for 120 seconds. |
+| Interior doorway, behind the arrival point | Returns you to the ship at your own entry position and restores your camera orientation. |
+
+The pantry is stocked; food does not require ingredients and there is no hunger penalty. Recovery stays within your upgraded capacities. Weapons are holstered inside. Enemies and their projectiles remain in the ship, and sanctuary occupants cannot collect outside caches or activate mission terminals remotely.
+
+The sanctuary is shared in optional local co-op. One player can recover while the other keeps fighting. Each viewport shows its own interior or ship view, and each character retains an individual return anchor. The doorway cannot relocate while either active player is inside. Once everyone leaves, summon again to move it. Starting a new expedition packs it away.
+
+You can save inside and resume there safely. Format 4 stores the doorway, interior state, return orientation, rest, and food benefit. Compatible format-3 saves retain the same ship, missions, characters, and changed-room records with no sanctuary deployed; saving upgrades them to format 4. Generator 3 is unchanged. Existing version-1/version-2 character migration remains supported.
+
+For inspection, `--scene shelter --no-save` opens the sanctuary without writing a save. Add `--split` to see a second character outside the door. Automated unit, campaign, browser, and native render checks are described in [TESTING.md](TESTING.md).

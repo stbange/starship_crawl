@@ -38,7 +38,7 @@ typedef struct {
     Renderer renderer;
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
-    bool demo_encounter;
+    bool demo_encounter, inspect_shelter;
     int frame, smoke_frames;
     double last, accumulator, fps, autosave, audio_time;
     Uint64 look_after;
@@ -144,7 +144,9 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
             p->cooldown = .15f;
             app.game.dirty = true;
         }
-    } else if (action == 8)
+    } else if (action == 13)
+        game_summon(&app.game, 0);
+    else if (action == 8)
         game_interact(&app.game, 0);
     else if (action == 9)
         game_weapon(&app.game, 0, 1);
@@ -197,7 +199,8 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "shots\":%u,\"projectile_hits\":%u,\"climbers\":%u,\"mission\":%u,\"weapon\":%u,"
         "\"weapons\":%u,\"shield\":%.2f,\"armor\":%.2f,\"energy\":%.2f,\"credits\":%u,\"pickups\":%"
         "u,\"contracts\":%u,\"theme\":%u,\"logs\":%u,\"yaw\":%.4f,\"pitch\":%.4f,\"time\":%.3f,"
-        "\"key_w\":%u}",
+        "\"sheltered\":%s,\"shelter_deployed\":%s,\"sx\":%.3f,\"sz\":%.3f,\"resting\":%.2f,"
+        "\"nourished\":%.2f,\"health\":%.2f,\"facility\":%d,\"key_w\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -208,7 +211,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         p->flashlight ? "true" : "false", projectiles, app.game.enemy_shots,
         app.game.projectile_hits, climbers, app.game.mission, p->weapon, p->weapons, p->shield,
         p->armor, p->energy, p->credits, p->pickups, app.game.contracts, room ? room->theme : 0,
-        p->logs, p->yaw, p->pitch, app.game.time,
+        p->logs, p->yaw, p->pitch, app.game.time, p->sheltered ? "true" : "false",
+        app.game.shelter.deployed ? "true" : "false", p->shelter_pos.x, p->shelter_pos.z,
+        p->resting, p->nourished, p->health, (int)game_shelter_near(&app.game, 0),
         (unsigned)SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W]);
     return result;
 }
@@ -286,12 +291,12 @@ static float axis(SDL_Gamepad *pad, SDL_GamepadAxis axis_id) {
     return fabsf(v) < .16f ? 0 : (v > 0 ? (v - .16f) / .84f : (v + .16f) / .84f);
 }
 static int finger_role(float x, float y) {
-    const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f},
-                ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f};
+    const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f, .64f},
+                ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f, .27f};
     int w, h;
     SDL_GetWindowSize(app.window, &w, &h);
     float radius = fminf((float)w, (float)h) * .075f;
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 9; i++)
         if (fabsf((x - xs[i]) * w) < radius && fabsf((y - ys[i]) * h) < radius)
             return i + 2;
     if (x < .42f)
@@ -315,6 +320,8 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
                     game_interact(&app.game, 0);
                 if (app.fingers[i].role == 9)
                     game_weapon(&app.game, 0, 1);
+                if (app.fingers[i].role == 10)
+                    game_summon(&app.game, 0);
                 break;
             }
     } else
@@ -390,6 +397,8 @@ static void events(void) {
                         app.started = true;
                         set_pause(!app.paused);
                     }
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_BACK)
+                        game_summon(&app.game, pad_player(i));
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
                         game_weapon(&app.game, pad_player(i), 1);
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_DOWN)
@@ -435,6 +444,9 @@ static void events(void) {
                 break;
             case SDLK_L:
                 sc_web_action(12);
+                break;
+            case SDLK_R:
+                game_summon(&app.game, 0);
                 break;
             case SDLK_G:
                 game_interact(&app.game, 0);
@@ -582,6 +594,11 @@ static void frame(void *unused) {
                                 position_absolute(app.game.players[1].pos)};
     world_refresh(&app.game.world, stream_positions, app.game.player_count);
     world_stream(&app.game.world, SC_STREAM_BUDGET);
+    if (app.inspect_shelter && world_ready(&app.game.world, (Cell){0, 0, 0})) {
+        game_summon(&app.game, 0);
+        game_interact(&app.game, 0);
+        app.inspect_shelter = false;
+    }
     if (app.demo_encounter) {
         Room *room = world_find(&app.game.world, (Cell){1, 0, 0});
         if (room && room->ready) {
@@ -703,7 +720,8 @@ int main(int argc, char **argv) {
         } else if (!strcmp(argv[i], "--help")) {
             puts("Starship Crawl\n  --seed NUMBER --new --no-save --save-dir DIRECTORY\n  --touch "
                  "--split --smoke FRAMES --capture FILE.ppm\n  --scene "
-                 "bay|hall|engine|crew|tunnel|atrium|distant|encounter|luxury|bridge|lab|cargo|"
+                 "bay|hall|engine|crew|tunnel|atrium|distant|encounter|shelter|luxury|bridge|lab|"
+                 "cargo|"
                  "cryonics|botany\nSolo by default. F2 "
                  "explicitly "
                  "toggles local "
@@ -804,6 +822,11 @@ int main(int argc, char **argv) {
                         }
             }
         app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, -25)));
+        if (!strcmp(scene, "shelter")) {
+            app.game.players[0].pos = position_from(v3(0, .02, 12));
+            app.inspect_shelter = true;
+            app.no_save = true;
+        }
         app.game.players[0].crouched = world_describe(seed, c).type == CONDUIT;
         app.game.players[0].pitch = .03;
         Vec3 p = position_absolute(app.game.players[0].pos);

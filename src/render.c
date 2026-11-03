@@ -542,12 +542,85 @@ static void creature(Renderer *r, const Enemy *e, double time, double distance) 
         octahedron(r, vadd(face, vmul(forward, .26)), radius, rgb(.32f, .82f, .36f), 2.4f);
     }
 }
+static void fold_door(Renderer *r, Vec3 feet, double yaw) {
+    Vec3 right = v3(cos(yaw), 0, -sin(yaw)), forward = v3(sin(yaw), 0, cos(yaw));
+    for (int side = -1; side <= 1; side += 2)
+        cube(&r->mesh, vsub(vadd(feet, vadd(vmul(right, side * 1.05), v3(0, 1.35, 0))), r->origin),
+             vmul(right, .22), v3(0, 2.7, 0), vmul(forward, .45), rgb(.32f, .28f, .22f), .15f);
+    cube(&r->mesh, vsub(vadd(feet, v3(0, 2.65, 0)), r->origin), vmul(right, 2.3), v3(0, .2, 0),
+         vmul(forward, .45), rgb(.7f, .53f, .3f), .6f);
+    cube(&r->mesh, vsub(vadd(feet, v3(0, 1.3, 0)), r->origin), vmul(right, 1.85), v3(0, 2.5, 0),
+         vmul(forward, .08), rgb(.13f, .48f, .53f), 1.1f);
+    for (int i = 0; i < 5; i++)
+        cube(&r->mesh, vsub(vadd(feet, v3(0, .35 + i * .44, 0)), r->origin), vmul(right, 1.5),
+             v3(0, .025, 0), vmul(forward, .1), rgb(.65f, .75f, .55f), .9f);
+}
+static void fold_interior(Renderer *r, const Game *g, int viewer) {
+    Color stone = rgb(.23f, .25f, .27f), wood = rgb(.4f, .27f, .17f);
+    block(r, v3(0, -.2, 0), v3(18.4, .4, 16.4), stone, 0);
+    block(r, v3(0, 4.7, 0), v3(18.4, .4, 16.4), rgb(.13f, .18f, .23f), 0);
+    block(r, v3(-9.15, 2.25, 0), v3(.3, 4.5, 16.4), stone, 0);
+    block(r, v3(9.15, 2.25, 0), v3(.3, 4.5, 16.4), stone, 0);
+    block(r, v3(0, 2.25, 8.15), v3(18.4, 4.5, .3), stone, 0);
+    block(r, v3(0, 2.25, -8.15), v3(18.4, 4.5, .3), stone, 0);
+    block(r, v3(0, .012, -.6), v3(4.5, .025, 12), rgb(.24f, .14f, .14f), .04f);
+    for (int z = -6; z <= 6; z += 4) {
+        block(r, v3(-8.85, 2.2, z), v3(.22, 4.4, .25), wood, .04f);
+        block(r, v3(8.85, 2.2, z), v3(.22, 4.4, .25), wood, .04f);
+        block(r, v3(0, 4.38, z), v3(18, .22, .25), wood, .04f);
+    }
+    size_t count;
+    const Box *boxes = shelter_furniture(&count);
+    for (size_t i = 0; i < count; i++)
+        block(r, vmul(vadd(boxes[i].min, boxes[i].max), .5), vsub(boxes[i].max, boxes[i].min),
+              boxes[i].color, boxes[i].glow);
+    /* Bed, quilt, pillows and reading lamp. */
+    block(r, v3(-6.3, .9, 5.55), v3(2.5, .22, 3), rgb(.64f, .64f, .52f), .03f);
+    block(r, v3(-6.3, 1.04, 5.2), v3(2.35, .1, 2.1), rgb(.22f, .38f, .4f), .03f);
+    block(r, v3(-6.3, 1.08, 6.55), v3(1.8, .24, .55), rgb(.75f, .7f, .54f), .05f);
+    block(r, v3(-7.9, 1.7, 6.7), v3(.6, .7, .6), rgb(.85f, .57f, .24f), .7f);
+    /* Medical screen, cross and instruments. */
+    block(r, v3(6.5, 1.7, 6.3), v3(2, 1, .2), rgb(.12f, .45f, .48f), .55f);
+    block(r, v3(6.5, 1.7, 6.15), v3(.85, .18, .1), rgb(.65f, .9f, .65f), 1);
+    block(r, v3(6.5, 1.7, 6.14), v3(.18, .75, .1), rgb(.65f, .9f, .65f), 1);
+    for (int i = 0; i < 4; i++)
+        block(r, v3(5.5 + i * .5, 1.4, 5.4), v3(.16, .3, .16), rgb(.4f, .6f, .65f), .1f);
+    /* Kitchen: hob, pot, pantry tins, sink and extraction hood. */
+    block(r, v3(-6.9, 1.12, -2), v3(1.2, .04, 1), rgb(.13f, .16f, .17f), .05f);
+    block(r, v3(-6.9, 1.18, -2), v3(.7, .08, .7), rgb(.9f, .34f, .12f), .65f);
+    block(r, v3(-6.9, 1.4, -2), v3(.55, .4, .55), rgb(.45f, .42f, .32f), .04f);
+    block(r, v3(-5.2, 1.14, -2), v3(.8, .06, .8), rgb(.23f, .43f, .47f), .1f);
+    block(r, v3(-6.9, 2.6, -2), v3(1.7, .3, 1.5), rgb(.24f, .28f, .3f), 0);
+    for (int i = 0; i < 5; i++)
+        block(r, v3(-7.6 + i * .58, 1.3, -1.5), v3(.25, .4, .25), rgb(.65f, .47f, .24f), .06f);
+    /* Dining mugs and a star window. */
+    for (int i = 0; i < 3; i++)
+        block(r, v3(-.8 + i * .7, 1, 2), v3(.18, .25, .18), rgb(.65f, .53f, .32f), .05f);
+    block(r, v3(0, 2.5, 7.95), v3(5.5, 2.4, .1), rgb(.05f, .1f, .2f), .45f);
+    for (int i = 0; i < 24; i++) {
+        double x = -2.5 + (i * 37 % 101) * .05, y = 1.45 + (i * 19 % 43) * .05;
+        block(r, v3(x, y, 7.86), v3(.035, .035, .02), rgb(.75f, .8f, .7f), 1.5f);
+    }
+    fold_door(r, v3(0, 0, -7.95), 0);
+    for (int i = 0; i < g->player_count; i++)
+        if (i != viewer && g->players[i].sheltered) {
+            Vec3 p = g->players[i].shelter_pos;
+            block(r, vadd(p, v3(0, .7, 0)), v3(.65, 1.35, .4), rgb(.3f, .6f, .55f), .08f);
+            octahedron(r, vadd(p, v3(0, 1.5, 0)), .35, rgb(.7f, .72f, .65f), .1f);
+        }
+}
 static void lights(Renderer *r, const Game *g, const Player *viewer) {
     PointLight selected[SC_VIEW_LIGHTS];
     double scores[SC_VIEW_LIGHTS];
     int count = 0;
+    if (viewer->sheltered) {
+        const Vec3 lamps[] = {{-6, 3.8, 5}, {6, 3.8, 5}, {-6, 3.8, -3}, {3, 3.8, -4}, {0, 3.8, 1}};
+        for (int i = 0; i < 5; i++)
+            selected[count++] = (PointLight){
+                lamps[i], i == 1 ? rgb(.45f, .75f, .8f) : rgb(1, .77f, .48f), 14, 2.4f, 0};
+    }
     Vec3 eye = player_eye(viewer);
-    for (int group = 0; group < 3; group++) {
+    for (int group = 0; !viewer->sheltered && group < 3; group++) {
         int total = group == 0 ? SC_MAX_CHUNKS : group == 1 ? SC_MAX_PROJECTILES : g->player_count;
         for (int i = 0; i < total; i++) {
             const Chunk *chunk = group == 0 ? &g->world.chunks[i] : NULL;
@@ -567,7 +640,7 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                     light = (PointLight){position_absolute(p->pos), p->color, 9, 1.5f, 0};
                 } else {
                     const Player *p = &g->players[i];
-                    if (p->muzzle <= 0)
+                    if (p->sheltered || p->muzzle <= 0)
                         continue;
                     light = (PointLight){vadd(player_eye(p), facing(p->yaw, p->pitch)),
                                          rgb(1, .5f, .15f), 12, 1.2f, 0};
@@ -676,6 +749,9 @@ static void actors(Renderer *r, Game *g, int viewer) {
                 octahedron(r, p, loot->kind == PICK_LOG ? .25 : .35, col, .7f);
         }
     }
+    if (g->shelter.deployed && world_cell(position_absolute(g->shelter.door)).y == cell.y &&
+        vlen(vsub(position_absolute(g->shelter.door), eye)) < 100)
+        fold_door(r, position_absolute(g->shelter.door), g->shelter.yaw);
     Cell target;
     if (game_objective(g, &target) && target.y == cell.y && world_ready(&g->world, target)) {
         Vec3 p = game_terminal(target);
@@ -687,7 +763,7 @@ static void actors(Renderer *r, Game *g, int viewer) {
         }
     }
     for (int i = 0; i < g->player_count; i++)
-        if (i != viewer) {
+        if (i != viewer && !g->players[i].sheltered) {
             Player *p = &g->players[i];
             if (vlen(vsub(position_absolute(p->pos), r->origin)) > 430)
                 continue;
@@ -806,11 +882,12 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     const char *name = position_absolute(p->pos).z < 0
                            ? "THE SILENT EXPANSE"
                            : (room ? sc_themes[room->theme].name : "BETWEEN DECKS");
-    centered(r, w * .5f, pad, 1.6f * s, name, gold);
+    centered(r, w * .5f, pad, 1.6f * s, p->sheltered ? "THE FOLD / SANCTUARY" : name, gold);
     snprintf(label, sizeof(label), "DEPTH %03u  /  DECK %+d",
              position_absolute(p->pos).z < 0 ? 0 : world_difficulty(cell), cell.y);
-    centered(r, w * .5f, pad + 18 * s, 1.1f * s, label, dim);
-    if (room && position_absolute(p->pos).z >= 0)
+    centered(r, w * .5f, pad + 18 * s, 1.1f * s,
+             p->sheltered ? "SAFE / THE INFESTATION CANNOT ENTER" : label, dim);
+    if (!p->sheltered && room && position_absolute(p->pos).z >= 0)
         centered(r, w * .5f, pad + 33 * s, .9f * s, world_district_name(room->district), dim);
     if (g->world.pending)
         centered(r, w * .5f, h * .8f, 1 * s, "SURVEYING NEARBY PASSAGES", dim);
@@ -844,7 +921,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     rect(r, pad, by + 65 * s, 230 * s * p->shield / player_max_shield(p), 4 * s,
          rgb(.25f, .5f, .9f));
     Cell objective;
-    if (game_objective(g, &objective)) {
+    if (!p->sheltered && game_objective(g, &objective)) {
         snprintf(label, sizeof(label), "%s  /  [%d,%d,%d]", game_mission(g), objective.x,
                  objective.y, objective.z);
         centered(r, w * .5f, 96 * s, .85f * s, label, gold);
@@ -854,7 +931,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     const Enemy *aimed = NULL;
     double nearest = 55;
     Vec3 eye = player_eye(p), aim = facing(p->yaw, p->pitch);
-    for (int j = 0; j < g->world.count; j++)
+    for (int j = 0; !p->sheltered && j < g->world.count; j++)
         for (int i = 0; i < g->world.rooms[j].enemy_count; i++) {
             const Enemy *e = &g->world.rooms[j].enemies[i];
             Vec3 delta = vsub(enemy_center(e), eye);
@@ -872,7 +949,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     float exp = (float)p->xp / (float)player_next_level(p);
     rect(r, 0, h - 3, w * exp, 3, gold);
     if (!touch) {
-        text_at(r, w - 260 * s, by, 1.3f * s, sc_weapons[p->weapon].name, ink);
+        text_at(r, w - 260 * s, by, 1.3f * s,
+                p->sheltered ? "WEAPONS HOLSTERED" : sc_weapons[p->weapon].name, ink);
         snprintf(label, sizeof(label), "DMG %.0f  ENERGY %.0f  CORE %u",
                  sc_weapons[p->weapon].damage * (1 + .35f * p->power), p->energy, p->points);
         text_at(r, w - 260 * s, by + 19 * s, 1.1f * s, label, gold);
@@ -888,12 +966,32 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     Vec3 lift = world_lift(cell), d = vsub(position_absolute(p->pos), lift);
     d.y = 0;
-    if (position_absolute(p->pos).z >= 0 && vlen(d) < 3.3)
+    if (!p->sheltered && position_absolute(p->pos).z >= 0 && vlen(d) < 3.3)
         centered(r, w * .5f, h * .65f, 1.7f * s,
                  touch ? "GRAV LIFT / UP OR DOWN" : "GRAV LIFT  /  E UP  /  Q DOWN", mint);
+    ShelterUse use = game_shelter_near(g, player);
+    if (use != SHELTER_NONE) {
+        const char *prompts[] = {
+            "", p->sheltered ? "G / USE TO RETURN TO SHIP" : "G / USE TO ENTER FOLD SHELTER",
+            "G / USE TO REST IN BED", "G / USE MED STATION / HEAL AND REPAIR",
+            "G / USE KITCHEN / COOK STARGRAIN STEW"};
+        centered(r, w * .5f, h * .58f, 1.1f * s, prompts[use], mint);
+    }
+    if (p->sheltered)
+        centered(r, w * .5f, pad + 38 * s, .8f * s,
+                 "BED AHEAD LEFT / MED STATION AHEAD RIGHT / KITCHEN ON LEFT", gold);
+    if (p->resting > 0 || p->nourished > 0) {
+        snprintf(label, sizeof(label),
+                 p->resting > 0 ? "RESTING %.0fS / MOVE TO WAKE"
+                                : "WELL FED / RECOVERY BOOST %.0fS",
+                 p->resting > 0 ? p->resting : p->nourished);
+        centered(r, w * .5f, h - 137 * s, s, label, mint);
+    }
+    if (!touch && !p->sheltered)
+        text_at(r, w - 260 * s, by + 53 * s, .9f * s, "R SUMMON FOLD SHELTER / G USE", dim);
     if (g->message_time > 0 && !paused)
         centered(r, w * .5f, h * .19f, 1.2f * s, g->message, gold);
-    if (position_absolute(p->pos).z < 0 && !paused)
+    if (!p->sheltered && position_absolute(p->pos).z < 0 && !paused)
         centered(r, w * .5f, h * .72f, 1.2f * s,
                  touch ? "DRAG LEFT TO DRIFT / RIGHT TO AIM"
                        : "WASD TO DRIFT / SPACE TO RISE / CTRL TO DESCEND",
@@ -912,10 +1010,11 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         float size = fminf(w, h) * .12f;
         frame(r, w * .13f - size * .5f, h * .73f - size * .5f, size, size, dim);
         centered(r, w * .13f, h * .73f - 3 * s, 1.1f * s, "MOVE", dim);
-        const char *names[] = {"FIRE", "JUMP", "CROUCH", "UP", "DOWN", "LAMP", "USE", "GUN"};
-        const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f},
-                    ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f};
-        for (int i = 0; i < 8; i++) {
+        const char *names[] = {"FIRE", "JUMP", "CROUCH", "UP",  "DOWN",
+                               "LAMP", "USE",  "GUN",    "FOLD"};
+        const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f, .64f},
+                    ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f, .27f};
+        for (int i = 0; i < 9; i++) {
             float x = w * xs[i], y = h * ys[i];
             rect(r, x - size * .5f, y - size * .5f, size, size, panel);
             frame(r, x - size * .5f, y - size * .5f, size, size, dim);
@@ -1057,7 +1156,8 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         gl.Enable(GL_DEPTH_TEST);
         gl.Uniform1i(r->ui, 0);
         Player *player = &g->players[p];
-        r->origin = world_center(world_cell(position_absolute(player->pos)));
+        r->origin = player->sheltered ? v3(0, 0, 0)
+                                      : world_center(world_cell(position_absolute(player->pos)));
         Vec3 eye = vsub(player_eye(player), r->origin);
         float m[16];
         camera(m, eye, player->yaw, player->pitch, (double)vw / vh);
@@ -1066,10 +1166,14 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         gl.Uniform3f(r->grid, (float)fmod(r->origin.x, 4096), (float)fmod(r->origin.y, 4096),
                      (float)fmod(r->origin.z, 4096));
         lights(r, g, player);
-        draw_chunks(r, g);
-        actors(r, g, p);
+        if (player->sheltered)
+            fold_interior(r, g, p);
+        else {
+            draw_chunks(r, g);
+            actors(r, g, p);
+        }
         flush(r);
-        if (!paused) {
+        if (!paused && !player->sheltered) {
             gl.Clear(GL_DEPTH_BUFFER_BIT);
             weapon(r, player);
             flush(r);

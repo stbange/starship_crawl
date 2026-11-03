@@ -458,11 +458,12 @@ static void test_save_failure_safety(void) {
     struct {
         size_t offset;
         uint32_t value;
-    } invalid_ints[] = {{4, 99},        {12, 99},       {104, 0},
-                        {144, 51},      {172, 0},       {176, SC_WEAPONS},
-                        {184, 4096},    {424, 7},       {436, 8},
-                        {440, 1000001}, {444 + 16, 32}, {444 + 12, 1u << SC_MAX_ENEMIES},
-                        {444, 10000001}};
+    } invalid_ints[] = {{4, 99},         {12, 99},       {104, 0},
+                        {144, 51},       {172, 0},       {176, SC_WEAPONS},
+                        {184, 4096},     {424, 7},       {436, 8},
+                        {440, 1000001},  {444 + 16, 32}, {444 + 12, 1u << SC_MAX_ENEMIES},
+                        {444, 10000001}, {464, 2},       {512, 2},
+                        {512, 1},        {572, 2}};
     for (size_t i = 0; i < sizeof(invalid_ints) / sizeof(invalid_ints[0]); i++) {
         memcpy(data, base, length);
         CHECK(invalid_ints[i].offset + 4 <= length - 4);
@@ -474,8 +475,10 @@ static void test_save_failure_safety(void) {
     struct {
         size_t offset;
         double value;
-    } invalid_reals[] = {{28, NAN},  {28, 48},      {88, NAN}, {136, -1},
-                         {196, NAN}, {204, 100000}, {212, -1}};
+    } invalid_reals[] = {{28, NAN}, {28, 48},   {88, NAN}, {136, -1},  {196, NAN}, {204, 100000},
+                         {212, -1}, {504, NAN}, {504, 4},  {516, NAN}, {516, 9},   {524, -.1},
+                         {532, 8},  {540, NAN}, {540, 4},  {548, NAN}, {548, 2},   {556, NAN},
+                         {556, -1}, {556, 7},   {556, 1},  {564, NAN}, {564, -1},  {564, 121}};
     for (size_t i = 0; i < sizeof(invalid_reals) / sizeof(invalid_reals[0]); i++) {
         memcpy(data, base, length);
         put_real(data + invalid_reals[i].offset, invalid_reals[i].value);
@@ -489,8 +492,9 @@ static void test_save_failure_safety(void) {
     CHECK(rejected_unchanged(g, bad));
     unsigned char *duplicate = malloc(length + 20);
     CHECK(duplicate);
-    memcpy(duplicate, base, length - 4);
-    memcpy(duplicate + length - 4, base + 444, 20);
+    memcpy(duplicate, base, 464);
+    memcpy(duplicate + 464, base + 444, 20);
+    memcpy(duplicate + 484, base + 464, length - 464);
     put32(duplicate + 440, 2);
     write_payload(bad, duplicate, length + 20);
     CHECK(rejected_unchanged(g, bad));
