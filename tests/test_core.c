@@ -405,7 +405,7 @@ static void test_save(void) {
     CHECK(g->players[0].level == 7 && g->players[0].kills == 81 && g->players[0].power == 3);
     CHECK(g->players[1].level == 4 && g->players[1].haste == 2);
     CHECK(position_absolute(g->players[0].pos).z == -34);
-    CHECK(g->world.record_count == 0 && g->players[0].weapons == 7);
+    CHECK(g->world.record_count == 0 && g->players[0].weapons == SC_START_WEAPONS);
     CHECK(g->players[0].flashlight && !g->projectiles[0].active);
     game_destroy(g);
     free(g);
@@ -624,7 +624,7 @@ static void test_expansion(void) {
     game_weapon(g, 0, 1);
     CHECK(p->weapon == 1);
     game_destroy(g);
-    for (int weapon = 0; weapon < SC_WEAPONS; weapon++) {
+    for (int weapon = 0; weapon < SC_GENERATED_WEAPONS; weapon++) {
         room = quiet_encounter(g);
         p = &g->players[0];
         p->weapon = weapon;

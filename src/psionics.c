@@ -6,8 +6,8 @@ void game_psionic(Game *g, int player, Psionic power) {
         return;
     Player *p = &g->players[player];
     p->selected_power = (uint8_t)power;
-    if (p->sheltered || p->health <= 0) {
-        game_message(g, "PSIONICS ARE QUIET IN THE SANCTUARY");
+    if (p->sheltered || p->riding || p->health <= 0) {
+        game_message(g, "PSIONICS REQUIRE BEING ON FOOT OUTSIDE THE SANCTUARY");
         return;
     }
     bool active = power == PSI_VEIL     ? p->cloaked
@@ -53,7 +53,7 @@ void game_psionics_step(Game *g, Player *p, double dt) {
         p->nova_tick = 0;
         return;
     }
-    if (p->sheltered)
+    if (p->sheltered || p->riding)
         return;
     if (p->nova_tick <= 0) {
         game_nova(g, (int)(p - g->players));

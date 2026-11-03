@@ -722,6 +722,43 @@ static void fold_interior(Renderer *r, const Game *g, int viewer) {
             octahedron(r, vadd(p, v3(0, 1.5, 0)), .35, rgb(.7f, .72f, .65f), .1f);
         }
 }
+static void rig_block(Renderer *r, const Rig *rig, Vec3 at, Vec3 size, Color color, float glow) {
+    Vec3 right = v3(cos(rig->yaw), 0, -sin(rig->yaw)),
+         forward = v3(sin(rig->yaw), 0, cos(rig->yaw));
+    Vec3 center = vadd(position_absolute(rig->pos),
+                       vadd(vmul(right, at.x), vadd(v3(0, at.y, 0), vmul(forward, at.z))));
+    cube(&r->mesh, vsub(center, r->origin), vmul(right, size.x), v3(0, size.y, 0),
+         vmul(forward, size.z), color, glow);
+}
+static void rig_mesh(Renderer *r, const Rig *rig, RigKind kind, double time) {
+    Color metal = rig->armor > 0 ? rgb(.24f, .29f, .3f) : rgb(.1f, .11f, .12f),
+          trim = rgb(.7f, .43f, .16f);
+    if (kind == MECH) {
+        for (int side = -1; side <= 1; side += 2) {
+            rig_block(r, rig, v3(side * .43, .55, 0), v3(.48, 1.1, .65), metal, 0);
+            rig_block(r, rig, v3(side * .43, .15, .18), v3(.58, .3, .95), metal, 0);
+            rig_block(r, rig, v3(side * .87, 1.8, 0), v3(.38, .8, .75), metal, 0);
+            rig_block(r, rig, v3(side * .87, 1.55, .72), v3(.2, .22, 1.1), metal, 0);
+            rig_block(r, rig, v3(side * .87, 1.55, 1.3), v3(.22, .24, .08), trim, .7f);
+        }
+        rig_block(r, rig, v3(0, 1.65, 0), v3(1.35, 1.25, 1), metal, 0);
+        rig_block(r, rig, v3(0, 2.48, .05), v3(.75, .55, .75), metal, 0);
+        rig_block(r, rig, v3(0, 2.48, .44), v3(.6, .12, .04),
+                  rig->armor > 0 ? rgb(.8f, .57f, .25f) : rgb(.2f, .1f, .05f), .8f);
+        rig_block(r, rig, v3(0, 1.8, -.7), v3(.9, 1.5, .5), metal, 0);
+        rig_block(r, rig, v3(0, 1.8, -.96), v3(.16, 1.1, .04), trim, .3f);
+    } else {
+        rig_block(r, rig, v3(0, .45, 0), v3(1.2, .45, 1.9), metal, 0);
+        rig_block(r, rig, v3(0, .9, -.35), v3(.8, .8, .45), metal, 0);
+        rig_block(r, rig, v3(0, .8, .65), v3(1.2, .55, .5), trim, 0);
+        for (int side = -1; side <= 1; side += 2)
+            for (int end = -1; end <= 1; end += 2)
+                rig_block(r, rig, v3(side * .65, .3, end * .65), v3(.28, .6, .6),
+                          rgb(.08f, .1f, .11f), 0);
+        rig_block(r, rig, v3(0, 1.18, .72), v3(.7, .08, .1), rgb(.3f, .65f, .55f), .5f);
+    }
+    (void)time;
+}
 static void lights(Renderer *r, const Game *g, const Player *viewer) {
     PointLight selected[SC_VIEW_LIGHTS];
     double scores[SC_VIEW_LIGHTS];
@@ -733,8 +770,11 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                 lamps[i], i == 1 ? rgb(.45f, .75f, .8f) : rgb(1, .77f, .48f), 14, 2.4f, 0};
     }
     Vec3 eye = player_eye(viewer);
-    for (int group = 0; !viewer->sheltered && group < 3; group++) {
-        int total = group == 0 ? SC_MAX_CHUNKS : group == 1 ? SC_MAX_PROJECTILES : g->player_count;
+    for (int group = 0; !viewer->sheltered && group < 5; group++) {
+        int total = group == 0   ? SC_MAX_CHUNKS
+                    : group == 1 ? SC_MAX_PROJECTILES
+                    : group == 3 ? SC_MAX_FLARES
+                                 : g->player_count;
         for (int i = 0; i < total; i++) {
             const Chunk *chunk = group == 0 ? &g->world.chunks[i] : NULL;
             if (chunk && (!chunk->active || chunk->cell.y != world_cell(eye).y))
@@ -751,6 +791,17 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                     if (!p->active)
                         continue;
                     light = (PointLight){position_absolute(p->pos), p->color, 9, 1.5f, 0};
+                } else if (group == 3) {
+                    const Flare *f = &g->flares[i];
+                    if (!f->active)
+                        continue;
+                    light = (PointLight){position_absolute(f->pos), rgb(1, .65f, .28f), f->radius,
+                                         f->power, 0};
+                } else if (group == 4) {
+                    const Beam *b = &g->beams[i];
+                    if (b->life <= 0 || g->players[i].sheltered)
+                        continue;
+                    light = (PointLight){position_absolute(b->to), b->color, 7, 2, 0};
                 } else {
                     const Player *p = &g->players[i];
                     if (p->sheltered || p->muzzle <= 0)
@@ -761,7 +812,7 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                 double distance = vlen(vsub(light.pos, eye));
                 if (distance > 65 || light.power < .01f)
                     continue;
-                double score = distance / (light.radius + 1) - (group ? 2 : 0);
+                double score = distance / (light.radius + 1) - (group == 3 ? 3 : group ? 2 : 0);
                 int slot = count;
                 if (count < SC_VIEW_LIGHTS)
                     count++;
@@ -879,6 +930,36 @@ static void actors(Renderer *r, Game *g, int viewer) {
                  1.5f);
         }
     }
+    for (int owner = 0; owner < SC_PLAYERS; owner++)
+        for (int k = 0; k < 2; k++) {
+            const Rig *rig = &g->rigs[owner][k];
+            if (!rig->deployed || (owner == viewer && g->players[viewer].riding == (unsigned)k + 1))
+                continue;
+            Vec3 at = position_absolute(rig->pos);
+            if (world_cell(at).y == cell.y && vlen(vsub(at, eye)) < 130)
+                rig_mesh(r, rig, (RigKind)(k + 1), g->time);
+        }
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        const Beam *beam = &g->beams[i];
+        if (beam->life <= 0 || g->players[i].sheltered)
+            continue;
+        Vec3 from = position_absolute(beam->from), to = position_absolute(beam->to);
+        if (vlen(vsub(from, eye)) < 150) {
+            tube(r, from, to, .045, .035, beam->color, 2);
+            tube(r, from, to, .014, .014, rgb(.9f, .95f, 1), 3);
+            octahedron(r, to, .1, beam->color, 2);
+        }
+    }
+    for (int i = 0; i < SC_MAX_FLARES; i++) {
+        const Flare *f = &g->flares[i];
+        if (!f->active)
+            continue;
+        Vec3 at = position_absolute(f->pos);
+        if (world_cell(at).y != cell.y || vlen(vsub(at, eye)) > 100)
+            continue;
+        tube(r, at, vadd(at, vmul(f->normal, .3)), .055, .045, rgb(.6f, .24f, .12f), .3f);
+        octahedron(r, vadd(at, vmul(f->normal, .25)), .11, rgb(1, .65f, .25f), 2);
+    }
     Cell target;
     if (game_objective(g, &target) && target.y == cell.y && world_ready(&g->world, target)) {
         Vec3 p = game_terminal(target);
@@ -890,7 +971,8 @@ static void actors(Renderer *r, Game *g, int viewer) {
         }
     }
     for (int i = 0; i < g->player_count; i++)
-        if (i != viewer && !g->players[i].sheltered && !g->players[i].cloaked) {
+        if (i != viewer && !g->players[i].sheltered && !g->players[i].cloaked &&
+            !g->players[i].riding) {
             Player *p = &g->players[i];
             if (vlen(vsub(position_absolute(p->pos), r->origin)) > 430)
                 continue;
@@ -908,7 +990,22 @@ static void weapon(Renderer *r, const Player *p) {
     Vec3 center = vsub(
         vadd(player_eye(p), vadd(vmul(right, .35), vadd(vmul(up, -.3), vmul(f, .65 - p->muzzle)))),
         r->origin);
-    const WeaponDef *gun = &sc_weapons[p->weapon];
+    const WeaponDef *gun = game_gun(p);
+    if (p->riding == MECH) {
+        for (int side = -1; side <= 1; side += 2) {
+            Vec3 arm = vsub(
+                vadd(player_eye(p), vadd(vmul(right, side * .7), vadd(vmul(up, -.55), vmul(f, 1)))),
+                r->origin);
+            cube(&r->mesh, arm, vmul(right, .5), vmul(up, .4), vmul(f, 1.2), rgb(.24f, .29f, .3f),
+                 0);
+            cube(&r->mesh, vadd(arm, vmul(f, .65)), vmul(right, .23), vmul(up, .23), vmul(f, .2),
+                 gun->color, p->muzzle > 0 ? 2 : .4f);
+        }
+        return;
+    }
+    if (p->riding == WAGON)
+        cube(&r->mesh, vsub(vadd(player_eye(p), vadd(vmul(up, -.7), vmul(f, .8))), r->origin),
+             vmul(right, 1.3), vmul(up, .35), vmul(f, .8), rgb(.35f, .25f, .14f), 0);
     Color tint = p->tint % 3 == 0
                      ? rgb(.18f, .39f, .4f)
                      : (p->tint % 3 == 1 ? rgb(.55f, .32f, .15f) : rgb(.41f, .25f, .53f));
@@ -1106,7 +1203,12 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     const char *name = position_absolute(p->pos).z < 0
                            ? "THE SILENT EXPANSE"
                            : (room ? sc_themes[room->theme].name : "BETWEEN DECKS");
-    centered(r, w * .5f, pad, 1.6f * s, p->sheltered ? "THE FOLD / SANCTUARY" : name, gold);
+    centered(r, w * .5f, pad, 1.6f * s,
+             p->sheltered         ? "THE FOLD / SANCTUARY"
+             : p->riding == MECH  ? "REAVER / MECH PILOT LINK"
+             : p->riding == WAGON ? "FOLD WAGON / ROAD LINK"
+                                  : name,
+             gold);
     snprintf(label, sizeof(label), "DEPTH %03u  /  DECK %+d",
              position_absolute(p->pos).z < 0 ? 0 : world_difficulty(cell), cell.y);
     centered(r, w * .5f, pad + 18 * s, 1.1f * s,
@@ -1177,16 +1279,16 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     rect(r, 0, h - 3, w * exp, 3, gold);
     if (!touch) {
         text_at(r, w - 260 * s, by, 1.3f * s,
-                p->sheltered ? "WEAPONS HOLSTERED" : sc_weapons[p->weapon].name, ink);
+                p->sheltered ? "WEAPONS HOLSTERED" : game_gun(p)->name, ink);
         snprintf(label, sizeof(label), "DMG %.0f  ENERGY %.0f  CORE %u",
-                 sc_weapons[p->weapon].damage * (1 + .35f * p->power), p->energy, p->points);
+                 game_gun(p)->damage * (1 + .35f * p->power), p->energy, p->points);
         text_at(r, w - 260 * s, by + 19 * s, 1.1f * s, label, gold);
         text_at(r, w - 260 * s, by + 36 * s, 1 * s,
                 p->flashlight ? "F LAMP ON / F5 SAVE / ESC PAUSE"
                               : "F LAMP OFF / F5 SAVE / ESC PAUSE",
                 dim);
     }
-    if (p->points) {
+    if (p->points && !p->riding) {
         centered(r, w * .5f, h - 115 * s, 1.4f * s, "ASCENSION AVAILABLE", gold);
         centered(r, w * .5f, h - 97 * s, 1.1f * s,
                  touch ? "OPEN MENU TO CHOOSE AN UPGRADE" : "I JOURNAL / 1 THROUGH 0 UPGRADE", ink);
@@ -1196,6 +1298,29 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     if (!p->sheltered && position_absolute(p->pos).z >= 0 && vlen(d) < 3.3)
         centered(r, w * .5f, h * .65f, 1.7f * s,
                  touch ? "GRAV LIFT / UP OR DOWN" : "GRAV LIFT  /  E UP  /  Q DOWN", mint);
+    if (p->riding) {
+        const Rig *rig = &g->rigs[player][p->riding - 1];
+        Color amber = rgb(.95f, .62f, .22f);
+        if (p->riding == MECH) {
+            frame(r, 8 * s, 8 * s, w - 16 * s, h - 16 * s, amber);
+            rect(r, 8 * s, h * .3f, 4 * s, h * .32f, amber);
+            rect(r, w - 12 * s, h * .3f, 4 * s, h * .32f, amber);
+        }
+        rect(r, w * .5f - 180 * s, h - 172 * s, 360 * s, 49 * s, panel);
+        snprintf(label, sizeof(label), "%s PLATING %.0f / %.0f",
+                 p->riding == MECH ? "MECH" : "WAGON", rig->armor,
+                 game_rig_max_armor(p, (RigKind)p->riding));
+        centered(r, w * .5f, h - 165 * s, 1.1f * s, label, amber);
+        rect(r, w * .5f - 160 * s, h - 149 * s, 320 * s, 5 * s, dim);
+        rect(r, w * .5f - 160 * s, h - 149 * s,
+             320 * s * rig->armor / game_rig_max_armor(p, (RigKind)p->riding), 5 * s, amber);
+        snprintf(label, sizeof(label),
+                 touch ? "%.1f M/S / GUN / USE TO EXIT" : "%.1f M/S / Z-X WEAPONS / G DISMOUNT",
+                 p->drive_speed);
+        centered(r, w * .5f, h - 136 * s, .9f * s, label, ink);
+    } else if (game_rig_near(g, player) != ON_FOOT)
+        centered(r, w * .5f, h * .63f, 1.1f * s,
+                 game_rig_near(g, player) == MECH ? "G / BOARD MECH" : "G / RIDE WAGON", mint);
     ShelterUse use = game_shelter_near(g, player);
     if (use != SHELTER_NONE) {
         const char *prompts[] = {
@@ -1215,15 +1340,23 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         centered(r, w * .5f, h - 137 * s, s, label, mint);
     }
     if (!touch && !p->sheltered)
-        text_at(r, w - 260 * s, by + 53 * s, .9f * s, "R SUMMON FOLD SHELTER / G USE", dim);
+        text_at(r, w - 260 * s, by + 53 * s, .9f * s, "T MECH / Y WAGON / K FLARE", dim);
     snprintf(label, sizeof(label), "V VEIL%s / B FLY %.0f / J LEAP %.0f / H NOVA %.0f",
              p->cloaked ? " ON" : "", p->flight, p->leap, p->nova);
-    if (!touch)
+    if (!touch && !p->riding)
         centered(r, w * .5f, h - 158 * s, .85f * s, label, p->cloaked ? rgb(.65f, .45f, 1) : mint);
     if (touch) {
-        snprintf(label, sizeof(label), "PSI: %s / %.0f ENERGY", sc_psionic_names[p->selected_power],
-                 sc_psionic_costs[p->selected_power]);
+        if (p->riding)
+            snprintf(label, sizeof(label), "%s / ENERGY %.0f", game_gun(p)->name, p->energy);
+        else
+            snprintf(label, sizeof(label), "PSI: %s / %.0f ENERGY",
+                     sc_psionic_names[p->selected_power], sc_psionic_costs[p->selected_power]);
         centered(r, w * .5f, 56 * s, .8f * s, label, mint);
+    }
+    if (!touch && !p->sheltered && p->weapon == SC_FLARE_CANNON && p->riding != MECH) {
+        snprintf(label, sizeof(label), "O BURN %us / P STRENGTH %u / EACH MAX 5",
+                 30 + 15 * p->flare_lifetime, p->flare_strength);
+        centered(r, w * .5f, h - 181 * s, .85f * s, label, gold);
     }
     if (g->message_time > 0 && !paused)
         centered(r, w * .5f, h * .19f, 1.2f * s, g->message, gold);

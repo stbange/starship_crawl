@@ -39,7 +39,7 @@ typedef struct {
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
     bool demo_encounter, inspect_shelter;
-    int frame, smoke_frames, inspect_form;
+    int frame, smoke_frames, inspect_form, inspect_rig;
     double last, accumulator, fps, autosave, audio_time;
     Uint64 look_after;
     bool discard_look;
@@ -122,7 +122,11 @@ EMSCRIPTEN_KEEPALIVE int sc_web_import(void) {
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     if (action >= 60 && action < 60 + SC_PSIONICS)
         game_psionic(&app.game, 0, (Psionic)(action - 60));
-    else if (action >= 30 && action < 36) {
+    else if (action >= 70 && action < 70 + SC_MECH_WEAPONS) {
+        app.game.players[0].rig_weapon = (unsigned)(action - 70);
+        app.game.players[0].cooldown = .15f;
+        app.game.dirty = true;
+    } else if (action >= 30 && action < 36) {
         const int pan[6][3] = {{-1, 0, 0}, {1, 0, 0}, {0, 0, 1}, {0, 0, -1}, {0, 1, 0}, {0, -1, 0}};
         game_map_pan(&app.game, 0, pan[action - 30][0], pan[action - 30][1], pan[action - 30][2]);
     } else if (action == 14)
@@ -146,12 +150,23 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     else if (action >= 40 && action < 40 + SC_WEAPONS) {
         Player *p = &app.game.players[0];
         unsigned gun = (unsigned)(action - 40);
-        if (p->weapons & (1u << gun)) {
+        if (p->riding != MECH && (p->weapons & (1u << gun))) {
             p->weapon = gun;
             p->cooldown = .15f;
             app.game.dirty = true;
         }
-    } else if (action == 13)
+    } else if (action == 15 || action == 16)
+        game_rig_toggle(&app.game, 0, action == 15 ? MECH : WAGON);
+    else if (action == 17) {
+        Player *p = &app.game.players[0];
+        if (p->riding != MECH) {
+            p->weapon = SC_FLARE_CANNON;
+            p->cooldown = .15f;
+            app.game.dirty = true;
+        }
+    } else if (action == 18 || action == 19)
+        game_flare_upgrade(&app.game, 0, action == 19);
+    else if (action == 13)
         game_summon(&app.game, 0);
     else if (action == 8)
         game_interact(&app.game, 0);
@@ -187,7 +202,7 @@ EMSCRIPTEN_KEEPALIVE uint32_t sc_web_fingerprint(uint32_t seed, int x, int y, in
     return world_fingerprint(seed, (Cell){x, y, z});
 }
 EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
-    static char result[3072];
+    static char result[4096];
     const Player *p = &app.game.players[0];
     Vec3 feet = position_absolute(p->pos);
     unsigned projectiles = 0, climbers = 0, bodies = 0;
@@ -204,6 +219,17 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
                 bodies |= 1u << (body.form * 5 + body.variant);
             }
         }
+    unsigned flares = 0, beams = 0;
+    float flare_life = 0, flare_power = 0;
+    for (int i = 0; i < SC_MAX_FLARES; i++)
+        if (app.game.flares[i].active) {
+            flares++;
+            flare_life = fmaxf(flare_life, app.game.flares[i].life);
+            flare_power = fmaxf(flare_power, app.game.flares[i].power);
+        }
+    for (int i = 0; i < SC_PLAYERS; i++)
+        beams += app.game.beams[i].life > 0;
+    float hull = p->riding ? app.game.rigs[0][p->riding - 1].armor : 0;
     Room *room = world_find(&app.game.world, world_cell(feet));
     snprintf(
         result, sizeof(result),
@@ -217,7 +243,10 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"sheltered\":%s,\"shelter_deployed\":%s,\"sx\":%.3f,\"sz\":%.3f,\"resting\":%.2f,"
         "\"nourished\":%.2f,\"health\":%.2f,\"facility\":%d,"
         "\"map\":%s,\"map_x\":%d,\"map_y\":%d,\"map_z\":%d,\"veil\":%s,\"flight\":%.2f,\"leap\":%."
-        "2f,\"nova\":%.2f,\"power\":%u,\"bodies\":%u,\"key_w\":%u}",
+        "2f,\"nova\":%.2f,\"power\":%u,\"bodies\":%u,\"key_w\":%u,\"riding\":%u,\"rig_weapon\":%u,"
+        "\"hull\":%.2f,\"drive_speed\":%.2f,\"mech_deployed\":%s,\"wagon_deployed\":%s,\"beams\":%"
+        "u,\"flares\":%u,\"flare_lifetime\":%u,\"flare_strength\":%u,\"flare_life\":%.2f,\"flare_"
+        "power\":%.2f,\"points\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -233,7 +262,10 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         p->resting, p->nourished, p->health, (int)game_shelter_near(&app.game, 0),
         p->map_open ? "true" : "false", p->map_center.x, p->map_center.y, p->map_center.z,
         p->cloaked ? "true" : "false", p->flight, p->leap, p->nova, p->selected_power, bodies,
-        (unsigned)SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W]);
+        (unsigned)SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W], p->riding, p->rig_weapon, hull,
+        p->drive_speed, app.game.rigs[0][0].deployed ? "true" : "false",
+        app.game.rigs[0][1].deployed ? "true" : "false", beams, flares, p->flare_lifetime,
+        p->flare_strength, flare_life, flare_power, p->points);
     return result;
 }
 static void audio_frame(void) {
@@ -448,6 +480,19 @@ static void events(void) {
                     }
                     if (SDL_GetGamepadAxis(app.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16000) {
                         int b = e.gbutton.button;
+                        if (b == SDL_GAMEPAD_BUTTON_SOUTH || b == SDL_GAMEPAD_BUTTON_EAST) {
+                            game_rig_toggle(&app.game, player,
+                                            b == SDL_GAMEPAD_BUTTON_SOUTH ? MECH : WAGON);
+                            continue;
+                        }
+                        if (b == SDL_GAMEPAD_BUTTON_WEST) {
+                            if (p->riding != MECH) {
+                                p->weapon = SC_FLARE_CANNON;
+                                p->cooldown = .15f;
+                                app.game.dirty = true;
+                            }
+                            continue;
+                        }
                         if (b == SDL_GAMEPAD_BUTTON_DPAD_LEFT) {
                             game_psionic(&app.game, player, PSI_VEIL);
                             continue;
@@ -559,6 +604,21 @@ static void events(void) {
                     game_map_toggle(&app.game, 0);
                     game_map_toggle(&app.game, 0);
                 }
+                break;
+            case SDLK_T:
+                sc_web_action(15);
+                break;
+            case SDLK_Y:
+                sc_web_action(16);
+                break;
+            case SDLK_K:
+                sc_web_action(17);
+                break;
+            case SDLK_O:
+                sc_web_action(18);
+                break;
+            case SDLK_P:
+                sc_web_action(19);
                 break;
             case SDLK_R:
                 game_summon(&app.game, 0);
@@ -673,10 +733,12 @@ static void read_actions(Actions actions[2], double dt) {
             game_look(&app.game.players[player], axis(pad, SDL_GAMEPAD_AXIS_RIGHTX) * dt * 2.3,
                       -axis(pad, SDL_GAMEPAD_AXIS_RIGHTY) * dt * 1.8);
             a->fire |= SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > 8000;
-            a->jump |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_SOUTH);
-            a->crouch |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_EAST);
-            a->lift_up |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_WEST);
-            a->lift_down |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_NORTH);
+            if (SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) <= 16000) {
+                a->jump |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_SOUTH);
+                a->crouch |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_EAST);
+                a->lift_up |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_WEST);
+                a->lift_down |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_NORTH);
+            }
             a->sprint |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
         }
     for (int i = 0; i < app.game.player_count; i++)
@@ -730,6 +792,11 @@ static void frame(void *unused) {
                 }
         }
         app.inspect_form = 0;
+    }
+    if (app.inspect_rig && world_ready(&app.game.world, (Cell){0, 0, 0})) {
+        game_rig_toggle(&app.game, 0, (RigKind)app.inspect_rig);
+        game_rig_interact(&app.game, 0);
+        app.inspect_rig = 0;
     }
     if (app.inspect_shelter && world_ready(&app.game.world, (Cell){0, 0, 0})) {
         game_summon(&app.game, 0);
@@ -857,7 +924,8 @@ int main(int argc, char **argv) {
         } else if (!strcmp(argv[i], "--help")) {
             puts("Starship Crawl\n  --seed NUMBER --new --no-save --save-dir DIRECTORY\n  --touch "
                  "--split --smoke FRAMES --capture FILE.ppm\n  --scene "
-                 "bay|hall|engine|crew|tunnel|atrium|distant|encounter|shelter|luxury|bridge|lab|"
+                 "bay|hall|engine|crew|tunnel|atrium|distant|encounter|shelter|mech|wagon|luxury|"
+                 "bridge|lab|"
                  "cargo|"
                  "cryonics|botany\nSolo by default. F2 "
                  "explicitly "
@@ -962,6 +1030,11 @@ int main(int argc, char **argv) {
         if (!strncmp(scene, "form", 4) && scene[4] >= '0' && scene[4] <= '4' && !scene[5]) {
             app.game.players[0].pos = position_from(v3(0, .02, 14));
             app.inspect_form = scene[4] - '0' + 1;
+            app.no_save = true;
+        }
+        if (!strcmp(scene, "mech") || !strcmp(scene, "wagon")) {
+            app.game.players[0].pos = position_from(v3(0, .02, 12));
+            app.inspect_rig = !strcmp(scene, "mech") ? MECH : WAGON;
             app.no_save = true;
         }
         if (!strcmp(scene, "shelter")) {

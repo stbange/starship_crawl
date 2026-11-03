@@ -127,7 +127,7 @@ static void test_catalog_and_projectiles(void) {
         mask |= 1u << (b.form * 5 + b.variant);
     }
     CHECK(mask == ((1u << 25) - 1));
-    for (int weapon = 0; weapon < SC_WEAPONS; weapon++) {
+    for (int weapon = 0; weapon < SC_GENERATED_WEAPONS; weapon++) {
         Game *g = fresh();
         Player *p = &g->players[0];
         p->weapon = (unsigned)weapon;

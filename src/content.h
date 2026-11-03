@@ -17,7 +17,12 @@ typedef enum {
 } District;
 #define SC_THEMES 28
 #define SC_ENEMY_TYPES 27
-#define SC_WEAPONS 16
+#define SC_WEAPONS 20
+#define SC_GENERATED_WEAPONS 16
+#define SC_MECH_WEAPONS 3
+#define SC_FLARE_CANNON 19
+#define SC_NEW_WEAPONS (15u << 16)
+#define SC_START_WEAPONS (7u | SC_NEW_WEAPONS)
 #define SC_ATTRIBUTES 10
 #define SC_BODY_FORMS 5
 #define SC_BODY_VARIANTS 5
@@ -59,7 +64,16 @@ typedef struct {
     uint8_t role, tier;
     Color color;
 } EnemyDef;
-enum { W_PROJECTILE = 1, W_BLAST = 2, W_BURN = 4, W_CHILL = 8, W_LEECH = 16, W_CHAIN = 32 };
+enum {
+    W_PROJECTILE = 1,
+    W_BLAST = 2,
+    W_BURN = 4,
+    W_CHILL = 8,
+    W_LEECH = 16,
+    W_CHAIN = 32,
+    W_BEAM = 64,
+    W_FLARE = 128
+};
 typedef struct {
     const char *name;
     float damage, interval, range, spread, blast, cost;
@@ -70,6 +84,7 @@ typedef struct {
 extern const RoomTheme sc_themes[SC_THEMES];
 extern const EnemyDef sc_enemies[SC_ENEMY_TYPES];
 extern const WeaponDef sc_weapons[SC_WEAPONS];
+extern const WeaponDef sc_mech_weapons[SC_MECH_WEAPONS];
 extern const char *sc_attributes[SC_ATTRIBUTES];
 extern const char *sc_logs[12];
 #endif

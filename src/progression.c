@@ -22,6 +22,14 @@ void game_weapon(Game *g, int player, int delta) {
     if (player < 0 || player >= g->player_count)
         return;
     Player *p = &g->players[player];
+    if (p->riding == MECH) {
+        p->rig_weapon = (p->rig_weapon + SC_MECH_WEAPONS + (delta < 0 ? -1 : 1)) % SC_MECH_WEAPONS;
+        p->cooldown = .15f;
+        g->dirty = true;
+        game_message(g, game_gun(p)->name);
+        return;
+    }
+
     for (int i = 0; i < SC_WEAPONS; i++) {
         p->weapon = (p->weapon + SC_WEAPONS + (delta < 0 ? -1 : 1)) % SC_WEAPONS;
         if (p->weapons & (1u << p->weapon))
@@ -44,6 +52,7 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags) {
     float shield = fminf(damage, p->shield);
     p->shield -= shield;
     damage -= shield;
+    game_rig_damage(g, player, &damage);
     float absorb = fminf(p->armor, damage * fminf(.65f, .3f + .008f * p->mods[0]));
     p->armor -= absorb * .5f;
     damage -= absorb;
@@ -75,6 +84,8 @@ void game_interact(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
     Player *p = &g->players[player];
+    if (game_rig_interact(g, player))
+        return;
     if (game_shelter_interact(g, player))
         return;
     Cell target;

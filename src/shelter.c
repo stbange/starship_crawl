@@ -32,6 +32,10 @@ bool shelter_clear(Vec3 feet) {
 void game_summon(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
+    if (g->players[player].riding) {
+        game_message(g, "DISMOUNT BEFORE UNFOLDING THE SHELTER");
+        return;
+    }
     for (int i = 0; i < g->player_count; i++)
         if (g->players[i].sheltered) {
             game_message(g, "FOLD SHELTER OCCUPIED / THE DOOR CANNOT MOVE");
@@ -62,6 +66,8 @@ ShelterUse game_shelter_near(const Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return SHELTER_NONE;
     const Player *p = &g->players[player];
+    if (p->riding)
+        return SHELTER_NONE;
     if (p->sheltered) {
         for (int use = SHELTER_DOOR; use <= SHELTER_KITCHEN; use++)
             if (vlen(vsub(p->shelter_pos, shelter_station((ShelterUse)use))) < 2.2)
@@ -117,6 +123,7 @@ bool game_shelter_interact(Game *g, int player) {
     } else if (use == SHELTER_MED) {
         p->health = player_max_health(p);
         p->armor = player_max_armor(p);
+        game_rig_repair(g, player);
         p->hurt = p->slow = 0;
         game_message(g, "MEDICAL STATION / WOUNDS TREATED / ARMOR REPAIRED");
     } else if (use == SHELTER_KITCHEN) {

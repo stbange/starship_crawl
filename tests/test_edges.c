@@ -78,7 +78,7 @@ static void test_controls_and_resources(void) {
     game_weapon(g, SC_PLAYERS, 1);
     CHECK(p->weapon == 0);
     game_weapon(g, 0, -1);
-    CHECK(p->weapon == 2);
+    CHECK(p->weapon == SC_FLARE_CANNON);
     float hp = p->health;
     game_hurt(g, -1, 10, 0);
     game_hurt(g, 2, 10, 0);
@@ -463,7 +463,9 @@ static void test_save_failure_safety(void) {
         {172, 0},        {176, SC_WEAPONS}, {184, 4096},    {424, 7},
         {436, 8},        {440, 1000001},    {444 + 16, 32}, {444 + 12, 1u << SC_MAX_ENEMIES},
         {444, 10000001}, {464, 2},          {512, 2},       {512, 1},
-        {572, 2},        {632, 2},          {668, 2}};
+        {572, 2},        {632, 2},          {668, 2},       {704, 3},
+        {708, 3},        {712, 6},          {716, 6},       {764, 2},
+        {704, 1},        {960, 33}};
     for (size_t i = 0; i < sizeof(invalid_ints) / sizeof(invalid_ints[0]); i++) {
         memcpy(data, base, length);
         CHECK(invalid_ints[i].offset + 4 <= length - 4);
@@ -481,7 +483,7 @@ static void test_save_failure_safety(void) {
                          {556, -1},  {556, 7},   {556, 1},  {564, NAN}, {564, -1},  {564, 121},
                          {636, NAN}, {636, -1},  {636, 19}, {644, NAN}, {644, -1},  {644, 46},
                          {652, NAN}, {652, -1},  {652, 9},  {660, NAN}, {660, -1},  {660, .6},
-                         {660, .25}};
+                         {660, .25}, {756, NAN}, {756, -1}, {756, 601}, {768, NAN}, {768, 4}};
     for (size_t i = 0; i < sizeof(invalid_reals) / sizeof(invalid_reals[0]); i++) {
         memcpy(data, base, length);
         put_real(data + invalid_reals[i].offset, invalid_reals[i].value);
@@ -504,6 +506,30 @@ static void test_save_failure_safety(void) {
     free(duplicate);
     free(base);
     free(data);
+    /* Validate each attached-light field with a fresh correct checksum. */
+    settle(g);
+    game_attach_flare(g, 0, v3(96, 0, 24), v3(0, -1, 0));
+    CHECK(g->flares[0].active && game_save(g, valid));
+    base = read_file(valid, &length);
+    data = malloc(length);
+    CHECK(data);
+    struct {
+        size_t offset;
+        double value;
+    } bad_lights[] = {{1000, NAN}, {1008, 0},  {1024, NAN}, {1024, 0}, {1024, 106}, {1032, NAN},
+                      {1032, 11},  {1032, 23}, {1040, NAN}, {1040, 2}, {1040, 7}};
+    for (size_t i = 0; i < sizeof(bad_lights) / sizeof(bad_lights[0]); i++) {
+        memcpy(data, base, length);
+        put_real(data + bad_lights[i].offset, bad_lights[i].value);
+        write_payload(bad, data, length);
+        CHECK(rejected_unchanged(g, bad));
+    }
+    memcpy(data, base, length);
+    put32(data + 1048, 2);
+    write_payload(bad, data, length);
+    CHECK(rejected_unchanged(g, bad));
+    free(data);
+    free(base);
     base = read_file(SC_FIXTURE_DIR "/generator-v1.sav", &length);
     put_real(base + 12, NAN);
     write_payload(bad, base, length);

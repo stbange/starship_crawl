@@ -15,6 +15,8 @@ The pantry is stocked; food does not require ingredients and there is no hunger 
 
 The sanctuary is shared in optional local co-op. One player can recover while the other keeps fighting. Each viewport shows its own interior or ship view, and each character retains an individual return anchor. The doorway cannot relocate while either active player is inside. Once everyone leaves, press R to pack it away, then R again on clear flooring to deploy it elsewhere. Starting a new expedition packs it away.
 
-You can save inside and resume there safely. Format 5 stores the doorway, interior state, return orientation, rest, and food benefit. Compatible format-3 and format-4 saves retain the same ship, missions, characters, and changed-room records and any existing sanctuary; format 3 starts with no sanctuary. Saving upgrades them to format 5. Generator 3 is unchanged. Existing version-1/version-2 character migration remains supported.
+You can save inside and resume there safely. Format 6 stores the doorway, interior state, return orientation, rest, and food benefit. Compatible format-3, format-4 and format-5 saves retain the same ship, missions, characters, and changed-room records and any existing sanctuary; format 3 starts with no sanctuary. Saving upgrades them to format 6. Generator 3 is unchanged. Existing version-1/version-2 character migration remains supported.
 
 For inspection, `--scene shelter --no-save` opens the sanctuary without writing a save. Add `--split` to see a second character outside the door. Automated unit, campaign, browser, and native render checks are described in [TESTING.md](TESTING.md).
+
+The medical station also repairs both of your fold rigs, whether parked or packed. Dismount before deploying the shelter. See [EQUIPMENT.md](EQUIPMENT.md).

@@ -6,16 +6,16 @@ Responsive combat with distinct enemy abilities, weapon effects, and collision.
 
 ### Requirement: Weapon and enemy catalog
 
-The game SHALL provide 16 usable weapons and 27 enemy species with their declared shared behavior systems and distance-based encounter gating. All 16 weapons SHALL emit finite visible projectiles with their original impact effects, and the catalog SHALL cover five body families with five structural variants each.
+The game SHALL provide 20 personal weapons, three mech weapons and 27 enemy species with shared behavior systems and distance-based gating. The original 16 guns SHALL retain visible projectiles and impact effects. Three added guns SHALL fire visible wall-bounded beams; the flare cannon SHALL attach non-damaging surface lights. Enemy models SHALL cover five body families with five structural variants each.
 
 #### Scenario: Armory effects
 
-- **WHEN** each weapon hits an in-range visible enemy with sufficient energy
+- **WHEN** each damaging weapon hits an in-range visible enemy with sufficient energy
 - **THEN** damage or its declared projectile effect reaches the enemy.
 
 #### Scenario: Energy exhaustion
 
-- **WHEN** a weapon has insufficient energy or the projectile pool is full
+- **WHEN** a weapon has insufficient energy, or a projectile weapon cannot fit its entire volley in the pool
 - **THEN** it does not consume energy or create a partially emitted volley.
 
 ### Requirement: Avoidable enemy projectiles

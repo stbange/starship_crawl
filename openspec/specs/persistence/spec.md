@@ -6,7 +6,7 @@ Portable validated saves that preserve the active game when an operation fails.
 
 ### Requirement: Portable format and migration
 
-Saves SHALL use a versioned checksummed representation shared across native and web, with explicit generator compatibility. Format 4 SHALL retain sanctuary state. Format 3 SHALL retain its compatible expedition without regenerating the ship. Format 5 SHALL retain validated psionic state and load compatible format-3 and format-4 expeditions without changing their ship or progress.
+Saves SHALL use a versioned checksum and explicit generator compatibility across native and web. Format 6 SHALL retain validated sanctuary and psionic state, rig deployment/plating/mounted state, flare upgrades and attached lights. Compatible format-3/4/5 expeditions SHALL retain their ship and progress, initializing unavailable equipment to defaults.
 
 #### Scenario: Legacy profile
 
@@ -22,6 +22,11 @@ Saves SHALL use a versioned checksummed representation shared across native and 
 
 - **WHEN** a format-3 save using generator 3 is loaded
 - **THEN** its ship, records, missions, and character progress are retained with no deployed sanctuary.
+
+#### Scenario: Compatible format-5 expedition
+
+- **WHEN** a format-5 save using generator 3 is loaded
+- **THEN** the ship, progress, sanctuary and powers remain, the four new personal guns unlock, and rigs start packed with full plating and no flare upgrades.
 
 ### Requirement: Transactional validation
 

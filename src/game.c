@@ -10,7 +10,12 @@ unsigned player_next_level(const Player *p) {
 }
 Vec3 player_eye(const Player *p) {
     return vadd(p->sheltered ? p->shelter_pos : position_absolute(p->pos),
-                v3(0, p->crouched ? .85 : 1.62, 0));
+                v3(0,
+                   p->riding == MECH    ? 2.35
+                   : p->riding == WAGON ? 1.25
+                   : p->crouched        ? .85
+                                        : 1.62,
+                   0));
 }
 Vec3 enemy_center(const Enemy *e) {
     return vadd(position_absolute(e->pos), v3(0, .65, 0));
@@ -31,7 +36,7 @@ static void player_init(Player *p) {
     p->health = 100;
     p->pitch = -.04;
     p->flashlight = true;
-    p->weapons = 7;
+    p->weapons = SC_START_WEAPONS;
     p->shield = 50;
     p->armor = 25;
     p->energy = 100;
@@ -42,6 +47,7 @@ void game_init(Game *g, uint32_t seed) {
     g->player_count = 1;
     for (int i = 0; i < SC_PLAYERS; i++)
         player_init(&g->players[i]);
+    game_equipment_reset(g);
     Vec3 p = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &p, 1);
     game_message(g, "THE BAY IS SAFE. THE SHIP BEYOND IT IS NOT.");
@@ -65,6 +71,8 @@ void game_join(Game *g) {
     p->return_yaw = g->players[0].return_yaw;
     p->return_pitch = g->players[0].return_pitch;
     p->resting = 0;
+    p->riding = 0;
+    p->drive_speed = 0;
     if (world_overlap(&g->world, position_absolute(p->pos), .34, 1.78))
         p->pos = g->players[0].pos;
     p->crouched = world_overlap(&g->world, position_absolute(p->pos), .34, 1.78);
@@ -77,6 +85,8 @@ void game_join(Game *g) {
     game_message(g, "LOCAL CO-OP JOINED / PLAYER TWO USES A GAMEPAD");
 }
 void game_leave(Game *g) {
+    g->players[1].riding = 0;
+    g->players[1].drive_speed = 0;
     g->players[1].sheltered = false;
     g->players[1].resting = 0;
     g->player_count = 1;
@@ -109,6 +119,7 @@ void game_new_ship(Game *g, uint32_t seed) {
         p->sheltered = false;
         p->resting = p->nourished = 0;
     }
+    game_equipment_reset(g);
     Vec3 positions[2] = {position_absolute(g->players[0].pos),
                          position_absolute(g->players[1].pos)};
     world_refresh(&g->world, positions, g->player_count);
@@ -219,13 +230,15 @@ static void blast_enemies(Game *g, Vec3 pos, int owner, float damage, double rad
         }
 }
 void game_nova(Game *g, int player) {
-    if (player < 0 || player >= g->player_count || g->players[player].sheltered)
+    if (player < 0 || player >= g->player_count ||
+        (g->players[player].sheltered || g->players[player].riding))
         return;
     Player *p = &g->players[player];
     blast_enemies(g, player_eye(p), player, 14 * (1 + .2f * p->power), 7, 0);
 }
+static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin);
 static void shoot(Game *g, Player *p) {
-    const WeaponDef *w = &sc_weapons[p->weapon];
+    const WeaponDef *w = game_gun(p);
     if (p->energy < w->cost) {
         p->cooldown = .2f;
         game_message(g, "ENERGY RECHARGING / Z OR X SWITCHES WEAPONS");
@@ -234,7 +247,7 @@ static void shoot(Game *g, Player *p) {
     int free = 0;
     for (int i = 0; i < SC_MAX_PROJECTILES; i++)
         free += !g->projectiles[i].active;
-    if (free < w->pellets) {
+    if (!(w->flags & W_BEAM) && free < w->pellets) {
         p->cooldown = .15f;
         return;
     }
@@ -245,6 +258,10 @@ static void shoot(Game *g, Player *p) {
     g->shots++;
     int owner = (int)(p - g->players), slot = 0;
     Vec3 origin = vadd(player_eye(p), v3(cos(p->yaw) * .16, -.13, -sin(p->yaw) * .16));
+    if (w->flags & W_BEAM) {
+        beam_shot(g, p, w, origin);
+        return;
+    }
     for (int pellet = 0; pellet < w->pellets; pellet++) {
         uint32_t hash = world_hash(g->shots, p->pos.sector, (uint32_t)pellet * 31 + owner);
         double spread = w->spread / (1 + .12 * p->mods[3]);
@@ -255,7 +272,7 @@ static void shoot(Game *g, Player *p) {
             damage *= 1.75f;
         while (g->projectiles[slot].active)
             slot++;
-        float speed = sc_projectile_speeds[p->weapon];
+        float speed = game_shot_speed(p);
         g->projectiles[slot] = (Projectile){.pos = position_from(origin),
                                             .velocity = vmul(dir, speed),
                                             .life = w->range / speed,
@@ -269,8 +286,11 @@ static void shoot(Game *g, Player *p) {
     }
 }
 static void move_player(Game *g, Player *p, const Actions *a, double dt) {
-    bool outside = position_absolute(p->pos).z < 0, flying = p->flight > 0;
-    if (a->crouch)
+    bool riding = p->riding != ON_FOOT;
+    bool outside = !riding && position_absolute(p->pos).z < 0, flying = !riding && p->flight > 0;
+    if (riding)
+        p->crouched = false;
+    else if (a->crouch)
         p->crouched = true;
     else if (!world_overlap(&g->world, position_absolute(p->pos), .34, 1.78))
         p->crouched = false;
@@ -282,7 +302,11 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
     if (vlen(wish) > 1)
         wish = vnorm(wish);
     double speed = outside ? 14 : (p->crouched ? 3.4 : (a->sprint ? 11 : 7.5));
-    if (!outside && !flying && p->leap > 0 && !p->grounded)
+    if (riding)
+        speed = p->riding == MECH ? (a->sprint ? 8 : 5.5) : 20;
+    if (p->riding == WAGON && a->crouch)
+        wish = v3(0, 0, 0);
+    if (!riding && !outside && !flying && p->leap > 0 && !p->grounded)
         speed *= 1.65;
     speed *= (1 + .025 * p->mods[2]) * (p->slow > 0 ? .55 : 1);
     if (outside || flying)
@@ -290,19 +314,29 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
     else {
         Room *room = world_find(&g->world, world_cell(position_absolute(p->pos)));
         double gravity = room && room->type == GARDEN ? 9 : 22;
-        p->velocity.x = wish.x * speed;
-        p->velocity.z = wish.z * speed;
+        double blend = p->riding == WAGON ? fmin(1, dt * 6) : 1;
+        p->velocity.x += (wish.x * speed - p->velocity.x) * blend;
+        p->velocity.z += (wish.z * speed - p->velocity.z) * blend;
         if (p->grounded) {
             p->velocity.y = 0;
-            if (a->jump && !p->crouched)
+            if (!riding && a->jump && !p->crouched)
                 p->velocity.y = p->leap > 0 ? 13 : 7.5;
         }
         p->velocity.y = fmax(-30, p->velocity.y - gravity * dt);
     }
     p->grounded = false;
     double before_y = p->pos.local.y;
-    move_body(&g->world, &p->pos, vmul(p->velocity, dt), .34, p->crouched ? 1.0 : 1.78,
-              &p->grounded);
+    Position before = p->pos;
+    Vec3 delta = vmul(p->velocity, dt);
+    if (riding && position_absolute(p->pos).z + delta.z < .8)
+        delta.z = fmax(0, .8 - position_absolute(p->pos).z);
+    move_body(&g->world, &p->pos, delta, game_body_radius(p), game_body_height(p), &p->grounded);
+    if (game_rig_blocks(g, (int)(p - g->players), position_absolute(p->pos), game_body_radius(p),
+                        game_body_height(p)))
+        p->pos = before;
+    Vec3 travelled = position_delta(p->pos, before);
+    travelled.y = 0;
+    p->drive_speed = (float)(vlen(travelled) / dt);
     if (fabs(p->pos.local.y - before_y) < 1e-7 && p->velocity.y > 0)
         p->velocity.y = 0;
     if (p->grounded)
@@ -315,6 +349,11 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
         cell.y += a->lift_up ? 1 : -1;
         if (!world_ready(&g->world, cell)) {
             game_message(g, "SURVEYING DESTINATION / LIFT CHARGING");
+            return;
+        }
+        if (riding &&
+            world_overlap(&g->world, world_lift(cell), game_body_radius(p), game_body_height(p))) {
+            game_message(g, "LIFT DESTINATION TOO SMALL / DISMOUNT FIRST");
             return;
         }
         p->pos = position_from(world_lift(cell));
@@ -343,7 +382,11 @@ static double ray_sphere(Vec3 origin, Vec3 dir, Vec3 center, double radius, doub
 }
 static double player_intercept(const Player *p, Vec3 origin, Vec3 dir, double limit) {
     Vec3 feet = position_absolute(p->pos);
-    double radius = .53, lo = feet.y + .34, hi = feet.y + (p->crouched ? .65 : 1.40);
+    double radius = p->riding ? game_body_radius(p) : .53;
+    double lo = feet.y + (p->riding ? radius : .34),
+           hi = feet.y + (p->riding     ? game_body_height(p) - radius
+                          : p->crouched ? .65
+                                        : 1.4);
     double best = ray_sphere(origin, dir, v3(feet.x, lo, feet.z), radius, limit);
     best = ray_sphere(origin, dir, v3(feet.x, hi, feet.z), radius, best);
     double x = origin.x - feet.x, z = origin.z - feet.z, a = dir.x * dir.x + dir.z * dir.z;
@@ -368,6 +411,45 @@ static bool already_hit(const Projectile *shot, Cell room, int id) {
             return true;
     return false;
 }
+static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin) {
+    Vec3 dir = facing(p->yaw, p->pitch), ray = origin, end = origin;
+    double left = w->range;
+    int owner = (int)(p - g->players);
+    Projectile history = {0};
+    for (int pass = 0; pass < w->pierce && pass < 4; pass++) {
+        double nearest = world_raycast(&g->world, ray, dir, left);
+        int target = -1;
+        Room *room = NULL;
+        for (int r = 0; r < g->world.count; r++)
+            for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
+                Enemy *enemy = &g->world.rooms[r].enemies[e];
+                if (!enemy->alive || already_hit(&history, g->world.rooms[r].cell, e))
+                    continue;
+                double hit = ray_sphere(ray, dir, enemy_center(enemy),
+                                        fmax(.45, sc_enemies[enemy->kind].size * .92), nearest);
+                if (hit < nearest) {
+                    nearest = hit;
+                    target = e;
+                    room = &g->world.rooms[r];
+                }
+            }
+        end = vadd(ray, vmul(dir, nearest));
+        if (target < 0)
+            break;
+        damage_enemy(g, room, target, owner, w->damage * (1 + .35f * p->power), w->flags);
+        int at = history.hit_count++;
+        history.hit_rooms[at] = room->cell;
+        history.hit_ids[at] = (uint8_t)target;
+        left -= nearest + .01;
+        ray = vadd(end, vmul(dir, .01));
+        if (left <= 0)
+            break;
+    }
+    Vec3 muzzle =
+        vadd(origin, v3(cos(p->yaw) * (p->riding == MECH ? .65 : .3), p->riding == MECH ? -.5 : -.2,
+                        -sin(p->yaw) * (p->riding == MECH ? .65 : .3)));
+    g->beams[owner] = (Beam){position_from(muzzle), position_from(end), w->color, .14f};
+}
 static void projectiles_step(Game *g, double dt) {
     for (int i = 0; i < SC_MAX_PROJECTILES; i++) {
         Projectile *shot = &g->projectiles[i];
@@ -390,7 +472,7 @@ static void projectiles_step(Game *g, double dt) {
                             player = p;
                         }
                     }
-            } else {
+            } else if (!(shot->flags & W_FLARE)) {
                 for (int r = 0; r < g->world.count; r++)
                     for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                         Enemy *enemy = &g->world.rooms[r].enemies[e];
@@ -408,6 +490,8 @@ static void projectiles_step(Game *g, double dt) {
             }
             position_move(&shot->pos, vmul(dir, nearest));
             bool impact = wall < travel || player >= 0 || target >= 0;
+            if (shot->owner >= 0 && (shot->flags & W_FLARE) && wall < travel)
+                game_attach_flare(g, shot->owner, position_absolute(shot->pos), dir);
             if (player >= 0) {
                 game_hurt(g, player, shot->damage, shot->flags);
                 g->projectile_hits++;
@@ -683,6 +767,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     if (!isfinite(dt) || dt <= 0 || dt > .05)
         return;
     g->time += dt;
+    game_equipment_step(g, dt);
     g->message_time = fmaxf(0, g->message_time - (float)dt);
     Vec3 positions[2] = {position_absolute(g->players[0].pos),
                          position_absolute(g->players[1].pos)};
@@ -706,6 +791,10 @@ void game_step(Game *g, const Actions *actions, double dt) {
             continue;
         }
         move_player(g, p, &actions[i], dt);
+        if (p->riding) {
+            g->rigs[i][p->riding - 1].pos = p->pos;
+            g->rigs[i][p->riding - 1].yaw = p->yaw;
+        }
         if (actions[i].fire && p->cooldown <= 0)
             shoot(g, p);
     }
@@ -715,6 +804,8 @@ void game_step(Game *g, const Actions *actions, double dt) {
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         if (p->health <= 0 || position_absolute(p->pos).z < -400) {
+            p->riding = 0;
+            p->drive_speed = 0;
             p->pos = p->checkpoint;
             p->velocity = v3(0, 0, 0);
             p->health = player_max_health(p);

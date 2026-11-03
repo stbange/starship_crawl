@@ -59,6 +59,8 @@ jobs:
           ./build/starship_crawl --seed 713 --smoke 10 --no-save
           ./build/starship_crawl --seed 713 --scene shelter --split --smoke 60 --no-save
           ./build/starship_crawl --seed 713 --scene form4 --split --smoke 30 --no-save
+          ./build/starship_crawl --seed 713 --scene mech --split --smoke 30 --no-save
+          ./build/starship_crawl --seed 713 --scene wagon --smoke 30 --no-save
       - uses: actions/upload-artifact@v4
         with:
           name: native-${{ runner.os }}
@@ -98,6 +100,8 @@ jobs:
         run: python tests/test_shelter_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play navigation, body variants and psionics
         run: python tests/test_features_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Play fold rigs, beams and flare lighting
+        run: python tests/test_equipment_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Retain browser captures
         if: always()
         uses: actions/upload-artifact@v4

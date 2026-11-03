@@ -611,7 +611,7 @@ static void populate(World *w, Room *r) {
         Pickup *p = &r->pickups[i];
         p->id = (uint8_t)i;
         p->kind = (uint8_t)(i == 3 ? PICK_WEAPON : i == 4 ? PICK_LOG : h % 7);
-        p->item = (uint8_t)(i == 3 ? 1 + h % (SC_WEAPONS - 1) : h % 12);
+        p->item = (uint8_t)(i == 3 ? 1 + h % (SC_GENERATED_WEAPONS - 1) : h % 12);
         p->pos = position_from(vadd(world_lift(r->cell), v3(i % 2 ? 1.5 : -1.5, .45, 3 + i * 1.6)));
         p->active = r->record == SIZE_MAX || !(w->records[r->record].collected & (1u << i));
     }

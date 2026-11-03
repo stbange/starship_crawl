@@ -27,3 +27,9 @@ seed or mission. The sanctuary starts undeployed.
 `generator-v4.sav` was written by commit 5e1e9f6's format-4 writer. It holds
 seed 713, mission stage 2, rank 7, and a deployed shelter with player 1 inside.
 Format 5 retains the expedition and sanctuary, initializing psionic effects inactive.
+
+`generator-v5.sav` was written with commit cd4d0a5's unmodified format-5 core,
+starting from the v4 fixture and activating player 1's veil and ten seconds of
+flight. It retains seed 713, mission 2, rank 7 and the occupied deployed shelter.
+Format 6 retains those states and records, grants the four new personal guns, and
+initializes both fold rigs packed with full plating and flare upgrades at zero.

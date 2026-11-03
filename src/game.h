@@ -5,6 +5,8 @@
 #define SC_MAX_PROJECTILES 192
 #define SC_MAP_SIDE 9
 #define SC_PSIONICS 4
+#define SC_MAX_FLARES 32
+typedef enum { ON_FOOT, MECH, WAGON } RigKind;
 typedef enum { PSI_VEIL, PSI_FLIGHT, PSI_LEAP, PSI_NOVA } Psionic;
 typedef struct {
     Position pos, checkpoint;
@@ -24,6 +26,8 @@ typedef struct {
     float flight, leap, nova, nova_tick, nova_flash;
     uint8_t selected_power;
     Cell map_center;
+    uint32_t riding, rig_weapon, flare_lifetime, flare_strength;
+    float drive_speed;
 } Player;
 typedef struct {
     Position door;
@@ -49,6 +53,24 @@ typedef struct {
     uint8_t hit_ids[4];
 } Projectile;
 typedef struct {
+    Position pos;
+    float armor;
+    bool deployed;
+    double yaw;
+} Rig;
+typedef struct {
+    Position from, to;
+    Color color;
+    float life;
+} Beam;
+typedef struct {
+    Position pos;
+    Vec3 normal;
+    float life, radius, power;
+    uint32_t owner;
+    bool active;
+} Flare;
+typedef struct {
     World world;
     Player players[SC_PLAYERS];
     int player_count;
@@ -60,6 +82,9 @@ typedef struct {
     uint32_t enemy_shots, projectile_hits;
     uint32_t mission, mission_kills, mission_loot, contracts;
     Shelter shelter;
+    Rig rigs[SC_PLAYERS][2];
+    Beam beams[SC_PLAYERS];
+    Flare flares[SC_MAX_FLARES];
     bool dirty;
 } Game;
 typedef struct {
@@ -77,6 +102,21 @@ void game_psionics_step(Game *g, Player *p, double dt);
 void game_nova(Game *g, int player);
 extern const char *sc_psionic_names[SC_PSIONICS];
 extern const float sc_psionic_costs[SC_PSIONICS];
+void game_rig_toggle(Game *g, int player, RigKind kind);
+bool game_rig_interact(Game *g, int player);
+RigKind game_rig_near(const Game *g, int player);
+bool game_rig_blocks(const Game *g, int player, Vec3 feet, double radius, double height);
+float game_rig_max_armor(const Player *p, RigKind kind);
+double game_body_radius(const Player *p);
+double game_body_height(const Player *p);
+const WeaponDef *game_gun(const Player *p);
+float game_shot_speed(const Player *p);
+void game_equipment_reset(Game *g);
+void game_equipment_step(Game *g, double dt);
+void game_rig_repair(Game *g, int player);
+void game_rig_damage(Game *g, int player, float *damage);
+bool game_flare_upgrade(Game *g, int player, bool strength);
+void game_attach_flare(Game *g, int owner, Vec3 point, Vec3 direction);
 void game_init(Game *g, uint32_t seed);
 void game_destroy(Game *g);
 void game_step(Game *g, const Actions *actions, double dt);

@@ -106,17 +106,11 @@ const WeaponDef sc_weapons[SC_WEAPONS] = {
     {"VOID SCALPEL", 48, .24f, 32, 0, 0, 4, 1, 3, W_PROJECTILE, {.75f, .35f, .9f}},
     {"FLECHETTE FAN", 12, .22f, 65, .045f, 0, 4, 5, 2, W_PROJECTILE, {.65f, .85f, .5f}},
     {"SERAPH BEAM", 19, .11f, 120, 0, 0, 3, 1, 2, W_PROJECTILE | W_BURN, {1, .8f, .5f}},
-    {"STORM RELIC",
-     65,
-     .6f,
-     100,
-     0,
-     10,
-     15,
-     1,
-     2,
-     W_PROJECTILE | W_CHAIN | W_CHILL,
-     {.4f, .9f, 1}}};
+    {"STORM RELIC", 65, .6f, 100, 0, 10, 15, 1, 2, W_PROJECTILE | W_CHAIN | W_CHILL, {.4f, .9f, 1}},
+    {"LUMEN CUTTER", 8, .06f, 55, 0, 0, 1.5f, 1, 1, W_BEAM | W_BURN, {1, .55f, .15f}},
+    {"PRISM LANCE", 36, .25f, 140, 0, 0, 6, 1, 4, W_BEAM, {.3f, .8f, 1}},
+    {"SIPHON RAY", 12, .1f, 70, 0, 0, 2.5f, 1, 1, W_BEAM | W_LEECH, {.9f, .2f, .65f}},
+    {"LANTERN FLARE CANNON", 0, .65f, 100, 0, 0, 5, 1, 1, W_PROJECTILE | W_FLARE, {1, .55f, .18f}}};
 const char *sc_attributes[SC_ATTRIBUTES] = {"DAMAGE",  "VITALITY", "HASTE",     "ARMOR",
                                             "SHIELD",  "MOBILITY", "PRECISION", "RECOVERY",
                                             "REACTOR", "SALVAGE"};
@@ -134,8 +128,8 @@ const char *sc_logs[12] = {
     "11 / Cut the neural heart. Wake the beacon. Give the sleepers a sky.",
     "12 / If you can hear this, you are not the first reclaimer. Be the last."};
 
-const float sc_projectile_speeds[SC_WEAPONS] = {140, 78,  115, 220, 72,  32,  35,  100,
-                                                95,  110, 28,  45,  160, 105, 180, 100};
+const float sc_projectile_speeds[SC_WEAPONS] = {140, 78, 115, 220, 72,  32,  35, 100, 95, 110,
+                                                28,  45, 160, 105, 180, 100, 0,  0,   0,  34};
 const char *sc_body_names[SC_BODY_FORMS] = {"HUSK", "GAZER", "VOID RAY", "WORM", "CONSTRUCT"};
 const char *sc_body_variants[SC_BODY_FORMS][SC_BODY_VARIANTS] = {
     {"DRUDGE", "CLEAVER", "BULWARK", "HORNED", "RELIQUARY"},
@@ -150,3 +144,18 @@ const EnemyBody sc_enemy_bodies[SC_ENEMY_TYPES] = {
     {VOID_RAY, 2},  {WORM, 2},  {GAZER, 4},    {VOID_RAY, 0}, {CONSTRUCT, 3}, {VOID_RAY, 1},
     {CONSTRUCT, 1}, {WORM, 4},  {VOID_RAY, 3}, {VOID_RAY, 4}, {GAZER, 2},     {CONSTRUCT, 2},
     {CONSTRUCT, 4}, {GAZER, 3}, {CONSTRUCT, 4}};
+
+const WeaponDef sc_mech_weapons[SC_MECH_WEAPONS] = {
+    {"REAVER AUTOCANNON",
+     48,
+     .13f,
+     120,
+     .008f,
+     1.8f,
+     1,
+     1,
+     1,
+     W_PROJECTILE | W_BLAST,
+     {1, .65f, .22f}},
+    {"SIEGE ROCKET", 175, .9f, 120, 0, 7, 12, 1, 1, W_PROJECTILE | W_BLAST, {1, .28f, .12f}},
+    {"REAPER BEAM", 22, .08f, 100, 0, 0, 3, 1, 2, W_BEAM | W_CHILL, {.65f, .3f, 1}}};

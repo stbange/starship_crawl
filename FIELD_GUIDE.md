@@ -18,7 +18,7 @@ Press **M** for the larger map. Arrows pan, **Page Up / Page Down** change the v
 
 Inspection scenes `--scene form0` through `--scene form4` show five variants of each family safely in the bay, with saving disabled. The Warden remains a larger late-expedition encounter.
 
-**Visible weapons.** Every weapon emits finite projectiles: fast carbine/rail bolts, spreading shotgun/flechette volleys, short-range embers, needles, plasma and rockets. Speeds differ; all shots use swept collision so fast bolts hit the nearest body or wall. Piercing, chain, blast, burn, chill and life-steal remain active on impact. A full projectile pool refuses an entire volley without charging energy. Shots take time to arrive and cannot damage through bulkheads.
+**Visible weapons.** The original 16 weapons emit finite projectiles: fast carbine/rail bolts, spreading shotgun/flechette volleys, short-range embers, needles, plasma and rockets. Speeds differ; all shots use swept collision so fast bolts hit the nearest body or wall. Piercing, chain, blast, burn, chill and life-steal remain active on impact. A full projectile pool refuses an entire volley without charging energy. Shots take time to arrive and cannot damage through bulkheads.
 
 **Psionics.** These use the same rechargeable energy as weapons and are available to each character from the start. Press a power key again to release an active effect without another energy cost.
 
@@ -32,3 +32,5 @@ Inspection scenes `--scene form0` through `--scene form4` show five variants of 
 On a controller, hold **left trigger** and press D-pad **left / up / right / down** for veil / flight / long jumps / nova. Touch uses **POWER** to select an ability and **CAST** to activate it; the browser menu also offers each power directly. The HUD shows selected power, energy and active durations. Powers cannot be activated inside the sanctuary, and an existing aura cannot hit the ship from within it.
 
 Format 5 retains active power state. Compatible format-3 and format-4 saves retain ships, missions, profiles, records and any sanctuary while starting powers inactive. Older character migrations keep their existing new-expedition behavior. Map UI is transient and loads closed. See [TESTING.md](TESTING.md) for unit coverage, gameplay simulations, real browser checks and device-testing limits.
+
+**Beams and fold rigs.** Three additional personal guns fire visible wall-bounded beams. T deploys a mech, Y a wagon, G boards/exits, and K equips the flare cannon. O / P improve flare lifetime / strength. See [EQUIPMENT.md](EQUIPMENT.md) for the separate mech arsenal, plating, driving and wall-mounted lights.

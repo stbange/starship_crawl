@@ -110,7 +110,8 @@ static void profile(Stream *s, Player *p, bool read, unsigned version) {
         for (int i = 0; i < 7; i++)
             if (p->mods[i] > 50)
                 s->ok = false;
-        if (!p->weapons || p->weapons >= (1u << SC_WEAPONS) || p->weapon >= SC_WEAPONS ||
+        unsigned limit = version < 6 ? SC_GENERATED_WEAPONS : SC_WEAPONS;
+        if (!p->weapons || p->weapons >= (1u << limit) || p->weapon >= limit ||
             !(p->weapons & (1u << p->weapon)) || p->credits > 1000000000 || p->logs >= 4096 ||
             p->victories > 1000000000 || p->pickups > 1000000000 || !isfinite(p->shield) ||
             p->shield < 0 || p->shield > player_max_shield(p) || !isfinite(p->armor) ||
@@ -174,6 +175,63 @@ static void powers(Stream *s, Player *players, bool read) {
             s->ok = false;
     }
 }
+static void equipment(Stream *s, Player *players, Rig rigs[SC_PLAYERS][2], Flare *flares,
+                      bool read) {
+    for (int p = 0; p < SC_PLAYERS; p++) {
+        Player *v = &players[p];
+        v->riding = number(s, v->riding, read);
+        v->rig_weapon = number(s, v->rig_weapon, read);
+        v->flare_lifetime = number(s, v->flare_lifetime, read);
+        v->flare_strength = number(s, v->flare_strength, read);
+        if (v->riding > WAGON || v->rig_weapon >= SC_MECH_WEAPONS || v->flare_lifetime > 5 ||
+            v->flare_strength > 5 ||
+            (v->riding &&
+             (v->sheltered || v->cloaked || v->flight > 0 || v->leap > 0 || v->nova > 0)))
+            s->ok = false;
+        for (int k = 0; k < 2; k++) {
+            Rig *r = &rigs[p][k];
+            r->pos = location(s, r->pos, read, false);
+            r->armor = (float)real(s, r->armor, read);
+            uint32_t deployed = number(s, r->deployed, read);
+            r->deployed = deployed != 0;
+            r->yaw = real(s, r->yaw, read);
+            if (!isfinite(r->yaw) || fabs(r->yaw) > SC_PI + 1e-6 || deployed > 1 ||
+                !isfinite(r->armor) || r->armor < 0 ||
+                r->armor > game_rig_max_armor(v, (RigKind)(k + 1)) ||
+                (deployed && position_absolute(r->pos).z < 0))
+                s->ok = false;
+            if (v->riding == (unsigned)k + 1 &&
+                (!r->deployed || r->armor <= 0 || vlen(position_delta(v->pos, r->pos)) > .01))
+                s->ok = false;
+        }
+    }
+    unsigned count = 0;
+    if (!read)
+        for (int i = 0; i < SC_MAX_FLARES; i++)
+            count += flares[i].active;
+    count = number(s, count, read);
+    if (count > SC_MAX_FLARES)
+        s->ok = false;
+    unsigned at = 0;
+    for (unsigned n = 0; s->ok && n < count; n++) {
+        if (!read)
+            while (!flares[at].active)
+                at++;
+        Flare *f = &flares[read ? n : at++];
+        f->pos = location(s, f->pos, read, false);
+        f->normal = vector(s, f->normal, read);
+        f->life = (float)real(s, f->life, read);
+        f->radius = (float)real(s, f->radius, read);
+        f->power = (float)real(s, f->power, read);
+        f->owner = number(s, f->owner, read);
+        f->active = true;
+        if (!valid_vector(f->normal) || fabs(vlen(f->normal) - 1) > .01 || !isfinite(f->life) ||
+            f->life <= 0 || f->life > 105 || !isfinite(f->radius) || f->radius < 12 ||
+            f->radius > 22 || !isfinite(f->power) || f->power < 2.5 || f->power > 6.25 ||
+            f->owner >= SC_PLAYERS)
+            s->ok = false;
+    }
+}
 bool game_save(const Game *g, const char *path) {
     if (!path || g->world.record_count > 1000000)
         return false;
@@ -190,13 +248,13 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 5, false);
+    number(&s, 6, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player p = g->players[i];
-        profile(&s, &p, false, 3);
+        profile(&s, &p, false, 6);
     }
     number(&s, g->mission, false);
     number(&s, g->mission_kills, false);
@@ -216,6 +274,11 @@ bool game_save(const Game *g, const char *path) {
     memcpy(players, g->players, sizeof(players));
     sanctuary(&s, &shelter, players, false);
     powers(&s, players, false);
+    Rig rigs[SC_PLAYERS][2];
+    Flare flares[SC_MAX_FLARES];
+    memcpy(rigs, g->rigs, sizeof(rigs));
+    memcpy(flares, g->flares, sizeof(flares));
+    equipment(&s, players, rigs, flares, false);
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -242,7 +305,7 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 5) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 6) ||
         (version == 2 && generator != 2) || (version >= 3 && generator != SC_GENERATOR_VERSION))
         s.ok = false;
     Player players[SC_PLAYERS];
@@ -286,6 +349,17 @@ bool game_load(Game *g, const char *path) {
         sanctuary(&s, &shelter, players, true);
     if (version >= 5)
         powers(&s, players, true);
+    Rig rigs[SC_PLAYERS][2] = {0};
+    Flare flares[SC_MAX_FLARES] = {0};
+    if (version >= 6)
+        equipment(&s, players, rigs, flares, true);
+    else
+        for (int p = 0; p < SC_PLAYERS; p++) {
+            players[p].weapons |= SC_NEW_WEAPONS;
+            for (int k = 0; k < 2; k++)
+                rigs[p][k] = (Rig){players[p].pos,
+                                   game_rig_max_armor(&players[p], (RigKind)(k + 1)), false, 0};
+        }
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
@@ -329,13 +403,16 @@ bool game_load(Game *g, const char *path) {
     free(replacement);
     memcpy(g->players, players, sizeof(players));
     g->shelter = shelter;
+    memcpy(g->rigs, rigs, sizeof(rigs));
+    memcpy(g->flares, flares, sizeof(flares));
+    memset(g->beams, 0, sizeof(g->beams));
     g->player_count = 1;
     memset(g->projectiles, 0, sizeof(g->projectiles));
     g->mission = mission;
     g->mission_kills = kills;
     g->mission_loot = loot;
     g->contracts = contracts;
-    g->dirty = version < 5;
+    g->dirty = version < 6;
     game_message(g, version < 3 ? "SHIP GENERATOR UPDATED / CHARACTERS RETAINED / NEW EXPEDITION"
                                 : "EXPEDITION RESUMED / WELCOME BACK");
     return true;
