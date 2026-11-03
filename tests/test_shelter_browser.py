@@ -22,14 +22,34 @@ def move_to(page, x, z):
                 if abs(current - target) < .4:
                     break
                 key = positive if current < target else negative
-                op = '>=' if current < target else '<='
                 threshold = target - .1 if current < target else target + .1
                 page.keyboard.down(key)
                 try:
-                    wait_for(page, f"JSON.parse(Module.ccall('sc_web_state','string',[],[])).{axis} {op} {threshold}", timeout=15000)
+                    # Release in the same browser callback that observes arrival.
+                    # Waiting for a Python/CDP round trip can hold a key for extra
+                    # simulation frames on software-rendered CI workers.
+                    wait_for(page, """args => {
+                        const s=JSON.parse(Module.ccall('sc_web_state','string',[],[]));
+                        const reached=args.positive ? s[args.axis]>=args.threshold : s[args.axis]<=args.threshold;
+                        if(reached) {
+                            const code=args.key.toUpperCase().charCodeAt(0);
+                            document.dispatchEvent(new KeyboardEvent('keyup', {
+                                key:args.key,code:'Key'+args.key.toUpperCase(),keyCode:code,which:code,bubbles:true
+                            }));
+                        }
+                        return reached;
+                    }""", arg={'axis': axis, 'threshold': threshold, 'positive': current < target, 'key': key}, timeout=15000)
+                    # Optional stress check of delayed automation delivery, with
+                    # gameplay stopped through its ordinary keyboard listener.
+                    delay = int(os.environ.get('SC_INPUT_RELEASE_DELAY_MS', '0'))
+                    if delay:
+                        stopped = state(page)[axis]
+                        page.wait_for_timeout(delay)
+                        assert abs(state(page)[axis] - stopped) < .4, state(page)
                 finally:
                     page.keyboard.up(key)
-            else:
+            # Arrival on the last attempt is still a successful arrival.
+            if abs(state(page)[axis] - target) >= .4:
                 raise AssertionError(f'Could not settle at {axis}={target}: {state(page)}')
             assert state(page)['sheltered'], state(page)
     finally:
@@ -113,7 +133,7 @@ def run():
             page.screenshot(path=str(ARTIFACTS / 'shelter-medical.png'))
             move_to(page, 3.3, 4.1)
             move_to(page, 3.3, -.3)
-            move_to(page, 0, -5.6)
+            move_to(page, 0, -6.1)
             page.keyboard.press('g')
             wait_for(page, "!JSON.parse(Module.ccall('sc_web_state','string',[],[])).sheltered")
             returned = state(page)

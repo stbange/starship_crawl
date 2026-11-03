@@ -73,6 +73,8 @@ python3 tests/test_shelter_browser.py --site-dir build-pages-preview --url-path 
 python3 tests/test_features_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
 ```
 
+Set `SC_INPUT_RELEASE_DELAY_MS=350` when running `test_shelter_browser.py` to stress delayed automation key releases. The driver releases movement through the browser keyboard listener on arrival, then verifies the character stays stopped while delivery to the Python runner is delayed.
+
 The features browser suite captures all five body families (five variants each), HUD/full maps, map pan/deck/recenter, visible firing that breaks veil, flight/ascent/landing, enhanced jumping, nova, format-5 persistence, shelter packing, and touch powers/map open/close. It checks that covered touch controls cannot activate while the map is open.
 
 The shelter browser suite also walks between all facilities using keyboard controls, verifies holstered weapons, reloads a current-format IndexedDB save inside, returns to the exact ship anchor, and exercises mobile summon/entry/exit. It captures the exterior door, interior, split-screen, bed, kitchen, medical station, and mobile view.
