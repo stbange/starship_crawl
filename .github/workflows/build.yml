@@ -3,6 +3,39 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
+  quality:
+    name: Specifications and 95% unit coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Validate specifications
+        env:
+          OPENSPEC_TELEMETRY: '0'
+        run: npm run spec:validate
+      - run: python -m pip install -r tests/requirements.txt
+      - name: Coverage gate self-tests
+        run: python -m unittest discover -s tests -p 'test_quality_tools.py'
+      - name: Unit coverage gate
+        run: python scripts/check-coverage.py
+      - name: Complete solo expedition
+        run: ctest --test-dir build-coverage -L gameplay --output-on-failure
+      - name: Core sanitizers
+        run: |
+          cmake -S . -B build-sanitize -DSC_BUILD_GAME=OFF -DSC_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build-sanitize --parallel 4
+          ctest --test-dir build-sanitize --output-on-failure
+      - name: Retain coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: build-coverage/coverage
+          if-no-files-found: ignore
   native:
     strategy:
       matrix:
@@ -50,7 +83,7 @@ jobs:
           ctest --test-dir build-parity --output-on-failure
       - name: Browser dependencies
         run: |
-          python -m pip install playwright
+          python -m pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Package the Pages site
         run: python scripts/package-web.py --output build-pages-preview/starship_crawl
@@ -80,7 +113,7 @@ jobs:
   deploy:
     name: Publish GitHub Pages
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: web
+    needs: [web, native, quality]
     runs-on: ubuntu-latest
     permissions:
       contents: read

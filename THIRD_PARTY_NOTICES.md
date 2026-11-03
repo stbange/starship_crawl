@@ -24,3 +24,5 @@ freely, subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be
    misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
+
+OpenSpec (`@fission-ai/openspec` 1.16.0), MIT, is a development-only dependency from https://github.com/Fission-AI/OpenSpec. Generated Codex workflow skills retain their upstream license metadata. Node development dependencies are pinned in package-lock.json and are not distributed with the game runtime.

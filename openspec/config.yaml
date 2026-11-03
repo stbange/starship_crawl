@@ -1,0 +1,21 @@
+schema: spec-driven
+context: |
+  Starship Crawl is a C17 game using SDL3 and OpenGL 3.3 / WebGL 2, built with CMake.
+  Native targets are Linux and Windows; web uses Emscripten and mobile touch controls.
+  Read README.md, EXPANSION.md, WORLD_GENERATION.md, and TESTING.md for current behavior.
+  The shipped generator and save format are version 3. Quality-only changes must not reset expeditions.
+  Gameplay is solo by default with optional local split-screen and persistent character profiles.
+  Headless core unit tests cover all sc_core sources and math3d.h. Native rendering/input adapters
+  are exercised by OpenGL smoke and browser integration tests, outside the unit coverage metric.
+  Unit line coverage must be at least 95% overall and in each executable core source file.
+  Keep production code independent of test controls; allocation/I/O fault injection is test-only.
+rules:
+  proposal:
+    - Identify affected gameplay capabilities and validation commands.
+    - State save/generator compatibility implications explicitly.
+  specs:
+    - Use SHALL requirements and concrete WHEN/THEN scenarios.
+    - Specify observable behavior instead of private implementation details.
+  tasks:
+    - Include unit, automated gameplay, browser, and specification checks where relevant.
+    - Do not lower coverage thresholds or exclude uncovered core code to make checks pass.

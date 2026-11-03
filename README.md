@@ -102,6 +102,8 @@ Start the story at the gold-marked console beside the loading bay's lift. Press 
 
 Autosaves occur every 20 seconds of active play. Save explicitly before closing a tab; asynchronous browser writes cannot be guaranteed during tab shutdown. Imported saves with an unsupported version or corrupt payload leave the running expedition unchanged.
 
+**Specifications and automated quality.** OpenSpec 1.16.0 and Codex workflows are checked in, with validated specifications under `openspec/specs`. Native unit tests measure **97.93% core line coverage** and enforce **95% overall and in every measured source file**. A separate automated campaign plays three seeds through all six objectives and extraction. The existing browser suite tests the compiled WASM/WebGL game, input, saves, and mobile controls. Coverage reports and browser captures are retained in CI, and Pages requires all quality, native, and web jobs to pass. See [TESTING.md](TESTING.md) for commands, scope, reports, and the specification workflow.
+
 **Development commands**
 
 ```sh
@@ -130,7 +132,7 @@ SDL_VIDEODRIVER=offscreen EGL_PLATFORM=surfaceless SDL_AUDIODRIVER=dummy \
   ./build/starship_crawl --seed 713 --smoke 10 --capture build/arrival.ppm
 
 # Exercise the built browser application with Chromium.
-python3 -m pip install playwright
+python3 -m pip install -r tests/requirements.txt
 python3 -m playwright install chromium
 python3 tests/test_browser.py
 ```
