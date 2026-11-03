@@ -42,6 +42,7 @@ typedef struct {
     int frame, smoke_frames;
     double last, accumulator, fps, autosave, audio_time;
     Uint64 look_after;
+    bool discard_look;
     float ambience[DISTRICT_TYPES];
     uint32_t audio_shots, audio_noise;
     int shot_sample;
@@ -61,6 +62,7 @@ static void set_pause(bool paused) {
         /* Discard menu motion and the browser's initial pointer-lock warp. */
         SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
         app.look_after = SDL_GetTicksNS() + UINT64_C(120000000);
+        app.discard_look = true;
     }
 }
 static uint32_t new_seed(void) {
@@ -88,6 +90,11 @@ EMSCRIPTEN_KEEPALIVE void sc_web_start(void) {
         app.game.players[i].journal = false;
     app.new_armed = false;
     set_pause(false);
+}
+EMSCRIPTEN_KEEPALIVE void sc_web_capture(void) {
+    /* Chromium can deliver its centering warp well after the capture promise. */
+    SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
+    app.discard_look = true;
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_save(void) {
     save_game();
@@ -327,8 +334,13 @@ static void events(void) {
             break;
         case SDL_EVENT_MOUSE_MOTION:
             if (!app.paused && e.motion.which != SDL_TOUCH_MOUSEID &&
-                e.motion.timestamp >= app.look_after)
+                e.motion.timestamp >= app.look_after) {
+                if (app.discard_look) {
+                    app.discard_look = false;
+                    break;
+                }
                 game_look(&app.game.players[0], e.motion.xrel * .0023, -e.motion.yrel * .0023);
+            }
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (e.button.which == SDL_TOUCH_MOUSEID)

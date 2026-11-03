@@ -99,6 +99,11 @@ def run():
             page.mouse.down()
             wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).shots > 0", timeout=10000)
             page.mouse.up()
+            # Capture warps are discarded, but real movement must still aim.
+            heading = state(page)["yaw"]
+            page.mouse.move(650, 360)
+            page.mouse.move(690, 360)
+            wait_for(page, "heading => Math.abs(JSON.parse(Module.ccall('sc_web_state','string',[],[])).yaw-heading) > .01", arg=heading)
             page.screenshot(path=str(ARTIFACTS / "arrival-game.png"))
             page.evaluate("Module.ccall('sc_web_save',null,[],[])")
             wait_for(page, "window.scStorage.status === 3", timeout=10000)
