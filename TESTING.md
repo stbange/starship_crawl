@@ -118,7 +118,9 @@ interiors; it uses keyboard movement to collect side-room caches, save/reload,
 and leave through the other entrance. It also checks landmark maps, importing
 an old generator-3 save, opting into a new ship with the same character, and
 mobile landmark rendering. Browser movement releases keys inside animation
-frames to avoid automation latency changing the route. Run:
+frames to avoid automation latency changing the route. Long walks use bounded
+waypoints with the same position assertions so slow software rendering cannot
+exhaust one deadline merely because a route is long. Run:
 
 ```sh
 python3 tests/test_interiors_browser.py --site-dir build-pages-preview --url-path /starship_crawl/

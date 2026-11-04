@@ -37,6 +37,13 @@ def walk_axis(page, axis, target, key):
     before = state(page)
     if abs(before[axis] - target) < .4:
         return
+    # Long crouched walks can outlast one CDP deadline on a software renderer.
+    # Keep each segment short and retain the same exact arrival/collision checks.
+    if abs(before[axis] - target) > 16:
+        waypoint = before[axis] + (12 if target > before[axis] else -12)
+        walk_axis(page, axis, waypoint, key)
+        walk_axis(page, axis, target, key)
+        return
     increasing = target > before[axis]
     threshold = target - .12 if increasing else target + .12
     # Observe arrival before pressing the key; CDP can deliver the next Python
