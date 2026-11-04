@@ -258,6 +258,21 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
                 bodies |= 1u << (body.form * 5 + body.variant);
             }
         }
+    unsigned corpses = 0, death_forms = 0, hazards = 0, hazard_kinds = 0, triggered = 0, spent = 0;
+    float death_age = 0;
+    for (int i = 0; i < SC_MAX_DEATHS; i++)
+        if (app.game.deaths[i].active) {
+            corpses++;
+            death_forms |= 1u << sc_enemy_bodies[app.game.deaths[i].body.kind].form;
+            death_age = fmaxf(death_age, app.game.deaths[i].age);
+        }
+    for (int i = 0; i < SC_MAX_DEATH_HAZARDS; i++)
+        if (app.game.death_hazards[i].active) {
+            hazards++;
+            hazard_kinds |= 1u << app.game.death_hazards[i].kind;
+            triggered += app.game.death_hazards[i].triggered;
+            spent += app.game.death_hazards[i].spent;
+        }
     unsigned flares = 0, beams = 0;
     float flare_life = 0, flare_power = 0;
     for (int i = 0; i < SC_MAX_FLARES; i++)
@@ -302,7 +317,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"remaining\":%u,\"events\":%u,\"systems\":%u,\"safe\":%s,\"event_reading\":%u,"
         "\"last0\":%u,\"last1\":%u,\"last2\":%u,\"last3\":%u,"
         "\"total0\":%u,\"total1\":%u,\"total2\":%u,\"total3\":%u,\"total4\":%u,"
-        "\"career0\":%u,\"career1\":%u,\"career2\":%u,\"career3\":%u,\"career4\":%u}",
+        "\"career0\":%u,\"career1\":%u,\"career2\":%u,\"career3\":%u,\"career4\":%u,"
+        "\"corpses\":%u,\"death_forms\":%u,\"death_age\":%.3f,\"hazards\":%u,"
+        "\"hazard_kinds\":%u,\"hazard_triggered\":%u,\"hazard_spent\":%u,\"respawns\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -342,7 +359,8 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         app.game.story.last[0], app.game.story.last[1], app.game.story.last[2],
         app.game.story.last[3], app.game.story.totals[0], app.game.story.totals[1],
         app.game.story.totals[2], app.game.story.totals[3], app.game.story.totals[4], p->career[0],
-        p->career[1], p->career[2], p->career[3], p->career[4]);
+        p->career[1], p->career[2], p->career[3], p->career[4], corpses, death_forms, death_age,
+        hazards, hazard_kinds, triggered, spent, app.game.respawns);
     return result;
 }
 static void audio_frame(void) {
@@ -901,8 +919,9 @@ static void frame(void *unused) {
         Room *room = world_find(&app.game.world, (Cell){0, 0, 0});
         if (room) {
             room->enemy_count = 0;
-            for (int kind = 0; kind < 25; kind++)
-                if (sc_enemy_bodies[kind].form == app.inspect_form - 1) {
+            for (int kind = 0; kind < SC_ENEMY_TYPES; kind++)
+                if ((kind < 25 || kind >= 27) &&
+                    sc_enemy_bodies[kind].form == app.inspect_form - 1) {
                     int at = room->enemy_count++;
                     Enemy *e = &room->enemies[at];
                     *e = (Enemy){.pos = position_from(v3((at - 2) * 3.2, .02, 22)),
@@ -1185,7 +1204,8 @@ int main(int argc, char **argv) {
                     }
                 }
         app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, -25)));
-        if (!strncmp(scene, "form", 4) && scene[4] >= '0' && scene[4] <= '4' && !scene[5]) {
+        if (!strncmp(scene, "form", 4) && scene[4] >= '0' && scene[4] < '0' + SC_BODY_FORMS &&
+            !scene[5]) {
             app.game.players[0].pos = position_from(v3(0, .02, 14));
             app.inspect_form = scene[4] - '0' + 1;
             app.no_save = true;

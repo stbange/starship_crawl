@@ -94,7 +94,7 @@ def run():
                     page.goto(base + f'?seed={seed}&scene=' + scene)
                     wait_ready(page)
                     s = state(page)
-                    assert s['generator'] == 5 and s[field] == value and s['ready'] and not s['failed'], s
+                    assert s['generator'] == 6 and s[field] == value and s['ready'] and not s['failed'], s
                     if category == 'landmark':
                         assert s['span'] == 4
                     page.keyboard.press('v')
@@ -120,7 +120,7 @@ def run():
                         page.goto(base)
                         wait_ready(page)
                         loaded = state(page)
-                        assert loaded['generator'] == 5 and loaded['layout'] == value
+                        assert loaded['generator'] == 6 and loaded['layout'] == value
                         assert loaded['pickups'] == saved['pickups'] and loaded['weapons'] == saved['weapons']
                         assert abs(loaded['x'] - saved['x']) < .1 and abs(loaded['z'] - saved['z']) < .1
                         start_play(page)
@@ -143,7 +143,7 @@ def run():
             expect(page, 's.generator === 3 && s.rank === 7 && s.sheltered && s.mission === 2')
             page.keyboard.press('n')
             page.keyboard.press('Enter')
-            expect(page, 's.generator === 5 && s.rank === 7 && s.mission === 0')
+            expect(page, 's.generator === 6 && s.rank === 7 && s.mission === 0')
             assert not state(page)['failed'] and not errors
             context.close()
             mobile = browser.new_context(viewport={'width': 844, 'height': 390}, is_mobile=True, has_touch=True)

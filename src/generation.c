@@ -166,6 +166,9 @@ static void history(RegionPlan *p, uint32_t hash, int preferred, unsigned incide
         }
 }
 void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPlan *p) {
+    /* Version 6 expands encounters; its architecture and historical sites stay on version 5. */
+    if (generator == 6)
+        generator = 5;
     memset(p, 0, sizeof(*p));
     p->origin = (Cell){region.x * 4, region.y, region.z * 4};
     uint32_t h = world_hash(seed ^ generator, region, 101);

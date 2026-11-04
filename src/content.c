@@ -69,7 +69,15 @@ const EnemyDef sc_enemies[SC_ENEMY_TYPES] = {
      ARMORED | WARD | BURST | REGENERATE,
      1,
      6,
-     {.32f, .15f, .23f}}};
+     {.32f, .15f, .23f}},
+    {"CHOIR SURVEYOR", 48, 4.8f, .7f, 9, 2.1f, HOVER | STRAFE, 1, 1, {.18f, .25f, .28f}},
+    {"GRAVEYARD LOADER", 150, 2.4f, 1.25f, 19, 1.7f, ARMORED | CHARGE, 2, 2, {.30f, .24f, .13f}},
+    {"SUTURE CUSTODIAN", 90, 1.8f, .9f, 10, 2.8f, HEALER | WARD, 1, 3, {.26f, .28f, .24f}},
+    {"COFFIN TREAD", 160, 2.1f, 1.15f, 15, 2.6f, ARMORED | BURST, 1, 4, {.24f, .19f, .16f}},
+    {"MARTYR MINE", 28, 6.5f, .52f, 18, 1.2f, CLIMB | CHARGE | DETONATE, 0, 1, {.27f, .17f, .11f}}};
+const DeathEffect sc_death_effects[SC_ENEMY_TYPES] = {
+    [1] = DEATH_ACID,  [8] = DEATH_ACID,  [13] = DEATH_BLAST, [16] = DEATH_MINE,
+    [25] = DEATH_ACID, [29] = DEATH_MINE, [30] = DEATH_BLAST, [31] = DEATH_BLAST};
 const WeaponDef sc_weapons[SC_WEAPONS] = {
     {"PULSE CARBINE", 27, .19f, 110, 0, 0, 0, 1, 1, W_PROJECTILE, {.3f, .8f, .75f}},
     {"BREACH SHOTGUN", 16, .65f, 42, .065f, 0, 7, 8, 1, W_PROJECTILE, {1, .6f, .2f}},
@@ -130,20 +138,23 @@ const char *sc_logs[12] = {
 
 const float sc_projectile_speeds[SC_WEAPONS] = {140, 78, 115, 220, 72,  32,  35, 100, 95, 110,
                                                 28,  45, 160, 105, 180, 100, 0,  0,   0,  34};
-const char *sc_body_names[SC_BODY_FORMS] = {"HUSK", "GAZER", "VOID RAY", "WORM", "CONSTRUCT"};
+const char *sc_body_names[SC_BODY_FORMS] = {"HUSK", "GAZER",     "VOID RAY",
+                                            "WORM", "CONSTRUCT", "ROBOT"};
 const char *sc_body_variants[SC_BODY_FORMS][SC_BODY_VARIANTS] = {
     {"DRUDGE", "CLEAVER", "BULWARK", "HORNED", "RELIQUARY"},
     {"OCULUS", "CROWN", "LANTERN", "BROOD", "SIPHON"},
     {"DART", "CRESCENT", "MANTA", "THORNWING", "SERAPH"},
     {"GRUB", "CENTIPEDE", "SERPENT", "MAW", "LEVIATHAN"},
-    {"SHARD", "OBELISK", "GYRE", "TRIPOD", "CATHEDRAL"}};
+    {"SHARD", "OBELISK", "GYRE", "TRIPOD", "CATHEDRAL"},
+    {"SURVEY DRONE", "LOADER", "REPAIR CUSTODIAN", "TRACKED GUN", "MOBILE MINE"}};
 /* Stable species IDs keep saved encounters and behavior compositions intact. */
 const EnemyBody sc_enemy_bodies[SC_ENEMY_TYPES] = {
-    {WORM, 1},      {GAZER, 0}, {HUSK, 2},     {WORM, 0},     {HUSK, 0},      {HUSK, 1},
-    {CONSTRUCT, 0}, {GAZER, 1}, {GAZER, 3},    {WORM, 3},     {HUSK, 3},      {HUSK, 4},
-    {VOID_RAY, 2},  {WORM, 2},  {GAZER, 4},    {VOID_RAY, 0}, {CONSTRUCT, 3}, {VOID_RAY, 1},
-    {CONSTRUCT, 1}, {WORM, 4},  {VOID_RAY, 3}, {VOID_RAY, 4}, {GAZER, 2},     {CONSTRUCT, 2},
-    {CONSTRUCT, 4}, {GAZER, 3}, {CONSTRUCT, 4}};
+    {WORM, 1},      {GAZER, 0}, {HUSK, 2},      {WORM, 0},     {HUSK, 0},      {HUSK, 1},
+    {CONSTRUCT, 0}, {GAZER, 1}, {GAZER, 3},     {WORM, 3},     {HUSK, 3},      {HUSK, 4},
+    {VOID_RAY, 2},  {WORM, 2},  {GAZER, 4},     {VOID_RAY, 0}, {CONSTRUCT, 3}, {VOID_RAY, 1},
+    {CONSTRUCT, 1}, {WORM, 4},  {VOID_RAY, 3},  {VOID_RAY, 4}, {GAZER, 2},     {CONSTRUCT, 2},
+    {CONSTRUCT, 4}, {GAZER, 3}, {CONSTRUCT, 4}, {ROBOT, 0},    {ROBOT, 1},     {ROBOT, 2},
+    {ROBOT, 3},     {ROBOT, 4}};
 
 const WeaponDef sc_mech_weapons[SC_MECH_WEAPONS] = {
     {"REAVER AUTOCANNON",

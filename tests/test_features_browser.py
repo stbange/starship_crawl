@@ -31,7 +31,7 @@ def run():
             page = context.new_page()
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
-            for form in range(5):
+            for form in range(6):
                 page.goto(base + f'?seed=713&scene=form{form}')
                 wait_ready(page)
                 mask = 31 << (form * 5)
@@ -128,7 +128,7 @@ def run():
             assert not state(page)['failed'] and not errors
             mobile.close()
             browser.close()
-            print('PASS features browser: 25 body variants, HUD/deck maps and objective, pan/deck/recenter, visible shots reveal veil, flight, charged jump, nova, v9 reload, shelter toggle, mobile powers/map')
+            print('PASS features browser: 30 body variants, HUD/deck maps and objective, pan/deck/recenter, visible shots reveal veil, flight, charged jump, nova, v9 reload, shelter toggle, mobile powers/map')
     except Exception:
         detail = traceback.format_exc().replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
         print('::error title=Navigation and psionics browser regression::' + detail, flush=True)

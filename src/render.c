@@ -487,6 +487,10 @@ static void bone(Renderer *r, const BodyPose *p, Vec3 a, Vec3 b, double thicknes
     tube(r, anatomical(p, a), anatomical(p, b), thickness * p->size, thickness * p->size * .45,
          color, glow);
 }
+static void panel(Renderer *r, const BodyPose *p, Vec3 at, Vec3 size, Color color, float glow) {
+    cube(&r->mesh, vsub(anatomical(p, at), r->origin), vmul(p->right, 2 * size.x * p->size),
+         vmul(p->up, 2 * size.y * p->size), vmul(p->forward, 2 * size.z * p->size), color, glow);
+}
 static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double time, Color shell,
                       Color flesh, float glow) {
     EnemyBody body = sc_enemy_bodies[e->kind];
@@ -572,6 +576,48 @@ static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double tim
             }
         if (v == 2)
             bone(r, p, v3(0, 0, .25), v3(0, .05, .95), .04, rgb(.5f, .18f, .2f), .1f);
+    } else if (body.form == ROBOT) {
+        Color steel = rgb(.32f, .35f, .37f), dark = rgb(.07f, .09f, .10f);
+        Color lamp = v == 2 ? rgb(.25f, .9f, .5f) : v == 4 ? rgb(1, .2f, .06f) : rgb(.2f, .7f, 1);
+        panel(r, p, v3(0, .05, 0), v3(v == 3 ? .85 : .55, v == 1 ? .65 : .24, .65), shell, glow);
+        panel(r, p, v3(0, .2, .66), v3(.28, .07, .035), lamp, 1.2f);
+        if (v == 0) {
+            for (int side = -1; side <= 1; side += 2)
+                for (int end = -1; end <= 1; end += 2) {
+                    bone(r, p, v3(0, 0, 0), v3(side * .95, -.05, end * .65), .09, steel, .05f);
+                    panel(r, p, v3(side * .95, -.1, end * .65), v3(.28, .08, .28), dark, .1f);
+                    bone(r, p, v3(side * .95 - cos(time * 20) * .3, -.2, end * .65),
+                         v3(side * .95 + cos(time * 20) * .3, -.2, end * .65), .04, lamp, 1);
+                }
+        } else if (v == 1 || v == 2) {
+            if (v == 2)
+                panel(r, p, v3(0, .49, .05), v3(.10, .30, .10), steel, glow);
+            panel(r, p, v3(0, .9, .08), v3(.28, .23, .3), steel, glow);
+            panel(r, p, v3(0, .93, .39), v3(.21, .045, .03), lamp, 1);
+            for (int side = -1; side <= 1; side += 2) {
+                panel(r, p, v3(side * .35, -.6, gait * side), v3(.2, .4, .25), dark, glow);
+                panel(r, p, v3(side * .78, .25, .1), v3(.23, .3, .25), steel, glow);
+                bone(r, p, v3(side * .78, .2, .1), v3(side * .95, -.25, .6), .1, steel, glow);
+                for (int finger = -1; finger <= 1; finger += 2)
+                    panel(r, p, v3(side * .95 + finger * .12, -.25, .8), v3(.06, .08, .25),
+                          v == 2 ? lamp : steel, v == 2 ? .5f : glow);
+            }
+            if (v == 2)
+                panel(r, p, v3(0, .3, -.7), v3(.25, .6, .18), rgb(.18f, .45f, .3f), .1f);
+        } else if (v == 3) {
+            for (int side = -1; side <= 1; side += 2) {
+                panel(r, p, v3(side * .9, -.38, 0), v3(.22, .25, .9), dark, glow);
+                for (int wheel = -1; wheel <= 1; wheel++)
+                    organ(r, p, v3(side * 1.12, -.38, wheel * .55), v3(.08, .18, .18), steel, glow);
+            }
+            panel(r, p, v3(0, .43, 0), v3(.45, .22, .4), steel, glow);
+            bone(r, p, v3(0, .43, .3), v3(0, .43, 1.7), .13, steel, glow);
+        } else {
+            for (int side = -1; side <= 1; side += 2)
+                panel(r, p, v3(side * .62, -.25, 0), v3(.16, .32, .4), dark, glow);
+            bone(r, p, v3(0, .2, 0), v3(0, .9, 0), .045, steel, glow);
+            organ(r, p, v3(0, .9, 0), v3(.12, .12, .12), lamp, 1.4f);
+        }
     } else {
         organ(r, p, v3(0, .2, 0), v3(.5, .75, .5), shell, .1f);
         if (v == 0)
@@ -598,6 +644,69 @@ static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double tim
             }
     }
 }
+static void death_mesh(Renderer *r, const EnemyDeath *d) {
+    const Enemy *e = &d->body;
+    double t = d->age, fall = fmin(1, t / .85), fade = fmin(1, (SC_DEATH_LIFE - t) / .8);
+    BodyForm form = sc_enemy_bodies[e->kind].form;
+    Vec3 at = vadd(vmul(enemy_center(e), 1 - fall), vmul(d->landing, fall));
+    Vec3 forward = vnorm(v3(e->heading.x, 0, e->heading.z));
+    if (vlen(forward) < .1)
+        forward = v3(0, 0, 1);
+    Vec3 right = vcross(v3(0, 1, 0), forward), up = v3(0, 1, 0);
+    if (form == HUSK || form == ROBOT) {
+        double angle = fall * SC_PI * .48;
+        up = vadd(v3(0, cos(angle), 0), vmul(right, sin(angle)));
+        right = vnorm(vcross(up, forward));
+        at.y += .15 * fall;
+    } else {
+        up = v3(0, 1 - .78 * fall, 0);
+        if (form == VOID_RAY)
+            right = vmul(right, 1 - .7 * fall);
+        if (form == WORM)
+            forward = vmul(forward, 1 - .65 * fall);
+    }
+    double scale = sc_enemies[e->kind].size * (.05 + .95 * fade);
+    BodyPose pose = {at, right, up, forward, scale};
+    Color shell = sc_enemies[e->kind].color;
+    shell = rgb(shell.r * (float)fade, shell.g * (float)fade, shell.b * (float)fade);
+    body_form(r, e, &pose, d->age * .1, shell, rgb(.12f * fade, .06f * fade, .08f * fade), -.3f);
+    for (int part = 0; part < 6; part++) {
+        double a = part * SC_PI / 3 + e->id, speed = .8 + (part % 3) * .5;
+        Vec3 debris =
+            vadd(enemy_center(e), v3(cos(a) * t * speed, t * 2 - t * t * 3, sin(a) * t * speed));
+        debris.y = fmax(debris.y, d->landing.y + .05);
+        double size = .08 * fade;
+        if (form == ROBOT || form == CONSTRUCT)
+            block(r, debris, v3(size * 2, size, size), form == ROBOT ? rgb(.4f, .35f, .25f) : shell,
+                  t < .45 ? 1.2f : .05f);
+        else
+            octahedron(r, debris, size, shell, t < .15 ? .6f : -.2f);
+    }
+}
+static void hazard_mesh(Renderer *r, const DeathHazard *h) {
+    Vec3 at = position_absolute(h->pos);
+    bool acid = h->kind == DEATH_ACID;
+    Color color = acid ? rgb(.3f, .8f, .12f) : h->spent ? rgb(1, .65f, .2f) : rgb(1, .24f, .06f);
+    double pulse = .6 + .4 * sin(h->age * (h->triggered ? 32 : 13));
+    double radius = h->spent ? h->radius * (1 - h->life / .45) : h->radius;
+    for (int i = 0; i < 18; i++) {
+        double a = i * SC_PI / 9, b = (i + 1) * SC_PI / 9;
+        Vec3 first = vadd(at, v3(cos(a) * radius, .06, sin(a) * radius));
+        Vec3 next = vadd(at, v3(cos(b) * radius, .06, sin(b) * radius));
+        tube(r, first, next, acid ? .06 : .035, .035, color, (float)pulse);
+    }
+    if (acid) {
+        for (int i = 0; i < 5; i++) {
+            double a = i * 2.4;
+            blob(r, vadd(at, v3(cos(a) * .7, .05, sin(a) * .7)), v3(.7, 0, 0), v3(0, .07, 0),
+                 v3(0, 0, .7), color, .35f);
+        }
+    } else if (h->kind == DEATH_MINE && !h->spent) {
+        block(r, vadd(at, v3(0, .15, 0)), v3(.48, .18, .48), rgb(.23f, .24f, .21f), .1f);
+        octahedron(r, vadd(at, v3(0, .4, 0)), .13 + pulse * .08, color, 1.8f);
+    } else
+        octahedron(r, vadd(at, v3(0, .2, 0)), h->spent ? radius * .6 : .18 + pulse * .14, color, 2);
+}
 static void creature(Renderer *r, const Enemy *e, double time, double distance) {
     Vec3 center = enemy_center(e), up = e->climbing ? e->normal : v3(0, 1, 0);
     Vec3 forward = vsub(e->heading, vmul(up, vdot(e->heading, up)));
@@ -618,10 +727,10 @@ static void creature(Renderer *r, const Enemy *e, double time, double distance) 
     float glow = e->flash > 0 ? .25f : -1;
     BodyPose pose = {center, right, up, forward, size};
     body_form(r, e, &pose, time, shell, flesh, glow);
-    if (def->flags & ARMORED)
+    if ((def->flags & ARMORED) && sc_enemy_bodies[e->kind].form != ROBOT)
         blob(r, vadd(center, vmul(up, size * .35)), vmul(right, size * .86), vmul(up, size * .4),
              vmul(forward, size * .95), rgb(.25f, .24f, .21f), glow);
-    if (def->flags & HOVER)
+    if ((def->flags & HOVER) && sc_enemy_bodies[e->kind].form != ROBOT)
         for (int side = -1; side <= 1; side += 2) {
             Vec3 wing =
                 vadd(center, vadd(vmul(right, side * size * 2.5), vmul(up, sin(time * 8) * .3)));
@@ -770,10 +879,11 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                 lamps[i], i == 1 ? rgb(.45f, .75f, .8f) : rgb(1, .77f, .48f), 14, 2.4f, 0};
     }
     Vec3 eye = player_eye(viewer);
-    for (int group = 0; !viewer->sheltered && group < 5; group++) {
+    for (int group = 0; !viewer->sheltered && group < 6; group++) {
         int total = group == 0   ? SC_MAX_CHUNKS
                     : group == 1 ? SC_MAX_PROJECTILES
                     : group == 3 ? SC_MAX_FLARES
+                    : group == 5 ? SC_MAX_DEATH_HAZARDS
                                  : g->player_count;
         for (int i = 0; i < total; i++) {
             const Chunk *chunk = group == 0 ? &g->world.chunks[i] : NULL;
@@ -804,6 +914,14 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                         continue;
                     light = (PointLight){position_absolute(f->pos), rgb(1, .65f, .28f), f->radius,
                                          f->power, 0};
+                } else if (group == 5) {
+                    const DeathHazard *h = &g->death_hazards[i];
+                    if (!h->active || world_cell(position_absolute(h->pos)).y != world_cell(eye).y)
+                        continue;
+                    light = (PointLight){position_absolute(h->pos),
+                                         h->kind == DEATH_ACID ? rgb(.4f, .85f, .12f)
+                                                               : rgb(1, .25f, .08f),
+                                         h->spent ? 10 : 5, h->spent ? 2 : .55f, 0};
                 } else if (group == 4) {
                     const Beam *b = &g->beams[i];
                     if (b->life <= 0 || g->players[i].sheltered)
@@ -934,6 +1052,18 @@ static void actors(Renderer *r, Game *g, int viewer) {
         }
     for (int i = 0; i < count; i++)
         creature(r, visible[i], g->time, distances[i]);
+    for (int i = 0; i < SC_MAX_DEATHS; i++) {
+        const EnemyDeath *d = &g->deaths[i];
+        if (d->active && vlen(vsub(enemy_center(&d->body), eye)) < 130 &&
+            world_cell(enemy_center(&d->body)).y == cell.y)
+            death_mesh(r, d);
+    }
+    for (int i = 0; i < SC_MAX_DEATH_HAZARDS; i++) {
+        const DeathHazard *h = &g->death_hazards[i];
+        if (h->active && vlen(position_delta(h->pos, g->players[viewer].pos)) < 130 &&
+            h->pos.sector.y == cell.y)
+            hazard_mesh(r, h);
+    }
     for (int i = 0; i < SC_MAX_PROJECTILES; i++) {
         const Projectile *p = &g->projectiles[i];
         if (!p->active)
@@ -1451,6 +1581,19 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     if (!p->sheltered && g->story.version >= 3 && game_story_safe(g, position_absolute(p->pos)))
         centered(r, w * .5f, pad + 48 * s, .9f * s, "BEACON WARD / SAFE RECOVERY", mint);
+    for (int i = 0; !p->sheltered && i < SC_MAX_DEATH_HAZARDS; i++) {
+        const DeathHazard *hazard = &g->death_hazards[i];
+        if (hazard->active && !hazard->spent &&
+            vlen(position_delta(hazard->pos, p->pos)) < hazard->radius + 2) {
+            centered(r, w * .5f, h * .67f, .95f * s,
+                     hazard->kind == DEATH_ACID ? "ACID RESIDUE / KEEP CLEAR"
+                     : hazard->kind == DEATH_MINE && !hazard->triggered
+                         ? "DROPPED MINE / KEEP CLEAR"
+                         : "UNSTABLE CORE / MOVE AWAY",
+                     rgb(1, .4f, .18f));
+            break;
+        }
+    }
     if (g->world.pending)
         centered(r, w * .5f, h * .8f, 1 * s, "SURVEYING NEARBY PASSAGES", dim);
     snprintf(label, sizeof(label), "SHIP %08X", g->world.seed);

@@ -12,7 +12,7 @@ spec.loader.exec_module(gate)
 class CoverageGateTests(unittest.TestCase):
     def report(self):
         return {"files": [{"file": name, "lines": [{"count": 1}] * 20} for name in (
-            "src/game.c", "src/generation.c", "src/history.c", "src/interior.c", "src/world.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/math3d.h") ]}
+            "src/game.c", "src/generation.c", "src/history.c", "src/interior.c", "src/world.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/death.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/math3d.h") ]}
 
     def test_empty_report_is_rejected(self):
         with self.assertRaises(SystemExit):

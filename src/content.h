@@ -16,7 +16,7 @@ typedef enum {
     DISTRICT_TYPES
 } District;
 #define SC_THEMES 28
-#define SC_ENEMY_TYPES 27
+#define SC_ENEMY_TYPES 32
 #define SC_WEAPONS 20
 #define SC_GENERATED_WEAPONS 16
 #define SC_MECH_WEAPONS 3
@@ -24,9 +24,11 @@ typedef enum {
 #define SC_NEW_WEAPONS (15u << 16)
 #define SC_START_WEAPONS (7u | SC_NEW_WEAPONS)
 #define SC_ATTRIBUTES 10
-#define SC_BODY_FORMS 5
+#define SC_BODY_FORMS 6
 #define SC_BODY_VARIANTS 5
-typedef enum { HUSK, GAZER, VOID_RAY, WORM, CONSTRUCT } BodyForm;
+typedef enum { HUSK, GAZER, VOID_RAY, WORM, CONSTRUCT, ROBOT } BodyForm;
+typedef enum { DEATH_NONE, DEATH_ACID, DEATH_BLAST, DEATH_MINE } DeathEffect;
+extern const DeathEffect sc_death_effects[SC_ENEMY_TYPES];
 typedef struct {
     uint8_t form, variant;
 } EnemyBody;

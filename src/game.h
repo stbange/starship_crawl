@@ -7,6 +7,9 @@
 #define SC_MAP_SIDE 9
 #define SC_PSIONICS 4
 #define SC_MAX_FLARES 32
+#define SC_MAX_DEATHS 64
+#define SC_MAX_DEATH_HAZARDS 32
+#define SC_DEATH_LIFE 2.8f
 typedef enum { ON_FOOT, MECH, WAGON } RigKind;
 typedef enum { PSI_VEIL, PSI_FLIGHT, PSI_LEAP, PSI_NOVA } Psionic;
 typedef struct {
@@ -75,6 +78,19 @@ typedef struct {
     bool active;
 } Flare;
 typedef struct {
+    Enemy body;
+    Vec3 landing;
+    float age;
+    bool active;
+} EnemyDeath;
+typedef struct {
+    Position pos;
+    DeathEffect kind;
+    float life, age, timer, radius, damage;
+    int owner;
+    bool active, triggered, spent;
+} DeathHazard;
+typedef struct {
     World world;
     Player players[SC_PLAYERS];
     int player_count;
@@ -90,6 +106,8 @@ typedef struct {
     Rig rigs[SC_PLAYERS][2];
     Beam beams[SC_PLAYERS];
     Flare flares[SC_MAX_FLARES];
+    EnemyDeath deaths[SC_MAX_DEATHS];
+    DeathHazard death_hazards[SC_MAX_DEATH_HAZARDS];
     bool dirty;
 } Game;
 typedef struct {
@@ -106,6 +124,10 @@ bool game_map_build(const Game *g, int player, Cell center, int radius, MapView 
 void game_psionic(Game *g, int player, Psionic power);
 void game_psionics_step(Game *g, Player *p, double dt);
 void game_nova(Game *g, int player);
+void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, uint32_t flags);
+void game_enemy_death(Game *g, const Enemy *enemy, int owner);
+void game_deaths_step(Game *g, double dt);
+void game_deaths_reset(Game *g);
 extern const char *sc_psionic_names[SC_PSIONICS];
 extern const float sc_psionic_costs[SC_PSIONICS];
 void game_rig_toggle(Game *g, int player, RigKind kind);

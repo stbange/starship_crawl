@@ -439,8 +439,12 @@ bool game_story_choose(Game *g, int player, unsigned choice) {
     if (scene == STORY_SOURCE && choice == 1) {
         Room *source = world_find(&g->world, g->story.sites[scene]);
         if (source)
-            for (int i = 0; i < source->enemy_count; i++)
+            for (int i = 0; i < source->enemy_count; i++) {
+                bool alive = source->enemies[i].alive;
                 world_kill(&g->world, source, i);
+                if (alive && !source->enemies[i].alive)
+                    game_enemy_death(g, &source->enemies[i], player);
+            }
     }
     g->story.choice = choice;
     if (g->story.version >= 3)
@@ -651,9 +655,12 @@ bool story_valid(const Story *s, uint32_t seed, uint32_t generator, uint32_t mis
     uint32_t allowed = BIT(0) | CLUES | (s->version >= 2 ? HISTORY_RECORDS : 0) | BIT(lead) |
                        BIT(alternate) | BIT(op) | BIT(goal) | BIT(STORY_EXTRACTION) |
                        (s->version >= 3 ? UINT32_C(0x7fe00000) : 0);
-    if ((s->version < 1 || s->version > 3) || generator != (s->version == 1 ? 4u : 5u) ||
-        s->assigned & ~allowed || !(s->assigned & BIT(0)) || s->seen & ~s->assigned ||
-        s->done & ~s->seen || s->done & PASSIVE || s->choice > 3 || s->tracked >= SC_STORY_SCENES ||
+    bool compatible = s->version == 1   ? generator == 4
+                      : s->version == 2 ? generator == 5
+                                        : generator >= 5 && generator <= SC_GENERATOR_VERSION;
+    if ((s->version < 1 || s->version > 3) || !compatible || s->assigned & ~allowed ||
+        !(s->assigned & BIT(0)) || s->seen & ~s->assigned || s->done & ~s->seen ||
+        s->done & PASSIVE || s->choice > 3 || s->tracked >= SC_STORY_SCENES ||
         mission != progress(s) || (s->choice != 0) != ((s->done & BIT(goal)) != 0) ||
         (s->choice == 3 && !(s->done & BIT(op)) && s->council != 3))
         return false;

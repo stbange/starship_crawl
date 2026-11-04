@@ -90,3 +90,5 @@ optional follow-on relays before capturing decisions, while its main target
 uses council assistance without the original evacuation operation. The initial
 and later choices themselves remain available in the decision snapshots.
 Existing format-7 and format-8 fixtures stay unchanged.
+
+`generator-v5-enemies.txt` was captured from the unmodified native core at commit `44ffa10` before adding machines. Its 16 rows cover four seeds and four locations, including the Warden room. Each row records seed, requested cell, encounter count and FNV-1a fingerprint of stable species IDs, millimetre-rounded absolute spawn coordinates and health. It is immutable compatibility evidence for generator 5, independent of the new generator-6 roster.

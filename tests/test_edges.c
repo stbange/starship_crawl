@@ -218,7 +218,9 @@ static void test_combat_and_movement(void) {
     p->hurt = 10;
     e = enemy(g, 13, vadd(at, v3(0, 0, 2)));
     tick(g, (Actions){0}, 1);
-    CHECK(!e->alive && p->health < 100 && p->kills == 1);
+    CHECK(!e->alive && p->health == 100 && p->kills == 1);
+    tick(g, (Actions){0}, 65);
+    CHECK(p->health < 100 && p->kills == 1);
     destroy(g);
     g = quiet();
     p = &g->players[0];

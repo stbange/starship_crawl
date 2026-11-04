@@ -22,8 +22,12 @@ static Game *create(unsigned seed) {
         g->world.generator = 4;
         g->story = (Story){.version = 1, .assigned = 1};
     }
-    if (narrative_version == 2)
+    if (narrative_version == 2) {
+        world_destroy(&g->world);
+        world_init(&g->world, seed);
+        g->world.generator = 5;
         g->story = (Story){.version = 2, .assigned = 1};
+    }
     return g;
 }
 static void destroy(Game *g) {

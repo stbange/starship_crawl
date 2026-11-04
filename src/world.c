@@ -632,10 +632,14 @@ static void populate(World *w, Room *r) {
         e->id = (uint8_t)i;
         e->normal = v3(0, 1, 0);
         e->heading = v3(0, 0, 1);
-        e->kind = (uint8_t)(h % (SC_ENEMY_TYPES - 1));
-        for (int retry = 0; retry < SC_ENEMY_TYPES - 1 && sc_enemies[e->kind].tier > difficulty;
-             retry++)
-            e->kind = (uint8_t)((e->kind + 1) % (SC_ENEMY_TYPES - 1));
+        unsigned pool = w->generator >= 6 ? SC_ENEMY_TYPES - 1 : 26;
+        unsigned choice = h % pool;
+        for (unsigned retry = 0; retry < pool; retry++) {
+            e->kind = (uint8_t)(choice + (w->generator >= 6 && choice >= 26));
+            if (sc_enemies[e->kind].tier <= difficulty)
+                break;
+            choice = (choice + 1) % pool;
+        }
         if (r->height < 3 && sc_enemies[e->kind].size > .8f)
             e->kind = (uint8_t)(h % 2 ? 0 : 3);
         e->health = sc_enemies[e->kind].health + (float)difficulty * 5;

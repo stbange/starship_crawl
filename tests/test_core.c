@@ -590,7 +590,8 @@ static void test_infestation(void) {
          "wall climbing, fast crawlers, flashlight controls, bounded dressing and broken lamps");
 }
 static void test_expansion(void) {
-    uint32_t themes = 0, enemies = 0;
+    uint32_t themes = 0;
+    uint64_t enemies = 0;
     for (unsigned seed = 1; seed <= 24; seed++)
         for (int y = -4; y <= 9; y++) {
             RegionPlan p;
@@ -656,7 +657,7 @@ static void test_expansion(void) {
         e->special = 0;
         step(g, (Actions){0}, 90);
         CHECK(isfinite(position_absolute(e->pos).x) && isfinite(e->health));
-        enemies |= 1u << kind;
+        enemies |= UINT64_C(1) << kind;
         if (sc_enemies[kind].flags & BROOD)
             CHECK(room->enemy_count > 1);
         if (sc_enemies[kind].flags & REGENERATE)
@@ -667,7 +668,7 @@ static void test_expansion(void) {
             CHECK(fabs(position_absolute(e->pos).z - (world_center(room->cell).z - 8)) < .01);
         game_destroy(g);
     }
-    CHECK(enemies == ((1u << SC_ENEMY_TYPES) - 1));
+    CHECK(enemies == ((UINT64_C(1) << SC_ENEMY_TYPES) - 1));
     room = quiet_encounter(g);
     p = &g->players[0];
     Pickup *loot = &room->pickups[3];

@@ -51,7 +51,7 @@ static Cell next_cell(uint32_t seed, unsigned generator, Cell from, Cell target,
         id = parent[id];
     return (Cell){id % width, from.y, id / width};
 }
-static unsigned saga_kinds = 0;
+static unsigned saga_kinds = 0, machine_kinds = 0, death_effect_kinds = 0;
 static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigned version) {
     Game *g = malloc(sizeof(*g));
     if (!g)
@@ -63,8 +63,12 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
         g->world.generator = 4;
         g->story = (Story){.version = 1, .assigned = 1};
     }
-    if (version == 2)
+    if (version == 2) {
+        world_destroy(&g->world);
+        world_init(&g->world, seed);
+        g->world.generator = 5;
         g->story = (Story){.version = 2, .assigned = 1};
+    }
     if (!choice)
         g->story = (Story){0};
     Vec3 waypoint = {0};
@@ -227,6 +231,14 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
                                                               world_cell(waypoint))
                                                .height < 2);
         game_step(g, a, 1.0 / 60);
+        if (version == 3) {
+            for (int i = 0; i < SC_MAX_DEATHS; i++)
+                if (g->deaths[i].active && g->deaths[i].body.kind >= 27)
+                    machine_kinds |= 1u << (g->deaths[i].body.kind - 27);
+            for (int i = 0; i < SC_MAX_DEATH_HAZARDS; i++)
+                if (g->death_hazards[i].active)
+                    death_effect_kinds |= 1u << g->death_hazards[i].kind;
+        }
         if (g->world.last_work > SC_STREAM_BUDGET || g->world.chunk_count > SC_MAX_CHUNKS ||
             !isfinite(p->health) || !isfinite(p->shield) || !isfinite(p->energy) || p->shield < 0 ||
             p->shield > player_max_shield(p) || p->energy < 0 || p->energy > player_max_energy(p)) {
@@ -305,7 +317,11 @@ int main(int argc, char **argv) {
                 return 1;
         }
         printf("Follow-on kinds exercised: %x\n", saga_kinds);
-        return saga_kinds == (1u << STORY_ARCS) - 1 ? 0 : 1;
+        printf("Machine defeats: %x / death hazards: %x\n", machine_kinds, death_effect_kinds);
+        return saga_kinds == (1u << STORY_ARCS) - 1 && machine_kinds == 31 &&
+                       death_effect_kinds == 14
+                   ? 0
+                   : 1;
     }
     if (argc > 1 &&
         (strcmp(argv[1], "--history") == 0 || strcmp(argv[1], "--history-fixtures") == 0)) {

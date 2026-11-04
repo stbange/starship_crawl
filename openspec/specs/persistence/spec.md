@@ -5,7 +5,7 @@ Portable validated saves that preserve the active game when an operation fails.
 ## Requirements
 
 ### Requirement: Portable format and migration
-Saves SHALL use a checksum and explicit generator compatibility across native and web. Format 9 SHALL retain reactive events, faction support, chapter outcomes, fixed sites and character careers alongside existing systems. Format 8 SHALL retain narrative version 2. Format 7 SHALL retain generator 4 and narrative version 1. Compatible formats 3–6 SHALL retain their original ship and legacy campaign. New expeditions SHALL use generator 5 and narrative version 3.
+Saves SHALL use checksums and explicit generator compatibility on native and web. Format 9 SHALL retain reactive events, faction support, chapter outcomes, fixed sites and careers. Formats 7 and 8 SHALL retain narrative 1/generator 4 and narrative 2/generator 5 respectively. Compatible formats 3–6 SHALL retain their ships and legacy campaign. New expeditions SHALL use generator 6/narrative 3. Generator-5 expeditions SHALL retain their original encounters and geometry.
 
 #### Scenario: Legacy profile
 - **WHEN** a supported version-1 or version-2 file is loaded
@@ -74,3 +74,10 @@ The browser SHALL confirm persistence only after IndexedDB synchronization and s
 
 - **WHEN** a completed browser save is followed by a page reload
 - **THEN** profiles, expedition state, resources, equipment, and consumed caches are restored in solo mode.
+
+### Requirement: Transient death state
+Format-9 saves SHALL support generator 6 while retaining all previously supported generators and narrative versions. Successfully loading a save or starting a new ship SHALL clear death animations and death hazards. Failed imports SHALL leave active effects and the expedition unchanged.
+
+#### Scenario: Reload during a death effect
+- **WHEN** a valid expedition is loaded while a corpse or mine is active
+- **THEN** transient effects clear and saved defeated-enemy records remain defeated.

@@ -403,8 +403,12 @@ bool expedition_choose(Game *g, int player, unsigned scene, unsigned choice) {
         if (s->arc == QUARANTINE_ARC && choice == 1) {
             Room *room = world_find(&g->world, s->sites[scene]);
             if (room)
-                for (int i = 0; i < room->enemy_count; i++)
+                for (int i = 0; i < room->enemy_count; i++) {
+                    bool alive = room->enemies[i].alive;
                     world_kill(&g->world, room, i);
+                    if (alive && !room->enemies[i].alive)
+                        game_enemy_death(g, &room->enemies[i], player);
+                }
         }
         support(s, choice == 3 ? 12 : choice == 1 ? 5 : 0, choice == 1 ? -5 : 10);
         s->assigned |= BIT(STORY_RETURN);

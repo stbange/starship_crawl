@@ -123,11 +123,11 @@ static void test_catalog_and_projectiles(void) {
     unsigned mask = 0;
     for (int i = 0; i < SC_ENEMY_TYPES; i++) {
         EnemyBody b = sc_enemy_bodies[i];
-        CHECK(b.form < 5 && b.variant < 5);
+        CHECK(b.form < SC_BODY_FORMS && b.variant < SC_BODY_VARIANTS);
         CHECK(sc_body_names[b.form][0] && sc_body_variants[b.form][b.variant][0]);
         mask |= 1u << (b.form * 5 + b.variant);
     }
-    CHECK(mask == ((1u << 25) - 1));
+    CHECK(mask == ((1u << (SC_BODY_FORMS * SC_BODY_VARIANTS)) - 1));
     for (int weapon = 0; weapon < SC_GENERATED_WEAPONS; weapon++) {
         Game *g = fresh();
         Player *p = &g->players[0];

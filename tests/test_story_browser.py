@@ -21,8 +21,23 @@ def import_fixture(page, name):
         page.keyboard.press('Escape')
         expect(page, 's.paused')
     page.locator('#menu').click()
+    # File.arrayBuffer() and pointer capture finish after set_input_files returns.
+    # Observe this import's UI confirmation, including when its text matches the previous import.
+    page.evaluate("""() => {
+        window.fixtureImported = false;
+        const note = document.getElementById('save-note');
+        const observer = new MutationObserver(() => {
+            if (note.textContent === 'Expedition imported.') {
+                observer.disconnect();
+                window.fixtureImported = true;
+            }
+        });
+        observer.observe(note, {childList: true, characterData: true, subtree: true});
+    }""")
     page.locator('#import').set_input_files(str(ROOT / 'tests' / 'fixtures' / name))
-    expect(page, '!s.paused && s.pending === 0')
+    wait_for(page, 'window.fixtureImported')
+    imported = state(page)
+    expect(page, f'!s.paused && s.pending === 0 && s.time > {imported["time"] + .08}')
 
 
 def run():

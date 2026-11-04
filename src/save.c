@@ -478,6 +478,7 @@ bool game_load(Game *g, const char *path) {
     memset(g->beams, 0, sizeof(g->beams));
     g->player_count = 1;
     memset(g->projectiles, 0, sizeof(g->projectiles));
+    game_deaths_reset(g);
     g->mission = mission;
     g->mission_kills = kills;
     g->mission_loot = loot;

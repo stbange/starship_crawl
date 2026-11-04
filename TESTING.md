@@ -20,7 +20,7 @@ cmake --build build-core --parallel 4
 ctest --test-dir build-core -L unit --output-on-failure
 ```
 
-`equipment` checks personal and mech beams, piercing and wall blocking, energy refusal, owned rig deployment, low ceilings, blocked exits and ejection, speed/braking, plating and medical repair, surface flare attachments, non-damaging utility shots, upgrades/caps, expiry/replacement, format-5 migration and format-6 occupied-rig/light persistence. `navigation_psionics` checks map/generator parity across region boundaries and distant coordinates, 25 body variants, all visible weapon volleys and piercing, cloak targeting versus incoming damage, energy refusal, flight collision, charged jumps, nova pulses, and v4/v5 persistence. `shelter` checks doorway placement, furnishing collisions, recovery and cancellation, hostile/projectile/pickup isolation, co-op, format-3 expedition retention, and format-4 sanctuary persistence. `core` checks deterministic generation, reciprocal portals, clear floors/connectors, fair bounded streaming, distant split-screen coordinates, physics, weapon effects, all enemy species, progression, loot, missions, and save compatibility. `edge_cases` adds invalid API inputs, useful-only supplies, duplicate rewards, melee/explosive attacks, healing, swept projectile impacts, jump/ceiling/lift boundaries, allocation failures, failed flush/close/replacement, malformed checksummed save fields, and transactional rollback.
+`equipment` checks personal and mech beams, piercing and wall blocking, energy refusal, owned rig deployment, low ceilings, blocked exits and ejection, speed/braking, plating and medical repair, surface flare attachments, non-damaging utility shots, upgrades/caps, expiry/replacement, format-5 migration and format-6 occupied-rig/light persistence. `navigation_psionics` checks map/generator parity across region boundaries and distant coordinates, 30 body variants, all visible weapon volleys and piercing, cloak targeting versus incoming damage, energy refusal, flight collision, charged jumps, nova pulses, and v4/v5 persistence. `shelter` checks doorway placement, furnishing collisions, recovery and cancellation, hostile/projectile/pickup isolation, co-op, format-3 expedition retention, and format-4 sanctuary persistence. `core` checks deterministic generation, reciprocal portals, clear floors/connectors, fair bounded streaming, distant split-screen coordinates, physics, weapon effects, all enemy species, progression, loot, missions, and save compatibility. `edge_cases` adds invalid API inputs, useful-only supplies, duplicate rewards, melee/explosive attacks, healing, swept projectile impacts, jump/ceiling/lift boundaries, allocation failures, failed flush/close/replacement, malformed checksummed save fields, and transactional rollback.
 
 Fault tests compile a separate `sc_core_fault` library from the same core sources with forced allocator/I/O wrappers. The production core has no test-only switches, injected allocator, or failure API. Fault injection and assertion helpers are excluded from the production binary, not from measured core coverage.
 
@@ -39,9 +39,9 @@ The command configures `SC_COVERAGE=ON`, resets that build's counters, runs only
 python3 -m unittest discover -s tests -p 'test_quality_tools.py'
 ```
 
-The measured scope is **all executable `sc_core` code** (`generation.c`, `history.c`, `interior.c`, `world.c`, `game.c`, `progression.c`, `story.c`, `expedition.c`, `save.c`, `shelter.c`, `navigation.c`, `psionics.c`, `equipment.c`, and any future core sources), plus shared `math3d.h`. `content.c` currently consists of static definitions with no executable lines; catalog tests exercise its definitions. The unit metric excludes third-party SDL and the SDL/OpenGL/browser adapters (`main.c`, `render.c`, `gl_api.c`, JavaScript, and shaders), which are validated by integration tests below. It is not a whole-application or shader coverage claim. There are no line exclusion markers or suppressed uncovered core paths. The fault variant's hits merge with the ordinary core by source location.
+The measured scope is **all executable `sc_core` code** (`generation.c`, `history.c`, `interior.c`, `world.c`, `game.c`, `progression.c`, `story.c`, `expedition.c`, `death.c`, `save.c`, `shelter.c`, `navigation.c`, `psionics.c`, `equipment.c`, and any future core sources), plus shared `math3d.h`. `content.c` currently consists of static definitions with no executable lines; catalog tests exercise its definitions. The unit metric excludes third-party SDL and the SDL/OpenGL/browser adapters (`main.c`, `render.c`, `gl_api.c`, JavaScript, and shaders), which are validated by integration tests below. It is not a whole-application or shader coverage claim. There are no line exclusion markers or suppressed uncovered core paths. The fault variant's hits merge with the ordinary core by source location.
 
-The measured unit-only baseline for this change is **4,088 / 4,151 lines (98.48%)**, **255 / 255 functions (100%)**, and **3,997 / 4,362 branches (91.63%)**, using GCC/gcov and gcovr 8.4. The lowest measured file is `world.c` at **95.90%**. The enforced threshold is line coverage; branch and function coverage are reported separately. Reports are regenerated by CI and retained as the `unit-coverage` artifact. Campaign and render/browser execution are deliberately kept out of the unit number.
+The measured unit-only baseline for this change is **4,200 / 4,263 lines (98.52%)**, **260 / 260 functions (100%)**, and **4,131 / 4,502 branches (91.76%)**, using GCC/gcov and gcovr 8.4. The lowest measured file is `world.c` at **95.92%**. The enforced threshold is line coverage; branch and function coverage are reported separately. Reports are regenerated by CI and retained as the `unit-coverage` artifact. Campaign and render/browser execution are deliberately kept out of the unit number.
 
 **Automated gameplay.** `equipment_journey` walks from the space arrival onto the bay floor, unfolds and fires the mech, drives/brakes the wagon, attaches a flare, and saves/reloads its light through the real simulation.  `shelter_journey` walks from space into the ship, summons the sanctuary, navigates around furniture to cook, rest, and receive treatment, saves/reloads inside, and returns to the same entry anchor. It uses movement/actions rather than writing positions or clearing enemies. The retained legacy `solo_campaign` CTest runs seeds 713, 1, and 42 from the space arrival through all six objectives. Its player driver navigates connected routes, uses gravity and crouching, aims and fires the real weapon system, spends earned points, rides lifts, defeats the Warden, and extracts. It checks victory, kills, finite defensive resources, and streaming budgets. Each run has a bounded simulation duration and a CTest timeout.
 
@@ -75,7 +75,7 @@ python3 tests/test_features_browser.py --site-dir build-pages-preview --url-path
 
 Set `SC_INPUT_RELEASE_DELAY_MS=350` when running `test_shelter_browser.py` to stress delayed automation key releases. The driver releases movement through the browser keyboard listener on arrival, then verifies the character stays stopped while delivery to the Python runner is delayed.
 
-The features browser suite captures all five body families (five variants each), HUD/full maps, map pan/deck/recenter, visible firing that breaks veil, flight/ascent/landing, enhanced jumping, nova, format-6 persistence, shelter packing, and touch powers/map open/close. It checks that covered touch controls cannot activate while the map is open.
+The features browser suite captures all six body families (five variants each), HUD/full maps, map pan/deck/recenter, visible firing that breaks veil, flight/ascent/landing, enhanced jumping, nova, format-6 persistence, shelter packing, and touch powers/map open/close. It checks that covered touch controls cannot activate while the map is open.
 
 The shelter browser suite also walks between all facilities using keyboard controls, verifies holstered weapons, reloads a current-format IndexedDB save inside, returns to the exact ship anchor, and exercises mobile summon/entry/exit. It captures the exterior door, interior, split-screen, bed, kitchen, medical station, and mobile view.
 
@@ -157,6 +157,9 @@ locked/prepared choices, dossier pages and IndexedDB persistence. Captures
 include origin interiors, dossiers, decisions and the selected map lead.
 Decision checkpoints come from `./build/sc_campaign_tests --history-fixtures`;
 original format-7 fixtures remain immutable. See `tests/fixtures/README.md`.
+The shared fixture-import driver observes each import's completion message and
+waits for simulation ticks before sending interaction keys; an earlier save's
+unpaused state cannot satisfy the wait for a new asynchronous import.
 
 ```sh
 ctest --test-dir build -R 'narrative|generated_expeditions|history_expeditions' --output-on-failure
@@ -165,11 +168,11 @@ SDL_VIDEODRIVER=offscreen EGL_PLATFORM=surfaceless SDL_AUDIODRIVER=dummy \
   ./build/starship_crawl --seed 22 --scene origin --split --smoke 30 --no-save
 ```
 
-Generator-3 and generator-4 plan/geometry goldens, all seven browser suites,
+Generator-3 and generator-4 plan/geometry goldens, all eight browser suites,
 native OpenGL and ASan/UBSan remain required. Windows cross-compilation and
 emulated touch do not establish physical Windows, controller or mobile-GPU behavior.
 
-**Reactive expeditions and aftermath.** There are eight unit and six gameplay
+**Reactive expeditions and aftermath.** There are nine unit and six gameplay
 CTest suites. The new `reactive_aftermath` unit suite exercises 16 seeds with
 all three primary/council choices and multiple follow-on chapters. It checks
 observation-driven events, both operation orders, local power/recovery, ward
@@ -199,4 +202,14 @@ controls. Regenerate fixtures only deliberately; see their provenance in
 ```sh
 ctest --test-dir build -R 'reactive_aftermath|continuing_expeditions' --output-on-failure
 python3 tests/test_aftermath_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+```
+
+**Enemy deaths and machines.** `enemy_deaths` tests all 32 species, the five naturally generated robots, immutable generator-5 encounter fingerprints, generator-5/6 architecture parity, death/reward idempotence, warning periods, real bulkhead cover, blast chains, acid cadence, mine arming/trigger/dodge/expiry, co-op and sanctuary/ward isolation, pool saturation, detached streaming, save/reset behavior and attacks credited to a departed co-op profile. The continuing-expedition driver additionally records actual defeats of all five machines and all three hazard kinds while walking and fighting normally.
+
+The eighth browser suite fires actual beam weapons, checks animated corpse lifetime and pause behavior, captures acid and mechanical wrecks, triggers and retreats from a mine through movement inputs, and performs touch combat. The existing anatomy suite now captures all six families and 30 structural variants. These are Chromium/Mesa checks, not physical mobile-GPU testing.
+
+```sh
+ctest --test-dir build -R 'enemy_deaths|continuing_expeditions' --output-on-failure
+python3 tests/test_deaths_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+SDL_VIDEODRIVER=offscreen EGL_PLATFORM=surfaceless SDL_AUDIODRIVER=dummy ./build/starship_crawl --seed 713 --scene form5 --split --smoke 120 --no-save
 ```

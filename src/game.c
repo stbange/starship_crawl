@@ -98,6 +98,7 @@ void game_new_ship(Game *g, uint32_t seed) {
     world_destroy(&g->world);
     world_init(&g->world, seed);
     memset(g->projectiles, 0, sizeof(g->projectiles));
+    game_deaths_reset(g);
     g->mission = g->mission_kills = g->mission_loot = g->contracts = 0;
     story_init(&g->story);
     memset(&g->shelter, 0, sizeof(g->shelter));
@@ -190,7 +191,10 @@ static void move_body(World *w, Position *p, Vec3 delta, double radius, double h
                 *grounded = true;
         }
 }
-static void damage_enemy(Game *g, Room *room, int index, int owner, float damage, uint32_t flags) {
+void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, uint32_t flags) {
+    if (!room || index < 0 || index >= room->enemy_count || owner < 0 || owner >= SC_PLAYERS ||
+        !isfinite(damage) || damage <= 0)
+        return;
     Enemy *e = &room->enemies[index];
     if (!e->alive)
         return;
@@ -216,6 +220,9 @@ static void damage_enemy(Game *g, Room *room, int index, int owner, float damage
     g->hits++;
     if (e->health <= 0) {
         world_kill(&g->world, room, index);
+        if (e->alive)
+            return;
+        game_enemy_death(g, e, owner);
         award(g, &g->players[owner],
               20 + def->tier * 5 + (unsigned)fmin(world_difficulty(room->cell), 30));
     }
@@ -229,8 +236,8 @@ static void blast_enemies(Game *g, Vec3 pos, int owner, float damage, double rad
             double distance = vlen(diff);
             if (e->alive && distance < radius &&
                 world_raycast(&g->world, pos, vnorm(diff), distance) >= distance - .1)
-                damage_enemy(g, &g->world.rooms[r], i, owner,
-                             damage * (float)(1 - .65 * distance / radius), flags);
+                game_damage_enemy(g, &g->world.rooms[r], i, owner,
+                                  damage * (float)(1 - .65 * distance / radius), flags);
         }
 }
 void game_nova(Game *g, int player) {
@@ -440,7 +447,7 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin) {
         end = vadd(ray, vmul(dir, nearest));
         if (target < 0)
             break;
-        damage_enemy(g, room, target, owner, w->damage * (1 + .35f * p->power), w->flags);
+        game_damage_enemy(g, room, target, owner, w->damage * (1 + .35f * p->power), w->flags);
         int at = history.hit_count++;
         history.hit_rooms[at] = room->cell;
         history.hit_ids[at] = (uint8_t)target;
@@ -501,7 +508,7 @@ static void projectiles_step(Game *g, double dt) {
                 g->projectile_hits++;
             }
             if (target >= 0 && !(shot->flags & W_BLAST)) {
-                damage_enemy(g, room, target, shot->owner, shot->damage, shot->flags);
+                game_damage_enemy(g, room, target, shot->owner, shot->damage, shot->flags);
                 if (shot->flags & W_CHAIN)
                     blast_enemies(g, enemy_center(&room->enemies[target]), shot->owner,
                                   shot->damage * .55f, shot->blast, shot->flags & ~W_CHAIN);
@@ -640,7 +647,7 @@ static void enemies_step(Game *g, double dt) {
             e->slow = fmaxf(0, e->slow - (float)dt);
             if (e->burn > 0) {
                 e->burn -= dt;
-                damage_enemy(g, room, i, e->last_player, (float)dt * 7, 0);
+                game_damage_enemy(g, room, i, e->last_player, (float)dt * 7, 0);
                 if (!e->alive)
                     continue;
             }
@@ -764,9 +771,7 @@ static void enemies_step(Game *g, double dt) {
                         e->vertical_speed = 0;
                 }
                 if ((def->flags & DETONATE) && best < 3 && sight) {
-                    game_hurt(g, (int)(target - g->players),
-                              def->damage + (float)world_difficulty(room->cell), 0);
-                    damage_enemy(g, room, i, (int)(target - g->players), 10000, 0);
+                    game_damage_enemy(g, room, i, (int)(target - g->players), 10000, 0);
                 } else if (best < (def->role == 2 ? 2.8 : 1.7) && e->cooldown <= 0 && sight) {
                     game_hurt(g, (int)(target - g->players), def->damage, def->flags);
                     e->cooldown = def->interval;
@@ -815,6 +820,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     game_story_step(g);
     enemies_step(g, dt);
     projectiles_step(g, dt);
+    game_deaths_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         if (p->health <= 0 || position_absolute(p->pos).z < -400) {
