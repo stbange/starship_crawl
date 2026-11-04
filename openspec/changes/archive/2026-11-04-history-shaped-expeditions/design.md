@@ -1,0 +1,10 @@
+## Decisions
+- A pure seeded ShipHistory supplies cause, controller, survivor agenda, population, arc variant and an accessible origin in the first district. Generator 5 and narrative 2 consume the same data; older versions retain their original functions.
+- New room composition favors the cause's sector while preserving introductory rooms, connected topology and bounded geometry. Frost, bloom, quarantine or fire propagate along room connections from compatible sources; the main origin is a real cryonics, xenobiology, command or reactor room.
+- Origin machinery, survivor waystations and control notices use side-space geometry and readable notices. Actual player visits persist historical discoveries; map previews and background generation do not.
+- Original motivations gain direct commissions alongside dependency arcs. Containment targets the physical origin and offers purge, seal or prepared isolation. Optional work unlocks the third outcome. The journal and dossier derive all text from the same cause and selected arc.
+- Append scene IDs without renumbering existing ones. Format 8 writes the extended array; format 7 reads exactly its original sixteen entries. Retain narrative 1 with generator 4, narrative 2 with generator 5, and legacy campaign saves. Add real pre-change generator-4 plan/geometry goldens before editing generation.
+- Purging the origin records its remaining defeated infestation through ordinary world records; other outcome systems are represented in the debrief. Faction NPC behavior and physical power rerouting are later work.
+
+## Validation
+Sample seeds for every cause/profile/arc, connected incident sources, matching notices, protected routes and bounded geometry. Preserve generator-3 and generator-4 goldens. Test all motives and outcome variants, arbitrary discovery order, immutable sites, cooperative idempotency, old/new save round trips and malformed payload rollback. Exercise real movement/combat campaigns and browser keyboard/touch dossiers, origin exploration, choices and persistence.

@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 4u
+#define SC_GENERATOR_VERSION 5u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -28,6 +28,21 @@ typedef enum { PILGRIM_ARK, CROWN_LINER, SIEGE_CARRIER, SEED_VAULT, SHIP_PROFILE
 typedef enum { SUITES, WORKBAYS, ARCADES, INTERIOR_LAYOUTS } InteriorLayout;
 typedef enum { QUIET, BLACKOUT, FROST, QUARANTINE, FIRE, BLOOM, INCIDENT_TYPES } Incident;
 typedef enum {
+    CRYO_RUPTURE,
+    XENO_OUTBREAK,
+    MACHINE_PURGE,
+    REACTOR_CASCADE,
+    HISTORY_CAUSES
+} HistoryCause;
+typedef enum { DIRECT_COMMISSION, DEPENDENT_TARGET } HistoryArc;
+typedef enum { HISTORY_NONE, HISTORY_ORIGIN, HISTORY_SURVIVORS, HISTORY_CONTROL } HistoryRole;
+typedef struct {
+    HistoryCause cause;
+    HistoryArc arc;
+    Cell origin;
+    unsigned population;
+} ShipHistory;
+typedef enum {
     NO_LANDMARK,
     BANQUET,
     CONSERVATORY,
@@ -44,7 +59,7 @@ typedef struct {
     Cell cell;
     RoomType type;
     District district;
-    uint8_t theme, layout, incident, intensity, landmark;
+    uint8_t theme, layout, incident, intensity, landmark, history_role;
     uint8_t span_x, span_z;
     double width, depth, height;
     uint32_t hash;
@@ -97,7 +112,7 @@ typedef struct {
     Cell cell;
     RoomType type;
     District district;
-    uint8_t theme, layout, incident, intensity, landmark;
+    uint8_t theme, layout, incident, intensity, landmark, history_role;
     uint8_t span_x, span_z;
     double width, depth, height;
     uint32_t hash;
@@ -162,6 +177,14 @@ Connector world_connector_version(uint32_t seed, uint32_t generator, Cell cell,
                                   Direction direction);
 uint32_t world_fingerprint_version(uint32_t seed, uint32_t generator, Cell region);
 ShipProfile world_profile(uint32_t seed);
+ShipHistory world_history(uint32_t seed);
+unsigned world_history_theme(HistoryCause cause);
+Incident world_history_incident(HistoryCause cause);
+const char *world_history_cause(HistoryCause cause);
+const char *world_history_controller(HistoryCause cause);
+const char *world_history_agenda(uint32_t seed);
+const char *world_history_role(unsigned role);
+void world_history_notice(uint32_t seed, unsigned role, char *text, size_t size);
 const char *world_profile_name(ShipProfile profile);
 const char *world_layout_name(unsigned layout);
 const char *world_incident_name(unsigned incident);

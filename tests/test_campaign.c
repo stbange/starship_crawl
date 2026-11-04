@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-static Cell next_cell(uint32_t seed, Cell from, Cell target) {
+static Cell next_cell(uint32_t seed, unsigned generator, Cell from, Cell target) {
     int parent[16], queue[16], head = 0, tail = 0;
     for (int i = 0; i < 16; i++)
         parent[i] = -1;
@@ -16,7 +16,8 @@ static Cell next_cell(uint32_t seed, Cell from, Cell target) {
         Cell c = {id % 4, from.y, id / 4};
         for (int d = 0; d < 4; d++) {
             Cell n = world_neighbor(c, (Direction)d);
-            if (n.x < 0 || n.x > 3 || n.z < 0 || n.z > 3 || !world_door(seed, c, (Direction)d))
+            if (n.x < 0 || n.x > 3 || n.z < 0 || n.z > 3 ||
+                !world_door_version(seed, generator, c, (Direction)d))
                 continue;
             int ni = n.z * 4 + n.x;
             if (parent[ni] >= 0)
@@ -32,11 +33,17 @@ static Cell next_cell(uint32_t seed, Cell from, Cell target) {
         id = parent[id];
     return (Cell){id % 4, from.y, id / 4};
 }
-static int campaign(uint32_t seed, unsigned choice, const char *fixture) {
+static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigned version) {
     Game *g = malloc(sizeof(*g));
     if (!g)
         return 2;
     game_init(g, seed);
+    if (version < 2) {
+        world_destroy(&g->world);
+        world_init(&g->world, seed);
+        g->world.generator = 4;
+        g->story.version = 1;
+    }
     if (!choice)
         g->story = (Story){0};
     Vec3 waypoint = {0};
@@ -51,10 +58,10 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture) {
         world_stream(&g->world, SC_STREAM_BUDGET);
         Cell target;
         if (choice == 3) {
-            for (unsigned i = STORY_REACTOR; i <= STORY_MIRROR; i++)
-                if (game_story_available(g, i))
-                    while (g->story.tracked != i)
-                        game_story_track(g);
+            unsigned op = game_story_operation(g);
+            if (game_story_available(g, op))
+                while (g->story.tracked != op)
+                    game_story_track(g);
         }
         game_objective(g, &target);
         Cell cell = world_cell(feet);
@@ -73,7 +80,7 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture) {
             else if (cell.x == target.x && cell.z == target.z)
                 waypoint = game_terminal(target);
             else
-                waypoint = world_center(next_cell(g->world.seed, cell, target));
+                waypoint = world_center(next_cell(g->world.seed, g->world.generator, cell, target));
             have = true;
         }
         Vec3 diff = vsub(waypoint, feet);
@@ -120,9 +127,10 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture) {
             a[0].forward = (float)vdot(move, forward);
             a[0].strafe = (float)vdot(move, right);
         }
-        a[0].crouch =
-            world_describe(g->world.seed, cell).height < 2 ||
-            (distance > 1 && world_describe(g->world.seed, world_cell(waypoint)).height < 2);
+        a[0].crouch = world_describe_version(g->world.seed, g->world.generator, cell).height < 2 ||
+                      (distance > 1 && world_describe_version(g->world.seed, g->world.generator,
+                                                              world_cell(waypoint))
+                                               .height < 2);
         game_step(g, a, 1.0 / 60);
         if (g->world.last_work > SC_STREAM_BUDGET || g->world.chunk_count > SC_MAX_CHUNKS ||
             !isfinite(p->health) || !isfinite(p->shield) || !isfinite(p->energy) || p->shield < 0 ||
@@ -179,21 +187,43 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture) {
 }
 
 int main(int argc, char **argv) {
-    if (argc > 1 && (strcmp(argv[1], "--story") == 0 || strcmp(argv[1], "--story-fixtures") == 0)) {
-        bool fixtures = strcmp(argv[1], "--story-fixtures") == 0;
+    if (argc > 1 &&
+        (strcmp(argv[1], "--history") == 0 || strcmp(argv[1], "--history-fixtures") == 0)) {
+        bool fixtures = strcmp(argv[1], "--history-fixtures") == 0;
+        for (unsigned motivation = 0; motivation < 4; motivation++)
+            for (unsigned arc = 0; arc < (motivation == STORY_CONTAINMENT ? 1u : 2u); arc++) {
+                unsigned seed = 1;
+                while ((unsigned)story_motivation(seed) != motivation ||
+                       world_history(seed).arc != (HistoryArc)arc)
+                    seed++;
+                for (unsigned choice = 1; choice <= 3; choice++) {
+                    char path[120];
+                    snprintf(path, sizeof(path), "tests/fixtures/history-%u-arc%u-choice%u.sav",
+                             motivation, arc, choice);
+                    printf("History expedition: motivation %u, arc %u, choice %u, seed %u\n",
+                           motivation, arc, choice, seed);
+                    if (campaign(seed, choice,
+                                 fixtures && arc == 0 &&
+                                         (choice == 3 ||
+                                          (choice == 1 && (motivation == STORY_RESCUE ||
+                                                           motivation == STORY_CONTAINMENT)))
+                                     ? path
+                                     : NULL,
+                                 2))
+                        return 1;
+                }
+            }
+        return 0;
+    }
+    if (argc > 1 && strcmp(argv[1], "--story") == 0) {
         for (unsigned motivation = 0; motivation < 3; motivation++) {
             unsigned seed = 1;
-            while ((unsigned)story_motivation(seed) != motivation)
+            while ((unsigned)story_motivation_version(seed, 1) != motivation)
                 seed++;
             for (unsigned choice = 1; choice <= 3; choice++) {
-                char path[120];
-                snprintf(path, sizeof(path), "tests/fixtures/story-%u-choice%u.sav", motivation,
-                         choice);
-                printf("Generated expedition: motivation %u, choice %u, seed %u\n", motivation,
-                       choice, seed);
-                if (campaign(seed, choice,
-                             fixtures && (choice == 3 || (motivation == 0 && choice == 1)) ? path
-                                                                                           : NULL))
+                printf("Legacy generated expedition: motivation %u, choice %u, seed %u\n",
+                       motivation, choice, seed);
+                if (campaign(seed, choice, NULL, 1))
                     return 1;
             }
         }
@@ -201,7 +231,7 @@ int main(int argc, char **argv) {
     }
     const uint32_t seeds[] = {713, 1, 42};
     for (unsigned i = 0; i < sizeof(seeds) / sizeof(seeds[0]); i++)
-        if (campaign(seeds[i], 0, NULL))
+        if (campaign(seeds[i], 0, NULL, 0))
             return 1;
     return 0;
 }

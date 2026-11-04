@@ -5,7 +5,7 @@ Portable validated saves that preserve the active game when an operation fails.
 ## Requirements
 
 ### Requirement: Portable format and migration
-Saves SHALL use a checksum and explicit generator compatibility across native and web. Format 7 SHALL retain narrative events, sites and choices alongside equipment, sanctuary and powers. Compatible formats 3–6 SHALL retain their original ship and legacy campaign. New expeditions SHALL use generator 4 and narrative version 1.
+Saves SHALL use a checksum and explicit generator compatibility across native and web. Format 8 SHALL retain narrative events, history discoveries, sites and choices alongside equipment, sanctuary and powers. Format 7 SHALL retain generator 4 and narrative version 1. Compatible formats 3–6 SHALL retain their original ship and legacy campaign. New expeditions SHALL use generator 5 and narrative version 2.
 
 #### Scenario: Legacy profile
 - **WHEN** a supported version-1 or version-2 file is loaded
@@ -29,11 +29,15 @@ Saves SHALL use a checksum and explicit generator compatibility across native an
 
 #### Scenario: New generation opt-in
 - **WHEN** a player starts a new ship after loading a generator-3 expedition
-- **THEN** the new ship uses generator 4 and narrative version 1 while keeping character progression.
+- **THEN** the new ship uses generator 5 and narrative version 2 while keeping character progression.
 
 #### Scenario: Narrative round trip
 - **WHEN** a format-7 expedition resumes
 - **THEN** its discoveries, assigned locations, tracked lead and conclusion agree with the saved state.
+
+#### Scenario: History round trip
+- **WHEN** a format-8 expedition resumes
+- **THEN** its generator-5 history, discoveries, fixed sites, conclusion and persistent purge agree with the saved state.
 
 ### Requirement: Transactional validation
 

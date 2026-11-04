@@ -128,7 +128,7 @@ def run():
             assert not state(page)['failed'] and not errors
             mobile.close()
             browser.close()
-            print('PASS features browser: 25 body variants, HUD/deck maps and objective, pan/deck/recenter, visible shots reveal veil, flight, charged jump, nova, v7 reload, shelter toggle, mobile powers/map')
+            print('PASS features browser: 25 body variants, HUD/deck maps and objective, pan/deck/recenter, visible shots reveal veil, flight, charged jump, nova, v8 reload, shelter toggle, mobile powers/map')
     except Exception:
         detail = traceback.format_exc().replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
         print('::error title=Navigation and psionics browser regression::' + detail, flush=True)

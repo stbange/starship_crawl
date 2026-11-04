@@ -6,7 +6,10 @@
 #define BIT(n) (UINT32_C(1) << (n))
 #define EVIDENCE (BIT(STORY_REFUGE) | BIT(STORY_ARCHIVE) | BIT(STORY_LEDGER))
 #define CLUES UINT32_C(62)
-#define TARGETS (BIT(STORY_SURVIVORS) | BIT(STORY_MEMORY) | BIT(STORY_DRIVE))
+#define HISTORY_RECORDS                                                                            \
+    (BIT(STORY_ORIGIN_RECORD) | BIT(STORY_SURVIVOR_RECORD) | BIT(STORY_CONTROL_RECORD))
+#define PASSIVE (CLUES | HISTORY_RECORDS)
+#define TARGETS (BIT(STORY_SURVIVORS) | BIT(STORY_MEMORY) | BIT(STORY_DRIVE) | BIT(STORY_SOURCE))
 
 const StoryTemplate sc_story_templates[SC_STORY_SCENES] = {
     {"RECEIVE THE COMMISSION", BAY, SANCTUM},
@@ -24,12 +27,26 @@ const StoryTemplate sc_story_templates[SC_STORY_SCENES] = {
     {"REACH THE SURVIVOR VAULT", CREW, CRYONICS},
     {"REACH THE LIVING ARCHIVE", NAVE, RESEARCH},
     {"REACH THE ALIEN DRIVE", ENGINE, MACHINERY},
-    {"RETURN TO THE EXTRACTION BEACON", BAY, SANCTUM}};
+    {"RETURN TO THE EXTRACTION BEACON", BAY, SANCTUM},
+    {"CONTAIN THE CATASTROPHE SOURCE", ENGINE, RESEARCH},
+    {"RESTORE THE ISOLATION GRID", ENGINE, COMMAND},
+    {"THE COLLAPSE ORIGIN", ENGINE, MACHINERY},
+    {"A SURVIVOR NOTICE", CREW, HABITAT},
+    {"THE CONTROLLER'S SIGNATURE", NAVE, COMMAND}};
 static unsigned history(uint32_t seed, unsigned salt, unsigned count) {
     return world_hash(seed, (Cell){0, 0, 0}, UINT32_C(0x53540000) + salt) % count;
 }
+StoryMotivation story_motivation_version(uint32_t seed, unsigned version) {
+    return (StoryMotivation)history(seed, 1, version < 2 ? 3 : 4);
+}
 StoryMotivation story_motivation(uint32_t seed) {
-    return (StoryMotivation)history(seed, 1, 3);
+    return story_motivation_version(seed, 2);
+}
+static StoryMotivation motivation(const Game *g) {
+    return story_motivation_version(g->world.seed, g->story.version);
+}
+static bool direct(const Game *g) {
+    return g->story.version >= 2 && world_history(g->world.seed).arc == DIRECT_COMMISSION;
 }
 const char *story_ship(uint32_t seed) {
     static const char *names[] = {"SAINT VESPER", "MOURNING GLASS", "THE NINTH MERCY",
@@ -37,11 +54,15 @@ const char *story_ship(uint32_t seed) {
                                   "BLACK LITANY", "LAST DAWN"};
     return names[history(seed, 2, 8)];
 }
-const char *story_commission(uint32_t seed) {
+const char *story_commission_version(uint32_t seed, unsigned version) {
     static const char *names[] = {"RESCUE / BRING THE LOST HOME",
                                   "KNOWLEDGE / RECOVER A LOST STAR CHART",
-                                  "SALVAGE / RECOVER AN ALIEN DRIVE"};
-    return names[story_motivation(seed)];
+                                  "SALVAGE / RECOVER AN ALIEN DRIVE",
+                                  "CONTAINMENT / KEEP THE INFESTATION FROM REACHING HOME"};
+    return names[story_motivation_version(seed, version)];
+}
+const char *story_commission(uint32_t seed) {
+    return story_commission_version(seed, 2);
 }
 static const char *survivors(uint32_t seed) {
     static const char *groups[] = {"PILGRIMS", "PASSENGERS", "PRISONERS", "SEED CUSTODIANS"};
@@ -53,12 +74,33 @@ static const char *cause(uint32_t seed) {
                                    "A DEFENSE PURGE STRUCK THE LIFE SUPPORT GRID"};
     return causes[history(seed, 3, 3)];
 }
-static unsigned target(uint32_t seed) {
-    return STORY_SURVIVORS + story_motivation(seed);
+static unsigned target(uint32_t seed, unsigned version) {
+    const unsigned scenes[] = {STORY_SURVIVORS, STORY_MEMORY, STORY_DRIVE, STORY_SOURCE};
+    return scenes[story_motivation_version(seed, version)];
 }
-static unsigned optional(uint32_t seed) {
-    const unsigned scenes[] = {STORY_EVAC, STORY_MIRROR, STORY_REACTOR};
-    return scenes[story_motivation(seed)];
+static unsigned optional(uint32_t seed, unsigned version) {
+    const unsigned scenes[] = {STORY_EVAC, STORY_MIRROR, STORY_REACTOR, STORY_ISOLATOR};
+    return scenes[story_motivation_version(seed, version)];
+}
+unsigned game_story_target(const Game *g) {
+    return target(g->world.seed, g->story.version);
+}
+unsigned game_story_operation(const Game *g) {
+    return optional(g->world.seed, g->story.version);
+}
+bool game_story_prepared(const Game *g) {
+    return (g->story.done & BIT(game_story_operation(g))) != 0;
+}
+const char *game_story_title(const Game *g, unsigned scene) {
+    if (direct(g)) {
+        if (scene == STORY_REACTOR)
+            return "RESTART THE ALIEN FABRICATOR";
+        if (scene == STORY_EVAC)
+            return "REACH THE REMOTE SLEEPER RELAY";
+        if (scene == STORY_MIRROR)
+            return "REBUILD THE DAMAGED CATALOGUE";
+    }
+    return scene < SC_STORY_SCENES ? sc_story_templates[scene].title : "UNKNOWN RECORD";
 }
 static unsigned progress(const Story *s) {
     if (s->done & BIT(STORY_EXTRACTION))
@@ -70,12 +112,12 @@ static unsigned progress(const Story *s) {
 }
 void story_init(Story *s) {
     memset(s, 0, sizeof(*s));
-    s->version = 1;
+    s->version = 2;
     s->assigned = BIT(STORY_BRIEFING);
 }
 static bool available(const Story *s, unsigned scene) {
     return scene < SC_STORY_SCENES && (s->assigned & BIT(scene)) && !(s->done & BIT(scene)) &&
-           !(CLUES & BIT(scene)) && (!s->choice || scene == STORY_EXTRACTION);
+           !(PASSIVE & BIT(scene)) && (!s->choice || scene == STORY_EXTRACTION);
 }
 bool game_story_available(const Game *g, unsigned scene) {
     return g->story.version && available(&g->story, scene);
@@ -99,6 +141,12 @@ static void reserve(Game *g, unsigned scene, Cell from) {
     Story *s = &g->story;
     if (s->assigned & BIT(scene))
         return;
+    ShipHistory past = world_history(g->world.seed);
+    if (scene == STORY_SOURCE) {
+        s->sites[scene] = past.origin;
+        s->assigned |= BIT(scene);
+        return;
+    }
     Cell best = {0};
     double score = 1e9;
     /* Bounded introductory catchment; all cells have lifts and connected doors.
@@ -110,9 +158,10 @@ static void reserve(Game *g, unsigned scene, Cell from) {
                 RoomSpec room = world_describe_version(g->world.seed, g->world.generator, c);
                 if (!site_room(room) || !cell_equal(c, room.cell))
                     continue;
-                bool used = false;
-                for (int i = STORY_REFUGE; i < STORY_EXTRACTION; i++)
-                    used |= (s->assigned & BIT(i)) && cell_equal(s->sites[i], c);
+                bool used = motivation(g) == STORY_CONTAINMENT && cell_equal(c, past.origin);
+                for (int i = STORY_REFUGE; i <= STORY_ISOLATOR; i++)
+                    used |= i != STORY_EXTRACTION && (s->assigned & BIT(i)) &&
+                            cell_equal(s->sites[i], c);
                 if (used)
                     continue;
                 const StoryTemplate *def = &sc_story_templates[scene];
@@ -136,14 +185,14 @@ void game_story_track(Game *g) {
         if (available(&g->story, at)) {
             g->story.tracked = at;
             g->dirty = true;
-            game_message(g, sc_story_templates[at].title);
+            game_message(g, game_story_title(g, at));
             return;
         }
     }
 }
 void game_story_step(Game *g) {
     Story *s = &g->story;
-    if (!s->version || s->choice)
+    if (!s->version || (s->choice && s->version == 1))
         return;
     for (int p = 0; p < g->player_count; p++) {
         Player *player = &g->players[p];
@@ -162,13 +211,25 @@ void game_story_step(Game *g) {
         RoomSpec spec = world_describe_version(g->world.seed, g->world.generator, room->cell);
         if (!(s->done & BIT(STORY_BRIEFING)) || !site_room(spec))
             continue;
+        if (s->version >= 2 && spec.history_role) {
+            unsigned record = STORY_ORIGIN_RECORD + spec.history_role - 1;
+            if (!(s->seen & BIT(record))) {
+                s->sites[record] = spec.cell;
+                s->assigned |= BIT(record);
+                s->seen |= BIT(record);
+                g->dirty = true;
+                game_message(g, "HISTORY NOTICE RECORDED / F6 SHIP DOSSIER");
+            }
+        }
+        if (s->choice)
+            continue;
         unsigned found = clue(spec);
         if (s->seen & BIT(found))
             continue;
         s->sites[found] = room->cell;
         s->assigned |= BIT(found);
         s->seen |= BIT(found);
-        reserve(g, STORY_REFUGE + (story_motivation(g->world.seed) + 1) % 3, room->cell);
+        reserve(g, STORY_REFUGE + (motivation(g) + 1) % 3, room->cell);
         g->dirty = true;
         char observation[128];
         snprintf(observation, sizeof(observation), "%s / NEW EVIDENCE IN I JOURNAL / U TRACK LEADS",
@@ -219,7 +280,7 @@ static void complete(Game *g, int player, unsigned scene) {
         p->shield = player_max_shield(p);
         p->energy = player_max_energy(p);
         p->checkpoint = g->players[player].pos;
-        p->weapons |= BIT(scene == STORY_BRIEFING ? 1 : 4 + story_motivation(g->world.seed));
+        p->weapons |= BIT(scene == STORY_BRIEFING ? 1 : 4 + motivation(g));
         if (scene == STORY_EXTRACTION) {
             const unsigned pay[] = {0, 250, 180, 400};
             p->credits += pay[s->choice];
@@ -250,43 +311,61 @@ void game_story_interact(Game *g, int player) {
     }
     complete(g, player, scene);
     if (scene == STORY_BRIEFING) {
-        unsigned lead = STORY_REFUGE + story_motivation(g->world.seed);
+        unsigned lead = STORY_REFUGE + motivation(g) % 3;
         reserve(g, lead, (Cell){0, 0, 0});
         s->tracked = lead;
     } else if (EVIDENCE & BIT(scene)) {
-        unsigned goal = target(g->world.seed);
+        unsigned goal = game_story_target(g);
         reserve(g, goal, s->sites[scene]);
-        reserve(g, optional(g->world.seed), s->sites[scene]);
+        reserve(g, game_story_operation(g), s->sites[scene]);
         s->tracked = goal;
     } else if (scene != STORY_EXTRACTION)
-        s->tracked = target(g->world.seed);
+        s->tracked = game_story_target(g);
     char message[128];
     game_story_entry(g, scene, message, sizeof(message));
     game_message(g, message);
 }
 const char *game_story_choice(const Game *g, unsigned choice) {
-    static const char *options[3][3] = {
+    static const char *options[4][3] = {
         {"EVACUATE THE AWAKE / SLEEPERS STAY BEHIND", "FORTIFY THE REFUGE / ALL STAY ABOARD",
          "EVACUATE EVERYONE / ALL SURVIVORS GO HOME"},
         {"TAKE THE ARCHIVE / REFUGE LOSES ITS NAVIGATOR",
          "TRANSMIT A SURVEY / KEEP THE ARCHIVE ABOARD",
          "COPY THE FULL ARCHIVE / KEEP THE NAVIGATOR ABOARD"},
         {"TAKE THE DRIVE / REFUGE LOSES POWER", "LEAVE THE DRIVE / PRESERVE THE REFUGE",
-         "TAKE THE DRIVE SAFELY / REFUGE KEEPS ITS POWER"}};
-    return choice >= 1 && choice <= 3 ? options[story_motivation(g->world.seed)][choice - 1] : "";
+         "TAKE THE DRIVE SAFELY / REFUGE KEEPS ITS POWER"},
+        {"PURGE THE SOURCE / DESTROY ITS RESEARCH", "SEAL THE SOURCE / LEAVE IT ABOARD",
+         "ISOLATE THE SOURCE / PRESERVE THE RESEARCH"}};
+    static const char *simple[3][3] = {
+        {"EVACUATE THE REFUGE / EVERYONE HERE GOES HOME", "ESTABLISH A REFUGE / CREW STAYS ABOARD",
+         "EVACUATE BOTH GROUPS / RESCUE THE REMOTE SLEEPERS TOO"},
+        {"COPY THE CHART / COMPLETE THE COMMISSION", "TRANSMIT THE CHART / LEAVE THE ORIGINAL",
+         "COPY THE FULL CATALOGUE / RECOVER THE LOST ROUTES TOO"},
+        {"TAKE THE SPARE DRIVE / COMPLETE THE COMMISSION",
+         "TRANSMIT ITS BLUEPRINTS / LEAVE THE DRIVE",
+         "RECOVER DRIVE AND FABRICATOR / BRING HOME MORE TECHNOLOGY"}};
+    if (direct(g) && motivation(g) < STORY_CONTAINMENT && choice >= 1 && choice <= 3)
+        return simple[motivation(g)][choice - 1];
+    return choice >= 1 && choice <= 3 ? options[motivation(g)][choice - 1] : "";
 }
 bool game_story_choose(Game *g, int player, unsigned choice) {
     unsigned scene = game_story_near(g, player);
-    if (choice < 1 || choice > 3 || scene != target(g->world.seed) ||
+    if (choice < 1 || choice > 3 || scene != game_story_target(g) ||
         !g->players[player].decision_open)
         return false;
-    if (choice == 3 && !(g->story.done & BIT(optional(g->world.seed)))) {
+    if (choice == 3 && !game_story_prepared(g)) {
         game_message(g, "OPTIONAL OPERATION REQUIRED / U TRACK IT / ENTER TO RETURN");
         return false;
     }
     if (!clear(g, scene))
         return false;
     complete(g, player, scene);
+    if (scene == STORY_SOURCE && choice == 1) {
+        Room *source = world_find(&g->world, g->story.sites[scene]);
+        if (source)
+            for (int i = 0; i < source->enemy_count; i++)
+                world_kill(&g->world, source, i);
+    }
     g->story.choice = choice;
     g->story.assigned |= BIT(STORY_EXTRACTION);
     g->story.tracked = STORY_EXTRACTION;
@@ -313,6 +392,10 @@ void game_story_entry(const Game *g, unsigned scene, char *text, size_t size) {
         snprintf(text, size, "NO OBSERVATION YET / EXPLORE THE SHIP");
         return;
     }
+    if (scene >= STORY_ORIGIN_RECORD) {
+        world_history_notice(g->world.seed, scene - STORY_ORIGIN_RECORD + 1, text, size);
+        return;
+    }
     static const char *details[] = {
         "COMMISSION ACCEPTED. INVESTIGATE THE SIGNAL; SECURE SITES FOR 75 SALVAGE AND 2 POINTS.",
         "FRESH BOOTPRINTS CROSS OLD DUST. SOMEONE STILL TRAVELS BETWEEN THE REFUGES.",
@@ -330,35 +413,77 @@ void game_story_entry(const Game *g, unsigned scene, char *text, size_t size) {
         "THE VAULT HAS AWAKE SURVIVORS AND IMMOBILE SLEEPERS. THE EVACUATION RELAY CAN CARRY BOTH.",
         "THE STAR CHART IS A LIVING ARCHIVE. THE REFUGE ALSO RELIES ON IT FOR SAFE NAVIGATION.",
         "THE ALIEN DRIVE IS INTACT. ITS OUTPUT IS KEEPING THE REFUGE'S LIFE SUPPORT ALIVE.",
-        "EXTRACTION COMPLETE. YOUR CHOICE IS RECORDED; EXPLORE ON OR BEGIN A NEW EXPEDITION."};
+        "EXTRACTION COMPLETE. YOUR CHOICE IS RECORDED; EXPLORE ON OR BEGIN A NEW EXPEDITION.",
+        "THE COLLAPSE SOURCE IS STILL ACTIVE. PURGE IT, SEAL IT ABOARD, OR RESTORE ISOLATION TO "
+        "SAVE THE RESEARCH.",
+        "ISOLATION GRID RESTORED. THE SOURCE CAN NOW BE CONTAINED WITHOUT DESTROYING ITS "
+        "RESEARCH."};
+    const char *detail = details[scene];
+    if (direct(g)) {
+        switch (scene) {
+        case STORY_ARCHIVE:
+            detail = "THE WITNESS IDENTIFIES THE TARGET AND A SECOND RECOVERY OPPORTUNITY.";
+            break;
+        case STORY_REACTOR:
+            detail =
+                "FABRICATOR RESTORED. ITS ALIEN DESIGN CAN BE RECOVERED ALONGSIDE THE SPARE DRIVE.";
+            break;
+        case STORY_EVAC:
+            detail = "REMOTE RELAY RESTORED. SLEEPERS FROM ANOTHER REFUGE CAN JOIN THE EVACUATION.";
+            break;
+        case STORY_MIRROR:
+            detail = "CATALOGUE REBUILT. THE CHART CAN NOW INCLUDE PREVIOUSLY LOST ROUTES.";
+            break;
+        case STORY_SURVIVORS:
+            detail = "THE REFUGE IS READY TO EVACUATE. THE RELAY CAN ALSO RESCUE A REMOTE GROUP OF "
+                     "SLEEPERS.";
+            break;
+        case STORY_MEMORY:
+            detail = "THE CHART IS AN INDEPENDENT SURVEY. ITS DAMAGED CATALOGUE COULD REVEAL "
+                     "ADDITIONAL ROUTES.";
+            break;
+        case STORY_DRIVE:
+            detail = "THIS IS A SPARE DRIVE. TAKING IT LEAVES SHIP POWER INTACT. A NEARBY "
+                     "FABRICATOR OFFERS MORE TECHNOLOGY.";
+            break;
+        default:
+            break;
+        }
+    }
     RoomSpec room = world_describe_version(g->world.seed, g->world.generator, s->sites[scene]);
-    snprintf(text, size, "%s: %s", sc_themes[room.theme].name, details[scene]);
+    snprintf(text, size, "%s: %s", sc_themes[room.theme].name, detail);
 }
 void game_story_line(const Game *g, int line, char *text, size_t size) {
     const Story *s = &g->story;
     if (line == 0)
         snprintf(text, size, "%s / %s", story_ship(g->world.seed), survivors(g->world.seed));
     else if (line == 1)
-        snprintf(text, size, "%s", story_commission(g->world.seed));
+        snprintf(text, size, "%s", story_commission_version(g->world.seed, s->version));
     else if (line == 2)
         snprintf(text, size, "SITE PAY 75 SALVAGE + 2 POINTS / EXTRACTION BONUS 180-400");
     else if (line == 3)
         snprintf(text, size, "%s",
-                 s->done & EVIDENCE ? cause(g->world.seed)
-                                    : "CAUSE OF COLLAPSE UNKNOWN / INVESTIGATE A LEAD");
+                 (s->done & EVIDENCE) || (s->version >= 2 && (s->seen & BIT(STORY_ORIGIN_RECORD)))
+                     ? (s->version >= 2 ? world_history_cause(world_history(g->world.seed).cause)
+                                        : cause(g->world.seed))
+                     : "CAUSE OF COLLAPSE UNKNOWN / INVESTIGATE A LEAD");
     else if (line == 4) {
         const char *facts[] = {"THE VAULT HOLDS AWAKE SURVIVORS AND IMMOBILE SLEEPERS",
                                "THE REFUGE USES THE REQUESTED ARCHIVE AS ITS NAVIGATOR",
-                               "THE REQUESTED DRIVE POWERS THE REFUGE'S LIFE SUPPORT"};
+                               "THE REQUESTED DRIVE POWERS THE REFUGE'S LIFE SUPPORT",
+                               "THE ACTIVE SOURCE THREATENS THE SHIP'S NEXT INHABITED PORT"};
+        const char *simple[] = {"THE REFUGE IS READY TO LEAVE / A SECOND GROUP COULD ALSO BE SAVED",
+                                "THE CHART IS INDEPENDENT / ITS CATALOGUE HAS LOST ROUTES",
+                                "THE SPARE DRIVE CAN BE REMOVED WITHOUT DISRUPTING SHIP POWER",
+                                "THE ACTIVE SOURCE THREATENS THE SHIP'S NEXT INHABITED PORT"};
         snprintf(text, size, "%s",
-                 s->done & EVIDENCE ? facts[story_motivation(g->world.seed)]
+                 s->done & EVIDENCE ? (direct(g) ? simple : facts)[motivation(g)]
                                     : "THE TARGET'S CONDITION IS UNCONFIRMED");
     } else if (line == 5)
         snprintf(text, size, "%s",
-                 s->choice ? "DECISION COMMITTED / OPTIONAL LEADS ARE CLOSED"
-                 : s->done & BIT(optional(g->world.seed))
-                     ? "OPTIONAL OPERATION COMPLETE / THIRD OUTCOME AVAILABLE"
-                     : "OPTIONAL PREPARATION CAN UNLOCK ANOTHER OUTCOME");
+                 s->choice                ? "DECISION COMMITTED / OPTIONAL LEADS ARE CLOSED"
+                 : game_story_prepared(g) ? "OPTIONAL OPERATION COMPLETE / THIRD OUTCOME AVAILABLE"
+                                          : "OPTIONAL PREPARATION CAN UNLOCK ANOTHER OUTCOME");
     else if (line == 6)
         snprintf(text, size, "%s",
                  s->choice ? game_story_choice(g, s->choice) : "NO FINAL DECISION MADE");
@@ -368,18 +493,59 @@ void game_story_line(const Game *g, int line, char *text, size_t size) {
                      ? "VICTORY RECORDED / CONTINUE EXPLORING OR N FOR A NEW SHIP"
                      : "EXTRACT AT THE BAY AFTER RESOLVING THE TARGET");
 }
+void game_story_dossier(const Game *g, int line, char *text, size_t size) {
+    if (g->story.version < 2) {
+        snprintf(text, size, "ARCHIVAL EXPEDITION / SEE THE ORIGINAL FIELD RECORDS IN I JOURNAL");
+        return;
+    }
+    ShipHistory past = world_history(g->world.seed);
+    const Story *s = &g->story;
+    bool evidence = (s->done & EVIDENCE) != 0;
+    bool origin = evidence || (s->seen & BIT(STORY_ORIGIN_RECORD));
+    bool group = evidence || (s->seen & BIT(STORY_SURVIVOR_RECORD));
+    bool control = evidence || (s->seen & BIT(STORY_CONTROL_RECORD));
+    if (line == 0)
+        snprintf(text, size, "%s / ORIGINAL PURPOSE: %s", story_ship(g->world.seed),
+                 world_profile_name(world_profile(g->world.seed)));
+    else if (line == 1)
+        snprintf(text, size, "LAST MANIFEST: %u %s / CURRENT SURVIVOR COUNT UNCONFIRMED",
+                 past.population, survivors(g->world.seed));
+    else if (line == 2)
+        snprintf(text, size, "%s",
+                 origin ? world_history_cause(past.cause)
+                        : "COLLAPSE: UNKNOWN / INVESTIGATE WITNESSES OR DAMAGE NOTICES");
+    else if (line == 3) {
+        if (origin)
+            snprintf(text, size, "CATASTROPHE ORIGIN [%d,%d,%d] / %s", past.origin.x, past.origin.y,
+                     past.origin.z, sc_themes[world_history_theme(past.cause)].name);
+        else
+            snprintf(text, size, "ORIGIN: UNCONFIRMED / FOLLOW THE CONNECTED DAMAGE TRAIL");
+    } else if (line == 4)
+        snprintf(text, size, "%s",
+                 control ? world_history_controller(past.cause)
+                         : "CURRENT CONTROLLER: UNKNOWN / LOOK FOR LOCKOUT NOTICES");
+    else if (line == 5)
+        snprintf(text, size, "%s",
+                 group ? world_history_agenda(g->world.seed)
+                       : "SURVIVOR AGENDA: UNKNOWN / LOOK FOR WAYSTATION NOTICES");
+    else if (line == 6)
+        game_story_line(g, 4, text, size);
+    else
+        game_story_line(g, 6, text, size);
+}
 bool story_valid(const Story *s, uint32_t seed, uint32_t generator, uint32_t mission) {
     if (s->version == 0) {
         Story empty = {0};
         return memcmp(s, &empty, sizeof(*s)) == 0 && mission <= 6;
     }
-    unsigned goal = target(seed), op = optional(seed), lead = STORY_REFUGE + story_motivation(seed);
-    unsigned alternate = STORY_REFUGE + (story_motivation(seed) + 1) % 3;
-    uint32_t allowed =
-        BIT(0) | CLUES | BIT(lead) | BIT(alternate) | BIT(op) | BIT(goal) | BIT(STORY_EXTRACTION);
-    if (s->version != 1 || generator != SC_GENERATOR_VERSION || s->assigned & ~allowed ||
-        !(s->assigned & BIT(0)) || s->seen & ~s->assigned || s->done & ~s->seen ||
-        s->done & CLUES || s->choice > 3 || s->tracked >= SC_STORY_SCENES ||
+    unsigned goal = target(seed, s->version), op = optional(seed, s->version);
+    unsigned m = story_motivation_version(seed, s->version);
+    unsigned lead = STORY_REFUGE + m % 3, alternate = STORY_REFUGE + (m + 1) % 3;
+    uint32_t allowed = BIT(0) | CLUES | (s->version >= 2 ? HISTORY_RECORDS : 0) | BIT(lead) |
+                       BIT(alternate) | BIT(op) | BIT(goal) | BIT(STORY_EXTRACTION);
+    if ((s->version != 1 && s->version != 2) || generator != (s->version == 1 ? 4u : 5u) ||
+        s->assigned & ~allowed || !(s->assigned & BIT(0)) || s->seen & ~s->assigned ||
+        s->done & ~s->seen || s->done & PASSIVE || s->choice > 3 || s->tracked >= SC_STORY_SCENES ||
         mission != progress(s) || (s->choice != 0) != ((s->done & BIT(goal)) != 0) ||
         (s->choice == 3 && !(s->done & BIT(op))))
         return false;
@@ -408,11 +574,16 @@ bool story_valid(const Story *s, uint32_t seed, uint32_t generator, uint32_t mis
         if (CLUES & BIT(i)) {
             if (!(s->seen & BIT(i)) || clue(room) != (unsigned)i)
                 return false;
+        } else if (HISTORY_RECORDS & BIT(i)) {
+            if (!(s->seen & BIT(i)) || room.history_role != (unsigned)i - STORY_ORIGIN_RECORD + 1)
+                return false;
         } else {
+            if (i == STORY_SOURCE && !cell_equal(c, world_history(seed).origin))
+                return false;
             if (c.x < 0 || c.x > 3 || c.y < -1 || c.y > 1 || c.z > 3)
                 return false;
             for (int j = STORY_REFUGE; j < i; j++)
-                if ((s->assigned & BIT(j)) && cell_equal(c, s->sites[j]))
+                if (j != STORY_EXTRACTION && (s->assigned & BIT(j)) && cell_equal(c, s->sites[j]))
                     return false;
         }
     }

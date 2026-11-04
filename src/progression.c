@@ -83,7 +83,7 @@ bool game_objective(const Game *g, Cell *cell) {
 const char *game_mission(const Game *g) {
     if (g->story.version)
         return g->mission == 6 ? "EXPEDITION COMPLETE / YOUR CHOICE ENDURES"
-                               : sc_story_templates[g->story.tracked].title;
+                               : game_story_title(g, g->story.tracked);
     return missions[g->mission < 6 ? g->mission : 6];
 }
 Vec3 game_terminal(Cell cell) {

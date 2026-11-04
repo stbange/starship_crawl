@@ -62,6 +62,7 @@ jobs:
           ./build/starship_crawl --seed 713 --scene mech --split --smoke 30 --no-save
           ./build/starship_crawl --seed 713 --scene wagon --smoke 30 --no-save
           ./build/starship_crawl --seed 713 --scene landmark3 --split --smoke 30 --no-save
+          ./build/starship_crawl --seed 22 --scene origin --split --smoke 30 --no-save
       - uses: actions/upload-artifact@v4
         with:
           name: native-${{ runner.os }}
@@ -116,7 +117,7 @@ jobs:
         run: python tests/test_equipment_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Explore generated interiors and discoveries
         run: python tests/test_interiors_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Play generated story discoveries and decisions
+      - name: Play generated histories, dossiers and decisions
         run: python tests/test_story_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Retain browser captures
         if: always()

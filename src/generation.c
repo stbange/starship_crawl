@@ -130,13 +130,13 @@ const char *world_landmark_name(unsigned landmark) {
                                   "THE HANGING HEART", "RELIQUARY OF VOICES"};
     return names[landmark % LANDMARK_TYPES];
 }
-static void history(RegionPlan *p, uint32_t hash) {
+static void history(RegionPlan *p, uint32_t hash, int preferred, unsigned incident) {
     /* Distances are over logical rooms, so a hall is one connected incident.
        The safe bay is excluded from propagation as well as decoration. */
     int distance[16], queue[16], head = 0, tail = 1;
     for (int i = 0; i < p->count; i++)
         distance[i] = 99;
-    int source = (int)(hash % (unsigned)p->count);
+    int source = preferred >= 0 ? preferred : (int)(hash % (unsigned)p->count);
     if (p->rooms[source].type == BAY)
         source = (source + 1) % p->count;
     distance[source] = 0;
@@ -161,7 +161,7 @@ static void history(RegionPlan *p, uint32_t hash) {
     }
     for (int i = 0; i < p->count; i++)
         if (distance[i] < 4) {
-            p->rooms[i].incident = (uint8_t)(1 + (hash >> 8) % (INCIDENT_TYPES - 1));
+            p->rooms[i].incident = (uint8_t)incident;
             p->rooms[i].intensity = (uint8_t)(distance[i] < 2 ? 3 - distance[i] : 1);
         }
 }
@@ -169,6 +169,7 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
     memset(p, 0, sizeof(*p));
     p->origin = (Cell){region.x * 4, region.y, region.z * 4};
     uint32_t h = world_hash(seed ^ generator, region, 101);
+    ShipHistory past = world_history(seed);
     int layer = ((region.y % DISTRICT_TYPES) + DISTRICT_TYPES) % DISTRICT_TYPES;
     p->district =
         (District)((layer + (h % 4 == 0 ? (h >> 14) % DISTRICT_TYPES : 0)) % DISTRICT_TYPES);
@@ -180,6 +181,8 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
             {BOTANY, RESEARCH, CRYONICS, HABITAT, MACHINERY, SANCTUM, LUXURY, COMMAND, LOGISTICS}};
         p->district = decks[world_profile(seed)][p->district];
     }
+    if (generator >= 5 && (h >> 11) % 4 == 0)
+        p->district = sc_themes[world_history_theme(past.cause)].sector;
     if (!region.x && !region.y && !region.z)
         p->district = SANCTUM;
     int hx = (int)((h >> 5) % 3), hz = (int)((h >> 9) % 3);
@@ -211,6 +214,12 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
                 if (sc_themes[t].sector == p->district)
                     choices[count++] = t;
             r->theme = (uint8_t)(count ? choices[r->hash % count] : 1);
+            if (generator >= 5 && ((r->hash >> 18) % 5 == 0 || cell_equal(r->cell, past.origin)))
+                r->theme = (uint8_t)world_history_theme(past.cause);
+            if (generator >= 5 && cell_equal(r->cell, past.origin)) {
+                r->history_role = HISTORY_ORIGIN;
+                r->district = sc_themes[r->theme].sector;
+            }
             r->type = sc_themes[r->theme].architecture;
             if (r->span_x == 2 && r->type == CREW)
                 r->type = GARDEN;
@@ -304,8 +313,34 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
             parent[ra] = rb;
         }
     }
-    if (generator >= 4)
-        history(p, world_hash(seed, region, 42001));
+    if (generator >= 4) {
+        uint32_t damage = world_hash(seed, region, 42001);
+        int source = -1;
+        unsigned incident = 1 + (damage >> 8) % (INCIDENT_TYPES - 1);
+        if (generator >= 5) {
+            unsigned origin_theme = world_history_theme(past.cause);
+            for (int i = 0; i < p->count; i++)
+                if (p->rooms[i].history_role == HISTORY_ORIGIN) {
+                    source = i;
+                    break;
+                } else if (p->rooms[i].theme == origin_theme)
+                    source = i;
+            incident = (unsigned)world_history_incident(past.cause);
+            if (!cell_equal(region, world_region(past.origin)) && damage % 4 == 0)
+                incident = past.cause == XENO_OUTBREAK ? QUARANTINE : BLACKOUT;
+        }
+        history(p, damage, source, incident);
+        if (generator >= 5)
+            for (int i = 0; i < p->count; i++) {
+                RoomSpec *r = &p->rooms[i];
+                if (r->history_role || r->type == BAY || r->height < 3)
+                    continue;
+                if ((r->type == CREW || r->type == GARDEN) && r->hash % 5 == 0)
+                    r->history_role = HISTORY_SURVIVORS;
+                else if ((r->type == ENGINE || r->type == NAVE) && r->hash % 5 == 0)
+                    r->history_role = HISTORY_CONTROL;
+            }
+    }
 }
 RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell c) {
     RegionPlan p;
@@ -361,8 +396,12 @@ uint32_t world_fingerprint_version(uint32_t seed, uint32_t generator, Cell regio
                              r->layout,
                              r->incident,
                              r->intensity,
-                             r->landmark};
-        for (size_t j = 0; j < (generator == 3 ? 13 : sizeof(values) / sizeof(values[0])); j++)
+                             r->landmark,
+                             r->history_role};
+        for (size_t j = 0; j < (generator == 3   ? 13
+                                : generator == 4 ? 17
+                                                 : sizeof(values) / sizeof(values[0]));
+             j++)
             for (int byte = 0; byte < 4; byte++) {
                 h ^= (values[j] >> (byte * 8)) & 255;
                 h *= UINT32_C(16777619);

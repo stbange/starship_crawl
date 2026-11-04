@@ -351,6 +351,48 @@ void interior_conduit(Builder *b, const Room *r) {
             piece(b, v3(sign * 2.5, .035, sign * 18), v3(.8, .05, 16),
                   r->incident == FIRE ? rgb(.035f, .025f, .025f) : color, 0, false);
 }
+static void history_furnishings(Alcove *a, const Room *r) {
+    ShipHistory past = world_history(a->builder->world->seed);
+    Color glow = incident_colors[world_history_incident(past.cause)];
+    /* Replace one alcove's furniture. Routes, doorways and cache approaches stay clear. */
+    if (r->history_role == HISTORY_ORIGIN) {
+        prop(a, 0, .4, 2, 8, .8, 7, metal, 0, true);
+        for (int side = -1; side <= 1; side += 2) {
+            prop(a, side * 3, 3, 2, .6, 5.2, 5, rust, 0, true);
+            prop(a, side * 1.5, 1.2, 4, .3, 2.2, 2, glow, .5f, false);
+        }
+        if (past.cause == CRYO_RUPTURE) {
+            prop(a, 0, 2, 2, 4.7, 2.2, 4, glass, .3f, true);
+            prop(a, 0, 3.7, 4.5, 5, .3, 1, bone, 0, false);
+        } else if (past.cause == XENO_OUTBREAK) {
+            prop(a, 0, 2.4, 2, 3.6, 3.8, 3.6, glow, .45f, false);
+            ornament(a->builder, NEST, v3(a->sx * a->mx, 2.4, a->sz * (a->mz + 2)), v3(0, 1, 0), 3,
+                     r->hash);
+        } else if (past.cause == MACHINE_PURGE) {
+            prop(a, 0, 3, 3, 4, 5, 2, metal, 0, true);
+            for (int i = 0; i < 3; i++)
+                prop(a, 0, 1.5 + i * 1.4, 1.9, 2.8, .5, .12, glow, 4, false);
+        } else {
+            prop(a, 0, 2.8, 2, 2.5, 4, 2.5, glow, .8f, true);
+            prop(a, 0, 5, 2, 4, .6, 4, metal, 0, false);
+        }
+    } else if (r->history_role == HISTORY_SURVIVORS) {
+        for (int side = -1; side <= 1; side += 2) {
+            prop(a, side * 3, .5, 2, 2.4, 1, 4.5, metal, 0, true);
+            prop(a, side * 3, 1.05, 2, 2.3, .12, 4.2, bone, 0, false);
+        }
+        prop(a, 0, .6, 4, 1.3, 1.2, 1.3, rust, 0, true);
+        prop(a, 0, 1.25, 4, .9, .1, .9, rgb(.7f, .3f, .1f), .8f, false);
+    } else {
+        prop(a, 0, 2, 3, 6, 4, 1.5, metal, 0, true);
+        for (int i = -1; i <= 1; i++)
+            prop(a, i * 1.7, 3, 2.2, 1.1, 1.6, .12, glow, 4, false);
+        prop(a, 0, 4.8, 3, .25, 1.6, .25, rust, 0, false);
+    }
+    /* The illuminated plate marks the notice recorded on entering this room. */
+    prop(a, 0, 2, -1, 3.8, 2, .25, metal, 0, false);
+    prop(a, 0, 2, -1.15, 3.3, 1.6, .06, rgb(.32f, .6f, .5f), .45f, false);
+}
 void interior_build(Builder *b, const Room *r) {
     landmark(b, r);
     Alcove spaces[4];
@@ -372,7 +414,10 @@ void interior_build(Builder *b, const Room *r) {
             role = HABITAT;
         if (theme == 11 || theme == 19 || theme == 25)
             role = CRYONICS;
-        furnishings(&spaces[i], role, theme, r->hash + (unsigned)i);
+        if (i == 0 && r->history_role && cell_equal(b->chunk->cell, r->cell))
+            history_furnishings(&spaces[i], r);
+        else
+            furnishings(&spaces[i], role, theme, r->hash + (unsigned)i);
     }
     lighting(b, r);
     for (int i = 0; i < 4; i++)

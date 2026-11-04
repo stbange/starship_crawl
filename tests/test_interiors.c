@@ -212,6 +212,29 @@ static void test_legacy(void) {
     fclose(f);
     CHECK(count == 14);
     free(w);
+    for (unsigned kind = 0; kind < 2; kind++) {
+        f = fopen(kind ? SC_FIXTURE_DIR "/generator-v4-geometry.txt"
+                       : SC_FIXTURE_DIR "/generator-v4-fingerprints.txt",
+                  "r");
+        CHECK(f);
+        count = 0;
+        while (fscanf(f, "%u %d %d %d %u", &seed, &c.x, &c.y, &c.z, &hash) == 5) {
+            if (kind) {
+                World *old = malloc(sizeof(*old));
+                CHECK(old);
+                world_init(old, seed);
+                old->generator = 4;
+                pump(old, c);
+                CHECK(geometry_fingerprint(world_chunk(old, c)) == hash);
+                world_destroy(old);
+                free(old);
+            } else
+                CHECK(world_fingerprint_version(seed, 4, c) == hash);
+            count++;
+        }
+        fclose(f);
+        CHECK(count == 24);
+    }
     Game *g = malloc(sizeof(*g));
     CHECK(g);
     game_init(g, 1);
@@ -225,7 +248,7 @@ static void test_legacy(void) {
     for (int i = 0; i < map.side * map.side; i++)
         CHECK(!map.rooms[i].landmark && !map.rooms[i].incident);
     game_new_ship(g, 713);
-    CHECK(g->world.generator == 4 && g->players[0].level == 7);
+    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->players[0].level == 7);
     game_destroy(g);
     free(g);
     CHECK(remove("interior-legacy.sav") == 0);
@@ -252,7 +275,8 @@ static void test_cache_persistence(void) {
     CHECK(game_load(g, "interior-cache.sav"));
     pump(&g->world, cell);
     r = world_find(&g->world, cell);
-    CHECK(g->world.generator == 4 && !r->pickups[3].active && !r->pickups[4].active);
+    CHECK(g->world.generator == SC_GENERATOR_VERSION && !r->pickups[3].active &&
+          !r->pickups[4].active);
     CHECK(vlen(position_delta(point, r->pickups[3].pos)) == 0);
     game_destroy(g);
     free(g);

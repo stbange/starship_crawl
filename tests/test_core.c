@@ -51,7 +51,10 @@ static void test_topology(void) {
             int footprint[16] = {0}, large = 0, edges = 0;
             for (int i = 0; i < p.count; i++) {
                 RoomSpec *r = &p.rooms[i];
-                CHECK(r->district == p.district);
+                CHECK(r->district == p.district ||
+                      (r->history_role == HISTORY_ORIGIN &&
+                       r->district ==
+                           sc_themes[world_history_theme(world_history(seed).cause)].sector));
                 if (r->span_x > 1) {
                     large++;
                     CHECK(r->width >= 180 && r->height >= 58);
@@ -271,7 +274,10 @@ static void test_streaming(void) {
 static void test_movement(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g != NULL);
-    game_init(g, 17);
+    unsigned seed = 17;
+    while (!world_door(seed, (Cell){0, -1, 0}, EAST))
+        seed++;
+    game_init(g, seed);
     settle_game(g);
     for (int r = 0; r < g->world.count; r++)
         g->world.rooms[r].enemy_count = 0;

@@ -599,6 +599,7 @@ static Room *room_create(World *w, RoomSpec spec) {
     r->incident = spec.incident;
     r->intensity = spec.intensity;
     r->landmark = spec.landmark;
+    r->history_role = spec.history_role;
     r->span_x = spec.span_x;
     r->span_z = spec.span_z;
     r->width = spec.width;

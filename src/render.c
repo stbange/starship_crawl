@@ -1000,7 +1000,8 @@ static void actors(Renderer *r, Game *g, int viewer) {
     if (g->story.version) {
         for (int i = 0; i < SC_STORY_SCENES; i++) {
             Cell c = g->story.sites[i];
-            if (!(g->story.assigned & (1u << i)) || c.y != cell.y || !world_ready(&g->world, c))
+            if (i >= STORY_ORIGIN_RECORD || !(g->story.assigned & (1u << i)) || c.y != cell.y ||
+                !world_ready(&g->world, c))
                 continue;
             if (i == STORY_BRIEFING && (g->story.assigned & (1u << STORY_EXTRACTION)))
                 continue;
@@ -1284,7 +1285,7 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
         text_at(r, x, y + (169 + (line - 3) * 17) * s, .92f * s, text, ink);
     }
     snprintf(text, sizeof(text), "FIELD RECORD / L NEXT / %s",
-             sc_story_templates[p->story_reading].title);
+             game_story_title(g, p->story_reading));
     text_at(r, x, y + 231 * s, .9f * s, text, gold);
     game_story_entry(g, p->story_reading, text, sizeof(text));
     wrapped(r, x, y + 250 * s, .95f * s, 760 * s, text, ink);
@@ -1294,14 +1295,13 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
         if (game_story_available(g, i)) {
             Cell c = g->story.sites[i];
             snprintf(text, sizeof(text), "%c %s [%d,%d,%d]", i == g->story.tracked ? '>' : ' ',
-                     sc_story_templates[i].title, c.x, c.y, c.z);
+                     game_story_title(g, i), c.x, c.y, c.z);
             text_at(r, x, y + (313 + row++ * 17) * s, .9f * s, text,
                     i == g->story.tracked ? mint : dim);
         }
     if (p->decision_open) {
         text_at(r, x, y + 385 * s, s, "CHOOSE HERE / 1 2 3 / GAMEPAD LEFT UP RIGHT", gold);
-        bool prepared = (g->story.done &
-                         ((1u << STORY_REACTOR) | (1u << STORY_EVAC) | (1u << STORY_MIRROR))) != 0;
+        bool prepared = game_story_prepared(g);
         for (unsigned i = 1; i <= 3; i++) {
             snprintf(text, sizeof(text), "%u %s%s", i, game_story_choice(g, i),
                      i == 3 && !prepared ? " / LOCKED" : "");
@@ -1320,8 +1320,25 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
         text_at(r, x, y + 455 * s, .9f * s,
                 "G AT A CLEARED SITE TO INVESTIGATE OR REVIEW ITS CHOICES", dim);
     }
-    text_at(r, x, y + 491 * s, .85f * s,
-            "F4 CHARACTER PAGE / ENTER CLOSE / TOUCH: JOURNAL ACTIONS IN MENU", gold);
+    text_at(r, x, y + 491 * s, .85f * s, "F6 DOSSIER / F4 CHARACTER / ENTER CLOSE / PAD RB DOSSIER",
+            gold);
+}
+static void history_journal(Renderer *r, const Game *g, float w, float h) {
+    float s = fminf((w - 24) / 800, (h - 24) / 510), x = (w - 800 * s) * .5f,
+          y = (h - 510 * s) * .5f;
+    Color gold = rgb(.88f, .7f, .4f), ink = rgb(.8f, .85f, .8f);
+    rect(r, x, y, 800 * s, 510 * s, rgb(.02f, .04f, .05f));
+    frame(r, x, y, 800 * s, 510 * s, gold);
+    text_at(r, x + 18 * s, y + 16 * s, 1.4f * s, "SHIP DOSSIER / TRACES OF THE COLLAPSE", gold);
+    char text[320];
+    for (int line = 0; line < (g->story.version < 2 ? 1 : 8); line++) {
+        game_story_dossier(g, line, text, sizeof(text));
+        wrapped(r, x + 18 * s, y + (52 + line * 49) * s, s, 760 * s, text, ink);
+    }
+    text_at(r, x + 18 * s, y + 455 * s, .9f * s,
+            "ROOM NOTICES AND WITNESS RECORDS REVEAL THE SHIP'S HISTORY", gold);
+    text_at(r, x + 18 * s, y + 486 * s, .85f * s,
+            "I EXPEDITION / F4 CHARACTER / ENTER CLOSE / PAD RB EXPEDITION", gold);
 }
 static void hud(Renderer *r, Game *g, int player, int width, int height, bool paused, bool touch,
                 bool debug, double fps, const char *save_status) {
@@ -1358,6 +1375,9 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     if (!p->sheltered && room && position_absolute(p->pos).z >= 0) {
         snprintf(label, sizeof(label), "%s / %s", world_district_name(room->district),
                  g->world.generator >= 4 ? world_incident_name(room->incident) : "UNSURVEYED");
+        if (room->history_role)
+            snprintf(label, sizeof(label), "%s / F6 DOSSIER",
+                     world_history_role(room->history_role));
         centered(r, w * .5f, pad + 33 * s, .9f * s, label, dim);
     }
     if (g->world.pending)
@@ -1399,7 +1419,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
          rgb(.25f, .5f, .9f));
     Cell objective;
     if (g->story.version && !(g->story.done & 1u) && !p->sheltered)
-        centered(r, w * .5f, 77 * s, .85f * s, story_commission(g->world.seed), mint);
+        centered(r, w * .5f, 77 * s, .85f * s,
+                 story_commission_version(g->world.seed, g->story.version), mint);
     if (!p->sheltered && game_objective(g, &objective)) {
         snprintf(label, sizeof(label), "%s  /  [%d,%d,%d]", game_mission(g), objective.x,
                  objective.y, objective.z);
@@ -1410,7 +1431,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     unsigned story_site = game_story_near(g, player);
     if (story_site < SC_STORY_SCENES) {
-        snprintf(label, sizeof(label), "G / %s", sc_story_templates[story_site].title);
+        snprintf(label, sizeof(label), "G / %s", game_story_title(g, story_site));
         centered(r, w * .5f, h * .58f, s, label, gold);
     }
     const Enemy *aimed = NULL;
@@ -1593,7 +1614,9 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         if (g->message_time > 0)
             centered(r, w * .5f, my + 242 * s, .9f * s, g->message, mint);
     }
-    if (p->journal && g->story.version && p->journal_page)
+    if (p->journal && p->journal_page == 2)
+        history_journal(r, g, w, h);
+    else if (p->journal && g->story.version && p->journal_page)
         story_journal(r, g, player, w, h);
     else if (p->journal) {
         float pw = fminf(w - 24, 740 * s), ph = fminf(h - 32, 450 * s), px = (w - pw) * .5f,

@@ -11,10 +11,17 @@
         }                                                                                          \
     } while (0)
 #define BIT(n) (1u << (n))
+static unsigned narrative_version = 2;
 static Game *create(unsigned seed) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
     game_init(g, seed);
+    if (narrative_version == 1) {
+        world_destroy(&g->world);
+        world_init(&g->world, seed);
+        g->world.generator = 4;
+        g->story.version = 1;
+    }
     return g;
 }
 static void destroy(Game *g) {
@@ -64,17 +71,21 @@ static void inspect_text(Game *g) {
     for (int line = 0; line <= 8; line++) {
         game_story_line(g, line, text, sizeof(text));
         CHECK(*text);
+        game_story_dossier(g, line, text, sizeof(text));
+        CHECK(*text);
     }
+    for (unsigned i = 0; i <= SC_STORY_SCENES; i++)
+        CHECK(*game_story_title(g, i));
     CHECK(!*game_story_choice(g, 0) && !*game_story_choice(g, 4));
     for (unsigned choice = 1; choice <= 3; choice++)
         CHECK(*game_story_choice(g, choice));
 }
 static void test_arcs(void) {
     unsigned motivations = 0, clues = 0;
-    for (unsigned seed = 1; seed <= 12; seed++) {
+    for (unsigned seed = 1; seed <= 24; seed++) {
         for (unsigned choice = 1; choice <= 3; choice++) {
             Game *g = create(seed);
-            StoryMotivation m = story_motivation(seed);
+            StoryMotivation m = story_motivation_version(seed, g->story.version);
             motivations |= BIT(m);
             valid(g);
             inspect_text(g);
@@ -96,7 +107,7 @@ static void test_arcs(void) {
             roundtrip(g);
             use(g, STORY_BRIEFING);
             CHECK(g->mission == 1 && g->players[0].credits == 75);
-            unsigned initial = STORY_REFUGE + m, alternate = STORY_REFUGE + (m + 1) % 3;
+            unsigned initial = STORY_REFUGE + m % 3, alternate = STORY_REFUGE + (m + 1) % 3;
             CHECK(g->story.tracked == initial);
             Cell stable = g->story.sites[initial];
             game_interact(g, 0); /* Repeat the completed bay interaction. */
@@ -131,8 +142,8 @@ static void test_arcs(void) {
             /* Both investigation orders work; first discovered target stays reserved. */
             unsigned first = choice & 1 ? alternate : initial;
             use(g, first);
-            unsigned goal = STORY_SURVIVORS + m;
-            unsigned ops[] = {STORY_EVAC, STORY_MIRROR, STORY_REACTOR}, op = ops[m];
+            unsigned goal = game_story_target(g);
+            unsigned op = game_story_operation(g);
             CHECK(game_story_available(g, goal) && game_story_available(g, op));
             Cell fixed_goal = g->story.sites[goal], fixed_op = g->story.sites[op];
             use(g, first == initial ? alternate : initial);
@@ -180,13 +191,13 @@ static void test_arcs(void) {
             }
             roundtrip(g);
             game_new_ship(g, seed + 987);
-            CHECK(g->mission == 0 && g->story.version == 1 && g->story.seen == 0);
+            CHECK(g->mission == 0 && g->story.version == 2 && g->story.seen == 0);
             CHECK(g->players[0].credits == money && g->players[0].victories == 1);
             valid(g);
             destroy(g);
         }
     }
-    CHECK(motivations == 7 && clues);
+    CHECK(motivations == (narrative_version == 1 ? 7u : 15u) && clues);
 }
 static void test_discovery_and_contest(void) {
     Game *g = create(713);
@@ -214,7 +225,7 @@ static void test_discovery_and_contest(void) {
     CHECK(observed == 62);
     inspect_text(g);
     roundtrip(g);
-    unsigned lead = STORY_REFUGE + story_motivation(713);
+    unsigned lead = STORY_REFUGE + story_motivation_version(713, g->story.version) % 3;
     arrive(g, g->story.sites[lead]);
     Room *r = world_find(&g->world, g->story.sites[lead]);
     CHECK(r);
@@ -225,7 +236,7 @@ static void test_discovery_and_contest(void) {
     CHECK(g->players[0].credits == money && strstr(g->message, "CONTESTED"));
     r->enemies[0].alive = false;
     game_interact(g, 0);
-    unsigned goal = STORY_SURVIVORS + story_motivation(713);
+    unsigned goal = game_story_target(g);
     use(g, goal);
     r = world_find(&g->world, g->story.sites[goal]);
     r->enemy_count = 1;
@@ -253,7 +264,7 @@ static void test_validation_and_legacy(void) {
     Game *g = create(713);
     Story good = g->story, bad;
     bad = good;
-    bad.version = 2;
+    bad.version = 3;
     rejected(g, bad, 0);
     bad = good;
     bad.assigned |= BIT(30);
@@ -271,7 +282,7 @@ static void test_validation_and_legacy(void) {
     bad.choice = 4;
     rejected(g, bad, 0);
     bad = good;
-    bad.tracked = 16;
+    bad.tracked = SC_STORY_SCENES;
     rejected(g, bad, 0);
     bad = good;
     bad.tracked = 9;
@@ -287,11 +298,10 @@ static void test_validation_and_legacy(void) {
     rejected(g, bad, 0);
     CHECK(!story_valid(&good, 713, 3, 0));
     use(g, STORY_BRIEFING);
-    use(g, STORY_REFUGE + story_motivation(713));
+    use(g, STORY_REFUGE + story_motivation_version(713, g->story.version) % 3);
     good = g->story;
-    unsigned goal = STORY_SURVIVORS + story_motivation(713);
-    const unsigned ops[] = {STORY_EVAC, STORY_MIRROR, STORY_REACTOR};
-    unsigned op = ops[story_motivation(713)];
+    unsigned goal = game_story_target(g);
+    unsigned op = game_story_operation(g);
     bad = good;
     bad.choice = 1;
     rejected(g, bad, g->mission);
@@ -357,14 +367,149 @@ static void test_validation_and_legacy(void) {
     bad.seen = 1;
     rejected(g, bad, g->mission);
     game_new_ship(g, 713);
-    CHECK(g->story.version == 1 && g->players[0].level == 7);
+    CHECK(g->story.version == 2 && g->players[0].level == 7);
     valid(g);
     destroy(g);
 }
+static void test_history_discovery(void) {
+    unsigned causes = 0, arcs = 0, profiles = 0, roles = 0;
+    for (unsigned seed = 1; seed <= 40; seed++) {
+        Game *g = create(seed);
+        ShipHistory h = world_history(seed);
+        CHECK(h.cause == world_history(seed).cause &&
+              cell_equal(h.origin, world_history(seed).origin));
+        causes |= BIT(h.cause);
+        arcs |= BIT(h.arc);
+        profiles |= BIT(world_profile(seed));
+        RoomSpec origin = world_describe(seed, h.origin);
+        CHECK(origin.history_role == HISTORY_ORIGIN && origin.height >= 3);
+        CHECK(origin.theme == world_history_theme(h.cause));
+        CHECK(origin.incident == world_history_incident(h.cause) && origin.intensity == 3);
+        CHECK(cell_equal(origin.cell, h.origin));
+        char text[320];
+        for (unsigned role = 0; role < 4; role++) {
+            world_history_notice(seed, role, text, sizeof(text));
+            CHECK(*text && strlen(text) < sizeof(text));
+            CHECK(role == 0 || *world_history_role(role));
+        }
+        game_story_dossier(g, 2, text, sizeof(text));
+        CHECK(strstr(text, "UNKNOWN"));
+        arrive(g, h.origin);
+        game_story_step(g);
+        CHECK(!(g->story.seen & BIT(STORY_ORIGIN_RECORD))); /* No commission accepted. */
+        use(g, STORY_BRIEFING);
+        unsigned money = g->players[0].credits, stage = g->mission;
+        for (int y = -1; y <= 1; y++) {
+            RegionPlan plan;
+            world_plan(seed, (Cell){0, y, 0}, &plan);
+            for (int i = 0; i < plan.count; i++) {
+                unsigned role = plan.rooms[i].history_role;
+                if (!role)
+                    continue;
+                roles |= BIT(role);
+                arrive(g, plan.rooms[i].cell);
+                Room *r = world_find(&g->world, plan.rooms[i].cell);
+                CHECK(r && r->history_role == role);
+                Vec3 center = world_center(r->cell);
+                for (int d = -6; d <= 6; d++)
+                    CHECK(!world_overlap(&g->world, vadd(center, v3(d, .02, 0)), .7, 3.2));
+                const Chunk *chunk = world_chunk(&g->world, r->cell);
+                CHECK(chunk && chunk->box_count <= SC_CHUNK_BOXES &&
+                      chunk->light_count == SC_CHUNK_LIGHTS);
+                game_story_step(g);
+                unsigned record = STORY_ORIGIN_RECORD + role - 1;
+                CHECK(g->story.seen & BIT(record));
+                Cell fixed = g->story.sites[record];
+                game_story_step(g);
+                CHECK(cell_equal(fixed, g->story.sites[record]));
+                game_story_entry(g, record, text, sizeof(text));
+                char notice[320];
+                world_history_notice(seed, role, notice, sizeof(notice));
+                CHECK(strcmp(text, notice) == 0);
+                valid(g);
+            }
+        }
+        CHECK(g->players[0].credits == money && g->mission == stage);
+        CHECK(g->story.seen & BIT(STORY_ORIGIN_RECORD));
+        game_story_dossier(g, 2, text, sizeof(text));
+        CHECK(strcmp(text, world_history_cause(h.cause)) == 0);
+        game_story_dossier(g, 3, text, sizeof(text));
+        CHECK(strstr(text, "CATASTROPHE ORIGIN"));
+        roundtrip(g);
+        Story bad = g->story;
+        bad.sites[STORY_ORIGIN_RECORD] = (Cell){1, 0, 0};
+        rejected(g, bad, g->mission);
+        bad = g->story;
+        bad.seen &= ~BIT(STORY_ORIGIN_RECORD);
+        rejected(g, bad, g->mission);
+        if (story_motivation(seed) == STORY_CONTAINMENT) {
+            use(g, STORY_REFUGE);
+            CHECK(cell_equal(g->story.sites[STORY_SOURCE], h.origin));
+            bad = g->story;
+            bad.sites[STORY_SOURCE] = (Cell){1, 0, 0};
+            rejected(g, bad, g->mission);
+            use(g, STORY_SOURCE);
+            Room *r = world_find(&g->world, h.origin);
+            CHECK(r && r->enemy_count > 0);
+            unsigned count = r->enemy_count;
+            /* A distant remaining creature is purged along with the source. */
+            r->enemies[count - 1].alive = true;
+            r->enemies[count - 1].pos = position_from(vadd(game_terminal(h.origin), v3(25, 0, 0)));
+            CHECK(game_story_choose(g, 0, 1));
+            CHECK(r->record != SIZE_MAX);
+            CHECK(g->world.records[r->record].killed == (BIT(count) - 1));
+            roundtrip(g);
+            while (g->world.pending)
+                world_stream(&g->world, SC_STREAM_BUDGET);
+            r = world_find(&g->world, h.origin);
+            CHECK(r && r->enemy_count == (int)count);
+            for (unsigned i = 0; i < count; i++)
+                CHECK(!r->enemies[i].alive);
+        }
+        destroy(g);
+    }
+    CHECK(causes == 15 && arcs == 3 && profiles == 15 && roles == 14);
+    Game *after = create(22);
+    use(after, STORY_BRIEFING);
+    use(after, STORY_REFUGE + story_motivation(22));
+    use(after, game_story_target(after));
+    CHECK(game_story_choose(after, 0, 1));
+    unsigned money = after->players[0].credits, stage = after->mission;
+    CHECK(!(after->story.seen & BIT(STORY_ORIGIN_RECORD)));
+    arrive(after, world_history(22).origin);
+    game_story_step(after);
+    CHECK(after->story.seen & BIT(STORY_ORIGIN_RECORD));
+    CHECK(after->players[0].credits == money && after->mission == stage &&
+          after->story.choice == 1);
+    valid(after);
+    roundtrip(after);
+    destroy(after);
+    const char *fixtures[] = {"story-0-choice1.sav", "story-0-choice3.sav", "story-1-choice3.sav",
+                              "story-2-choice3.sav"};
+    for (unsigned i = 0; i < 4; i++) {
+        Game *g = create(999);
+        char path[256];
+        snprintf(path, sizeof(path), "%s/%s", SC_FIXTURE_DIR, fixtures[i]);
+        CHECK(game_load(g, path));
+        CHECK(g->world.generator == 4 && g->story.version == 1);
+        CHECK(story_motivation_version(g->world.seed, 1) == (i < 2    ? STORY_RESCUE
+                                                             : i == 2 ? STORY_KNOWLEDGE
+                                                                      : STORY_SALVAGE));
+        CHECK(game_story_prepared(g) == (i > 0));
+        valid(g);
+        roundtrip(g);
+        inspect_text(g);
+        destroy(g);
+    }
+}
 int main(void) {
+    narrative_version = 1;
+    test_arcs();
+    narrative_version = 2;
     test_arcs();
     test_discovery_and_contest();
     test_validation_and_legacy();
+    test_history_discovery();
     puts("PASS narrative: motivations, all outcomes, discoveries, stable reservations, co-op, "
          "persistence and validation");
     return 0;

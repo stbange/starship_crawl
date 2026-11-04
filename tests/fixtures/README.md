@@ -59,3 +59,21 @@ The motivations use seeds 1, 2 and 7 respectively. `choice3` files include the
 optional operation; `choice1` has no optional preparation. The choice itself is
 still uncommitted. Browser tests import these through the ordinary save UI to
 exercise decisions, disabled options and persistence without runtime test hooks.
+
+`generator-v4-fingerprints.txt` and `generator-v4-geometry.txt` contain 24
+reference rows each captured from the unmodified core at commit 2cd9b89 before
+generator-5 changes. They use seeds 713 and 41 across introductory and adjacent
+regions and decks. The semantic geometry hashing excludes struct padding.
+
+`history-0-arc0-choice1.sav`, `history-0-arc0-choice3.sav`,
+`history-1-arc0-choice3.sav`, `history-2-arc0-choice3.sav`,
+`history-3-arc0-choice1.sav` and `history-3-arc0-choice3.sav` are
+format-8/narrative-2 checkpoints from `./build/sc_campaign_tests --history-fixtures`.
+The ordinary movement/combat/lift driver saves after reaching the target, before
+committing a decision. Arc 0 means direct commission; seeds are 11, 10, 5 and 14
+for rescue, knowledge, salvage and containment. Choice-3 checkpoints include
+optional preparation; choice-1 checkpoints do not. They exercise browser
+imports, direct consequences, origin history, purge, prepared isolation and
+keyboard/touch UI. Original format-7 fixtures remain unchanged; the old
+`--story-fixtures` capture command is historical and has been removed to avoid
+replacing their provenance.

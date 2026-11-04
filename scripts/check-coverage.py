@@ -29,7 +29,7 @@ def validate_report(data):
         if covered * 100 < THRESHOLD * len(lines):
             failed.append(source["file"])
     # Do not accidentally pass with an empty, stale, or incorrectly filtered report.
-    required = {"src/game.c", "src/generation.c", "src/interior.c", "src/world.c", "src/progression.c", "src/story.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/math3d.h"}
+    required = {"src/game.c", "src/generation.c", "src/history.c", "src/interior.c", "src/world.c", "src/progression.c", "src/story.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/math3d.h"}
     missing = required - names
     if missing or failed:
         raise SystemExit(f"Coverage gate failed. Below {THRESHOLD}%: {failed}; missing sources: {sorted(missing)}")

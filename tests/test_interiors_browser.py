@@ -90,10 +90,11 @@ def run():
             for category, values, field in [('layout', range(3), 'layout'), ('history', range(6), 'incident'), ('landmark', range(1, 5), 'landmark')]:
                 for value in values:
                     scene = category + str(value)
-                    page.goto(base + '?seed=713&scene=' + scene)
+                    seed = {1: 22, 2: 11, 3: 22, 4: 1, 5: 10}.get(value, 713) if category == 'history' else 713
+                    page.goto(base + f'?seed={seed}&scene=' + scene)
                     wait_ready(page)
                     s = state(page)
-                    assert s['generator'] == 4 and s[field] == value and s['ready'] and not s['failed'], s
+                    assert s['generator'] == 5 and s[field] == value and s['ready'] and not s['failed'], s
                     if category == 'landmark':
                         assert s['span'] == 4
                     page.keyboard.press('v')
@@ -119,7 +120,7 @@ def run():
                         page.goto(base)
                         wait_ready(page)
                         loaded = state(page)
-                        assert loaded['generator'] == 4 and loaded['layout'] == value
+                        assert loaded['generator'] == 5 and loaded['layout'] == value
                         assert loaded['pickups'] == saved['pickups'] and loaded['weapons'] == saved['weapons']
                         assert abs(loaded['x'] - saved['x']) < .1 and abs(loaded['z'] - saved['z']) < .1
                         start_play(page)
@@ -142,7 +143,7 @@ def run():
             expect(page, 's.generator === 3 && s.rank === 7 && s.sheltered && s.mission === 2')
             page.keyboard.press('n')
             page.keyboard.press('Enter')
-            expect(page, 's.generator === 4 && s.rank === 7 && s.mission === 0')
+            expect(page, 's.generator === 5 && s.rank === 7 && s.mission === 0')
             assert not state(page)['failed'] and not errors
             context.close()
             mobile = browser.new_context(viewport={'width': 844, 'height': 390}, is_mobile=True, has_touch=True)

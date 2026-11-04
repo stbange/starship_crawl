@@ -232,15 +232,15 @@ static void equipment(Stream *s, Player *players, Rig rigs[SC_PLAYERS][2], Flare
             s->ok = false;
     }
 }
-/* Format 7 adds story state without shifting any existing field or appendix. */
-static void narrative(Stream *s, Story *story, bool read) {
+/* Format 8 extends the narrative appendix; format 7 has exactly 16 sites. */
+static void narrative(Stream *s, Story *story, bool read, unsigned version) {
     story->version = number(s, story->version, read);
     story->assigned = number(s, story->assigned, read);
     story->seen = number(s, story->seen, read);
     story->done = number(s, story->done, read);
     story->tracked = number(s, story->tracked, read);
     story->choice = number(s, story->choice, read);
-    for (int i = 0; i < SC_STORY_SCENES; i++) {
+    for (int i = 0; i < (version < 8 ? 16 : SC_STORY_SCENES); i++) {
         story->sites[i].x = (int32_t)number(s, (uint32_t)story->sites[i].x, read);
         story->sites[i].y = (int32_t)number(s, (uint32_t)story->sites[i].y, read);
         story->sites[i].z = (int32_t)number(s, (uint32_t)story->sites[i].z, read);
@@ -262,13 +262,13 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 7, false);
+    number(&s, 8, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player p = g->players[i];
-        profile(&s, &p, false, 7);
+        profile(&s, &p, false, 8);
     }
     number(&s, g->mission, false);
     number(&s, g->mission_kills, false);
@@ -294,7 +294,7 @@ bool game_save(const Game *g, const char *path) {
     memcpy(flares, g->flares, sizeof(flares));
     equipment(&s, players, rigs, flares, false);
     Story story = g->story;
-    narrative(&s, &story, false);
+    narrative(&s, &story, false, 8);
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -321,7 +321,7 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 7) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 8) ||
         (version == 2 && generator != 2) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
@@ -379,7 +379,7 @@ bool game_load(Game *g, const char *path) {
         }
     Story story = {0};
     if (version >= 7) {
-        narrative(&s, &story, true);
+        narrative(&s, &story, true, version);
         if (!story_valid(&story, seed, generator, mission))
             s.ok = false;
     }

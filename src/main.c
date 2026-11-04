@@ -130,10 +130,10 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     if (action >= 90 && action <= 92) {
         if (game_story_choose(&app.game, 0, (unsigned)(action - 89)))
             set_pause(false);
-    } else if (action == 80 || action == 84) {
+    } else if (action == 80 || action == 84 || action == 85) {
         Player *p = &app.game.players[0];
         p->journal = true;
-        p->journal_page = action == 80 && app.game.story.version ? 1 : 0;
+        p->journal_page = action == 85 ? 2 : action == 80 && app.game.story.version ? 1 : 0;
         set_pause(true);
     } else if (action == 81)
         game_story_track(&app.game);
@@ -199,10 +199,11 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     else if (action == 10)
         game_weapon(&app.game, 0, -1);
     else if (action == 11) {
-        app.game.players[0].journal = !app.game.players[0].journal;
-        app.game.players[0].journal_page = app.game.story.version ? 1 : 0;
-        app.game.players[0].decision_open = false;
-        set_pause(app.game.players[0].journal);
+        Player *p = &app.game.players[0];
+        p->journal = !p->journal || (app.game.story.version && p->journal_page != 1);
+        p->journal_page = app.game.story.version ? 1 : 0;
+        p->decision_open = false;
+        set_pause(p->journal);
     } else if (action >= 1 && action <= 3)
         game_upgrade(&app.game, 0, action - 1);
     else if (action == 4) {
@@ -259,6 +260,7 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
     Room *room = world_find(&app.game.world, world_cell(feet));
     Cell objective = {0};
     bool has_goal = game_objective(&app.game, &objective);
+    ShipHistory past = world_history(app.game.world.seed);
     snprintf(
         result, sizeof(result),
         "{\"seed\":%u,\"players\":%d,\"paused\":%s,\"frames\":%d,\"rooms\":%d,"
@@ -280,7 +282,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"story_done\":%u,\"story_choice\":%u,\"story_tracked\":%u,\"story_reading\":%u,"
         "\"journal\":%s,\"journal_page\":%u,\"decision\":%s,\"has_goal\":%s,"
         "\"goal_x\":%d,\"goal_y\":%d,\"goal_z\":%d,\"victories\":%u,"
-        "\"choice1\":\"%s\",\"choice2\":\"%s\",\"choice3\":\"%s\"}",
+        "\"choice1\":\"%s\",\"choice2\":\"%s\",\"choice3\":\"%s\","
+        "\"prepared\":%s,\"history_cause\":%u,\"history_arc\":%u,\"history_role\":%u,"
+        "\"origin_x\":%d,\"origin_y\":%d,\"origin_z\":%d}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -305,12 +309,14 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         room ? room->landmark : 0, room ? room->depth : 0,
         room && room->ready ? position_absolute(room->pickups[3].pos).x : 0,
         room && room->ready ? position_absolute(room->pickups[3].pos).z : 0, app.game.story.version,
-        story_motivation(app.game.world.seed), app.game.story.assigned, app.game.story.seen,
-        app.game.story.done, app.game.story.choice, app.game.story.tracked, p->story_reading,
-        p->journal ? "true" : "false", p->journal_page, p->decision_open ? "true" : "false",
-        has_goal ? "true" : "false", objective.x, objective.y, objective.z, p->victories,
-        game_story_choice(&app.game, 1), game_story_choice(&app.game, 2),
-        game_story_choice(&app.game, 3));
+        story_motivation_version(app.game.world.seed, app.game.story.version),
+        app.game.story.assigned, app.game.story.seen, app.game.story.done, app.game.story.choice,
+        app.game.story.tracked, p->story_reading, p->journal ? "true" : "false", p->journal_page,
+        p->decision_open ? "true" : "false", has_goal ? "true" : "false", objective.x, objective.y,
+        objective.z, p->victories, game_story_choice(&app.game, 1), game_story_choice(&app.game, 2),
+        game_story_choice(&app.game, 3), game_story_prepared(&app.game) ? "true" : "false",
+        past.cause, past.arc, room ? room->history_role : 0, past.origin.x, past.origin.y,
+        past.origin.z);
     return result;
 }
 static void audio_frame(void) {
@@ -506,8 +512,11 @@ static void events(void) {
                                           : b == SDL_GAMEPAD_BUTTON_DPAD_UP    ? 2
                                           : b == SDL_GAMEPAD_BUTTON_DPAD_RIGHT ? 3
                                                                                : 0;
-                        if (choice && game_story_choose(&app.game, player, choice))
+                        if (p->journal_page == 1 && choice &&
+                            game_story_choose(&app.game, player, choice))
                             set_pause(false);
+                        if (b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+                            p->journal_page = p->journal_page == 2 ? 1 : 2;
                         if (b == SDL_GAMEPAD_BUTTON_WEST)
                             game_story_read(&app.game, player);
                         if (b == SDL_GAMEPAD_BUTTON_NORTH)
@@ -702,6 +711,9 @@ static void events(void) {
             case SDLK_I:
                 sc_web_action(11);
                 break;
+            case SDLK_F6:
+                sc_web_action(85);
+                break;
             case SDLK_F4:
                 sc_web_action(app.game.players[0].journal_page ? 84 : 80);
                 break;
@@ -741,9 +753,9 @@ static void events(void) {
             case SDLK_7:
             case SDLK_8:
             case SDLK_9:
-                if (app.game.players[0].journal && app.game.players[0].journal_page &&
-                    app.game.players[0].decision_open) {
-                    if (e.key.key <= SDLK_3)
+                if (app.game.players[0].journal && app.game.players[0].journal_page) {
+                    if (app.game.players[0].journal_page == 1 &&
+                        app.game.players[0].decision_open && e.key.key <= SDLK_3)
                         sc_web_action(90 + (int)(e.key.key - SDLK_1));
                 } else
                     game_upgrade(&app.game, 0, (int)(e.key.key - SDLK_1));
@@ -1104,20 +1116,32 @@ int main(int argc, char **argv) {
                             }
                         }
             }
-        int inspect_layout = -1, inspect_incident = -1, inspect_landmark = -1;
+        int inspect_layout = -1, inspect_incident = -1, inspect_landmark = -1, inspect_role = -1;
+        if (!strcmp(scene, "origin"))
+            inspect_role = HISTORY_ORIGIN;
+        if (!strcmp(scene, "waystation"))
+            inspect_role = HISTORY_SURVIVORS;
+        if (!strcmp(scene, "controller"))
+            inspect_role = HISTORY_CONTROL;
         if (!strncmp(scene, "layout", 6) && scene[6] >= '0' && scene[6] <= '2' && !scene[7])
             inspect_layout = scene[6] - '0';
         if (!strncmp(scene, "history", 7) && scene[7] >= '0' && scene[7] <= '5' && !scene[8])
             inspect_incident = scene[7] - '0';
         if (!strncmp(scene, "landmark", 8) && scene[8] >= '1' && scene[8] <= '4' && !scene[9])
             inspect_landmark = scene[8] - '0';
-        bool interior_scene = inspect_layout >= 0 || inspect_incident >= 0 || inspect_landmark >= 0;
+        bool interior_scene = inspect_layout >= 0 || inspect_incident >= 0 ||
+                              inspect_landmark >= 0 || inspect_role >= 0;
         bool found = false;
+        if (inspect_role == HISTORY_ORIGIN) {
+            c = world_history(seed).origin;
+            found = true;
+        }
         for (int y = 0; interior_scene && y < 9 && !found; y++)
             for (int z = 0; z < 24 && !found; z++)
                 for (int x = -12; x < 12 && !found; x++) {
                     RoomSpec spec = world_describe(seed, (Cell){x, y, z});
                     if (spec.type != BAY && spec.height >= 3 &&
+                        (inspect_role < 0 || spec.history_role == inspect_role) &&
                         (inspect_layout < 0 ||
                          (spec.layout == inspect_layout && spec.span_x == 1)) &&
                         (inspect_incident < 0 ||
@@ -1147,7 +1171,7 @@ int main(int argc, char **argv) {
         app.game.players[0].pitch = .03;
         if (interior_scene) {
             app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, 0)));
-            app.game.players[0].yaw = .78;
+            app.game.players[0].yaw = inspect_role >= 0 ? -2.36 : .78;
             app.game.players[0].pitch = inspect_landmark >= 0 ? .26 : .015;
         }
         Vec3 p = position_absolute(app.game.players[0].pos);
