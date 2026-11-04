@@ -50,7 +50,7 @@ def run():
             for motivation, seed in enumerate((1, 3, 4, 14)):
                 page.goto(base + f'?seed={seed}&scene=bay')
                 wait_ready(page)
-                assert state(page)['story_version'] == 2 and state(page)['motivation'] == motivation
+                assert state(page)['story_version'] == 3 and state(page)['motivation'] == motivation
                 assert state(page)['story_assigned'] == 1 and state(page)['story_done'] == 0
                 start_play(page)
                 page.keyboard.press('i')

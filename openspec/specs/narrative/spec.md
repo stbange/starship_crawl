@@ -6,7 +6,7 @@ Seeded expedition motivations, consistent discoveries and consequential player d
 ## Requirements
 
 ### Requirement: Generated motivation and history
-New expeditions SHALL select rescue, knowledge recovery, alien technology salvage or containment from a versioned ship seed. Narrative version 2 SHALL support direct commissions and targets with dependencies, using the same history as generator 5. Briefings and discoveries SHALL derive from one consistent hidden history and identify a goal and reward.
+New expeditions SHALL select rescue, knowledge recovery, alien technology salvage or containment from a versioned ship seed. Narrative versions 2 and 3 SHALL support direct commissions and targets with dependencies, using the same history as generator 5. Briefings and discoveries SHALL derive from one consistent hidden history and identify a goal and reward.
 
 #### Scenario: Repeat a ship
 - **WHEN** the same seed and narrative version begin again
@@ -28,7 +28,7 @@ Each motivation SHALL offer two conclusions and an additional conclusion enabled
 
 #### Scenario: Optional preparation
 - **WHEN** players secure the optional operation before resolving the target
-- **THEN** the journal explains the newly available outcome and extraction reflects their chosen result.
+- **THEN** the journal explains the newly available outcome and extraction reflects their chosen result. Narrative 3 SHALL also support preparation supplied by a negotiated faction agreement.
 
 #### Scenario: Containment alternatives
 - **WHEN** a containment target is resolved

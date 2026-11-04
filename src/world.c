@@ -828,6 +828,29 @@ double world_raycast(const World *w, Vec3 o, Vec3 d, double limit) {
     }
     return best;
 }
+uint32_t world_systems(const World *w, Cell cell) {
+    if (!w->index_cap || !w->record_count || cell.z < 0)
+        return 0;
+    for (int i = 0; i < w->count; i++)
+        if (contains(&w->rooms[i], cell))
+            return w->rooms[i].record == SIZE_MAX ? 0 : w->records[w->rooms[i].record].systems;
+    Cell owner = world_describe_version(w->seed, w->generator, cell).cell;
+    size_t slot = record_slot(w, owner);
+    return w->record_index[slot] ? w->records[w->record_index[slot] - 1].systems : 0;
+}
+bool world_set_systems(World *w, Cell cell, uint32_t systems) {
+    if (systems >= 16 || (systems & SYSTEM_POWER && systems & SYSTEM_BLACKOUT) || cell.z < 0)
+        return false;
+    Cell owner = world_describe_version(w->seed, w->generator, cell).cell;
+    size_t index = record_for(w, owner, true);
+    if (index == SIZE_MAX || w->failed)
+        return false;
+    w->records[index].systems = systems;
+    for (int i = 0; i < w->count; i++)
+        if (cell_equal(w->rooms[i].cell, owner))
+            w->rooms[i].record = index;
+    return true;
+}
 void world_kill(World *w, Room *r, int i) {
     if (i < 0 || i >= r->enemy_count)
         return;

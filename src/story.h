@@ -1,7 +1,9 @@
 #ifndef SC_STORY_H
 #define SC_STORY_H
 #include "world.h"
-#define SC_STORY_SCENES 21
+#define SC_STORY_SCENES 31
+#define SC_STORY_EVENTS 32
+#define SC_OUTCOMES 5
 typedef enum { STORY_RESCUE, STORY_KNOWLEDGE, STORY_SALVAGE, STORY_CONTAINMENT } StoryMotivation;
 typedef enum {
     STORY_BRIEFING,
@@ -24,11 +26,38 @@ typedef enum {
     STORY_ISOLATOR,
     STORY_ORIGIN_RECORD,
     STORY_SURVIVOR_RECORD,
-    STORY_CONTROL_RECORD
+    STORY_CONTROL_RECORD,
+    STORY_POWER,
+    STORY_BEACON,
+    STORY_CIPHER,
+    STORY_COUNCIL,
+    STORY_OVERRIDE,
+    STORY_CONTINUE,
+    STORY_CONTACT,
+    STORY_RELAY,
+    STORY_RESOLUTION,
+    STORY_RETURN
 } StoryScene;
+typedef enum {
+    HARROW_ARC,
+    RELIEF_ARC,
+    CHART_ARC,
+    QUARANTINE_ARC,
+    FABRICATOR_ARC,
+    STORY_ARCS
+} StoryArc;
+typedef struct {
+    uint32_t chapter, scene, choice, arc;
+    Cell site;
+    uint32_t outcome[4];
+} StoryEvent;
 typedef struct {
     uint32_t version, assigned, seen, done, tracked, choice;
     Cell sites[SC_STORY_SCENES];
+    uint32_t support[2], council, chapter, arc, chapter_choice, remaining;
+    uint32_t last[SC_OUTCOMES], totals[SC_OUTCOMES];
+    uint32_t event_count;
+    StoryEvent events[SC_STORY_EVENTS];
 } Story;
 typedef struct {
     const char *title;

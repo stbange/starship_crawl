@@ -77,3 +77,16 @@ imports, direct consequences, origin history, purge, prepared isolation and
 keyboard/touch UI. Original format-7 fixtures remain unchanged; the old
 `--story-fixtures` capture command is historical and has been removed to avoid
 replacing their provenance.
+
+The eight `saga-*.sav` files are format-9/narrative-3 snapshots produced by
+`./build/sc_campaign_tests --saga-fixtures` with ordinary movement, combat,
+upgrades, lifts and interactions. Seed 1 performs its primary rescue, brokers
+the council agreement, and extracts two subsequent commissions. `power`,
+`beacon` and `controller` are captured immediately before the corresponding
+operation; `council` before its decision; `main` before the initial conclusion;
+`continuation` after primary extraction; `follow` at a relay-prepared chapter
+target; and `extracted` after chapter-one extraction. The fixture run completes
+optional follow-on relays before capturing decisions, while its main target
+uses council assistance without the original evacuation operation. The initial
+and later choices themselves remain available in the decision snapshots.
+Existing format-7 and format-8 fixtures stay unchanged.

@@ -2,24 +2,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-static Cell next_cell(uint32_t seed, unsigned generator, Cell from, Cell target) {
-    int parent[16], queue[16], head = 0, tail = 0;
-    for (int i = 0; i < 16; i++)
+static Cell next_cell(uint32_t seed, unsigned generator, Cell from, Cell target, bool wide) {
+    int width = wide ? 12 : 4, height = wide ? 32 : 4, total = width * height;
+    static uint32_t planned_seed, planned_generator;
+    static int planned_y, planned_width;
+    static uint8_t doors[384];
+    if (planned_seed != seed || planned_generator != generator || planned_y != from.y ||
+        planned_width != width) {
+        for (int rz = 0; rz < height / 4; rz++)
+            for (int rx = 0; rx < width / 4; rx++) {
+                RegionPlan plan;
+                world_plan_version(seed, generator, (Cell){rx, from.y, rz}, &plan);
+                for (int z = 0; z < 4; z++)
+                    for (int x = 0; x < 4; x++)
+                        doors[(rz * 4 + z) * width + rx * 4 + x] = plan.doors[z * 4 + x];
+            }
+        planned_seed = seed;
+        planned_generator = generator;
+        planned_y = from.y;
+        planned_width = width;
+    }
+    int parent[384], queue[384], head = 0, tail = 0;
+    for (int i = 0; i < total; i++)
         parent[i] = -1;
-    int start = from.z * 4 + from.x, end = target.z * 4 + target.x;
-    if (start < 0 || start >= 16 || end < 0 || end >= 16)
+    int start = from.z * width + from.x, end = target.z * width + target.x;
+    if (start < 0 || start >= total || end < 0 || end >= total)
         return from;
     queue[tail++] = start;
     parent[start] = start;
     while (head < tail && parent[end] < 0) {
         int id = queue[head++];
-        Cell c = {id % 4, from.y, id / 4};
+        Cell c = {id % width, from.y, id / width};
         for (int d = 0; d < 4; d++) {
             Cell n = world_neighbor(c, (Direction)d);
-            if (n.x < 0 || n.x > 3 || n.z < 0 || n.z > 3 ||
-                !world_door_version(seed, generator, c, (Direction)d))
+            if (n.x < 0 || n.x >= width || n.z < 0 || n.z >= height || !(doors[id] & (1u << d)))
                 continue;
-            int ni = n.z * 4 + n.x;
+            int ni = n.z * width + n.x;
             if (parent[ni] >= 0)
                 continue;
             parent[ni] = id;
@@ -31,8 +49,9 @@ static Cell next_cell(uint32_t seed, unsigned generator, Cell from, Cell target)
     int id = end;
     while (parent[id] != start && id != start)
         id = parent[id];
-    return (Cell){id % 4, from.y, id / 4};
+    return (Cell){id % width, from.y, id / width};
 }
+static unsigned saga_kinds = 0;
 static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigned version) {
     Game *g = malloc(sizeof(*g));
     if (!g)
@@ -42,17 +61,32 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
         world_destroy(&g->world);
         world_init(&g->world, seed);
         g->world.generator = 4;
-        g->story.version = 1;
+        g->story = (Story){.version = 1, .assigned = 1};
     }
+    if (version == 2)
+        g->story = (Story){.version = 2, .assigned = 1};
     if (!choice)
         g->story = (Story){0};
     Vec3 waypoint = {0};
     bool have = false;
     bool fixture_written = false, resumed = false;
-    unsigned lastmission = 0, lastrespawn = 0;
+    unsigned lastmission = 0, lastrespawn = 0, lasttracked = 0;
+    bool saga = version >= 3;
+    uint32_t captured = 0;
     int frame;
-    for (frame = 0; frame < 120000 && g->mission < 6 && !g->world.failed; frame++) {
+    for (frame = 0; frame < (saga ? 240000 : 120000) &&
+                    !(saga ? (g->story.chapter >= 2 && (g->story.done & (1u << STORY_RETURN)))
+                           : g->mission >= 6) &&
+                    !g->world.failed;
+         frame++) {
         Player *p = &g->players[0];
+        if (saga && frame % 6000 == 0) {
+            Vec3 at = position_absolute(p->pos);
+            printf("Saga tick %d / chapter %u kind %u / scene %u / position %.1f %.1f %.1f / %s\n",
+                   frame, g->story.chapter, g->story.arc, g->story.tracked, at.x, at.y, at.z,
+                   g->message);
+            fflush(stdout);
+        }
         Vec3 feet = position_absolute(p->pos);
         world_refresh(&g->world, &feet, 1);
         world_stream(&g->world, SC_STREAM_BUDGET);
@@ -63,14 +97,41 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
                 while (g->story.tracked != op)
                     game_story_track(g);
         }
+        if (saga && !g->story.choice) {
+            unsigned todo[] = {STORY_POWER, STORY_BEACON, STORY_CIPHER, STORY_OVERRIDE,
+                               STORY_COUNCIL};
+            for (unsigned i = 0; i < 5; i++)
+                if (game_story_available(g, todo[i]) &&
+                    (todo[i] != STORY_COUNCIL || ((g->story.done & (1u << STORY_POWER)) &&
+                                                  (g->story.done & (1u << STORY_CIPHER))))) {
+                    while (g->story.tracked != todo[i])
+                        game_story_track(g);
+                    break;
+                }
+        }
+        if (saga && g->story.chapter && (choice == 3 || fixture) &&
+            game_story_available(g, STORY_RELAY))
+            while (g->story.tracked != STORY_RELAY)
+                game_story_track(g);
         game_objective(g, &target);
         Cell cell = world_cell(feet);
-        if (g->mission != lastmission || g->respawns != lastrespawn)
+        if (g->mission != lastmission || g->respawns != lastrespawn ||
+            (saga && lasttracked != g->story.tracked))
             have = false;
         lastmission = g->mission;
         lastrespawn = g->respawns;
-        while (p->points)
-            game_upgrade(g, 0, p->power < 10 ? 0 : 1);
+        lasttracked = g->story.tracked;
+        if (saga && g->story.chapter)
+            saga_kinds |= 1u << g->story.arc;
+        while (p->points) {
+            int upgrade = p->power < 10 ? 0 : 1;
+            if (*player_attribute(p, upgrade) >= 50)
+                for (int i = 0; i < SC_ATTRIBUTES; i++)
+                    if (*player_attribute(p, i) < *player_attribute(p, upgrade))
+                        upgrade = i;
+            if (*player_attribute(p, upgrade) >= 50 || !game_upgrade(g, 0, upgrade))
+                break;
+        }
         if (p->weapon != 0)
             game_weapon(g, 0, 1);
         Actions a[2] = {{0}, {0}};
@@ -80,7 +141,8 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
             else if (cell.x == target.x && cell.z == target.z)
                 waypoint = game_terminal(target);
             else
-                waypoint = world_center(next_cell(g->world.seed, g->world.generator, cell, target));
+                waypoint =
+                    world_center(next_cell(g->world.seed, g->world.generator, cell, target, saga));
             have = true;
         }
         Vec3 diff = vsub(waypoint, feet);
@@ -92,14 +154,47 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
                 a[0].lift_up = cell.y < target.y;
                 a[0].lift_down = cell.y > target.y;
             } else if (cell.x == target.x && cell.z == target.z) {
+                if (saga && fixture) {
+                    unsigned near = game_story_near(g, 0);
+                    unsigned flag = near == STORY_POWER      ? 32
+                                    : near == STORY_BEACON   ? 64
+                                    : near == STORY_OVERRIDE ? 128
+                                                             : 0;
+                    if (flag && !(captured & flag)) {
+                        const char *name = near == STORY_POWER ? "tests/fixtures/saga-power.sav"
+                                           : near == STORY_BEACON
+                                               ? "tests/fixtures/saga-beacon.sav"
+                                               : "tests/fixtures/saga-controller.sav";
+                        if (!game_save(g, name))
+                            return 1;
+                        captured |= flag;
+                    }
+                }
                 game_interact(g, 0);
                 if (choice && p->decision_open) {
-                    if (fixture && !fixture_written) {
+                    if (fixture && !saga && !fixture_written) {
                         if (!game_save(g, fixture))
                             return 1;
                         fixture_written = true;
                     }
-                    game_story_choose(g, 0, choice);
+                    if (saga && fixture) {
+                        unsigned scene = g->players[0].decision_scene;
+                        unsigned bit = scene == STORY_COUNCIL      ? 1
+                                       : scene == STORY_RESOLUTION ? 4
+                                                                   : 2;
+                        if (!(captured & bit)) {
+                            const char *name = scene == STORY_COUNCIL      ? "saga-council.sav"
+                                               : scene == STORY_RESOLUTION ? "saga-follow.sav"
+                                                                           : "saga-main.sav";
+                            char path[160];
+                            snprintf(path, sizeof(path), "tests/fixtures/%s", name);
+                            if (!game_save(g, path))
+                                return 1;
+                            captured |= bit;
+                        }
+                    }
+                    game_story_choose(g, 0,
+                                      saga && p->decision_scene == STORY_COUNCIL ? 3 : choice);
                 }
             }
         }
@@ -144,6 +239,17 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
                    p->kills, g->respawns);
             fflush(stdout);
         }
+        if (saga && fixture) {
+            bool bay = g->story.done & (1u << STORY_EXTRACTION);
+            unsigned flag = g->story.chapter ? 16 : 8;
+            if (bay && !(captured & flag) &&
+                (!g->story.chapter || (g->story.done & (1u << STORY_RETURN)))) {
+                if (!game_save(g, g->story.chapter ? "tests/fixtures/saga-extracted.sav"
+                                                   : "tests/fixtures/saga-continuation.sav"))
+                    return 1;
+                captured |= flag;
+            }
+        }
         if (choice && g->mission == 2 && !resumed) {
             Story before = g->story;
             if (!game_save(g, "sc-story-journey.sav") || !game_load(g, "sc-story-journey.sav") ||
@@ -158,8 +264,11 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
         "Campaign seed %u: stage %u, %.1fs, %u kills, rank %u, %u respawns, %d frames, failed=%d\n",
         seed, g->mission, g->time, g->players[0].kills, g->players[0].level, g->respawns, frame,
         g->world.failed);
-    int result = g->mission == 6 && g->players[0].victories == 1 && g->players[0].kills >= 1 &&
-                         (!choice || g->story.choice == choice) && !g->world.failed
+    int result = g->mission == 6 && g->players[0].victories == (saga ? 3u : 1u) &&
+                         g->players[0].kills >= 1 && (!choice || g->story.choice == choice) &&
+                         (!saga || (g->story.chapter == 2 && g->story.totals[4] == 3 &&
+                                    g->players[0].career[4] == 3)) &&
+                         !g->world.failed
                      ? 0
                      : 1;
     if (result) {
@@ -187,6 +296,17 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
 }
 
 int main(int argc, char **argv) {
+    if (argc > 1 && (strcmp(argv[1], "--saga") == 0 || strcmp(argv[1], "--saga-fixtures") == 0)) {
+        bool fixtures = strcmp(argv[1], "--saga-fixtures") == 0;
+        const unsigned seeds[] = {1, 3, 5, 14, 22, 8};
+        for (unsigned i = 0; i < 6; i++) {
+            printf("Reactive saga seed %u / three extracted arcs\n", seeds[i]);
+            if (campaign(seeds[i], i % 3 + 1, fixtures && i == 0 ? "saga" : NULL, 3))
+                return 1;
+        }
+        printf("Follow-on kinds exercised: %x\n", saga_kinds);
+        return saga_kinds == (1u << STORY_ARCS) - 1 ? 0 : 1;
+    }
     if (argc > 1 &&
         (strcmp(argv[1], "--history") == 0 || strcmp(argv[1], "--history-fixtures") == 0)) {
         bool fixtures = strcmp(argv[1], "--history-fixtures") == 0;

@@ -20,8 +20,10 @@ static Game *create(unsigned seed) {
         world_destroy(&g->world);
         world_init(&g->world, seed);
         g->world.generator = 4;
-        g->story.version = 1;
+        g->story = (Story){.version = 1, .assigned = 1};
     }
+    if (narrative_version == 2)
+        g->story = (Story){.version = 2, .assigned = 1};
     return g;
 }
 static void destroy(Game *g) {
@@ -191,7 +193,7 @@ static void test_arcs(void) {
             }
             roundtrip(g);
             game_new_ship(g, seed + 987);
-            CHECK(g->mission == 0 && g->story.version == 2 && g->story.seen == 0);
+            CHECK(g->mission == 0 && g->story.version == 3 && g->story.seen == 0);
             CHECK(g->players[0].credits == money && g->players[0].victories == 1);
             valid(g);
             destroy(g);
@@ -264,7 +266,7 @@ static void test_validation_and_legacy(void) {
     Game *g = create(713);
     Story good = g->story, bad;
     bad = good;
-    bad.version = 3;
+    bad.version = 4;
     rejected(g, bad, 0);
     bad = good;
     bad.assigned |= BIT(30);
@@ -367,7 +369,7 @@ static void test_validation_and_legacy(void) {
     bad.seen = 1;
     rejected(g, bad, g->mission);
     game_new_ship(g, 713);
-    CHECK(g->story.version == 2 && g->players[0].level == 7);
+    CHECK(g->story.version == 3 && g->players[0].level == 7);
     valid(g);
     destroy(g);
 }

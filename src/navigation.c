@@ -57,6 +57,7 @@ bool game_map_build(const Game *g, int player, Cell center, int radius, MapView 
             view->valid[at] = true;
             view->rooms[at] = plans[found].rooms[plans[found].owner[local]];
             view->doors[at] = plans[found].doors[local];
+            view->systems[at] = world_systems(&g->world, c);
         }
     return true;
 }

@@ -16,7 +16,7 @@ canvas{display:block;width:100%;height:100%;outline:none;touch-action:none}butto
   <p>A cathedral of steel. A thousand forgotten decks.<br>Rescue the lost. Recover forbidden knowledge.<br>Claim alien technology. Contain a threat before it reaches home.</p>
   <button class="primary" id="start" disabled>Preparing the ship…</button>
   <p id="status" role="status" class="small">Loading the engine</p>
-  <p class="small">WASD move · mouse aim · click fire · Ctrl crouch<br>F flashlight · Z / X weapons · G use · R shelter · M map · I journal · F6 ship dossier<br>V veil · B flight · J long jump · H nova<br>T mech · Y wagon · G board / exit · K flares · O / P flare upgrades<br>E / Q grav lifts · 1 / 2 / 3 upgrades · Esc pause</p>
+  <p class="small">WASD move · mouse aim · click fire · Ctrl crouch<br>F flashlight · Z / X weapons · G use · R shelter · M map · I journal · F6 dossier · F7 debrief<br>V veil · B flight · J long jump · H nova<br>T mech · Y wagon · G board / exit · K flares · O / P flare upgrades<br>E / Q grav lifts · 1 / 2 / 3 upgrades · Esc pause</p>
   </div>
 </section>
 <button id="menu" class="hidden" aria-expanded="false">MENU</button>
@@ -25,7 +25,7 @@ canvas{display:block;width:100%;height:100%;outline:none;touch-action:none}butto
   <button data-action="80">Expedition journal (I)</button>
   <button data-action="81">Track next unresolved lead (U)</button>
   <button data-action="83">Read next field record (L)</button>
-  <button data-action="85">Ship dossier (F6)</button><button data-action="84">Character and armory (F4)</button>
+  <button data-action="86">Debrief and career (F7)</button><button data-action="88">Read previous expedition event (L)</button><button data-action="85">Ship dossier (F6)</button><button data-action="84">Character and armory (F4)</button>
   <div id="story-choices" class="hidden"><p>Resolve this site. Your choice is final for this expedition.</p>
     <button data-action="90">Choice 1</button><button data-action="91">Choice 2</button><button data-action="92">Choice 3</button>
     <p class="small">Choice 3 needs the optional operation. Resume to leave undecided.</p>
@@ -71,12 +71,12 @@ attributes.forEach((name,i)=>{const b=document.createElement('button');b.dataset
 const weapons=['Pulse Carbine','Breach Shotgun','Nail Repeater','Reliquary Rail','Plasma Lance','Funeral Rocket','Ember Thrower','Cryo Needler','Arc Conductor','Siphon Rifle','Gravity Mortar','Sunburst Cannon','Void Scalpel','Flechette Fan','Seraph Beam','Storm Relic','Lumen Cutter','Prism Lance','Siphon Ray','Lantern Flare Cannon'];
 weapons.forEach((name,i)=>{const b=document.createElement('button');b.dataset.action=40+i;b.textContent='Equip '+name;b.title='Find this weapon aboard the ship to unlock it';document.getElementById('armory').appendChild(b)});
 for(let i=0;i<12;i++){const b=document.createElement('button');b.dataset.action=100+i;b.textContent='Read ship record '+(i+1);document.getElementById('records').appendChild(b)}
-document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const action=Number(b.dataset.action);Module.ccall('sc_web_action',null,['number'],[action]);if(action===14||(action>=90&&action<=92&&!JSON.parse(Module.ccall('sc_web_state','string',[],[])).decision)){resume()}else if(action===11||action===80||action===84||action===85||action>=100){drawer.classList.add('hidden');menu.setAttribute('aria-expanded','false');canvas.focus()}});
+document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const action=Number(b.dataset.action);Module.ccall('sc_web_action',null,['number'],[action]);if(action===14||(action>=90&&action<=92&&!JSON.parse(Module.ccall('sc_web_state','string',[],[])).decision)){resume()}else if(action===11||action===80||action===84||action===85||action===86||action>=100){drawer.classList.add('hidden');menu.setAttribute('aria-expanded','false');canvas.focus()}});
 document.getElementById('save').onclick=()=>{Module.ccall('sc_web_save',null,[],[]);document.getElementById('save-note').textContent='Saving…';const timer=setInterval(()=>{const s=window.scStorage.status;if(s!==2){document.getElementById('save-note').textContent=s===3?'Saved in this browser.':'Storage unavailable. Export a backup.';clearInterval(timer)}},100)};
 document.getElementById('new').onclick=()=>{if(confirm('Generate a new ship? This replaces the current expedition and retains your character.')){Module.ccall('sc_web_action',null,['number'],[6]);resume()}};
 document.getElementById('export').onclick=()=>{Module.ccall('sc_web_save',null,[],[]);try{const data=Module.FS.readFile('/persist/expedition.sav');const url=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));const a=document.createElement('a');a.href=url;a.download='starship-expedition.sav';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(e){document.getElementById('save-note').textContent='No save is available yet.'}};
 document.getElementById('import-button').onclick=()=>document.getElementById('import').click();
-document.getElementById('import').onchange=async e=>{const file=e.target.files[0];if(!file||file.size>20002000)return;if(!confirm('Replace the current save with this expedition?'))return;const data=new Uint8Array(await file.arrayBuffer());Module.FS.writeFile('/persist/import.sav',data);const valid=Module.ccall('sc_web_import','number',[],[]);document.getElementById('save-note').textContent=valid?'Expedition imported.':'Invalid save. Your expedition is unchanged.';if(valid)resume()};
+document.getElementById('import').onchange=async e=>{const file=e.target.files[0];e.target.value='';if(!file||file.size>24010000)return;if(!confirm('Replace the current save with this expedition?'))return;const data=new Uint8Array(await file.arrayBuffer());Module.FS.writeFile('/persist/import.sav',data);const valid=Module.ccall('sc_web_import','number',[],[]);document.getElementById('save-note').textContent=valid?'Expedition imported.':'Invalid save. Your expedition is unchanged.';if(valid)resume()};
 window.addEventListener('pagehide',()=>{if(!start.disabled)Module.ccall('sc_web_save',null,[],[])});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 </script>

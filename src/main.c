@@ -122,21 +122,29 @@ EMSCRIPTEN_KEEPALIVE int sc_web_import(void) {
     return 1;
 }
 static void interact_player(int player) {
+    bool reviewing = app.game.players[player].journal;
     game_interact(&app.game, player);
     if (app.game.players[player].journal)
         set_pause(true);
+    else if (reviewing)
+        set_pause(false);
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     if (action >= 90 && action <= 92) {
         if (game_story_choose(&app.game, 0, (unsigned)(action - 89)))
             set_pause(false);
-    } else if (action == 80 || action == 84 || action == 85) {
+    } else if (action == 80 || action == 84 || action == 85 || action == 86) {
         Player *p = &app.game.players[0];
         p->journal = true;
-        p->journal_page = action == 85 ? 2 : action == 80 && app.game.story.version ? 1 : 0;
+        p->journal_page = action == 86                             ? 3
+                          : action == 85                           ? 2
+                          : action == 80 && app.game.story.version ? 1
+                                                                   : 0;
         set_pause(true);
     } else if (action == 81)
         game_story_track(&app.game);
+    else if (action == 88)
+        game_story_event_read(&app.game, 0);
     else if (action == 83)
         game_story_read(&app.game, 0);
     else if (action >= 60 && action < 60 + SC_PSIONICS)
@@ -160,6 +168,10 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
         }
     } else if (action == 12) {
         Player *p = &app.game.players[0];
+        if (p->journal && p->journal_page == 3) {
+            game_story_event_read(&app.game, 0);
+            return;
+        }
         if (p->journal && p->journal_page && app.game.story.version) {
             game_story_read(&app.game, 0);
             return;
@@ -284,7 +296,13 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"goal_x\":%d,\"goal_y\":%d,\"goal_z\":%d,\"victories\":%u,"
         "\"choice1\":\"%s\",\"choice2\":\"%s\",\"choice3\":\"%s\","
         "\"prepared\":%s,\"history_cause\":%u,\"history_arc\":%u,\"history_role\":%u,"
-        "\"origin_x\":%d,\"origin_y\":%d,\"origin_z\":%d}",
+        "\"origin_x\":%d,\"origin_y\":%d,\"origin_z\":%d,"
+        "\"council\":%u,\"support0\":%u,\"support1\":%u,\"chapter\":%u,\"arc_kind\":%u,\"chapter_"
+        "choice\":%u,"
+        "\"remaining\":%u,\"events\":%u,\"systems\":%u,\"safe\":%s,\"event_reading\":%u,"
+        "\"last0\":%u,\"last1\":%u,\"last2\":%u,\"last3\":%u,"
+        "\"total0\":%u,\"total1\":%u,\"total2\":%u,\"total3\":%u,\"total4\":%u,"
+        "\"career0\":%u,\"career1\":%u,\"career2\":%u,\"career3\":%u,\"career4\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -314,9 +332,17 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         app.game.story.tracked, p->story_reading, p->journal ? "true" : "false", p->journal_page,
         p->decision_open ? "true" : "false", has_goal ? "true" : "false", objective.x, objective.y,
         objective.z, p->victories, game_story_choice(&app.game, 1), game_story_choice(&app.game, 2),
-        game_story_choice(&app.game, 3), game_story_prepared(&app.game) ? "true" : "false",
+        game_story_choice(&app.game, 3), game_story_choice_ready(&app.game, 0) ? "true" : "false",
         past.cause, past.arc, room ? room->history_role : 0, past.origin.x, past.origin.y,
-        past.origin.z);
+        past.origin.z, app.game.story.council, app.game.story.support[0], app.game.story.support[1],
+        app.game.story.chapter, app.game.story.arc, app.game.story.chapter_choice,
+        app.game.story.remaining, app.game.story.event_count,
+        world_systems(&app.game.world, world_cell(feet)),
+        game_story_safe(&app.game, feet) ? "true" : "false", p->event_reading,
+        app.game.story.last[0], app.game.story.last[1], app.game.story.last[2],
+        app.game.story.last[3], app.game.story.totals[0], app.game.story.totals[1],
+        app.game.story.totals[2], app.game.story.totals[3], app.game.story.totals[4], p->career[0],
+        p->career[1], p->career[2], p->career[3], p->career[4]);
     return result;
 }
 static void audio_frame(void) {
@@ -516,9 +542,13 @@ static void events(void) {
                             game_story_choose(&app.game, player, choice))
                             set_pause(false);
                         if (b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
-                            p->journal_page = p->journal_page == 2 ? 1 : 2;
-                        if (b == SDL_GAMEPAD_BUTTON_WEST)
-                            game_story_read(&app.game, player);
+                            p->journal_page = p->journal_page == 3 ? 1 : p->journal_page + 1;
+                        if (b == SDL_GAMEPAD_BUTTON_WEST) {
+                            if (p->journal_page == 3)
+                                game_story_event_read(&app.game, player);
+                            else
+                                game_story_read(&app.game, player);
+                        }
                         if (b == SDL_GAMEPAD_BUTTON_NORTH)
                             game_story_track(&app.game);
                         if (b == SDL_GAMEPAD_BUTTON_EAST || b == SDL_GAMEPAD_BUTTON_START)
@@ -710,6 +740,9 @@ static void events(void) {
                 break;
             case SDLK_I:
                 sc_web_action(11);
+                break;
+            case SDLK_F7:
+                sc_web_action(86);
                 break;
             case SDLK_F6:
                 sc_web_action(85);

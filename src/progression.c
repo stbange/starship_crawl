@@ -43,7 +43,7 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags) {
     if (player < 0 || player >= g->player_count || !isfinite(damage) || damage <= 0)
         return;
     Player *p = &g->players[player];
-    if (p->sheltered)
+    if (p->sheltered || game_story_safe(g, position_absolute(p->pos)))
         return;
     if (flags & CHILL)
         p->slow = 2;
@@ -82,8 +82,9 @@ bool game_objective(const Game *g, Cell *cell) {
 }
 const char *game_mission(const Game *g) {
     if (g->story.version)
-        return g->mission == 6 ? "EXPEDITION COMPLETE / YOUR CHOICE ENDURES"
-                               : game_story_title(g, g->story.tracked);
+        return !game_story_available(g, g->story.tracked) && g->mission == 6
+                   ? "EXPEDITION COMPLETE / YOUR CHOICE ENDURES"
+                   : game_story_title(g, g->story.tracked);
     return missions[g->mission < 6 ? g->mission : 6];
 }
 Vec3 game_terminal(Cell cell) {

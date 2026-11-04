@@ -163,7 +163,7 @@ def run():
             assert not state(page)['failed'] and not errors
             mobile.close()
             browser.close()
-            print('PASS shelter browser: portal, separate split-screen, no firing inside, kitchen, bed, med station, v8 IndexedDB reload, exact return, mobile summon/enter/exit')
+            print('PASS shelter browser: portal, separate split-screen, no firing inside, kitchen, bed, med station, v9 IndexedDB reload, exact return, mobile summon/enter/exit')
     except Exception:
         detail = traceback.format_exc()
         if page and not page.is_closed():

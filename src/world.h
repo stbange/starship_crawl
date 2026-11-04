@@ -79,8 +79,9 @@ typedef struct {
 } Box;
 typedef struct {
     Cell cell;
-    uint32_t killed, collected;
+    uint32_t killed, collected, systems;
 } RoomRecord;
+enum { SYSTEM_POWER = 1, SYSTEM_BEACON = 2, SYSTEM_SILENCED = 4, SYSTEM_BLACKOUT = 8 };
 typedef struct {
     Position pos;
     float health, cooldown, flash;
@@ -201,6 +202,8 @@ Vec3 world_lift(Cell cell);
 bool world_overlap(const World *w, Vec3 feet, double radius, double height);
 double world_raycast(const World *w, Vec3 origin, Vec3 direction, double limit);
 void world_kill(World *w, Room *room, int enemy);
+uint32_t world_systems(const World *w, Cell cell);
+bool world_set_systems(World *w, Cell cell, uint32_t systems);
 void world_collect(World *w, Room *room, int pickup);
 bool world_index_records(World *w);
 float world_lamp_power(uint32_t phase, double time);

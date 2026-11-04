@@ -621,12 +621,19 @@ static void move_crawler(Game *g, Room *room, Enemy *e, Vec3 direction, double d
     e->heading = direction;
 }
 static void enemies_step(Game *g, double dt) {
+    bool protected[SC_PLAYERS] = {false, false};
+    for (int p = 0; p < g->player_count; p++)
+    protected[p] = game_story_safe(g, position_absolute(g->players[p].pos));
     for (int r = 0; r < g->world.count; r++) {
         Room *room = &g->world.rooms[r];
         for (int i = 0; i < room->enemy_count; i++) {
             Enemy *e = &room->enemies[i];
             if (!e->alive)
                 continue;
+            if (game_story_inert(g, e)) {
+                e->windup = 0;
+                continue;
+            }
             const EnemyDef *def = &sc_enemies[e->kind];
             e->flash = fmaxf(0, e->flash - (float)dt);
             e->cooldown = fmaxf(0, e->cooldown - (float)dt);
@@ -641,7 +648,8 @@ static void enemies_step(Game *g, double dt) {
             double best = 55;
             for (int p = 0; p < g->player_count; p++) {
                 Player *t = &g->players[p];
-                if (!vulnerable(t) || t->cloaked || fabs(position_delta(t->pos, e->pos).y) > 9)
+                if (!vulnerable(t) || t->cloaked || protected[p] ||
+                    fabs(position_delta(t->pos, e->pos).y) > 9)
                     continue;
                 double distance = vlen(position_delta(t->pos, e->pos));
                 if (distance < best) {
@@ -794,6 +802,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
             game_shelter_step(g, p, &actions[i], dt);
             continue;
         }
+        game_story_recovery(g, p, dt);
         move_player(g, p, &actions[i], dt);
         if (p->riding) {
             g->rigs[i][p->riding - 1].pos = p->pos;
