@@ -2,7 +2,9 @@ The Reclaimer expansion turns exploration into an expedition aboard **HARROW**, 
 
 Begin at the marked console near the loading bay lift. **G** uses a terminal, **I** opens the character and mission journal, **Z/X** or the mouse wheel changes weapons, and **1–9/0** upgrades the ten attributes. The browser menu exposes the same actions and unlocked weapons. Mobile adds **USE** and **GUN** beside the existing controls. The journal pauses play on the shared machine; Enter resumes. **L** cycles collected records; the browser menu also lets you select a record.
 
-The six-stage mission route is:
+New expeditions now use generated motivations, discoveries and decisions described in [NARRATIVE.md](NARRATIVE.md). **I** opens the expedition page; **F4** switches to character upgrades and the historical record archive. The original campaign remains available in compatible older saves.
+
+The legacy six-stage mission route is:
 
 | System | Target cell [across, deck, inward] | Objective |
 | --- | --- | --- |

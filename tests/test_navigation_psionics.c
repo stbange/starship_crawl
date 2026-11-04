@@ -103,6 +103,7 @@ static void test_maps(void) {
     CHECK(g->world.generated == generated && g->world.revision == revision);
     CHECK(game_map_build(g, 0, (Cell){0}, 0, &map) && map.side == 3 && map.has_objective);
     CHECK(cell_equal(map.objective, (Cell){0, 0, 0}));
+    g->story = (Story){0}; /* Legacy objectives retain their original map route. */
     g->mission = 2;
     g->shelter.deployed = true;
     g->shelter.door = p->pos;

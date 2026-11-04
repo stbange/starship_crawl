@@ -140,6 +140,7 @@ static void test_controls_and_resources(void) {
     r->pickups[0] = (Pickup){.pos = p->pos, .kind = PICK_MEDKIT, .active = true};
     game_progression_step(g, .01);
     CHECK(r->pickups[0].active);
+    g->story = (Story){0};
     g->mission = 6;
     game_interact(g, 0);
     CHECK(strstr(g->message, "BEACON LIT"));

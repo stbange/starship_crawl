@@ -686,6 +686,8 @@ static void test_expansion(void) {
     room = world_find(&g->world, (Cell){1, 0, 0});
     CHECK(room && !room->pickups[3].active);
     remove("sc-cache-check.sav");
+    /* Keep the original campaign regression alongside generated-story tests. */
+    g->story = (Story){0};
     for (int stage = 0; stage < 6; stage++) {
         Cell target;
         CHECK(game_objective(g, &target));

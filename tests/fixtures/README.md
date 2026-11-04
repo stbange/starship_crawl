@@ -45,3 +45,17 @@ geometry/fixture/dressing fingerprints generated from that commit's source.
 The quantized field hashing is in `geometry_fingerprint.h`; it never hashes
 struct padding. Tests compare the supported generator-3 path against these
 pre-change references, including the bay, introduction rooms and all nine decks.
+
+`generator-v4-format6.sav` was captured from the unmodified core at commit
+414ec58 before narrative work. It contains generator 4, seed 713, legacy mission
+2 and a rank-7 character with 123 salvage. Format 7 must retain that story and
+geometry, then start a generated story only on an explicit new-ship action.
+
+`story-0-choice1.sav`, `story-0-choice3.sav`, `story-1-choice3.sav` and
+`story-2-choice3.sav` are format-7/narrative-1 decision checkpoints. They were
+produced by `./build/sc_campaign_tests --story-fixtures` using normal movement,
+combat, lifts, progression and interaction, including save/resume mid-journey.
+The motivations use seeds 1, 2 and 7 respectively. `choice3` files include the
+optional operation; `choice1` has no optional preparation. The choice itself is
+still uncommitted. Browser tests import these through the ordinary save UI to
+exercise decisions, disabled options and persistence without runtime test hooks.

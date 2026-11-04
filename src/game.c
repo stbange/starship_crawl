@@ -44,13 +44,14 @@ static void player_init(Player *p) {
 void game_init(Game *g, uint32_t seed) {
     memset(g, 0, sizeof(*g));
     world_init(&g->world, seed);
+    story_init(&g->story);
     g->player_count = 1;
     for (int i = 0; i < SC_PLAYERS; i++)
         player_init(&g->players[i]);
     game_equipment_reset(g);
     Vec3 p = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &p, 1);
-    game_message(g, "THE BAY IS SAFE. THE SHIP BEYOND IT IS NOT.");
+    game_message(g, story_commission(seed));
 }
 void game_destroy(Game *g) {
     world_destroy(&g->world);
@@ -98,6 +99,7 @@ void game_new_ship(Game *g, uint32_t seed) {
     world_init(&g->world, seed);
     memset(g->projectiles, 0, sizeof(g->projectiles));
     g->mission = g->mission_kills = g->mission_loot = g->contracts = 0;
+    story_init(&g->story);
     memset(&g->shelter, 0, sizeof(g->shelter));
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player *p = &g->players[i];
@@ -114,6 +116,8 @@ void game_new_ship(Game *g, uint32_t seed) {
         p->crouched = false;
         p->slow = p->hurt = p->cooldown = 0;
         p->journal = false;
+        p->decision_open = false;
+        p->journal_page = p->story_reading = 0;
         p->map_open = p->cloaked = false;
         p->flight = p->leap = p->nova = p->nova_tick = p->nova_flash = 0;
         p->sheltered = false;
@@ -799,6 +803,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
             shoot(g, p);
     }
     game_progression_step(g, dt);
+    game_story_step(g);
     enemies_step(g, dt);
     projectiles_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {

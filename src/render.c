@@ -850,6 +850,42 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
     gl.Uniform4fv(r->lamp_pos, count, positions);
     gl.Uniform4fv(r->lamp_color, count, colors);
 }
+static void story_prop(Renderer *r, unsigned scene, Vec3 at, bool done, double time) {
+    Color metal = rgb(.13f, .18f, .19f), glow = done ? rgb(.2f, .35f, .29f) : rgb(.3f, .8f, .72f);
+    if (scene >= STORY_TRACKS && scene <= STORY_RATIONS) {
+        for (int i = 0; i < 5; i++) {
+            Vec3 p = vadd(at, v3((i % 2 ? .25 : -.25), .04, (i - 2) * .38));
+            if (scene == STORY_CONDUIT)
+                tube(r, p, vadd(p, v3(.8, .12, .8)), .025, .025, glow, .4f);
+            else if (scene == STORY_FROST || scene == STORY_RESEARCH)
+                octahedron(r, vadd(p, v3(0, .12, 0)), .12, rgb(.35f, .5f, .65f), .3f);
+            else
+                block(r, p, v3(.15, scene == STORY_RATIONS ? .17 : .03, .25), rgb(.45f, .3f, .15f),
+                      .2f);
+        }
+        return;
+    }
+    block(r, vadd(at, v3(0, .5, 0)), v3(.95, 1, .7), metal, 0);
+    if (scene == STORY_REACTOR || scene == STORY_DRIVE) {
+        for (int i = -1; i <= 1; i++)
+            tube(r, vadd(at, v3(i * .42, .8, 0)), vadd(at, v3(i * .42, 2.1, 0)), .16, .11,
+                 i ? metal : glow, i ? .1f : 1);
+    } else if (scene == STORY_SURVIVORS) {
+        for (int i = -1; i <= 1; i += 2) {
+            block(r, vadd(at, v3(i * .65, .6, .5)), v3(.6, 1.2, 1.5), metal, 0);
+            block(r, vadd(at, v3(i * .65, 1.24, .5)), v3(.4, .08, 1.2), glow, .6f);
+        }
+    } else if (scene == STORY_ARCHIVE || scene == STORY_MEMORY || scene == STORY_MIRROR) {
+        for (int i = -1; i <= 1; i += 2)
+            octahedron(r, vadd(at, v3(i * .4, 1.55, 0)), .4, glow, .8f);
+    } else {
+        block(r, vadd(at, v3(0, 1.3, 0)), v3(1.2, .5, .8), glow, .6f);
+        if (scene == STORY_REFUGE || scene == STORY_EVAC || scene == STORY_EXTRACTION)
+            tube(r, vadd(at, v3(.55, 1.5, 0)), vadd(at, v3(.55, 2.5, 0)), .04, .02, glow, .5f);
+    }
+    if (!done)
+        octahedron(r, vadd(at, v3(0, 2.8 + sin(time) * .1, 0)), .2, rgb(.85f, .65f, .25f), 1.5f);
+}
 static void actors(Renderer *r, Game *g, int viewer) {
     const Enemy *visible[128];
     double distances[128];
@@ -961,7 +997,18 @@ static void actors(Renderer *r, Game *g, int viewer) {
         octahedron(r, vadd(at, vmul(f->normal, .25)), .11, rgb(1, .65f, .25f), 2);
     }
     Cell target;
-    if (game_objective(g, &target) && target.y == cell.y && world_ready(&g->world, target)) {
+    if (g->story.version) {
+        for (int i = 0; i < SC_STORY_SCENES; i++) {
+            Cell c = g->story.sites[i];
+            if (!(g->story.assigned & (1u << i)) || c.y != cell.y || !world_ready(&g->world, c))
+                continue;
+            if (i == STORY_BRIEFING && (g->story.assigned & (1u << STORY_EXTRACTION)))
+                continue;
+            Vec3 at = game_terminal(c);
+            if (vlen(vsub(at, eye)) < 170)
+                story_prop(r, (unsigned)i, at, !game_story_available(g, (unsigned)i), g->time);
+        }
+    } else if (game_objective(g, &target) && target.y == cell.y && world_ready(&g->world, target)) {
         Vec3 p = game_terminal(target);
         if (vlen(vsub(p, eye)) < 170) {
             block(r, vadd(p, v3(0, .6, 0)), v3(.9, 1.2, .7), rgb(.18f, .23f, .24f), 0);
@@ -1074,6 +1121,28 @@ static void text_at(Renderer *r, float x, float y, float scale, const char *text
 }
 static void centered(Renderer *r, float x, float y, float s, const char *text, Color c) {
     text_at(r, x - (float)strlen(text) * s * 3, y, s, text, c);
+}
+static void wrapped(Renderer *r, float x, float y, float scale, float width, const char *text,
+                    Color c) {
+    unsigned limit = (unsigned)fmaxf(1, fminf(159, width / (6 * scale)));
+    while (*text) {
+        unsigned n = (unsigned)strlen(text);
+        if (n > limit) {
+            n = limit;
+            while (n > 1 && text[n] != ' ')
+                n--;
+            if (n == 1)
+                n = limit;
+        }
+        char line[160];
+        memcpy(line, text, n);
+        line[n] = 0;
+        text_at(r, x, y, scale, line, c);
+        text += n;
+        while (*text == ' ')
+            text++;
+        y += 13 * scale;
+    }
 }
 static void frame(Renderer *r, float x, float y, float w, float h, Color c) {
     rect(r, x, y, w, 1, c);
@@ -1192,6 +1261,68 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
                 "GREEN YOU / BLUE LIFT / GOLD GOAL / VIOLET SHELTER / PINK DISCOVERY", wall);
     }
 }
+static void story_journal(Renderer *r, const Game *g, int player, float w, float h) {
+    const Player *p = &g->players[player];
+    float s = fminf((w - 24) / 800, (h - 24) / 510), x = (w - 800 * s) * .5f,
+          y = (h - 510 * s) * .5f;
+    Color gold = rgb(.88f, .7f, .4f), ink = rgb(.8f, .85f, .8f), mint = rgb(.3f, .8f, .7f),
+          dim = rgb(.45f, .55f, .57f);
+    rect(r, x, y, 800 * s, 510 * s, rgb(.02f, .04f, .05f));
+    frame(r, x, y, 800 * s, 510 * s, gold);
+    x += 18 * s;
+    char text[320];
+    text_at(r, x, y + 16 * s, 1.4f * s, "EXPEDITION / THE SHIP REMEMBERS", gold);
+    for (int line = 0; line < 3; line++) {
+        game_story_line(g, line, text, sizeof(text));
+        text_at(r, x, y + (40 + line * 18) * s, s, text, line == 1 ? mint : ink);
+    }
+    text_at(r, x, y + 105 * s, .9f * s, "CURRENT GOAL / GOLD ON YOUR MAP / U CHANGES LEAD", gold);
+    text_at(r, x, y + 123 * s, s, game_mission(g), ink);
+    text_at(r, x, y + 151 * s, .9f * s, "CONFIRMED FACTS", gold);
+    for (int line = 3; line < 6; line++) {
+        game_story_line(g, line, text, sizeof(text));
+        text_at(r, x, y + (169 + (line - 3) * 17) * s, .92f * s, text, ink);
+    }
+    snprintf(text, sizeof(text), "FIELD RECORD / L NEXT / %s",
+             sc_story_templates[p->story_reading].title);
+    text_at(r, x, y + 231 * s, .9f * s, text, gold);
+    game_story_entry(g, p->story_reading, text, sizeof(text));
+    wrapped(r, x, y + 250 * s, .95f * s, 760 * s, text, ink);
+    text_at(r, x, y + 294 * s, .9f * s, "UNRESOLVED LEADS / U TRACKS THE NEXT KNOWN SITE", gold);
+    int row = 0;
+    for (unsigned i = 0; i < SC_STORY_SCENES; i++)
+        if (game_story_available(g, i)) {
+            Cell c = g->story.sites[i];
+            snprintf(text, sizeof(text), "%c %s [%d,%d,%d]", i == g->story.tracked ? '>' : ' ',
+                     sc_story_templates[i].title, c.x, c.y, c.z);
+            text_at(r, x, y + (313 + row++ * 17) * s, .9f * s, text,
+                    i == g->story.tracked ? mint : dim);
+        }
+    if (p->decision_open) {
+        text_at(r, x, y + 385 * s, s, "CHOOSE HERE / 1 2 3 / GAMEPAD LEFT UP RIGHT", gold);
+        bool prepared = (g->story.done &
+                         ((1u << STORY_REACTOR) | (1u << STORY_EVAC) | (1u << STORY_MIRROR))) != 0;
+        for (unsigned i = 1; i <= 3; i++) {
+            snprintf(text, sizeof(text), "%u %s%s", i, game_story_choice(g, i),
+                     i == 3 && !prepared ? " / LOCKED" : "");
+            text_at(r, x, y + (408 + (i - 1) * 21) * s, .9f * s, text,
+                    i == 3 && !prepared ? dim : mint);
+        }
+        text_at(r, x, y + 472 * s, .85f * s,
+                prepared ? "ALL THREE OUTCOMES AVAILABLE / ENTER LEAVES UNDECIDED"
+                         : "THIRD CHOICE NEEDS THE OPTIONAL OPERATION / ENTER LEAVES UNDECIDED",
+                dim);
+    } else {
+        game_story_line(g, 6, text, sizeof(text));
+        text_at(r, x, y + 402 * s, .95f * s, text, mint);
+        game_story_line(g, 7, text, sizeof(text));
+        text_at(r, x, y + 426 * s, .9f * s, text, ink);
+        text_at(r, x, y + 455 * s, .9f * s,
+                "G AT A CLEARED SITE TO INVESTIGATE OR REVIEW ITS CHOICES", dim);
+    }
+    text_at(r, x, y + 491 * s, .85f * s,
+            "F4 CHARACTER PAGE / ENTER CLOSE / TOUCH: JOURNAL ACTIONS IN MENU", gold);
+}
 static void hud(Renderer *r, Game *g, int player, int width, int height, bool paused, bool touch,
                 bool debug, double fps, const char *save_status) {
     Player *p = &g->players[player];
@@ -1267,12 +1398,20 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     rect(r, pad, by + 65 * s, 230 * s * p->shield / player_max_shield(p), 4 * s,
          rgb(.25f, .5f, .9f));
     Cell objective;
+    if (g->story.version && !(g->story.done & 1u) && !p->sheltered)
+        centered(r, w * .5f, 77 * s, .85f * s, story_commission(g->world.seed), mint);
     if (!p->sheltered && game_objective(g, &objective)) {
         snprintf(label, sizeof(label), "%s  /  [%d,%d,%d]", game_mission(g), objective.x,
                  objective.y, objective.z);
         centered(r, w * .5f, 96 * s, .85f * s, label, gold);
-        if (vlen(vsub(position_absolute(p->pos), game_terminal(objective))) < 4)
+        if (!g->story.version &&
+            vlen(vsub(position_absolute(p->pos), game_terminal(objective))) < 4)
             centered(r, w * .5f, h * .58f, 1.2f * s, "G / USE MISSION TERMINAL", gold);
+    }
+    unsigned story_site = game_story_near(g, player);
+    if (story_site < SC_STORY_SCENES) {
+        snprintf(label, sizeof(label), "G / %s", sc_story_templates[story_site].title);
+        centered(r, w * .5f, h * .58f, s, label, gold);
     }
     const Enemy *aimed = NULL;
     double nearest = 55;
@@ -1454,7 +1593,9 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         if (g->message_time > 0)
             centered(r, w * .5f, my + 242 * s, .9f * s, g->message, mint);
     }
-    if (p->journal) {
+    if (p->journal && g->story.version && p->journal_page)
+        story_journal(r, g, player, w, h);
+    else if (p->journal) {
         float pw = fminf(w - 24, 740 * s), ph = fminf(h - 32, 450 * s), px = (w - pw) * .5f,
               py = (h - ph) * .5f;
         rect(r, px, py, pw, ph, panel);
@@ -1472,7 +1613,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                     mint);
         }
         text_at(r, px + 18 * s, py + 160 * s, .8f * s,
-                "UPGRADE WITH 1 POINT OR THE LISTED SALVAGE COST", dim);
+                "UPGRADE WITH 1 POINT OR SALVAGE / F4 EXPEDITION PAGE", dim);
         text_at(r, px + 18 * s, py + 175 * s, s, game_mission(g), gold);
         if (game_objective(g, &objective)) {
             Cell here = world_cell(position_absolute(p->pos));

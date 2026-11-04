@@ -59,6 +59,10 @@ static void set_pause(bool paused) {
     if (app.window && !app.touch)
         SDL_SetWindowRelativeMouseMode(app.window, !paused);
     if (!paused) {
+        for (int i = 0; i < SC_PLAYERS; i++) {
+            app.game.players[i].journal = false;
+            app.game.players[i].decision_open = false;
+        }
         /* Discard menu motion and the browser's initial pointer-lock warp. */
         SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
         app.look_after = SDL_GetTicksNS() + UINT64_C(120000000);
@@ -86,8 +90,6 @@ static void save_game(void) {
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_start(void) {
     app.started = true;
-    for (int i = 0; i < SC_PLAYERS; i++)
-        app.game.players[i].journal = false;
     app.new_armed = false;
     set_pause(false);
 }
@@ -119,8 +121,25 @@ EMSCRIPTEN_KEEPALIVE int sc_web_import(void) {
     save_game();
     return 1;
 }
+static void interact_player(int player) {
+    game_interact(&app.game, player);
+    if (app.game.players[player].journal)
+        set_pause(true);
+}
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
-    if (action >= 60 && action < 60 + SC_PSIONICS)
+    if (action >= 90 && action <= 92) {
+        if (game_story_choose(&app.game, 0, (unsigned)(action - 89)))
+            set_pause(false);
+    } else if (action == 80 || action == 84) {
+        Player *p = &app.game.players[0];
+        p->journal = true;
+        p->journal_page = action == 80 && app.game.story.version ? 1 : 0;
+        set_pause(true);
+    } else if (action == 81)
+        game_story_track(&app.game);
+    else if (action == 83)
+        game_story_read(&app.game, 0);
+    else if (action >= 60 && action < 60 + SC_PSIONICS)
         game_psionic(&app.game, 0, (Psionic)(action - 60));
     else if (action >= 70 && action < 70 + SC_MECH_WEAPONS) {
         app.game.players[0].rig_weapon = (unsigned)(action - 70);
@@ -136,10 +155,15 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
         if (p->logs & (1u << (action - 100))) {
             p->reading = (uint8_t)(action - 100);
             p->journal = true;
+            p->journal_page = 0;
             set_pause(true);
         }
     } else if (action == 12) {
         Player *p = &app.game.players[0];
+        if (p->journal && p->journal_page && app.game.story.version) {
+            game_story_read(&app.game, 0);
+            return;
+        }
         for (int i = 0; i < 12; i++) {
             p->reading = (p->reading + 1) % 12;
             if (p->logs & (1u << p->reading))
@@ -169,13 +193,15 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     else if (action == 13)
         game_summon(&app.game, 0);
     else if (action == 8)
-        game_interact(&app.game, 0);
+        interact_player(0);
     else if (action == 9)
         game_weapon(&app.game, 0, 1);
     else if (action == 10)
         game_weapon(&app.game, 0, -1);
     else if (action == 11) {
         app.game.players[0].journal = !app.game.players[0].journal;
+        app.game.players[0].journal_page = app.game.story.version ? 1 : 0;
+        app.game.players[0].decision_open = false;
         set_pause(app.game.players[0].journal);
     } else if (action >= 1 && action <= 3)
         game_upgrade(&app.game, 0, action - 1);
@@ -231,6 +257,8 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         beams += app.game.beams[i].life > 0;
     float hull = p->riding ? app.game.rigs[0][p->riding - 1].armor : 0;
     Room *room = world_find(&app.game.world, world_cell(feet));
+    Cell objective = {0};
+    bool has_goal = game_objective(&app.game, &objective);
     snprintf(
         result, sizeof(result),
         "{\"seed\":%u,\"players\":%d,\"paused\":%s,\"frames\":%d,\"rooms\":%d,"
@@ -247,7 +275,12 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"hull\":%.2f,\"drive_speed\":%.2f,\"mech_deployed\":%s,\"wagon_deployed\":%s,\"beams\":%"
         "u,\"flares\":%u,\"flare_lifetime\":%u,\"flare_strength\":%u,\"flare_life\":%.2f,\"flare_"
         "power\":%.2f,\"points\":%u,\"profile\":%u,\"layout\":%u,\"incident\":%u,\"intensity\":%u,"
-        "\"landmark\":%u,\"room_depth\":%.1f,\"cache_x\":%.3f,\"cache_z\":%.3f}",
+        "\"landmark\":%u,\"room_depth\":%.1f,\"cache_x\":%.3f,\"cache_z\":%.3f,"
+        "\"story_version\":%u,\"motivation\":%u,\"story_assigned\":%u,\"story_seen\":%u,"
+        "\"story_done\":%u,\"story_choice\":%u,\"story_tracked\":%u,\"story_reading\":%u,"
+        "\"journal\":%s,\"journal_page\":%u,\"decision\":%s,\"has_goal\":%s,"
+        "\"goal_x\":%d,\"goal_y\":%d,\"goal_z\":%d,\"victories\":%u,"
+        "\"choice1\":\"%s\",\"choice2\":\"%s\",\"choice3\":\"%s\"}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
         app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
@@ -271,7 +304,13 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         room ? room->layout : 0, room ? room->incident : 0, room ? room->intensity : 0,
         room ? room->landmark : 0, room ? room->depth : 0,
         room && room->ready ? position_absolute(room->pickups[3].pos).x : 0,
-        room && room->ready ? position_absolute(room->pickups[3].pos).z : 0);
+        room && room->ready ? position_absolute(room->pickups[3].pos).z : 0, app.game.story.version,
+        story_motivation(app.game.world.seed), app.game.story.assigned, app.game.story.seen,
+        app.game.story.done, app.game.story.choice, app.game.story.tracked, p->story_reading,
+        p->journal ? "true" : "false", p->journal_page, p->decision_open ? "true" : "false",
+        has_goal ? "true" : "false", objective.x, objective.y, objective.z, p->victories,
+        game_story_choice(&app.game, 1), game_story_choice(&app.game, 2),
+        game_story_choice(&app.game, 3));
     return result;
 }
 static void audio_frame(void) {
@@ -376,7 +415,7 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
                 if (app.fingers[i].role == 7)
                     game_flashlight(&app.game, 0);
                 if (app.fingers[i].role == 8)
-                    game_interact(&app.game, 0);
+                    interact_player(0);
                 if (app.fingers[i].role == 9)
                     game_weapon(&app.game, 0, 1);
                 if (app.fingers[i].role == 10)
@@ -461,6 +500,22 @@ static void events(void) {
                 if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == e.gbutton.which) {
                     int player = pad_player(i);
                     Player *p = &app.game.players[player];
+                    if (p->journal && p->journal_page && app.game.story.version) {
+                        int b = e.gbutton.button;
+                        unsigned choice = b == SDL_GAMEPAD_BUTTON_DPAD_LEFT    ? 1
+                                          : b == SDL_GAMEPAD_BUTTON_DPAD_UP    ? 2
+                                          : b == SDL_GAMEPAD_BUTTON_DPAD_RIGHT ? 3
+                                                                               : 0;
+                        if (choice && game_story_choose(&app.game, player, choice))
+                            set_pause(false);
+                        if (b == SDL_GAMEPAD_BUTTON_WEST)
+                            game_story_read(&app.game, player);
+                        if (b == SDL_GAMEPAD_BUTTON_NORTH)
+                            game_story_track(&app.game);
+                        if (b == SDL_GAMEPAD_BUTTON_EAST || b == SDL_GAMEPAD_BUTTON_START)
+                            sc_web_start();
+                        continue;
+                    }
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_LEFT_STICK) {
                         game_map_toggle(&app.game, player);
                         continue;
@@ -486,6 +541,12 @@ static void events(void) {
                     }
                     if (SDL_GetGamepadAxis(app.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16000) {
                         int b = e.gbutton.button;
+                        if (b == SDL_GAMEPAD_BUTTON_BACK) {
+                            p->journal = true;
+                            p->journal_page = app.game.story.version ? 1 : 0;
+                            set_pause(true);
+                            continue;
+                        }
                         if (b == SDL_GAMEPAD_BUTTON_SOUTH || b == SDL_GAMEPAD_BUTTON_EAST) {
                             game_rig_toggle(&app.game, player,
                                             b == SDL_GAMEPAD_BUTTON_SOUTH ? MECH : WAGON);
@@ -525,7 +586,7 @@ static void events(void) {
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
                         game_weapon(&app.game, pad_player(i), 1);
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_DOWN)
-                        game_interact(&app.game, pad_player(i));
+                        interact_player(pad_player(i));
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_RIGHT_STICK)
                         game_flashlight(&app.game, pad_player(i));
                     if (e.gbutton.button == SDL_GAMEPAD_BUTTON_DPAD_LEFT)
@@ -630,7 +691,7 @@ static void events(void) {
                 game_summon(&app.game, 0);
                 break;
             case SDLK_G:
-                game_interact(&app.game, 0);
+                interact_player(0);
                 break;
             case SDLK_Z:
                 game_weapon(&app.game, 0, -1);
@@ -640,6 +701,12 @@ static void events(void) {
                 break;
             case SDLK_I:
                 sc_web_action(11);
+                break;
+            case SDLK_F4:
+                sc_web_action(app.game.players[0].journal_page ? 84 : 80);
+                break;
+            case SDLK_U:
+                game_story_track(&app.game);
                 break;
             case SDLK_F:
                 game_flashlight(&app.game, 0);
@@ -674,7 +741,12 @@ static void events(void) {
             case SDLK_7:
             case SDLK_8:
             case SDLK_9:
-                game_upgrade(&app.game, 0, (int)(e.key.key - SDLK_1));
+                if (app.game.players[0].journal && app.game.players[0].journal_page &&
+                    app.game.players[0].decision_open) {
+                    if (e.key.key <= SDLK_3)
+                        sc_web_action(90 + (int)(e.key.key - SDLK_1));
+                } else
+                    game_upgrade(&app.game, 0, (int)(e.key.key - SDLK_1));
                 break;
             case SDLK_0:
                 game_upgrade(&app.game, 0, 9);

@@ -202,6 +202,8 @@ def run():
             assert state(page)["credits"] >= 75
             page.keyboard.press("i")
             wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
+            page.keyboard.press("F4")
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).journal_page === 0")
             page.keyboard.press("4")
             wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).armor > 40")
             page.keyboard.press("x")
@@ -270,7 +272,7 @@ def run():
             assert not errors, errors
             mobile.close()
             browser.close()
-            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, eleven interiors, first mission and rewarded armor upgrade, weapon cycling, journal, v6 reload, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
+            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, eleven interiors, first mission and rewarded armor upgrade, weapon cycling, journal, v7 reload, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
     finally:
         server.shutdown()
         server.server_close()

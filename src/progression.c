@@ -69,12 +69,21 @@ static const char *missions[] = {"ANSWER THE DISTRESS CONSOLE",
                                  "RETURN AND IGNITE THE BEACON",
                                  "THE SLEEPERS HAVE A SKY / EXPEDITION COMPLETE"};
 bool game_objective(const Game *g, Cell *cell) {
+    if (g->story.version) {
+        if (!game_story_available(g, g->story.tracked))
+            return false;
+        *cell = g->story.sites[g->story.tracked];
+        return true;
+    }
     if (g->mission >= 6)
         return false;
     *cell = objectives[g->mission];
     return true;
 }
 const char *game_mission(const Game *g) {
+    if (g->story.version)
+        return g->mission == 6 ? "EXPEDITION COMPLETE / YOUR CHOICE ENDURES"
+                               : sc_story_templates[g->story.tracked].title;
     return missions[g->mission < 6 ? g->mission : 6];
 }
 Vec3 game_terminal(Cell cell) {
@@ -88,6 +97,10 @@ void game_interact(Game *g, int player) {
         return;
     if (game_shelter_interact(g, player))
         return;
+    if (g->story.version) {
+        game_story_interact(g, player);
+        return;
+    }
     Cell target;
     if (!game_objective(g, &target)) {
         game_message(g, "BEACON LIT / N THEN ENTER BEGINS ANOTHER EXPEDITION");
@@ -198,7 +211,9 @@ void game_progression_step(Game *g, double dt) {
                 if (loot->kind == PICK_LOG) {
                     p->logs |= 1u << loot->item;
                     p->credits += 15;
-                    game_message(g, sc_logs[loot->item]);
+                    game_message(g, g->story.version
+                                        ? "HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE"
+                                        : sc_logs[loot->item]);
                 }
             }
         }

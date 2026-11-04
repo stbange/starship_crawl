@@ -1,6 +1,7 @@
 #include "game.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 static Cell next_cell(uint32_t seed, Cell from, Cell target) {
     int parent[16], queue[16], head = 0, tail = 0;
     for (int i = 0; i < 16; i++)
@@ -31,13 +32,16 @@ static Cell next_cell(uint32_t seed, Cell from, Cell target) {
         id = parent[id];
     return (Cell){id % 4, from.y, id / 4};
 }
-static int campaign(uint32_t seed) {
+static int campaign(uint32_t seed, unsigned choice, const char *fixture) {
     Game *g = malloc(sizeof(*g));
     if (!g)
         return 2;
     game_init(g, seed);
+    if (!choice)
+        g->story = (Story){0};
     Vec3 waypoint = {0};
     bool have = false;
+    bool fixture_written = false, resumed = false;
     unsigned lastmission = 0, lastrespawn = 0;
     int frame;
     for (frame = 0; frame < 120000 && g->mission < 6 && !g->world.failed; frame++) {
@@ -46,6 +50,12 @@ static int campaign(uint32_t seed) {
         world_refresh(&g->world, &feet, 1);
         world_stream(&g->world, SC_STREAM_BUDGET);
         Cell target;
+        if (choice == 3) {
+            for (unsigned i = STORY_REACTOR; i <= STORY_MIRROR; i++)
+                if (game_story_available(g, i))
+                    while (g->story.tracked != i)
+                        game_story_track(g);
+        }
         game_objective(g, &target);
         Cell cell = world_cell(feet);
         if (g->mission != lastmission || g->respawns != lastrespawn)
@@ -74,8 +84,17 @@ static int campaign(uint32_t seed) {
             if (cell.y != target.y) {
                 a[0].lift_up = cell.y < target.y;
                 a[0].lift_down = cell.y > target.y;
-            } else if (cell.x == target.x && cell.z == target.z)
+            } else if (cell.x == target.x && cell.z == target.z) {
                 game_interact(g, 0);
+                if (choice && p->decision_open) {
+                    if (fixture && !fixture_written) {
+                        if (!game_save(g, fixture))
+                            return 1;
+                        fixture_written = true;
+                    }
+                    game_story_choose(g, 0, choice);
+                }
+            }
         }
         Vec3 aim = vnorm(diff);
         aim.y = 0;
@@ -117,24 +136,72 @@ static int campaign(uint32_t seed) {
                    p->kills, g->respawns);
             fflush(stdout);
         }
+        if (choice && g->mission == 2 && !resumed) {
+            Story before = g->story;
+            if (!game_save(g, "sc-story-journey.sav") || !game_load(g, "sc-story-journey.sav") ||
+                memcmp(&before, &g->story, sizeof(before)))
+                return 1;
+            remove("sc-story-journey.sav");
+            resumed = true;
+            have = false;
+        }
     }
     printf(
         "Campaign seed %u: stage %u, %.1fs, %u kills, rank %u, %u respawns, %d frames, failed=%d\n",
         seed, g->mission, g->time, g->players[0].kills, g->players[0].level, g->respawns, frame,
         g->world.failed);
     int result = g->mission == 6 && g->players[0].victories == 1 && g->players[0].kills >= 1 &&
-                         !g->world.failed
+                         (!choice || g->story.choice == choice) && !g->world.failed
                      ? 0
                      : 1;
+    if (result) {
+        Vec3 p = position_absolute(g->players[0].pos);
+        Cell target = {0};
+        game_objective(g, &target);
+        fprintf(stderr,
+                "Stuck at %.2f %.2f %.2f, waypoint %.2f %.2f %.2f, target %d %d %d, scene %u\n",
+                p.x, p.y, p.z, waypoint.x, waypoint.y, waypoint.z, target.x, target.y, target.z,
+                g->story.tracked);
+        fprintf(stderr, "Message %s / decision %d\n", g->message, g->players[0].decision_open);
+        for (int r = 0; r < g->world.count; r++)
+            for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
+                Enemy *enemy = &g->world.rooms[r].enemies[e];
+                if (enemy->alive && vlen(vsub(enemy_center(enemy), game_terminal(target))) < 12) {
+                    Vec3 at = enemy_center(enemy);
+                    fprintf(stderr, "Contesting enemy %u at %.2f %.2f %.2f\n", enemy->kind, at.x,
+                            at.y, at.z);
+                }
+            }
+    }
     game_destroy(g);
     free(g);
     return result;
 }
 
-int main(void) {
+int main(int argc, char **argv) {
+    if (argc > 1 && (strcmp(argv[1], "--story") == 0 || strcmp(argv[1], "--story-fixtures") == 0)) {
+        bool fixtures = strcmp(argv[1], "--story-fixtures") == 0;
+        for (unsigned motivation = 0; motivation < 3; motivation++) {
+            unsigned seed = 1;
+            while ((unsigned)story_motivation(seed) != motivation)
+                seed++;
+            for (unsigned choice = 1; choice <= 3; choice++) {
+                char path[120];
+                snprintf(path, sizeof(path), "tests/fixtures/story-%u-choice%u.sav", motivation,
+                         choice);
+                printf("Generated expedition: motivation %u, choice %u, seed %u\n", motivation,
+                       choice, seed);
+                if (campaign(seed, choice,
+                             fixtures && (choice == 3 || (motivation == 0 && choice == 1)) ? path
+                                                                                           : NULL))
+                    return 1;
+            }
+        }
+        return 0;
+    }
     const uint32_t seeds[] = {713, 1, 42};
     for (unsigned i = 0; i < sizeof(seeds) / sizeof(seeds[0]); i++)
-        if (campaign(seeds[i]))
+        if (campaign(seeds[i], 0, NULL))
             return 1;
     return 0;
 }

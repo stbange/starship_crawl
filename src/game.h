@@ -1,6 +1,7 @@
 #ifndef SC_GAME_H
 #define SC_GAME_H
 #include "world.h"
+#include "story.h"
 #define SC_PLAYERS 2
 #define SC_MAX_PROJECTILES 192
 #define SC_MAP_SIDE 9
@@ -17,6 +18,8 @@ typedef struct {
     uint32_t mods[7], weapons, weapon, credits, logs, victories, pickups;
     float shield, armor, energy, slow;
     uint8_t reading;
+    uint8_t journal_page, story_reading;
+    bool decision_open;
     bool grounded, crouched, flashlight, journal;
     bool sheltered;
     Vec3 shelter_pos;
@@ -81,6 +84,7 @@ typedef struct {
     Projectile projectiles[SC_MAX_PROJECTILES];
     uint32_t enemy_shots, projectile_hits;
     uint32_t mission, mission_kills, mission_loot, contracts;
+    Story story;
     Shelter shelter;
     Rig rigs[SC_PLAYERS][2];
     Beam beams[SC_PLAYERS];
@@ -142,6 +146,16 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags);
 bool game_objective(const Game *g, Cell *cell);
 const char *game_mission(const Game *g);
 Vec3 game_terminal(Cell cell);
+void game_story_step(Game *g);
+void game_story_interact(Game *g, int player);
+bool game_story_choose(Game *g, int player, unsigned choice);
+void game_story_track(Game *g);
+void game_story_read(Game *g, int player);
+bool game_story_available(const Game *g, unsigned scene);
+unsigned game_story_near(const Game *g, int player);
+void game_story_entry(const Game *g, unsigned scene, char *text, size_t size);
+void game_story_line(const Game *g, int line, char *text, size_t size);
+const char *game_story_choice(const Game *g, unsigned choice);
 void game_summon(Game *g, int player);
 ShelterUse game_shelter_near(const Game *g, int player);
 bool game_shelter_interact(Game *g, int player);
