@@ -9,13 +9,14 @@ Inside, approach a facility and press **G / USE**:
 | Bed, ahead left | Six seconds of rest restores health, shield, and energy. Movement, jumping, or firing input wakes you. |
 | Medical station, ahead right | Restores health and repairs armor immediately. |
 | Kitchen, on the left | Cooks stocked stargrain stew, heals 30% of maximum health, and adds 3 health per second to normal recovery for 120 seconds. |
+| Network workstation, near the entrance on the right | C or G enters the local ship matrix while your body remains safe. Disconnect returns to the same sanctuary position; see [HACKING.md](HACKING.md). |
 | Interior doorway, behind the arrival point | Returns you to the ship at your own entry position and restores your camera orientation. |
 
-The pantry is stocked; food does not require ingredients and there is no hunger penalty. Recovery stays within your upgraded capacities. Weapons are holstered inside. Enemies and their projectiles remain in the ship, and sanctuary occupants cannot collect outside caches or activate mission terminals remotely.
+The pantry is stocked; food does not require ingredients and there is no hunger penalty. Recovery stays within your upgraded capacities. Weapons are holstered inside. Enemies and their projectiles remain in the ship, and sanctuary occupants cannot collect outside caches. The network workstation can remotely complete mapped preparation and system operations through the matrix; final physical story decisions stay at their targets.
 
-The sanctuary is shared in optional local co-op. One player can recover while the other keeps fighting. Each viewport shows its own interior or ship view, and each character retains an individual return anchor. The doorway cannot relocate while either active player is inside. Once everyone leaves, press R to pack it away, then R again on clear flooring to deploy it elsewhere. Starting a new expedition packs it away.
+The sanctuary is shared in optional local co-op. One player can recover while the other keeps fighting. Each viewport shows its own interior or ship view, and each character retains an individual return anchor. The doorway cannot relocate while either active player is inside or a saved second-player shelter link is reserved. Once everyone leaves, press R to pack it away, then R again on clear flooring to deploy it elsewhere. Starting a new expedition packs it away.
 
-You can save inside and resume there safely. Format 6 stores the doorway, interior state, return orientation, rest, and food benefit. Compatible format-3, format-4 and format-5 saves retain the same ship, missions, characters, and changed-room records and any existing sanctuary; format 3 starts with no sanctuary. Saving upgrades them to format 6. Generator 3 is unchanged. Existing version-1/version-2 character migration remains supported.
+You can save inside and resume there safely. Format 10 stores the doorway, interior state, return orientation, rest, and food benefit. Compatible format-3, format-4 and format-5 saves retain the same ship, missions, characters, and changed-room records and any existing sanctuary; format 3 starts with no sanctuary. Saving upgrades them to format 10, including matrix state when linked. Generator 3 is unchanged. Existing version-1/version-2 character migration remains supported.
 
 For inspection, `--scene shelter --no-save` opens the sanctuary without writing a save. Add `--split` to see a second character outside the door. Automated unit, campaign, browser, and native render checks are described in [TESTING.md](TESTING.md).
 

@@ -2,6 +2,7 @@
 #define SC_GAME_H
 #include "world.h"
 #include "story.h"
+#include "matrix.h"
 #define SC_PLAYERS 2
 #define SC_MAX_PROJECTILES 192
 #define SC_MAP_SIDE 9
@@ -12,7 +13,7 @@
 #define SC_DEATH_LIFE 2.8f
 typedef enum { ON_FOOT, MECH, WAGON } RigKind;
 typedef enum { PSI_VEIL, PSI_FLIGHT, PSI_LEAP, PSI_NOVA } Psionic;
-typedef struct {
+typedef struct Player {
     Position pos, checkpoint;
     Vec3 velocity;
     double yaw, pitch;
@@ -36,13 +37,20 @@ typedef struct {
     uint32_t riding, rig_weapon, flare_lifetime, flare_strength;
     float drive_speed;
 } Player;
-typedef struct {
+typedef struct Shelter {
     Position door;
     double yaw;
     bool deployed;
 } Shelter;
-typedef enum { SHELTER_NONE, SHELTER_DOOR, SHELTER_BED, SHELTER_MED, SHELTER_KITCHEN } ShelterUse;
-typedef struct {
+typedef enum {
+    SHELTER_NONE,
+    SHELTER_DOOR,
+    SHELTER_BED,
+    SHELTER_MED,
+    SHELTER_KITCHEN,
+    SHELTER_TERMINAL
+} ShelterUse;
+typedef struct Actions {
     float forward, strafe, vertical;
     bool fire, jump, crouch, lift_up, lift_down, sprint;
 } Actions;
@@ -90,7 +98,7 @@ typedef struct {
     int owner;
     bool active, triggered, spent;
 } DeathHazard;
-typedef struct {
+typedef struct Game {
     World world;
     Player players[SC_PLAYERS];
     int player_count;
@@ -108,6 +116,7 @@ typedef struct {
     Flare flares[SC_MAX_FLARES];
     EnemyDeath deaths[SC_MAX_DEATHS];
     DeathHazard death_hazards[SC_MAX_DEATH_HAZARDS];
+    MatrixState matrix;
     bool dirty;
 } Game;
 typedef struct {

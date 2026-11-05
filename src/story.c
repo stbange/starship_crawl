@@ -234,6 +234,47 @@ void game_story_track(Game *g) {
         }
     }
 }
+void matrix_story_evidence(Game *g, Cell owner) {
+    Story *s = &g->story;
+    if (!s->version)
+        return;
+    RoomSpec spec = world_describe_version(g->world.seed, g->world.generator, owner);
+
+    if (!(s->done & BIT(STORY_BRIEFING)) || !site_room(spec))
+        return;
+    if (s->version >= 2 && spec.history_role) {
+        unsigned record = STORY_ORIGIN_RECORD + spec.history_role - 1;
+        if (!(s->seen & BIT(record))) {
+            s->sites[record] = spec.cell;
+            s->assigned |= BIT(record);
+            s->seen |= BIT(record);
+            if (s->version >= 3)
+                expedition_record(g, record, 0);
+            g->dirty = true;
+            game_message(g, "HISTORY NOTICE RECORDED / F6 SHIP DOSSIER");
+        }
+    }
+    if (s->version >= 3)
+        expedition_observe(g, spec);
+    if (s->choice)
+        return;
+    unsigned found = clue(spec);
+    if (s->seen & BIT(found))
+        return;
+    s->sites[found] = spec.cell;
+    s->assigned |= BIT(found);
+    s->seen |= BIT(found);
+    if (s->version >= 3)
+        expedition_record(g, found, 0);
+    if (s->version >= 3)
+        expedition_observe(g, spec);
+    story_reserve(g, STORY_REFUGE + (motivation(g) + 1) % 3, spec.cell);
+    g->dirty = true;
+    char observation[128];
+    snprintf(observation, sizeof(observation), "%s / NEW EVIDENCE IN I JOURNAL / U TRACK LEADS",
+             sc_story_templates[found].title);
+    game_message(g, observation);
+}
 void game_story_step(Game *g) {
     Story *s = &g->story;
     if (!s->version || (s->choice && s->version == 1))
@@ -252,41 +293,7 @@ void game_story_step(Game *g) {
                 s->seen |= BIT(i);
                 g->dirty = true;
             }
-        RoomSpec spec = world_describe_version(g->world.seed, g->world.generator, room->cell);
-        if (!(s->done & BIT(STORY_BRIEFING)) || !site_room(spec))
-            continue;
-        if (s->version >= 2 && spec.history_role) {
-            unsigned record = STORY_ORIGIN_RECORD + spec.history_role - 1;
-            if (!(s->seen & BIT(record))) {
-                s->sites[record] = spec.cell;
-                s->assigned |= BIT(record);
-                s->seen |= BIT(record);
-                if (s->version >= 3)
-                    expedition_record(g, record, 0);
-                g->dirty = true;
-                game_message(g, "HISTORY NOTICE RECORDED / F6 SHIP DOSSIER");
-            }
-        }
-        if (s->version >= 3)
-            expedition_observe(g, spec);
-        if (s->choice)
-            continue;
-        unsigned found = clue(spec);
-        if (s->seen & BIT(found))
-            continue;
-        s->sites[found] = room->cell;
-        s->assigned |= BIT(found);
-        s->seen |= BIT(found);
-        if (s->version >= 3)
-            expedition_record(g, found, 0);
-        if (s->version >= 3)
-            expedition_observe(g, spec);
-        story_reserve(g, STORY_REFUGE + (motivation(g) + 1) % 3, room->cell);
-        g->dirty = true;
-        char observation[128];
-        snprintf(observation, sizeof(observation), "%s / NEW EVIDENCE IN I JOURNAL / U TRACK LEADS",
-                 sc_story_templates[found].title);
-        game_message(g, observation);
+        matrix_story_evidence(g, room->cell);
     }
 }
 unsigned game_story_near(const Game *g, int player) {
@@ -312,7 +319,7 @@ bool story_clear(Game *g, unsigned scene) {
             Vec3 delta = vsub(enemy_center(e), eye);
             double distance = vlen(delta);
             /* A creature behind a sealed partition cannot contest this console. */
-            if (e->alive && distance < 12 &&
+            if (e->alive && e->allegiance != 2 && distance < 12 &&
                 world_raycast(&g->world, eye, vnorm(delta), distance) >= distance - .1) {
                 game_message(g, "SITE CONTESTED / CLEAR NEARBY INFESTATION");
                 return false;
@@ -327,8 +334,18 @@ void story_complete(Game *g, int player, unsigned scene) {
     g->mission = progress(s);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
-        p->points = (uint32_t)fmin(1000, p->points + 2);
-        p->credits += 75;
+        unsigned service =
+            scene == STORY_REACTOR || scene == STORY_POWER || scene == STORY_RELAY ? MX_POWER
+            : scene == STORY_EVAC || scene == STORY_BEACON                         ? MX_BEACON
+            : scene == STORY_MIRROR || scene == STORY_CIPHER                       ? MX_ARCHIVE
+            : scene == STORY_ISOLATOR || scene == STORY_OVERRIDE                   ? MX_SECURITY
+                                                                 : SC_MATRIX_SERVICES;
+        Cell owner =
+            world_describe_version(g->world.seed, g->world.generator, s->sites[scene]).cell;
+        if (service == SC_MATRIX_SERVICES || !matrix_operation_done(g, owner, service)) {
+            p->points = (uint32_t)fmin(1000, p->points + 2);
+            p->credits += 75;
+        }
         p->health = player_max_health(p);
         p->shield = player_max_shield(p);
         p->energy = player_max_energy(p);

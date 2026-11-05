@@ -45,6 +45,7 @@ void game_init(Game *g, uint32_t seed) {
     memset(g, 0, sizeof(*g));
     world_init(&g->world, seed);
     story_init(&g->story);
+    matrix_init(&g->matrix);
     g->player_count = 1;
     for (int i = 0; i < SC_PLAYERS; i++)
         player_init(&g->players[i]);
@@ -54,6 +55,7 @@ void game_init(Game *g, uint32_t seed) {
     game_message(g, story_commission(seed));
 }
 void game_destroy(Game *g) {
+    matrix_destroy(&g->matrix);
     world_destroy(&g->world);
 }
 void game_look(Player *p, double yaw, double pitch) {
@@ -63,6 +65,12 @@ void game_look(Player *p, double yaw, double pitch) {
 void game_join(Game *g) {
     if (g->player_count == 2)
         return;
+    if (g->matrix.divers[1].active) {
+        g->player_count = 2;
+        g->dirty = true;
+        game_message(g, "LOCAL CO-OP / PLAYER TWO'S SAVED LINK RESTORED");
+        return;
+    }
     Player *p = &g->players[1];
     p->pos = g->players[0].pos;
     position_move(&p->pos, v3(1.4, 0, 0));
@@ -86,6 +94,7 @@ void game_join(Game *g) {
     game_message(g, "LOCAL CO-OP JOINED / PLAYER TWO USES A GAMEPAD");
 }
 void game_leave(Game *g) {
+    matrix_disconnect(g, 1, false);
     g->players[1].riding = 0;
     g->players[1].drive_speed = 0;
     g->players[1].sheltered = false;
@@ -95,6 +104,7 @@ void game_leave(Game *g) {
     game_message(g, "SOLO EXPLORATION");
 }
 void game_new_ship(Game *g, uint32_t seed) {
+    matrix_reset_ship(g);
     world_destroy(&g->world);
     world_init(&g->world, seed);
     memset(g->projectiles, 0, sizeof(g->projectiles));
@@ -196,7 +206,7 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
         !isfinite(damage) || damage <= 0)
         return;
     Enemy *e = &room->enemies[index];
-    if (!e->alive)
+    if (!e->alive || e->allegiance == 2)
         return;
     const EnemyDef *def = &sc_enemies[e->kind];
     if (def->flags & ARMORED)
@@ -434,7 +444,8 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin) {
         for (int r = 0; r < g->world.count; r++)
             for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                 Enemy *enemy = &g->world.rooms[r].enemies[e];
-                if (!enemy->alive || already_hit(&history, g->world.rooms[r].cell, e))
+                if (!enemy->alive || enemy->allegiance == 2 ||
+                    already_hit(&history, g->world.rooms[r].cell, e))
                     continue;
                 double hit = ray_sphere(ray, dir, enemy_center(enemy),
                                         fmax(.45, sc_enemies[enemy->kind].size * .92), nearest);
@@ -487,7 +498,8 @@ static void projectiles_step(Game *g, double dt) {
                 for (int r = 0; r < g->world.count; r++)
                     for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                         Enemy *enemy = &g->world.rooms[r].enemies[e];
-                        if (!enemy->alive || already_hit(shot, g->world.rooms[r].cell, e))
+                        if (!enemy->alive || enemy->allegiance == 2 ||
+                            already_hit(shot, g->world.rooms[r].cell, e))
                             continue;
                         double t =
                             ray_sphere(origin, dir, enemy_center(enemy),
@@ -630,12 +642,15 @@ static void move_crawler(Game *g, Room *room, Enemy *e, Vec3 direction, double d
 static void enemies_step(Game *g, double dt) {
     bool protected[SC_PLAYERS] = {false, false};
     for (int p = 0; p < g->player_count; p++)
-    protected[p] = game_story_safe(g, position_absolute(g->players[p].pos));
+    protected[p] =
+        game_story_safe(g, position_absolute(g->players[p].pos)) || matrix_protected(g, p);
     for (int r = 0; r < g->world.count; r++) {
         Room *room = &g->world.rooms[r];
         for (int i = 0; i < room->enemy_count; i++) {
             Enemy *e = &room->enemies[i];
             if (!e->alive)
+                continue;
+            if (matrix_control_enemy(g, room, e, dt))
                 continue;
             if (game_story_inert(g, e)) {
                 e->windup = 0;
@@ -803,6 +818,11 @@ void game_step(Game *g, const Actions *actions, double dt) {
             p->health =
                 fminf(player_max_health(p),
                       p->health + (float)dt * (3 + 1.5f * p->mods[4] + (p->nourished > 0 ? 3 : 0)));
+        if (g->matrix.divers[i].active) {
+            game_story_recovery(g, p, dt);
+            matrix_player_step(g, i, &actions[i], dt);
+            continue;
+        }
         if (p->sheltered) {
             game_shelter_step(g, p, &actions[i], dt);
             continue;
@@ -821,9 +841,11 @@ void game_step(Game *g, const Actions *actions, double dt) {
     enemies_step(g, dt);
     projectiles_step(g, dt);
     game_deaths_step(g, dt);
+    matrix_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         if (p->health <= 0 || position_absolute(p->pos).z < -400) {
+            matrix_disconnect(g, i, true);
             p->riding = 0;
             p->drive_speed = 0;
             p->pos = p->checkpoint;

@@ -87,7 +87,7 @@ typedef struct {
     float health, cooldown, flash;
     float windup, climb_time, vertical_speed, special, slow, burn;
     Vec3 aim, normal, heading;
-    uint8_t kind, id, last_player;
+    uint8_t kind, id, last_player, allegiance, ally_owner;
     bool alive, climbing;
 } Enemy;
 typedef struct {

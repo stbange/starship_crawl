@@ -13,9 +13,9 @@ const Box *shelter_furniture(size_t *count) {
     return furniture;
 }
 Vec3 shelter_station(ShelterUse use) {
-    const Vec3 stations[] = {
-        {0, 0, 0}, {0, 0, -7.5}, {-6.3, 0, 3.3}, {6.5, 0, 4.1}, {-6.2, 0, -3.5}};
-    return stations[use >= SHELTER_DOOR && use <= SHELTER_KITCHEN ? use : SHELTER_NONE];
+    const Vec3 stations[] = {{0, 0, 0},     {0, 0, -7.5},    {-6.3, 0, 3.3},
+                             {6.5, 0, 4.1}, {-6.2, 0, -3.5}, {3, 0, -5}};
+    return stations[use >= SHELTER_DOOR && use <= SHELTER_TERMINAL ? use : SHELTER_NONE];
 }
 bool shelter_clear(Vec3 feet) {
     if (!isfinite(feet.x) || !isfinite(feet.y) || !isfinite(feet.z) || feet.y < 0 || feet.y > .1 ||
@@ -32,12 +32,14 @@ bool shelter_clear(Vec3 feet) {
 void game_summon(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
+    if (g->matrix.divers[player].active)
+        return;
     if (g->players[player].riding) {
         game_message(g, "DISMOUNT BEFORE UNFOLDING THE SHELTER");
         return;
     }
-    for (int i = 0; i < g->player_count; i++)
-        if (g->players[i].sheltered) {
+    for (int i = 0; i < SC_PLAYERS; i++)
+        if (g->players[i].sheltered && (i < g->player_count || g->matrix.divers[i].active)) {
             game_message(g, "FOLD SHELTER OCCUPIED / THE DOOR CANNOT MOVE");
             return;
         }
@@ -69,7 +71,7 @@ ShelterUse game_shelter_near(const Game *g, int player) {
     if (p->riding)
         return SHELTER_NONE;
     if (p->sheltered) {
-        for (int use = SHELTER_DOOR; use <= SHELTER_KITCHEN; use++)
+        for (int use = SHELTER_DOOR; use <= SHELTER_TERMINAL; use++)
             if (vlen(vsub(p->shelter_pos, shelter_station((ShelterUse)use))) < 2.2)
                 return (ShelterUse)use;
     } else if (position_absolute(p->pos).z >= 0 && g->shelter.deployed &&
@@ -130,6 +132,8 @@ bool game_shelter_interact(Game *g, int player) {
         p->health = fminf(player_max_health(p), p->health + player_max_health(p) * .3f);
         p->nourished = 120;
         game_message(g, "STARGRAIN STEW COOKED / RECOVERY BOOST FOR 120 SECONDS");
+    } else if (use == SHELTER_TERMINAL) {
+        matrix_toggle(g, player);
     } else
         game_message(g, "SAFE IN THE FOLD / G NEAR THE BED, MED STATION, KITCHEN OR EXIT");
     g->dirty = true;

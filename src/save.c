@@ -247,7 +247,7 @@ static void narrative(Stream *s, Story *story, bool read, unsigned version) {
     }
 }
 static void aftermath(Stream *s, Story *story, Player *players, RoomRecord *records, size_t count,
-                      bool read) {
+                      bool read, unsigned version) {
     for (int i = 0; i < 2; i++)
         story->support[i] = number(s, story->support[i], read);
     story->council = number(s, story->council, read);
@@ -283,12 +283,108 @@ static void aftermath(Stream *s, Story *story, Player *players, RoomRecord *reco
         if (read &&
             (records[i].systems >= 16 ||
              ((records[i].systems & SYSTEM_POWER) && (records[i].systems & SYSTEM_BLACKOUT)) ||
-             (records[i].systems && story->version < 3)))
+             (records[i].systems && story->version < 3 && version < 10)))
             s->ok = false;
     }
 }
+/* Format 10 appends matrix state without changing any earlier payload offsets. */
+static Cell matrix_cell(Stream *s, Cell c, bool read) {
+    c.x = (int32_t)number(s, (uint32_t)c.x, read);
+    c.y = (int32_t)number(s, (uint32_t)c.y, read);
+    c.z = (int32_t)number(s, (uint32_t)c.z, read);
+    return c;
+}
+static bool matrix_bool(Stream *s, bool value, bool read) {
+    uint32_t n = number(s, value, read);
+    if (n > 1)
+        s->ok = false;
+    return n != 0;
+}
+static void matrix_stream(Stream *s, MatrixState *m, bool read) {
+    m->version = number(s, m->version, read);
+    uint32_t count = number(s, (uint32_t)m->count, read);
+    if (count > SC_MATRIX_RECORDS || m->version != SC_MATRIX_VERSION)
+        s->ok = false;
+    if (read && s->ok && count) {
+        m->records = calloc(count, sizeof(*m->records));
+        if (!m->records)
+            s->ok = false;
+    }
+    if (read)
+        m->count = m->capacity = s->ok ? count : 0;
+    for (uint32_t i = 0; s->ok && i < count; i++) {
+        MatrixRecord r = m->records[i];
+        r.key = matrix_cell(s, r.key, read);
+        for (int j = 0; j < SC_MATRIX_SERVICES; j++)
+            r.done[j] = number(s, r.done[j], read);
+        r.keys = number(s, r.keys, read);
+        r.killed = number(s, r.killed, read);
+        r.loot = number(s, r.loot, read);
+        r.flags = number(s, r.flags, read);
+        r.seen = number(s, r.seen, read);
+        r.outcome = number(s, r.outcome, read);
+        r.alert = number(s, r.alert, read);
+        if (read)
+            m->records[i] = r;
+    }
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        MatrixProfile *p = &m->profiles[i];
+        MatrixDiver *d = &m->divers[i];
+        p->programs = number(s, p->programs, read);
+        for (int j = 0; j < 2; j++)
+            p->slots[j] = number(s, p->slots[j], read);
+        for (int j = 0; j < SC_MATRIX_PROGRAMS; j++)
+            p->upgrades[j] = number(s, p->upgrades[j], read);
+        p->data = number(s, p->data, read);
+        p->dives = number(s, p->dives, read);
+        p->knowledge = number(s, p->knowledge, read);
+        d->key = matrix_cell(s, d->key, read);
+        d->terminal = matrix_cell(s, d->terminal, read);
+        d->blocked = matrix_cell(s, d->blocked, read);
+        d->pos = vector(s, d->pos, read);
+        d->velocity = vector(s, d->velocity, read);
+        d->echo = vector(s, d->echo, read);
+        d->body_yaw = real(s, d->body_yaw, read);
+        d->body_pitch = real(s, d->body_pitch, read);
+        d->integrity = (float)real(s, d->integrity, read);
+        d->bandwidth = (float)real(s, d->bandwidth, read);
+        d->trace = (float)real(s, d->trace, read);
+        d->cooldown = (float)real(s, d->cooldown, read);
+        d->hurt = (float)real(s, d->hurt, read);
+        d->veil = (float)real(s, d->veil, read);
+        d->siphon = (float)real(s, d->siphon, read);
+        d->grace = (float)real(s, d->grace, read);
+        d->counter = (float)real(s, d->counter, read);
+        d->lockout = (float)real(s, d->lockout, read);
+        d->echo_life = (float)real(s, d->echo_life, read);
+        d->network = number(s, d->network, read);
+        d->selected = number(s, d->selected, read);
+        d->service = number(s, d->service, read);
+        d->unbanked = number(s, d->unbanked, read);
+        d->active = matrix_bool(s, d->active, read);
+        d->map = matrix_bool(s, d->map, read);
+        d->choice = matrix_bool(s, d->choice, read);
+        d->grounded = matrix_bool(s, d->grounded, read);
+    }
+    for (int i = 0; i < 2; i++) {
+        MatrixNetwork *w = &m->networks[i];
+        w->active = matrix_bool(s, w->active, read);
+        w->key = matrix_cell(s, w->key, read);
+        for (int j = 0; j < 2; j++)
+            w->switches[j] = (float)real(s, w->switches[j], read);
+        w->bridge = (float)real(s, w->bridge, read);
+        w->gate = (float)real(s, w->gate, read);
+    }
+    for (int i = 0; i < SC_MATRIX_CONTROLS; i++) {
+        MatrixControl *c = &m->controls[i];
+        c->room = matrix_cell(s, c->room, read);
+        c->life = (float)real(s, c->life, read);
+        c->kind = number(s, c->kind, read);
+        c->owner = number(s, c->owner, read);
+    }
+}
 bool game_save(const Game *g, const char *path) {
-    if (!path || g->world.record_count > 1000000)
+    if (!path || g->world.record_count > 1000000 || g->matrix.count > SC_MATRIX_RECORDS)
         return false;
     size_t len = strlen(path);
     char *tmp = malloc(len + 5);
@@ -303,13 +399,13 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 9, false);
+    number(&s, 10, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player p = g->players[i];
-        profile(&s, &p, false, 9);
+        profile(&s, &p, false, 10);
     }
     number(&s, g->mission, false);
     number(&s, g->mission_kills, false);
@@ -335,8 +431,16 @@ bool game_save(const Game *g, const char *path) {
     memcpy(flares, g->flares, sizeof(flares));
     equipment(&s, players, rigs, flares, false);
     Story story = g->story;
-    narrative(&s, &story, false, 9);
-    aftermath(&s, &story, players, g->world.records, g->world.record_count, false);
+    narrative(&s, &story, false, 10);
+    aftermath(&s, &story, players, g->world.records, g->world.record_count, false, 10);
+    MatrixState *matrix = malloc(sizeof(*matrix));
+    if (!matrix)
+        s.ok = false;
+    else {
+        *matrix = g->matrix;
+        matrix_stream(&s, matrix, false);
+        free(matrix);
+    }
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -363,7 +467,7 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 9) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 10) ||
         (version == 2 && generator != 2) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
@@ -423,15 +527,31 @@ bool game_load(Game *g, const char *path) {
     if (version >= 7) {
         narrative(&s, &story, true, version);
         if (version >= 9)
-            aftermath(&s, &story, players, records, count, true);
+            aftermath(&s, &story, players, records, count, true, version);
+        if (version < 10)
+            for (unsigned i = 0; i < story.event_count && i < SC_STORY_EVENTS; i++)
+                if (story.events[i].scene >= SC_STORY_SCENES)
+                    s.ok = false;
         if (!story_valid(&story, seed, generator, mission))
             s.ok = false;
+    }
+    MatrixState *matrix = calloc(1, sizeof(*matrix));
+    if (!matrix)
+        s.ok = false;
+    else {
+        matrix_init(matrix);
+        if (version >= 10)
+            matrix_stream(&s, matrix, true);
     }
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
     fclose(f);
     if (!s.ok) {
+        if (matrix) {
+            matrix_destroy(matrix);
+            free(matrix);
+        }
         free(records);
         return false;
     }
@@ -453,6 +573,8 @@ bool game_load(Game *g, const char *path) {
     }
     World *replacement = malloc(sizeof(*replacement));
     if (!replacement) {
+        matrix_destroy(matrix);
+        free(matrix);
         free(records);
         return false;
     }
@@ -463,15 +585,27 @@ bool game_load(Game *g, const char *path) {
     replacement->record_count = count;
     replacement->record_cap = count;
     Vec3 start = position_absolute(players[0].pos);
-    if (!world_index_records(replacement) || !world_refresh(replacement, &start, 1)) {
+    if (!matrix_index(matrix) || !matrix_rehydrate(matrix, seed, replacement->generator) ||
+        !matrix_valid(matrix, seed, replacement->generator, players, &shelter) ||
+        !world_index_records(replacement) || !world_refresh(replacement, &start, 1)) {
+        matrix_destroy(matrix);
+        free(matrix);
         world_destroy(replacement);
         free(replacement);
         return false;
     }
+    matrix_destroy(&g->matrix);
+    g->matrix = *matrix;
+    free(matrix);
     world_destroy(&g->world);
     g->world = *replacement;
     free(replacement);
     memcpy(g->players, players, sizeof(players));
+    for (int i = 0; i < SC_PLAYERS; i++)
+        if (g->matrix.divers[i].active && g->matrix.divers[i].choice) {
+            g->players[i].journal = true;
+            g->players[i].journal_page = 4;
+        }
     g->shelter = shelter;
     memcpy(g->rigs, rigs, sizeof(rigs));
     memcpy(g->flares, flares, sizeof(flares));

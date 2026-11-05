@@ -38,7 +38,7 @@ typedef struct {
     Renderer renderer;
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
-    bool demo_encounter, inspect_shelter;
+    bool demo_encounter, inspect_shelter, inspect_matrix;
     int frame, smoke_frames, inspect_form, inspect_rig;
     double last, accumulator, fps, autosave, audio_time;
     Uint64 look_after;
@@ -62,6 +62,7 @@ static void set_pause(bool paused) {
         for (int i = 0; i < SC_PLAYERS; i++) {
             app.game.players[i].journal = false;
             app.game.players[i].decision_open = false;
+            app.game.matrix.divers[i].choice = false;
         }
         /* Discard menu motion and the browser's initial pointer-lock warp. */
         SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
@@ -99,8 +100,9 @@ EMSCRIPTEN_KEEPALIVE void sc_web_capture(void) {
     app.discard_look = true;
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_look(double dx, double dy) {
-    if (app.paused || app.touch || app.game.players[0].map_open || !isfinite(dx) || !isfinite(dy) ||
-        SDL_GetTicksNS() < app.look_after || (dx == 0 && dy == 0))
+    if (app.paused || app.touch ||
+        (app.game.players[0].map_open || app.game.matrix.divers[0].map) || !isfinite(dx) ||
+        !isfinite(dy) || SDL_GetTicksNS() < app.look_after || (dx == 0 && dy == 0))
         return;
     if (app.discard_look) {
         app.discard_look = false;
@@ -129,9 +131,79 @@ static void interact_player(int player) {
     else if (reviewing)
         set_pause(false);
 }
+static bool choose_player(int player, unsigned choice) {
+    return app.game.matrix.divers[player].choice ? matrix_choose(&app.game, player, choice)
+                                                 : game_story_choose(&app.game, player, choice);
+}
+static void matrix_journal(int player) {
+    Player *p = &app.game.players[player];
+    p->journal = true;
+    p->journal_page = 4;
+    set_pause(true);
+}
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
+    MatrixDiver *d = &app.game.matrix.divers[0];
+    if (action == 200) {
+        matrix_toggle(&app.game, 0);
+        return;
+    }
+    if (action == 201) {
+        matrix_service(&app.game, 0);
+        return;
+    }
+    if (action == 202 || action == 203) {
+        matrix_cycle_service(&app.game, 0, action == 202 ? -1 : 1);
+        return;
+    }
+    if (action == 204 || action == 205) {
+        matrix_cast(&app.game, 0, (unsigned)(action - 204));
+        return;
+    }
+    if (action == 206) {
+        matrix_journal(0);
+        return;
+    }
+    if (action == 207) {
+        matrix_upgrade(&app.game, 0);
+        return;
+    }
+    if (action == 208 || action == 209) {
+        matrix_select(&app.game, 0, (unsigned)(action - 208));
+        return;
+    }
+    if (action >= 210 && action < 216) {
+        matrix_equip(&app.game, 0, (unsigned)(action - 210));
+        return;
+    }
+    if (d->active) {
+        if (action == 11 || action == 80 || action == 84 || action == 85 || action == 86) {
+            matrix_journal(0);
+            return;
+        }
+        if (action == 12 || (action >= 100 && action < 112))
+            return;
+        if (action == 7) {
+            matrix_service(&app.game, 0);
+            return;
+        }
+        if (action == 9 || action == 10) {
+            matrix_select(&app.game, 0, action == 9 ? 1 : 0);
+            return;
+        }
+        if (action >= 60 && action < 64) {
+            matrix_cast(&app.game, 0, d->selected);
+            return;
+        }
+        if (action == 13) {
+            matrix_toggle(&app.game, 0);
+            return;
+        }
+        if ((action >= 1 && action <= 4) || (action >= 15 && action < 30) ||
+            (action >= 40 && action < 60) || (action >= 70 && action < 74))
+            return;
+    }
     if (action >= 90 && action <= 92) {
-        if (game_story_choose(&app.game, 0, (unsigned)(action - 89)))
+        if (choose_player(0, (unsigned)(action - 89)))
             set_pause(false);
     } else if (action == 80 || action == 84 || action == 85 || action == 86) {
         Player *p = &app.game.players[0];
@@ -241,7 +313,7 @@ EMSCRIPTEN_KEEPALIVE uint32_t sc_web_fingerprint(uint32_t seed, int x, int y, in
     return world_fingerprint(seed, (Cell){x, y, z});
 }
 EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
-    static char result[4096];
+    static char result[12288];
     const Player *p = &app.game.players[0];
     Vec3 feet = position_absolute(p->pos);
     unsigned projectiles = 0, climbers = 0, bodies = 0;
@@ -347,8 +419,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         story_motivation_version(app.game.world.seed, app.game.story.version),
         app.game.story.assigned, app.game.story.seen, app.game.story.done, app.game.story.choice,
         app.game.story.tracked, p->story_reading, p->journal ? "true" : "false", p->journal_page,
-        p->decision_open ? "true" : "false", has_goal ? "true" : "false", objective.x, objective.y,
-        objective.z, p->victories, game_story_choice(&app.game, 1), game_story_choice(&app.game, 2),
+        (p->decision_open || app.game.matrix.divers[0].choice) ? "true" : "false",
+        has_goal ? "true" : "false", objective.x, objective.y, objective.z, p->victories,
+        game_story_choice(&app.game, 1), game_story_choice(&app.game, 2),
         game_story_choice(&app.game, 3), game_story_choice_ready(&app.game, 0) ? "true" : "false",
         past.cause, past.arc, room ? room->history_role : 0, past.origin.x, past.origin.y,
         past.origin.z, app.game.story.council, app.game.story.support[0], app.game.story.support[1],
@@ -361,6 +434,57 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         app.game.story.totals[2], app.game.story.totals[3], app.game.story.totals[4], p->career[0],
         p->career[1], p->career[2], p->career[3], p->career[4], corpses, death_forms, death_age,
         hazards, hazard_kinds, triggered, spent, app.game.respawns);
+    size_t used = strlen(result);
+    const MatrixDiver *d = &app.game.matrix.divers[0];
+    const MatrixProfile *mp = &app.game.matrix.profiles[0];
+    const MatrixNetwork *mw = &app.game.matrix.networks[d->active ? d->network : 0];
+    const MatrixRecord *mr = mw->active ? matrix_find(&app.game.matrix, mw->key) : NULL;
+    Vec3 goal = {0};
+    matrix_goal(&app.game, 0, &goal);
+    unsigned guards = 0, shots = 0;
+    for (int i = 0; i < SC_MATRIX_GUARDS; i++)
+        guards += mw->guards[i].active;
+    for (int i = 0; i < SC_MATRIX_SHOTS; i++)
+        shots += mw->shots[i].active;
+    used--;
+    int n = snprintf(result + used, sizeof(result) - used,
+                     ",\"matrix\":%s,\"matrix_near\":%s,\"mx\":%.4f,\"my\":%.4f,\"mz\":%.4f,"
+                     "\"integrity\":%.2f,\"bandwidth\":%.2f,\"trace\":%.2f,\"matrix_map\":%s,"
+                     "\"matrix_choice\":%s,"
+                     "\"programs\":%u,\"slot0\":%u,\"slot1\":%u,\"matrix_selected\":%u,\"matrix_"
+                     "data\":%u,\"matrix_service\":%u,"
+                     "\"matrix_keys\":%u,\"matrix_flags\":%u,\"matrix_outcome\":%u,\"matrix_seen\":"
+                     "%u,\"matrix_killed\":%u,"
+                     "\"matrix_entry\":%u,\"matrix_core\":%u,\"matrix_credential\":%u,\"matrix_"
+                     "vault\":%u,\"matrix_rare\":%s,"
+                     "\"matrix_theme\":%u,\"matrix_guards\":%u,\"matrix_shots\":%u,\"matrix_"
+                     "switch0\":%.2f,\"matrix_switch1\":%.2f,"
+                     "\"matrix_goal_x\":%.2f,\"matrix_goal_z\":%.2f,\"matrix_veil\":%.2f,\"matrix_"
+                     "lock\":%.2f,\"matrix_nodes\":[",
+                     d->active ? "true" : "false", matrix_near(&app.game, 0) ? "true" : "false",
+                     d->pos.x, d->pos.y, d->pos.z, d->integrity, d->bandwidth, d->trace,
+                     d->map ? "true" : "false", d->choice ? "true" : "false", mp->programs,
+                     mp->slots[0], mp->slots[1], d->selected, mp->data, d->service,
+                     mr ? mr->keys : 0, mr ? mr->flags : 0, mr ? mr->outcome : 0, mr ? mr->seen : 0,
+                     mr ? mr->killed : 0, mw->entry, mw->core, mw->credential, mw->vault,
+                     mw->rare ? "true" : "false", mw->theme, guards, shots, mw->switches[0],
+                     mw->switches[1], goal.x, goal.z, d->veil, d->lockout);
+    if (n > 0 && (size_t)n < sizeof(result) - used)
+        used += (size_t)n;
+    bool first = true;
+    for (unsigned i = 0; i < 16; i++)
+        if (mw->nodes[i].valid) {
+            const MatrixNode *node = &mw->nodes[i];
+            n = snprintf(result + used, sizeof(result) - used,
+                         "%s{\"id\":%u,\"x\":%.2f,\"z\":%.2f,\"links\":%u,\"room_x\":%d,\"room_y\":"
+                         "%d,\"room_z\":%d}",
+                         first ? "" : ",", i, node->at.x, node->at.z, node->links, node->room.x,
+                         node->room.y, node->room.z);
+            if (n > 0 && (size_t)n < sizeof(result) - used)
+                used += (size_t)n;
+            first = false;
+        }
+    snprintf(result + used, sizeof(result) - used, "]}");
     return result;
 }
 static void audio_frame(void) {
@@ -442,7 +566,7 @@ static int finger_role(float x, float y) {
     int w, h;
     SDL_GetWindowSize(app.window, &w, &h);
     float radius = fminf((float)w, (float)h) * .075f;
-    if (app.game.players[0].map_open)
+    if ((app.game.players[0].map_open || app.game.matrix.divers[0].map))
         return fabsf((x - .51f) * w) < radius && fabsf((y - .1f) * h) < radius ? 13 : -1;
     for (int i = 0; i < 12; i++)
         if (fabsf((x - xs[i]) * w) < radius && fabsf((y - ys[i]) * h) < radius)
@@ -462,17 +586,26 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
             if (!app.fingers[i].active) {
                 app.fingers[i] =
                     (Finger){e->fingerID, true, finger_role(e->x, e->y), e->x, e->y, e->x, e->y};
+                if (app.game.matrix.divers[0].active &&
+                    (app.fingers[i].role == 5 || app.fingers[i].role == 6))
+                    matrix_cycle_service(&app.game, 0, app.fingers[i].role == 5 ? 1 : -1);
                 if (app.fingers[i].role == 7)
-                    game_flashlight(&app.game, 0);
+                    sc_web_action(7);
                 if (app.fingers[i].role == 8)
                     interact_player(0);
                 if (app.fingers[i].role == 9)
-                    game_weapon(&app.game, 0, 1);
+                    sc_web_action(9);
                 if (app.fingers[i].role == 10)
-                    game_summon(&app.game, 0);
-                if (app.fingers[i].role == 11)
-                    game_psionic(&app.game, 0, (Psionic)app.game.players[0].selected_power);
-                if (app.fingers[i].role == 12)
+                    sc_web_action(13);
+                if (app.fingers[i].role == 11) {
+                    if (app.game.matrix.divers[0].active)
+                        matrix_cast(&app.game, 0, app.game.matrix.divers[0].selected);
+                    else
+                        game_psionic(&app.game, 0, (Psionic)app.game.players[0].selected_power);
+                }
+                if (app.fingers[i].role == 12 && app.game.matrix.divers[0].active)
+                    matrix_select(&app.game, 0, 1 - app.game.matrix.divers[0].selected);
+                else if (app.fingers[i].role == 12)
                     app.game.players[0].selected_power =
                         (app.game.players[0].selected_power + 1) % SC_PSIONICS;
                 if (app.fingers[i].role == 13)
@@ -486,7 +619,8 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
                 if (type == SDL_EVENT_FINGER_UP || type == SDL_EVENT_FINGER_CANCELED)
                     f->active = false;
                 else {
-                    if (f->role == 1 && !app.paused && !app.game.players[0].map_open)
+                    if (f->role == 1 && !app.paused && !app.game.players[0].map_open &&
+                        !app.game.matrix.divers[0].map)
                         game_look(&app.game.players[0], (e->x - f->x) * 3.5, -(e->y - f->y) * 2.8);
                     f->x = e->x;
                     f->y = e->y;
@@ -550,6 +684,81 @@ static void events(void) {
                 if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == e.gbutton.which) {
                     int player = pad_player(i);
                     Player *p = &app.game.players[player];
+                    MatrixDiver *d = &app.game.matrix.divers[player];
+                    int mb = e.gbutton.button;
+                    if (p->journal && p->journal_page == 4 && !d->choice) {
+                        if (mb == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER ||
+                            mb == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+                            matrix_select(&app.game, player,
+                                          mb == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER);
+                        if (mb == SDL_GAMEPAD_BUTTON_DPAD_LEFT ||
+                            mb == SDL_GAMEPAD_BUTTON_DPAD_RIGHT) {
+                            unsigned program = app.game.matrix.profiles[player].slots[d->selected];
+                            for (int step = 0; step < 6; step++) {
+                                program =
+                                    (program + (mb == SDL_GAMEPAD_BUTTON_DPAD_RIGHT ? 1 : 5)) % 6;
+                                if (matrix_equip(&app.game, player, program))
+                                    break;
+                            }
+                        }
+                        if (mb == SDL_GAMEPAD_BUTTON_DPAD_UP)
+                            matrix_upgrade(&app.game, player);
+                        if (mb == SDL_GAMEPAD_BUTTON_EAST || mb == SDL_GAMEPAD_BUTTON_START)
+                            sc_web_start();
+                        continue;
+                    }
+                    if (mb == SDL_GAMEPAD_BUTTON_RIGHT_STICK &&
+                        SDL_GetGamepadAxis(app.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16000) {
+                        matrix_journal(player);
+                        continue;
+                    }
+                    if (d->active) {
+                        int b = e.gbutton.button;
+                        if (d->choice) {
+                            unsigned choice = b == SDL_GAMEPAD_BUTTON_DPAD_LEFT    ? 1
+                                              : b == SDL_GAMEPAD_BUTTON_DPAD_UP    ? 2
+                                              : b == SDL_GAMEPAD_BUTTON_DPAD_RIGHT ? 3
+                                                                                   : 0;
+                            if (choice && matrix_choose(&app.game, player, choice))
+                                set_pause(false);
+                            if (b == SDL_GAMEPAD_BUTTON_START || b == SDL_GAMEPAD_BUTTON_EAST)
+                                sc_web_start();
+                            continue;
+                        }
+                        if (b == SDL_GAMEPAD_BUTTON_START) {
+                            set_pause(!app.paused);
+                            continue;
+                        }
+                        if (b == SDL_GAMEPAD_BUTTON_BACK) {
+                            matrix_toggle(&app.game, player);
+                            continue;
+                        }
+                        if (b == SDL_GAMEPAD_BUTTON_LEFT_STICK) {
+                            game_map_toggle(&app.game, player);
+                            continue;
+                        }
+                        if (d->map)
+                            continue;
+                        if (b == SDL_GAMEPAD_BUTTON_WEST)
+                            matrix_service(&app.game, player);
+                        if (b == SDL_GAMEPAD_BUTTON_NORTH)
+                            matrix_cast(&app.game, player, d->selected);
+                        if (b == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER ||
+                            b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+                            matrix_select(&app.game, player,
+                                          b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER);
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_LEFT || b == SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
+                            matrix_cycle_service(&app.game, player,
+                                                 b == SDL_GAMEPAD_BUTTON_DPAD_RIGHT ? 1 : -1);
+                        if (b == SDL_GAMEPAD_BUTTON_DPAD_DOWN)
+                            interact_player(player);
+                        continue;
+                    }
+                    if (e.gbutton.button == SDL_GAMEPAD_BUTTON_BACK &&
+                        matrix_near(&app.game, player) && !app.paused) {
+                        matrix_toggle(&app.game, player);
+                        continue;
+                    }
                     if (p->journal && p->journal_page && app.game.story.version) {
                         int b = e.gbutton.button;
                         unsigned choice = b == SDL_GAMEPAD_BUTTON_DPAD_LEFT    ? 1
@@ -655,15 +864,89 @@ static void events(void) {
                 }
             break;
         case SDL_EVENT_MOUSE_WHEEL:
-            if (e.wheel.y != 0)
-                game_weapon(&app.game, 0, e.wheel.y > 0 ? 1 : -1);
+            if (e.wheel.y != 0) {
+                if (app.game.matrix.divers[0].active)
+                    matrix_select(&app.game, 0, e.wheel.y > 0 ? 1 : 0);
+                else
+                    game_weapon(&app.game, 0, e.wheel.y > 0 ? 1 : -1);
+            }
             break;
         case SDL_EVENT_KEY_DOWN:
             if (e.key.repeat)
                 break;
+            {
+                Player *p = &app.game.players[0];
+                MatrixDiver *d = &app.game.matrix.divers[0];
+                SDL_Keycode key = e.key.key;
+                if (key == SDLK_F8) {
+                    matrix_journal(0);
+                    break;
+                }
+                if (key == SDLK_C && !app.paused) {
+                    matrix_toggle(&app.game, 0);
+                    break;
+                }
+                if (p->journal && p->journal_page == 4 && !d->choice) {
+                    if (key >= SDLK_1 && key <= SDLK_6) {
+                        matrix_equip(&app.game, 0, (unsigned)(key - SDLK_1));
+                        break;
+                    }
+                    if (key == SDLK_Z || key == SDLK_X) {
+                        matrix_select(&app.game, 0, key == SDLK_X);
+                        break;
+                    }
+                    if (key == SDLK_O) {
+                        matrix_upgrade(&app.game, 0);
+                        break;
+                    }
+                }
+                if (d->active) {
+                    if (d->choice && key >= SDLK_1 && key <= SDLK_3) {
+                        if (matrix_choose(&app.game, 0, (unsigned)(key - SDLK_1 + 1)))
+                            set_pause(false);
+                        break;
+                    }
+                    if (key == SDLK_C || key == SDLK_R) {
+                        matrix_toggle(&app.game, 0);
+                        break;
+                    }
+                    if (key == SDLK_F) {
+                        matrix_service(&app.game, 0);
+                        break;
+                    }
+                    if (key == SDLK_Q || key == SDLK_E) {
+                        matrix_cycle_service(&app.game, 0, key == SDLK_E ? 1 : -1);
+                        break;
+                    }
+                    if (key == SDLK_Z || key == SDLK_X) {
+                        matrix_select(&app.game, 0, key == SDLK_X);
+                        break;
+                    }
+                    if (key == SDLK_V) {
+                        matrix_cast(&app.game, 0, d->selected);
+                        break;
+                    }
+                    if (key == SDLK_O) {
+                        matrix_upgrade(&app.game, 0);
+                        break;
+                    }
+                    if (key == SDLK_1 || key == SDLK_2) {
+                        matrix_cast(&app.game, 0, (unsigned)(key - SDLK_1));
+                        break;
+                    }
+                    if (key == SDLK_ESCAPE && d->map) {
+                        game_map_toggle(&app.game, 0);
+                        break;
+                    }
+                    if (key == SDLK_T || key == SDLK_Y || key == SDLK_K || key == SDLK_P ||
+                        key == SDLK_B || key == SDLK_J || key == SDLK_H ||
+                        (key >= SDLK_3 && key <= SDLK_9) || key == SDLK_0)
+                        break;
+                }
+            }
             switch (e.key.key) {
             case SDLK_ESCAPE:
-                if (app.game.players[0].map_open) {
+                if ((app.game.players[0].map_open || app.game.matrix.divers[0].map)) {
                     game_map_toggle(&app.game, 0);
                     break;
                 }
@@ -724,7 +1007,7 @@ static void events(void) {
                 game_map_pan(&app.game, 0, 0, -1, 0);
                 break;
             case SDLK_HOME:
-                if (app.game.players[0].map_open) {
+                if ((app.game.players[0].map_open || app.game.matrix.divers[0].map)) {
                     game_map_toggle(&app.game, 0);
                     game_map_toggle(&app.game, 0);
                 }
@@ -883,7 +1166,7 @@ static void read_actions(Actions actions[2], double dt) {
             a->sprint |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
         }
     for (int i = 0; i < app.game.player_count; i++)
-        if (app.game.players[i].map_open)
+        if (app.game.players[i].map_open || app.game.matrix.divers[i].map)
             actions[i] = (Actions){0};
 }
 static void shutdown_app(void) {
@@ -915,6 +1198,8 @@ static void frame(void *unused) {
                                 position_absolute(app.game.players[1].pos)};
     world_refresh(&app.game.world, stream_positions, app.game.player_count);
     world_stream(&app.game.world, SC_STREAM_BUDGET);
+    if (app.inspect_matrix && matrix_near(&app.game, 0) && matrix_toggle(&app.game, 0))
+        app.inspect_matrix = false;
     if (app.inspect_form && !app.game.world.pending) {
         Room *room = world_find(&app.game.world, (Cell){0, 0, 0});
         if (room) {
@@ -1213,6 +1498,11 @@ int main(int argc, char **argv) {
         if (!strcmp(scene, "mech") || !strcmp(scene, "wagon")) {
             app.game.players[0].pos = position_from(v3(0, .02, 12));
             app.inspect_rig = !strcmp(scene, "mech") ? MECH : WAGON;
+            app.no_save = true;
+        }
+        if (!strcmp(scene, "matrix")) {
+            app.game.players[0].pos = position_from(matrix_terminal((Cell){0}));
+            app.inspect_matrix = true;
             app.no_save = true;
         }
         if (!strcmp(scene, "shelter")) {

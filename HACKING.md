@@ -1,6 +1,40 @@
-# The Ship Matrix — proposed hacking layer
+# The Ship Matrix
 
-This is a design proposal. Terminal login and matrix gameplay are not implemented yet.
+All four hacking milestones are implemented. Ship generator 6 and narrative 3 stay compatible; saves now use format 10 with an independent matrix generator 1.
+
+**Start a dive.** Find the cyan network console near a room's center, or the workstation on the shelter's right near its entrance. Press **C** to link or disconnect; **G** also uses the shelter workstation. Your body stays where you linked. The loading bay, shelter and powered beacon wards are safe; actual damage to an exposed body disconnects immediately. An outside co-op partner can guard you. Field enemies continue simulating.
+
+**Controls inside the matrix**
+
+| Action | Keyboard / mouse | Gamepad |
+| --- | --- | --- |
+| Move / look / jump | WASD / mouse / Space | Sticks / A |
+| Visible pulse | Left mouse | Right trigger |
+| Primary data interaction, key, switch, controller | G | D-pad down |
+| Run selected physical service | F | X / west |
+| Cycle physical service | Q / E | D-pad left / right |
+| Cast equipped slot | 1 / 2; V casts selected | Y / north casts selected |
+| Select slot | Z / X; mouse wheel | Left / right shoulder |
+| Network schematic | M | Left stick click |
+| Programs / loadout | F8 | Left trigger + right stick click |
+| Equip / upgrade in loadout | 1–6 equip, Z/X select slot, O upgrade | D-pad left/right cycle, shoulders select slot, D-pad up upgrade |
+| Controller decision | 1 / 2 / 3 | D-pad left / up / right |
+| Leave a journal undecided | Enter | B or Start |
+| Disconnect | C (R also exits) | Back / Select |
+
+Touch has context-sensitive PULSE, SERVICE, SVC+/SVC-, USE, CAST, SLOT, EXIT and MAP buttons. Link, choose outcomes, equip programs and buy upgrades through the browser menu. Character armor color remains available in that menu or with C while paused outside the matrix; C now means link during play.
+
+**Playable loop.** Restore entry power with F. Follow the gold schematic marker to K, recover the maintenance credential with G, then operate the A and B routing pads within 16 seconds. The broken bridge can be jumped, temporarily restored with Bridge, or permanently restored by the maintenance service. Routing plus the credential opens controller firewalls. Interrupt briefly opens them; force access at a routed controller costs 15 bandwidth and 20 trace. Clear or interrupt nearby security before confirming a controller outcome.
+
+Veil, Echo and Interrupt start unlocked, with Veil and Interrupt equipped. Find caches to unlock Bridge, Fork and Siphon. Program upgrades cost 3, 5 and 7 matrix data, cap at three, and persist across new ships. Recovery increases integrity and recovery rate, Reactor increases bandwidth and regeneration, and Precision extends Interrupt. Upgraded Siphon lets the robot service recruit machines for 20 seconds; its initial service reboots them for 12 seconds. Maintenance distracts local hostiles for 10 seconds. Confirmed services pay once; repeating a temporary control costs bandwidth without paying again.
+
+Four seeded controller voices include ORISON fragments, memory custodians, choir engines and quarantine witnesses. Preserve restores power and a beacon; Purge silences security and blacks out local life support; Partition combines restored life support and security shutdown with retained knowledge. Partition requires a credential plus an archive copy, or the network's rare vault when present. Factions and the event journal respond after the loading-bay commission has been accepted. Final physical mission decisions remain at their actual targets.
+
+Trace rises through combat and secured operations, with additional routines at 25, 50 and 75. It falls during quiet exploration. At 100, reduce trace below 90 or disconnect within five seconds. Integrity failure or counterintrusion ejects, locks that terminal for eight seconds, and loses only unbanked defeat data. Confirmed caches, discoveries, operations, defeated identities, outcomes and character upgrades remain.
+
+**Persistence and budgets.** Terminals within the same four-by-four ship region share one deterministic network. At most two networks are resident, each capped at 16 room nodes, 160 collision boxes, 24 guards and 64 shots. There are 32 timed physical controls and at most 65,536 changed network records. Saving retains each avatar, body return pose, resources, keys, routing, discoveries, services, programs and controller outcomes. Loading opens solo and reserves a saved second link for F2 rejoin. Partially injured routines reset and in-flight matrix shots clear on reload. Formats 1–9 initialize fresh matrix profiles while preserving their documented ship migration behavior.
+
+The following design explains the world and connections behind the implemented layer.
 
 The ship has two overlapping worlds: its steel corridors and a damaged network
 that still believes it is maintaining a living vessel. Enter a terminal and
@@ -52,10 +86,10 @@ Start with two equipped programs and a basic defensive pulse. Suggested programs
 | Program | Use |
 | --- | --- |
 | Veil | Slip past a patrol until you operate a secured node or attack |
-| Echo | Send a decoy along a selected connection |
+| Echo | Place a decoy ahead and reduce trace |
 | Interrupt | Stop a security attack or briefly freeze a firewall gate |
 | Bridge | Reconnect a broken data crossing for a limited time |
-| Fork | Operate two nearby switches during one timing window |
+| Fork | Commit the routing pair from either pad; upgrades increase reach |
 | Siphon | Recover bandwidth from a defeated security routine |
 
 Bandwidth limits repeated powerful actions. Trace rises when you force a gate,
@@ -93,8 +127,8 @@ The factions give hacking a purpose: Refuge wants evacuation systems and life
 support restored; Keepers wants archives and living controllers preserved.
 Overriding a node can solve an immediate problem while damaging trust or
 redirecting a later commission. Changes appear in the existing event history
-and debrief. ORISON can first speak through corrupted network nodes, with its
-actual identity revealed only through evidence.
+and debrief. ORISON fragments speak through corrupted nodes, while archive copies reveal
+evidence from the mapped physical rooms.
 
 ## A concrete example
 
@@ -107,12 +141,12 @@ research archive while rerouting it. Back in the ship, the appropriate turrets
 go quiet, the service route becomes usable, and the refuge can receive power.
 Later transmissions acknowledge which systems and records survived.
 
-## Proposed implementation milestones
+## Implemented milestones
 
 1. **Terminal and return path.** One compact seeded network per terminal, a
    separate player space, matrix HUD, safe login/disconnect and optional
-   split-screen isolation. Commit only a local power operation initially.
-2. **Hacking encounters.** Security routines, bandwidth/trace, three programs,
+   split-screen isolation. Local power operations are connected to physical microgrids.
+2. **Hacking encounters.** Security routines, bandwidth/trace, six programs,
    an access-key branch and a short routing puzzle. Keep a solo bypass available.
 3. **Persistent consequences.** Security and beacon controllers, robot reboot,
    saved node states, exactly-once rewards, story evidence and faction responses.

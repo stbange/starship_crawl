@@ -1,0 +1,11 @@
+## Decisions
+- Player.pos remains the physical body. Matrix avatars have their own coordinates, defenses, resources and shots. Physical AI continues to target the body; separate matrix caches serve at most two distinct active/reserved links.
+- Build a stable local graph from the physical four-by-four region. Nodes map to canonical physical room owners, with bridges, credentials, a routing pair, a gated controller and optional caches. Sector styles change spatial scale, structures and palette.
+- Every route remains solvable alone with the basic pulse, credentials, timed switches, jumping and an explicit force-access option. Programs provide alternatives and upgrades without requiring another experience grind.
+- Committed records retain operations, loot, defeated security identities, discoveries, alerts and controller outcomes. Two loaded networks keep bounded guards/shots/geometry. Physical reboot/recruitment/distraction effects use a separate bounded timed pool.
+- Keep confirmed work and character progression on failure. Trace or integrity failure ejects with a brief terminal lock and loses only unbanked data. Field body damage disconnects; bay, sanctuary and powered wards support safe dives.
+- Format 10 appends explicit validated matrix state after the unchanged format-9 fields. Retain second-player links for optional rejoin while loading in solo. Validate the whole replacement before committing and clear only transient projectiles.
+- Reuse current ship-system flags and share story preparation completion between physical and matrix operations. Final physical mission choices stay at their targets. Matrix investigations are real discoveries; map previews are read-only.
+
+## Validation
+Test graph/geometry determinism, accessibility, body/virtual shot isolation, two different links, shared-network co-op, field/shelter transitions, body damage, every program and upgrade, trace thresholds, force access, credentials/routing, all operations and controller choices, faction/events/reward idempotence, cache budgets, legacy saves, active-link round trips and transactional corruption/fault rollback. Run real movement/fire/interact journeys and packaged keyboard/controller-adapter/touch rendering checks with the existing quality gates.

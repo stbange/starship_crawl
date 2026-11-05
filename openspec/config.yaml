@@ -3,7 +3,7 @@ context: |
   Starship Crawl is a C17 game using SDL3 and OpenGL 3.3 / WebGL 2, built with CMake.
   Native targets are Linux and Windows; web uses Emscripten and mobile touch controls.
   Read README.md, EXPANSION.md, WORLD_GENERATION.md, SHELTER.md, FIELD_GUIDE.md, and TESTING.md for current behavior.
-  The shipped generator is version 6, narrative version is 3 and save format is version 9. Quality-only changes must not reset expeditions.
+  The shipped generator is version 6, narrative version is 3 and save format is version 10 (matrix generator 1). Quality-only changes must not reset expeditions.
   Gameplay is solo by default with optional local split-screen and persistent character profiles.
   Headless core unit tests cover all sc_core sources and math3d.h. Native rendering/input adapters
   are exercised by OpenGL smoke and browser integration tests, outside the unit coverage metric.

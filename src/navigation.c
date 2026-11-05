@@ -9,6 +9,10 @@ static Cell bounded(Cell c) {
 void game_map_toggle(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
+    if (g->matrix.divers[player].active) {
+        g->matrix.divers[player].map = !g->matrix.divers[player].map;
+        return;
+    }
     Player *p = &g->players[player];
     p->map_open = !p->map_open;
     p->map_center = bounded(world_cell(position_absolute(p->pos)));

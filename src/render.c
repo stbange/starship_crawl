@@ -777,6 +777,7 @@ static void fold_door(Renderer *r, Vec3 feet, double yaw) {
         cube(&r->mesh, vsub(vadd(feet, v3(0, .35 + i * .44, 0)), r->origin), vmul(right, 1.5),
              v3(0, .025, 0), vmul(forward, .1), rgb(.65f, .75f, .55f), .9f);
 }
+#include "render_matrix_scene.inc"
 static void fold_interior(Renderer *r, const Game *g, int viewer) {
     Color stone = rgb(.23f, .25f, .27f), wood = rgb(.4f, .27f, .17f);
     block(r, v3(0, -.2, 0), v3(18.4, .4, 16.4), stone, 0);
@@ -796,6 +797,7 @@ static void fold_interior(Renderer *r, const Game *g, int viewer) {
     for (size_t i = 0; i < count; i++)
         block(r, vmul(vadd(boxes[i].min, boxes[i].max), .5), vsub(boxes[i].max, boxes[i].min),
               boxes[i].color, boxes[i].glow);
+    matrix_terminal_mesh(r, v3(3, 0, -6.3), g->time);
     /* Bed, quilt, pillows and reading lamp. */
     block(r, v3(-6.3, .9, 5.55), v3(2.5, .22, 3), rgb(.64f, .64f, .52f), .03f);
     block(r, v3(-6.3, 1.04, 5.2), v3(2.35, .1, 2.1), rgb(.22f, .38f, .4f), .03f);
@@ -872,14 +874,25 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
     PointLight selected[SC_VIEW_LIGHTS];
     double scores[SC_VIEW_LIGHTS];
     int count = 0;
-    if (viewer->sheltered) {
+    int player = (int)(viewer - g->players);
+    bool matrix = g->matrix.divers[player].active;
+    if (matrix) {
+        const MatrixDiver *d = &g->matrix.divers[player];
+        const MatrixNetwork *w = &g->matrix.networks[d->network];
+        for (int i = 0; i < 16; i++)
+            if (w->nodes[i].valid && vlen(vsub(w->nodes[i].at, d->pos)) < 55 &&
+                count < SC_VIEW_LIGHTS)
+                selected[count++] = (PointLight){vadd(w->nodes[i].at, v3(0, 4, 0)),
+                                                 matrix_color(w->theme), 28, 2.2f, 0};
+    }
+    if (!matrix && viewer->sheltered) {
         const Vec3 lamps[] = {{-6, 3.8, 5}, {6, 3.8, 5}, {-6, 3.8, -3}, {3, 3.8, -4}, {0, 3.8, 1}};
         for (int i = 0; i < 5; i++)
             selected[count++] = (PointLight){
                 lamps[i], i == 1 ? rgb(.45f, .75f, .8f) : rgb(1, .77f, .48f), 14, 2.4f, 0};
     }
     Vec3 eye = player_eye(viewer);
-    for (int group = 0; !viewer->sheltered && group < 6; group++) {
+    for (int group = 0; !matrix && !viewer->sheltered && group < 6; group++) {
         int total = group == 0   ? SC_MAX_CHUNKS
                     : group == 1 ? SC_MAX_PROJECTILES
                     : group == 3 ? SC_MAX_FLARES
@@ -968,7 +981,8 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
         colors[i * 4 + 3] = selected[i].power;
     }
     Vec3 dir = facing(viewer->yaw, viewer->pitch);
-    GLfloat torch[] = {(float)dir.x, (float)dir.y, (float)dir.z, viewer->flashlight ? 1.0f : 0.0f};
+    GLfloat torch[] = {(float)dir.x, (float)dir.y, (float)dir.z,
+                       !matrix && viewer->flashlight ? 1.0f : 0.0f};
     gl.Uniform4fv(r->torch, 1, torch);
     gl.Uniform1f(r->time, (float)fmod(g->time, 4096));
     gl.Uniform1i(r->lamp_count, count);
@@ -1023,6 +1037,17 @@ static void story_prop(Renderer *r, unsigned scene, Vec3 at, bool done, double t
         octahedron(r, vadd(at, v3(0, 2.8 + sin(time) * .1, 0)), .2, rgb(.85f, .65f, .25f), 1.5f);
 }
 static void actors(Renderer *r, Game *g, int viewer) {
+    for (int i = 0; i < g->world.count; i++) {
+        const Room *room = &g->world.rooms[i];
+        Vec3 at = matrix_terminal(room->cell);
+        if (room->ready && vlen(vsub(at, player_eye(&g->players[viewer]))) < 110)
+            matrix_terminal_mesh(r, at, g->time);
+    }
+    for (int i = 0; i < 16; i++)
+        if (g->matrix.links[i].life > 0)
+            tube(r, position_absolute(g->matrix.links[i].from),
+                 position_absolute(g->matrix.links[i].to), .045, .025, rgb(.25f, 1, .7f), 1.4f);
+
     const Enemy *visible[128];
     double distances[128];
     int count = 0;
@@ -1052,6 +1077,10 @@ static void actors(Renderer *r, Game *g, int viewer) {
         }
     for (int i = 0; i < count; i++)
         creature(r, visible[i], g->time, distances[i]);
+    for (int i = 0; i < count; i++)
+        if (visible[i]->allegiance == 2)
+            octahedron(r, vadd(enemy_center(visible[i]), v3(0, 1.2, 0)), .17, rgb(.2f, 1, .6f),
+                       1.1f);
     for (int i = 0; i < SC_MAX_DEATHS; i++) {
         const EnemyDeath *d = &g->deaths[i];
         if (d->active && vlen(vsub(enemy_center(&d->body), eye)) < 130 &&
@@ -1539,6 +1568,7 @@ static void debrief_journal(Renderer *r, const Game *g, int player, float w, flo
     text_at(r, x + 18 * s, y + 535 * s, .85f * s,
             "L PREVIOUS EVENT / I EXPEDITION / F4 CHARACTER / ENTER CLOSE / PAD RB PAGES", gold);
 }
+#include "render_matrix_hud.inc"
 static void hud(Renderer *r, Game *g, int player, int width, int height, bool paused, bool touch,
                 bool debug, double fps, const char *save_status) {
     Player *p = &g->players[player];
@@ -1551,6 +1581,11 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     gl.Uniform1i(r->ui, 1);
     gl.Uniform3f(r->offset, 0, 0, 0);
     gl.Disable(GL_DEPTH_TEST);
+    if (g->matrix.divers[player].active) {
+        matrix_hud(r, g, player, w, h, paused, touch, save_status);
+        flush(r);
+        return;
+    }
     float pad = 24 * s;
     char label[160];
     deck_map(r, g, player, pad, pad + 16 * s, 112 * s, false);
@@ -1717,12 +1752,17 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                  game_rig_near(g, player) == MECH ? "G / BOARD MECH" : "G / RIDE WAGON", mint);
     ShelterUse use = game_shelter_near(g, player);
     if (use != SHELTER_NONE) {
-        const char *prompts[] = {
-            "", p->sheltered ? "G / USE TO RETURN TO SHIP" : "G / USE TO ENTER FOLD SHELTER",
-            "G / USE TO REST IN BED", "G / USE MED STATION / HEAL AND REPAIR",
-            "G / USE KITCHEN / COOK STARGRAIN STEW"};
+        const char *prompts[] = {"",
+                                 p->sheltered ? "G / USE TO RETURN TO SHIP"
+                                              : "G / USE TO ENTER FOLD SHELTER",
+                                 "G / USE TO REST IN BED",
+                                 "G / USE MED STATION / HEAL AND REPAIR",
+                                 "G / USE KITCHEN / COOK STARGRAIN STEW",
+                                 "C OR G / LINK SHELTER MATRIX WORKSTATION"};
         centered(r, w * .5f, h * .58f, 1.1f * s, prompts[use], mint);
     }
+    if (matrix_near(g, player))
+        centered(r, w * .5f, h * .53f, 1.1f * s, "C / LINK TO SHIP MATRIX", mint);
     if (p->sheltered)
         centered(r, w * .5f, pad + 38 * s, .8f * s,
                  "BED AHEAD LEFT / MED STATION AHEAD RIGHT / KITCHEN ON LEFT", gold);
@@ -1828,7 +1868,9 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         if (g->message_time > 0)
             centered(r, w * .5f, my + 242 * s, .9f * s, g->message, mint);
     }
-    if (p->journal && p->journal_page == 3)
+    if (p->journal && p->journal_page == 4)
+        matrix_journal_draw(r, g, player, w, h);
+    else if (p->journal && p->journal_page == 3)
         debrief_journal(r, g, player, w, h);
     else if (p->journal && p->journal_page == 2)
         history_journal(r, g, w, h);
@@ -1943,9 +1985,11 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         gl.Enable(GL_DEPTH_TEST);
         gl.Uniform1i(r->ui, 0);
         Player *player = &g->players[p];
-        r->origin = player->sheltered ? v3(0, 0, 0)
-                                      : world_center(world_cell(position_absolute(player->pos)));
-        Vec3 eye = vsub(player_eye(player), r->origin);
+        bool matrix = g->matrix.divers[p].active;
+        r->origin = matrix || player->sheltered
+                        ? v3(0, 0, 0)
+                        : world_center(world_cell(position_absolute(player->pos)));
+        Vec3 eye = matrix ? matrix_eye(g, p) : vsub(player_eye(player), r->origin);
         float m[16];
         camera(m, eye, player->yaw, player->pitch, (double)vw / vh);
         gl.UniformMatrix4fv(r->mvp, 1, GL_FALSE, m);
@@ -1953,14 +1997,16 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         gl.Uniform3f(r->grid, (float)fmod(r->origin.x, 4096), (float)fmod(r->origin.y, 4096),
                      (float)fmod(r->origin.z, 4096));
         lights(r, g, player);
-        if (player->sheltered)
+        if (matrix)
+            matrix_scene(r, g, p);
+        else if (player->sheltered)
             fold_interior(r, g, p);
         else {
             draw_chunks(r, g);
             actors(r, g, p);
         }
         flush(r);
-        if (!paused && !player->sheltered) {
+        if (!paused && !player->sheltered && !matrix) {
             gl.Clear(GL_DEPTH_BUFFER_BIT);
             weapon(r, player);
             flush(r);

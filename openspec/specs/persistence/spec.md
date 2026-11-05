@@ -5,7 +5,7 @@ Portable validated saves that preserve the active game when an operation fails.
 ## Requirements
 
 ### Requirement: Portable format and migration
-Saves SHALL use checksums and explicit generator compatibility on native and web. Format 9 SHALL retain reactive events, faction support, chapter outcomes, fixed sites and careers. Formats 7 and 8 SHALL retain narrative 1/generator 4 and narrative 2/generator 5 respectively. Compatible formats 3–6 SHALL retain their ships and legacy campaign. New expeditions SHALL use generator 6/narrative 3. Generator-5 expeditions SHALL retain their original encounters and geometry.
+Saves SHALL use checksums and explicit generator compatibility. Format 10 SHALL retain matrix state and all format-9 reactive events, support, outcomes, sites and careers. Formats 7–8 SHALL retain their narrative 1/generator 4 and narrative 2/generator 5 expeditions; formats 3–6 SHALL retain compatible legacy ships. New expeditions SHALL use ship generator 6, narrative 3 and matrix generator 1. Generator-5 expeditions SHALL retain their original encounters and geometry.
 
 #### Scenario: Legacy profile
 - **WHEN** a supported version-1 or version-2 file is loaded
@@ -29,7 +29,7 @@ Saves SHALL use checksums and explicit generator compatibility on native and web
 
 #### Scenario: New generation opt-in
 - **WHEN** a player starts a new ship after loading a generator-3 expedition
-- **THEN** the new ship uses generator 5 and narrative version 3 while keeping character progression.
+- **THEN** the new ship uses generator 6 and narrative version 3 while keeping character progression.
 
 #### Scenario: Narrative round trip
 - **WHEN** a format-7 expedition resumes
@@ -81,3 +81,12 @@ Format-9 saves SHALL support generator 6 while retaining all previously supporte
 #### Scenario: Reload during a death effect
 - **WHEN** a valid expedition is loaded while a corpse or mine is active
 - **THEN** transient effects clear and saved defeated-enemy records remain defeated.
+
+### Requirement: Matrix appendix and migration
+Format 10 SHALL retain matrix profiles, fixed region records, equipped programs, avatar resources and coordinates, body return poses and active or reserved co-op links. Formats 1–9 SHALL remain supported and initialize matrix profiles safely. Unknown versions or invalid matrix fields SHALL leave all current spaces unchanged.
+#### Scenario: Resume two links in solo
+- **WHEN** a split-screen save contains divers in two different networks
+- **THEN** solo loading restores the first diver and retains the second link for explicit co-op rejoin.
+#### Scenario: Reject a corrupt network
+- **WHEN** a checksummed save contains invalid graph masks, coordinates, program slots, effects or link references
+- **THEN** the loader rejects it transactionally without replacing the current game.

@@ -90,7 +90,7 @@ static bool camp_power(Game *g) {
     return !(g->story.assigned & BIT(STORY_COUNCIL)) || power(g, g->story.sites[STORY_COUNCIL]);
 }
 bool game_story_safe(const Game *g, Vec3 feet) {
-    if (g->story.version < 3 || feet.z < 0)
+    if (feet.z < 0)
         return false;
     Cell c = world_cell(feet);
     uint32_t flags = world_systems(&g->world, c);
@@ -100,11 +100,11 @@ bool game_story_safe(const Game *g, Vec3 feet) {
     return vlen(vsub(feet, game_terminal(owner))) <= 18;
 }
 bool game_story_inert(const Game *g, const Enemy *e) {
-    return g->story.version >= 3 && (sc_enemies[e->kind].flags & TURRET) &&
+    return (sc_enemies[e->kind].flags & TURRET) &&
            (world_systems(&g->world, world_cell(position_absolute(e->pos))) & SYSTEM_SILENCED);
 }
 void game_story_recovery(Game *g, Player *p, double dt) {
-    if (g->story.version < 3 || p->sheltered || p->hurt > 0 || p->health <= 0 ||
+    if (p->sheltered || p->hurt > 0 || p->health <= 0 ||
         !(world_systems(&g->world, world_cell(position_absolute(p->pos))) & SYSTEM_POWER))
         return;
     p->health = fminf(player_max_health(p), p->health + 5 * (float)dt);
@@ -264,9 +264,9 @@ static bool guardian(Game *g, unsigned scene) {
             }
     return true;
 }
-void expedition_interact(Game *g, int player, unsigned scene) {
+static void interact(Game *g, int player, unsigned scene, bool remote) {
     Story *s = &g->story;
-    if (!story_clear(g, scene) || !guardian(g, scene))
+    if (!remote && (!story_clear(g, scene) || !guardian(g, scene)))
         return;
     if (scene == STORY_COUNCIL || scene == STORY_RESOLUTION) {
         Player *p = &g->players[player];
@@ -345,6 +345,55 @@ void expedition_interact(Game *g, int player, unsigned scene) {
     char text[128];
     expedition_entry(g, scene, text, sizeof(text));
     game_message(g, text);
+}
+void expedition_interact(Game *g, int player, unsigned scene) {
+    interact(g, player, scene, false);
+}
+int matrix_story_operation(Game *g, int player, Cell owner, unsigned service) {
+    const unsigned scenes[][4] = {
+        {STORY_REACTOR, STORY_POWER, STORY_RELAY, SC_STORY_SCENES},
+        {STORY_ISOLATOR, STORY_OVERRIDE, SC_STORY_SCENES, SC_STORY_SCENES},
+        {STORY_EVAC, STORY_BEACON, SC_STORY_SCENES, SC_STORY_SCENES},
+        {STORY_MIRROR, STORY_CIPHER, SC_STORY_SCENES, SC_STORY_SCENES}};
+    if (!g->story.version || service >= 4)
+        return false;
+    for (unsigned i = 0; i < 4; i++) {
+        unsigned scene = scenes[service][i];
+        if (scene >= SC_STORY_SCENES || !(g->story.assigned & BIT(scene)) ||
+            !cell_equal(
+                world_describe_version(g->world.seed, g->world.generator, g->story.sites[scene])
+                    .cell,
+                owner))
+            continue;
+        if (game_story_available(g, scene)) {
+            if (scene >= STORY_POWER)
+                interact(g, player, scene, true);
+            else {
+                story_complete(g, player, scene);
+                g->story.tracked = game_story_target(g);
+            }
+        }
+        return (g->story.done & BIT(scene)) ? 1 : -1;
+    }
+    return false;
+}
+void matrix_story_event(Game *g, Cell owner, unsigned service, unsigned choice) {
+    Story *s = &g->story;
+    if (s->version < 3 || !(s->done & BIT(STORY_BRIEFING)) || service > 6)
+        return;
+    unsigned scene = 64 + service;
+    for (unsigned i = 0; i < s->event_count; i++)
+        if (s->events[i].scene == scene && cell_equal(s->events[i].site, owner))
+            return;
+    if (s->event_count == SC_STORY_EVENTS) {
+        memmove(s->events, s->events + 1, (SC_STORY_EVENTS - 1) * sizeof(*s->events));
+        s->event_count--;
+    }
+    s->events[s->event_count++] = (StoryEvent){
+        .chapter = s->chapter, .scene = scene, .choice = choice, .arc = s->arc, .site = owner};
+    if (service == 6)
+        s->events[s->event_count - 1].outcome[1] = choice == 3 ? 3 : choice == 1 ? 1 : 0;
+    g->dirty = true;
 }
 bool expedition_choose(Game *g, int player, unsigned scene, unsigned choice) {
     Story *s = &g->story;
@@ -502,13 +551,20 @@ void game_story_debrief(const Game *g, int player, int line, char *text, size_t 
     } else if (line == 8 && s->event_count) {
         unsigned n = player >= 0 && player < g->player_count ? g->players[player].event_reading : 0;
         const StoryEvent *e = &s->events[s->event_count - 1 - n % s->event_count];
-        snprintf(text, size,
-                 "EVENT %u / CHAPTER %u / %s / %s [%d,%d,%d] / CHOICE %u / RESCUED %u / KNOWLEDGE "
-                 "%u / TECH %u / CONTAINED %u",
-                 s->event_count - n % s->event_count, e->chapter,
-                 e->chapter ? arcs[e->arc] : "COMMISSION", sc_story_templates[e->scene].title,
-                 e->site.x, e->site.y, e->site.z, e->choice, e->outcome[0], e->outcome[1],
-                 e->outcome[2], e->outcome[3]);
+        snprintf(
+            text, size,
+            "EVENT %u / CHAPTER %u / %s / %s [%d,%d,%d] / CHOICE %u / RESCUED %u / KNOWLEDGE "
+            "%u / TECH %u / CONTAINED %u",
+            s->event_count - n % s->event_count, e->chapter,
+            e->chapter ? arcs[e->arc] : "COMMISSION",
+            e->scene >= 64
+                ? (e->scene == 70
+                       ? matrix_controller_name(
+                             world_hash(g->world.seed, matrix_region(e->site), 0x4d415458u) % 4)
+                       : sc_matrix_services[e->scene - 64])
+                : sc_story_templates[e->scene].title,
+            e->site.x, e->site.y, e->site.z, e->choice, e->outcome[0], e->outcome[1], e->outcome[2],
+            e->outcome[3]);
     } else
         snprintf(text, size, "%s",
                  settled && s->chapter < 1000
@@ -587,8 +643,9 @@ bool expedition_valid(const Story *s, uint32_t seed) {
                 return false;
             continue;
         }
-        if (e->scene >= SC_STORY_SCENES || e->choice > 3 || e->chapter > s->chapter ||
-            e->arc >= STORY_ARCS || (i && e->chapter < s->events[i - 1].chapter))
+        if ((e->scene >= SC_STORY_SCENES && (e->scene < 64 || e->scene > 70)) || e->choice > 3 ||
+            e->chapter > s->chapter || e->arc >= STORY_ARCS ||
+            (i && e->chapter < s->events[i - 1].chapter))
             return false;
         Cell c = e->site;
         if (c.x < -10000000 || c.x > 10000000 || c.y < -4000000 || c.y > 4000000 || c.z < 0 ||
@@ -600,21 +657,23 @@ bool expedition_valid(const Story *s, uint32_t seed) {
                 return false;
         } else {
             RoomSpec r = world_describe_version(seed, 5, c);
-            if (r.type == BAY || r.height < 3 ||
+            if ((e->scene < 64 && (r.type == BAY || r.height < 3)) ||
                 (!cell_equal(c, r.cell) && !(e->scene == STORY_RESOLUTION && e->arc == HARROW_ARC &&
                                              cell_equal(c, (Cell){2, 1, 2}))))
                 return false;
         }
-        bool decision = e->scene == STORY_COUNCIL || e->scene == STORY_RESOLUTION ||
-                        e->scene == STORY_SURVIVORS || e->scene == STORY_MEMORY ||
-                        e->scene == STORY_DRIVE || e->scene == STORY_SOURCE;
+        bool decision = e->scene == 70 || e->scene == STORY_COUNCIL ||
+                        e->scene == STORY_RESOLUTION || e->scene == STORY_SURVIVORS ||
+                        e->scene == STORY_MEMORY || e->scene == STORY_DRIVE ||
+                        e->scene == STORY_SOURCE;
         if ((e->choice != 0) != decision)
             return false;
         for (unsigned k = 0; k < 4; k++)
             if (e->outcome[k] > (k == 0 ? people : 3))
                 return false;
         for (unsigned j = 0; j < i; j++)
-            if (s->events[j].chapter == e->chapter && s->events[j].scene == e->scene)
+            if (s->events[j].chapter == e->chapter && s->events[j].scene == e->scene &&
+                (e->scene < 64 || cell_equal(s->events[j].site, e->site)))
                 return false;
     }
     return true;

@@ -43,7 +43,8 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags) {
     if (player < 0 || player >= g->player_count || !isfinite(damage) || damage <= 0)
         return;
     Player *p = &g->players[player];
-    if (p->sheltered || game_story_safe(g, position_absolute(p->pos)))
+    if (p->sheltered || game_story_safe(g, position_absolute(p->pos)) ||
+        matrix_protected(g, player))
         return;
     if (flags & CHILL)
         p->slow = 2;
@@ -58,6 +59,7 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags) {
     damage -= absorb;
     p->health -= damage;
     p->hurt = 2.5f;
+    matrix_body_hit(g, player);
     g->dirty = true;
 }
 static const Cell objectives[] = {{0, 0, 0}, {1, 0, 0}, {1, 1, 1}, {0, 1, 0}, {2, 1, 2}, {0, 0, 0}};
@@ -93,6 +95,10 @@ Vec3 game_terminal(Cell cell) {
 void game_interact(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
+    if (g->matrix.divers[player].active) {
+        matrix_use(g, player);
+        return;
+    }
     Player *p = &g->players[player];
     if (game_rig_interact(g, player))
         return;
