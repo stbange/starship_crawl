@@ -2,6 +2,11 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+A [discussion draft for expedition progression and directional worlds](PROGRESSION_DESIGN.md)
+is being developed on `design/expedition-progression`. It proposes earned capabilities,
+four phases with guardian fights, and seeded directional traits. These proposals
+remain under discussion and do not yet replace the agreed behavior below.
+
 ## Procedural narrative roadmap
 
 The next implementation sequence turns the existing exploration sandbox into a game with a reason to enter each ship and a satisfying, achievable conclusion. Generate causes and consequences first, then derive objectives, environmental evidence and transmissions. Use authored fragments, conditions and effects in C; no runtime language model or external service is needed.
