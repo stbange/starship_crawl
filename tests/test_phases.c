@@ -49,7 +49,7 @@ static void win(Game *g, unsigned id) {
 }
 static void fresh_characters(void) {
     Game *g = fresh(713);
-    CHECK(g->world.generator == 7 && g->campaign.version == 1 && g->world.open_layer == 1);
+    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->campaign.version == 1 && g->world.open_layer == 1);
     for (int i = 0; i < 2; i++) {
         CHECK(g->players[i].weapons == 3 && g->players[i].level == 1);
         CHECK(!g->campaign.profiles[i].powers && !g->campaign.profiles[i].rigs);

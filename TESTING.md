@@ -1,5 +1,40 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
+**Arrival exterior.** `space_exterior` adds unit checks for sky/hull visibility,
+the shared skiff collision and weapon-ray geometry, cabin save/resume, co-op,
+generator-7/8 interior and population parity across eight seeds, and a real older
+phased save. `arrival_journey` uses movement actions to enter the craft, encounter
+its walls/ceiling, visit the bay, return, reload and exit with a second occupant.
+Both are part of the 22 native CTests (13 unit and 9 gameplay). Executable
+`exterior.c` lines are included in the same per-source 95% coverage gate.
+
+The eleventh packaged browser suite, `test_exterior_browser.py`, repeats the
+return route using keyboard input, saves in the cabin, exercises separate
+split-screen views and enters/leaves using real mobile touch events. Screenshot
+pixel checks verify stars in exposed sky, opaque hull, lamps with the flashlight
+off, and cabin lighting. Captures use the `exterior-` prefix in
+`build-web/test-artifacts/`. Native inspection scenes are `arrival`, `hull`,
+`space`, `skiff` and `cabin`; existing shelter/matrix/indoor smoke checks verify
+that each view restores its own fog, projection and lighting.
+
+```sh
+ctest --test-dir build -R 'space_exterior|arrival_journey' --output-on-failure
+python3 tests/test_exterior_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+SDL_VIDEODRIVER=offscreen EGL_PLATFORM=surfaceless SDL_AUDIODRIVER=dummy \
+  ./build/starship_crawl --seed 713 --scene cabin --split --smoke 20 --no-save
+```
+
+Arrival verification on 2026-11-05 passed all 22 native CTests, all 22
+ASan/UBSan CTests, the nine separately labelled gameplay tests, six coverage-gate
+self-tests, all eleven packaged Chromium/WebGL suites, and strict current/change/
+archived OpenSpec validation. Unit-only core line coverage was **98.30%**
+(6212/6320 lines), with every executable source above 95%; `exterior.c` reached
+100% line and branch coverage. Native Mesa captured the five exterior views plus
+hall, shelter and matrix split-screen views. Linux, Emscripten and Windows
+x86-64 builds completed without compiler diagnostics. Mobile checks used Chromium
+touch emulation; Windows compilation and software rendering do not establish
+physical-device graphics, controller or mobile-GPU performance.
+
 **Specification workflow.** Node 22.12+ is needed only for development tooling. OpenSpec 1.16.0 is pinned in package-lock.json, with six generated Codex workflows under `.agents/skills/`. The C game has no Node runtime dependency.
 
 ```sh
@@ -73,6 +108,7 @@ cmake --build build-web --parallel 4
 python3 -m playwright install --with-deps chromium
 python3 scripts/package-web.py --output build-pages-preview/starship_crawl
 python3 tests/test_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+python3 tests/test_exterior_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
 python3 tests/test_shelter_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
 python3 tests/test_features_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
 ```

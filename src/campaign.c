@@ -370,7 +370,8 @@ bool campaign_valid(const Campaign *c, const Player *players, const World *w) {
         Campaign empty = {0};
         return w->generator < 7 && memcmp(c, &empty, sizeof(empty)) == 0;
     }
-    if (c->version != 1 || w->generator != 7 || c->defeated >= (1u << SC_GUARDIANS) ||
+    if (c->version != 1 || w->generator < 7 || w->generator > SC_GENERATOR_VERSION ||
+        c->defeated >= (1u << SC_GUARDIANS) ||
         c->tracked > SC_GUARDIANS)
         return false;
     unsigned phase = campaign_phase(c);

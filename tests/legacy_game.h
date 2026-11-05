@@ -9,8 +9,10 @@ static void legacy_game_init(Game *g, uint32_t seed) {
     world_init(&g->world, seed);
     g->world.generator = 6;
     g->campaign = (Campaign){0};
-    for (int p = 0; p < SC_PLAYERS; p++)
+    for (int p = 0; p < SC_PLAYERS; p++) {
         g->players[p].weapons = SC_START_WEAPONS;
+        g->players[p].pos = position_from(v3(0, 4, -34));
+    }
     Vec3 at = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &at, 1);
 }

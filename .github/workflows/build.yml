@@ -57,6 +57,9 @@ jobs:
           EGL_PLATFORM: surfaceless
         run: |
           ./build/starship_crawl --seed 713 --smoke 10 --no-save
+          ./build/starship_crawl --seed 713 --scene hull --smoke 20 --no-save
+          ./build/starship_crawl --seed 713 --scene skiff --smoke 20 --no-save
+          ./build/starship_crawl --seed 713 --scene cabin --split --smoke 20 --no-save
           ./build/starship_crawl --seed 713 --scene guardian --split --smoke 60 --no-save
           ./build/starship_crawl --seed 713 --scene shelter --split --smoke 60 --no-save
           ./build/starship_crawl --seed 713 --scene matrix --split --smoke 60 --no-save
@@ -126,6 +129,8 @@ jobs:
         run: python tests/test_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play sanctuary recovery and return
         run: python tests/test_shelter_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Board the arrival skiff and inspect the surrounding space
+        run: python tests/test_exterior_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play phase rewards, loadouts, guardian retry and fresh characters
         run: python tests/test_phases_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play navigation, body variants and psionics

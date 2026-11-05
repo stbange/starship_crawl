@@ -3,6 +3,12 @@
 #include "game.h"
 #include "gl_api.h"
 #define SC_VIEW_LIGHTS 12
+#define SC_SPACE_STARS 1800
+typedef struct {
+    Vec3 direction;
+    Color color;
+    double radius;
+} SpaceStar;
 typedef struct {
     float x, y, z, nx, ny, nz, r, g, b, e;
 } Vertex;
@@ -14,7 +20,7 @@ typedef struct {
 typedef struct {
     GLuint program, vao, vbo, framebuffer, texture, depth;
     GLint mvp, eye, grid, ui, offset;
-    GLint torch, time, lamp_count, lamp_pos, lamp_color;
+    GLint torch, time, lamp_count, lamp_pos, lamp_color, fog_density;
     int width, height;
     uint32_t world_revision;
     size_t world_vertices;
@@ -23,6 +29,7 @@ typedef struct {
     size_t chunk_vertices[SC_MAX_CHUNKS];
     unsigned last_uploads;
     Vec3 origin;
+    SpaceStar stars[SC_SPACE_STARS];
     Mesh mesh;
     bool failed;
 } Renderer;

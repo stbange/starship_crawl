@@ -1,4 +1,5 @@
 #include "interior.h"
+#include "exterior.h"
 #include "campaign.h"
 #include <limits.h>
 #include <stdlib.h>
@@ -630,7 +631,8 @@ static void populate(World *w, Room *r) {
     unsigned difficulty = world_difficulty(r->cell);
     r->enemy_count = r->type == BAY ? 0 : (int)(5 + (difficulty > 12 ? 12 : difficulty));
     for (int i = 0; i < r->enemy_count; i++) {
-        uint32_t h = world_hash(w->seed ^ w->generator, r->cell, 1000 + (uint32_t)i * 31);
+        uint32_t population_version = w->generator == 8 ? 7 : w->generator;
+        uint32_t h = world_hash(w->seed ^ population_version, r->cell, 1000 + (uint32_t)i * 31);
         Enemy *e = &r->enemies[i];
         e->id = (uint8_t)i;
         e->normal = v3(0, 1, 0);
@@ -655,7 +657,7 @@ static void populate(World *w, Room *r) {
         e->alive = r->record == SIZE_MAX || !(w->records[r->record].killed & (UINT32_C(1) << i));
         for (unsigned attempt = 0; attempt < 64; attempt++) {
             uint32_t v =
-                world_hash(w->seed ^ w->generator, r->cell, 7000 + (uint32_t)i * 131 + attempt);
+                world_hash(w->seed ^ population_version, r->cell, 7000 + (uint32_t)i * 131 + attempt);
             e->pos = position_from(
                 vadd(world_room_center(r), v3(((v & 65535) / 65535.0 - .5) * (r->width - 4), .02,
                                               ((v >> 16) / 65535.0 - .5) * (r->depth - 4))));
@@ -786,6 +788,11 @@ static bool overlap_world(const World *w, Vec3 p, double radius, double height, 
     for (size_t i = 0; i < sizeof(hull) / sizeof(hull[0]); i++)
         if (overlaps(&hull[i], p, radius, height))
             return true;
+    if (w->generator >= SC_SKIFF_GENERATOR && p.z + radius > -111 && p.z - radius < -88 &&
+        fabs(p.x) < 9 + radius)
+        for (size_t i = 0; i < sc_skiff_box_count; i++)
+            if (overlaps(&sc_skiff_boxes[i], p, radius, height))
+                return true;
     for (int i = 0; i < SC_MAX_CHUNKS; i++) {
         const Chunk *c = &w->chunks[i];
         if (!c->active)
@@ -827,6 +834,12 @@ static double ray_box(const Box *b, Vec3 o, Vec3 d, double best) {
 }
 double world_raycast(const World *w, Vec3 o, Vec3 d, double limit) {
     double best = campaign_gate_ray(w, o, d, limit);
+    if (w->generator >= SC_SKIFF_GENERATOR) {
+        Box bounds = {{-9, 1.8, -111}, {9, 11, -87.5}, {0, 0, 0}, 0, true};
+        if (ray_box(&bounds, o, d, best) < best)
+            for (size_t i = 0; i < sc_skiff_box_count; i++)
+                best = ray_box(&sc_skiff_boxes[i], o, d, best);
+    }
     for (size_t i = 0; i < sizeof(hull) / sizeof(hull[0]); i++)
         best = ray_box(&hull[i], o, d, best);
     for (int i = 0; i < SC_MAX_CHUNKS; i++) {

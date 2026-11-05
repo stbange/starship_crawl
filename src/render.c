@@ -1,4 +1,5 @@
 #include "render.h"
+#include "exterior.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +17,7 @@ static const char *vertex_source = "layout(location=0) in vec3 aPosition;\n"
                                    "vPosition,1.0);}\n";
 static const char *fragment_source =
     "in vec3 vPosition;in vec3 vNormal;in vec3 vColor;in float vGlow;\n"
-    "uniform vec3 uEye;uniform vec3 uGrid;uniform int uUI;uniform float uTime;\n"
+    "uniform vec3 uEye;uniform vec3 uGrid;uniform int uUI;uniform float uTime;uniform float uFogDensity;\n"
     "uniform vec4 uTorch;uniform int uLampCount;uniform vec4 uLampPos[12];uniform vec4 "
     "uLampColor[12];out vec4 result;\n"
     "float lamp(float phase){if(mod(phase,4.0)<0.5)return 0.0;float "
@@ -46,7 +47,7 @@ static const char *fragment_source =
     " float emissive=vGlow>=4.0?lamp(floor(vGlow-4.0))*.8:max(vGlow,0.0)*.55;\n"
     " color+=vColor*emissive;\n"
     " if(vGlow<0.0)color+=vec3(.13,.16,.12)*pow(max(dot(n,view),0.0),18.0)*beam*.16;\n"
-    " float fog=1.0-exp(-distance*.009);color=mix(color,vec3(.004,.008,.012),fog);\n"
+    " float fog=1.0-exp(-distance*uFogDensity);color=mix(color,vec3(.004,.008,.012),fog);\n"
     " color=pow(max(color,vec3(0.0)),vec3(.75));\n"
     " float d=mod(gl_FragCoord.x,2.0)*.25+mod(gl_FragCoord.y,2.0)*.5;\n"
     " color=floor(color*42.0+d)/42.0;result=vec4(color,1.0);}\n";
@@ -118,6 +119,7 @@ bool renderer_init(Renderer *r) {
     r->offset = gl.GetUniformLocation(r->program, "uOffset");
     r->torch = gl.GetUniformLocation(r->program, "uTorch");
     r->time = gl.GetUniformLocation(r->program, "uTime");
+    r->fog_density = gl.GetUniformLocation(r->program, "uFogDensity");
     r->lamp_count = gl.GetUniformLocation(r->program, "uLampCount");
     r->lamp_pos = gl.GetUniformLocation(r->program, "uLampPos[0]");
     r->lamp_color = gl.GetUniformLocation(r->program, "uLampColor[0]");
@@ -129,6 +131,18 @@ bool renderer_init(Renderer *r) {
     gl.BindVertexArray(r->vao);
     layout(r->vbo);
     gl.DepthFunc(GL_LEQUAL);
+    /* A fixed celestial sphere has no near-field parallax and is shared by both
+       cameras. Cache directions once instead of rebuilding trigonometry per frame. */
+    for (int i = 0; i < SC_SPACE_STARS; i++) {
+        uint32_t h = world_hash(0x51a7, (Cell){i, 0, 0}, 17);
+        double y = 1 - 2 * (i + .5) / SC_SPACE_STARS;
+        double radial = sqrt(1 - y * y), angle = i * 2.399963229728653;
+        float brightness = .20f + (h % 100) * .0055f;
+        r->stars[i] = (SpaceStar){v3(radial * cos(angle), y, radial * sin(angle)),
+                                  h % 7 ? rgb(brightness * .83f, brightness * .91f, brightness)
+                                        : rgb(brightness, brightness * .87f, brightness * .70f),
+                                  .28 + ((h >> 8) % 100) * .0045};
+    }
     SDL_Log("Renderer: %s / %s", gl.GetString(GL_RENDERER), gl.GetString(GL_VERSION));
     return true;
 }
@@ -290,9 +304,10 @@ static void multiply(float *out, const float *a, const float *b) {
                 result[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k];
     memcpy(out, result, sizeof(result));
 }
-static void camera(float *matrix, Vec3 eye, double yaw, double pitch, double aspect) {
+static void camera(float *matrix, Vec3 eye, double yaw, double pitch, double aspect,
+                   double clip_far) {
     float projection[16] = {0}, view[16] = {0};
-    double f = 1 / tan(75 * SC_PI / 360), clip_near = .08, clip_far = 420;
+    double f = 1 / tan(75 * SC_PI / 360), clip_near = .08;
     projection[0] = (float)(f / aspect);
     projection[5] = (float)f;
     projection[10] = (float)((clip_far + clip_near) / (clip_near - clip_far));
@@ -392,39 +407,7 @@ static void upload_world(Renderer *r, Game *g) {
     }
     r->world_revision = w->revision ? w->revision : 1;
 }
-static void hull_view(Renderer *r) {
-    if (r->origin.z > 420)
-        return;
-    Color hull = rgb(.10f, .14f, .18f), trim = rgb(.21f, .25f, .28f);
-    double left = r->origin.x - 1400, right = r->origin.x + 1400;
-    double bottom = r->origin.y - 1400, top = r->origin.y + 1400;
-    double a[4][4] = {{left, fmin(right, -42), bottom, top},
-                      {fmax(left, 42), right, bottom, top},
-                      {fmax(left, -42), fmin(right, 42), fmax(bottom, 28), top},
-                      {fmax(left, -42), fmin(right, 42), bottom, fmin(top, 0)}};
-    for (int i = 0; i < 4; i++)
-        if (a[i][1] > a[i][0] && a[i][3] > a[i][2])
-            block(r, v3((a[i][0] + a[i][1]) * .5, (a[i][2] + a[i][3]) * .5, -2),
-                  v3(a[i][1] - a[i][0], a[i][3] - a[i][2], 4), hull, 0);
-    if (fabs(r->origin.x) < 800 && fabs(r->origin.y) < 800) {
-        for (int s = -1; s <= 1; s += 2)
-            for (int k = 0; k < 12; k++) {
-                block(r, v3(s * (45 + k * 32), 65, -5), v3(4, 290, 10), trim, 0);
-                if (k)
-                    block(r, v3(s * (60 + k * 32), 40 + (k % 3) * 25, -4.2), v3(2, 35, 1),
-                          rgb(.08f, .22f, .3f), .7f);
-            }
-        block(r, v3(0, 28, -4), v3(84, 3, 8), trim, 0);
-        block(r, v3(0, 26.2, -8.1), v3(76, .25, .2), rgb(.24f, .78f, .73f), 2);
-        for (int i = 0; i < 180; i++) {
-            uint32_t h = world_hash(713, (Cell){i, 0, 0}, 0);
-            block(r,
-                  v3((double)(h % 2000) / 5 - 200, (double)((h >> 12) % 1000) / 4 - 100,
-                     -110 - (i % 5) * 20),
-                  v3(.15, .15, .15), rgb(.32f, .46f, .55f), 2);
-        }
-    }
-}
+#include "render_exterior.inc"
 static void draw_chunks(Renderer *r, Game *g) {
     World *w = &g->world;
     for (int i = 0; i < SC_MAX_CHUNKS; i++) {
@@ -441,7 +424,6 @@ static void draw_chunks(Renderer *r, Game *g) {
         gl.DrawArrays(GL_TRIANGLES, 0, (GLsizei)r->chunk_vertices[i]);
     }
     gl.Uniform3f(r->offset, 0, 0, 0);
-    hull_view(r);
     /* Visible bulkheads match the collision guard at unfinished passages. */
     for (int i = 0; i < SC_MAX_CHUNKS; i++) {
         const Chunk *c = &w->chunks[i];
@@ -893,11 +875,12 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                 lamps[i], i == 1 ? rgb(.45f, .75f, .8f) : rgb(1, .77f, .48f), 14, 2.4f, 0};
     }
     Vec3 eye = player_eye(viewer);
-    for (int group = 0; !matrix && !viewer->sheltered && group < 6; group++) {
+    for (int group = 0; !matrix && !viewer->sheltered && group < 7; group++) {
         int total = group == 0   ? SC_MAX_CHUNKS
                     : group == 1 ? SC_MAX_PROJECTILES
                     : group == 3 ? SC_MAX_FLARES
                     : group == 5 ? SC_MAX_DEATH_HAZARDS
+                    : group == 6 ? SC_SKIFF_LIGHTS + 2
                                  : g->player_count;
         for (int i = 0; i < total; i++) {
             const Chunk *chunk = group == 0 ? &g->world.chunks[i] : NULL;
@@ -936,6 +919,14 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                                          h->kind == DEATH_ACID ? rgb(.4f, .85f, .12f)
                                                                : rgb(1, .25f, .08f),
                                          h->spent ? 10 : 5, h->spent ? 2 : .55f, 0};
+                } else if (group == 6) {
+                    if (i < SC_SKIFF_LIGHTS) {
+                        if (g->world.generator < SC_SKIFF_GENERATOR)
+                            continue;
+                        light = sc_skiff_lights[i];
+                    } else
+                        light = (PointLight){v3(i == SC_SKIFF_LIGHTS ? -46 : 46, 16, -4.7),
+                                             rgb(.85f, .58f, .30f), 24, 1.5f, 0};
                 } else if (group == 4) {
                     const Beam *b = &g->beams[i];
                     if (b->life <= 0 || g->players[i].sheltered)
@@ -1603,7 +1594,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     Cell cell = world_cell(position_absolute(p->pos));
     Room *room = world_find(&g->world, cell);
     const char *name = position_absolute(p->pos).z < 0
-                           ? "THE SILENT EXPANSE"
+                           ? (exterior_cabin(&g->world, position_absolute(p->pos))
+                                  ? "BOARDING SKIFF" : "THE SILENT EXPANSE")
                            : (room ? (room->landmark ? world_landmark_name(room->landmark)
                                                      : sc_themes[room->theme].name)
                                    : "BETWEEN DECKS");
@@ -2018,29 +2010,36 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         resize_target(r, rw, rh);
         gl.BindFramebuffer(GL_FRAMEBUFFER, r->framebuffer);
         gl.Viewport(0, 0, rw, rh);
-        gl.ClearColor(.012f, .024f, .039f, 1);
+        Player *player = &g->players[p];
+        bool matrix = g->matrix.divers[p].active;
+        bool outside = !matrix && !player->sheltered && position_absolute(player->pos).z < 0;
+        gl.ClearColor(outside ? .001f : .012f, outside ? .002f : .024f,
+                      outside ? .004f : .039f, 1);
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         gl.Enable(GL_DEPTH_TEST);
         gl.Uniform1i(r->ui, 0);
-        Player *player = &g->players[p];
-        bool matrix = g->matrix.divers[p].active;
         r->origin = matrix || player->sheltered
                         ? v3(0, 0, 0)
                         : world_center(world_cell(position_absolute(player->pos)));
         Vec3 eye = matrix ? matrix_eye(g, p) : vsub(player_eye(player), r->origin);
         float m[16];
-        camera(m, eye, player->yaw, player->pitch, (double)vw / vh);
+        camera(m, eye, player->yaw, player->pitch, (double)vw / vh,
+               outside ? fmax(6000, fabs(player_eye(player).z) + 6500) : 420);
         gl.UniformMatrix4fv(r->mvp, 1, GL_FALSE, m);
         gl.Uniform3f(r->eye, (float)eye.x, (float)eye.y, (float)eye.z);
         gl.Uniform3f(r->grid, (float)fmod(r->origin.x, 4096), (float)fmod(r->origin.y, 4096),
                      (float)fmod(r->origin.z, 4096));
+        gl.Uniform1f(r->fog_density, outside ? 0 : .009f);
         lights(r, g, player);
         if (matrix)
             matrix_scene(r, g, p);
         else if (player->sheltered)
             fold_interior(r, g, p);
         else {
+            starfield(r, player);
             draw_chunks(r, g);
+            hull_view(r, g, player_eye(player));
+            boarding_skiff(r, g, player_eye(player));
             actors(r, g, p);
             campaign_scene(r, g, p);
         }

@@ -1,4 +1,5 @@
 #include "game.h"
+#include "exterior.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -30,7 +31,7 @@ void game_message(Game *g, const char *s) {
 }
 static void player_init(Player *p) {
     memset(p, 0, sizeof(*p));
-    p->pos = position_from(v3(0, 4, -34));
+    p->pos = position_from(sc_arrival_spawn);
     p->checkpoint = position_from(v3(0, .02, 12));
     p->level = 1;
     p->health = 100;

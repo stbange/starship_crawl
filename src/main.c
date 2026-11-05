@@ -1,5 +1,6 @@
 #define SDL_MAIN_HANDLED
 #include "render.h"
+#include "exterior.h"
 #include <SDL3/SDL_main.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1457,7 +1458,8 @@ int main(int argc, char **argv) {
         } else if (!strcmp(argv[i], "--help")) {
             puts("Starship Crawl\n  --seed NUMBER --new --no-save --save-dir DIRECTORY\n  --touch "
                  "--split --smoke FRAMES --capture FILE.ppm\n  --scene "
-                 "bay|hall|engine|crew|tunnel|atrium|distant|encounter|shelter|mech|wagon|luxury|"
+                 "arrival|hull|space|skiff|cabin|bay|hall|engine|crew|tunnel|atrium|distant|"
+                 "encounter|shelter|mech|wagon|luxury|"
                  "bridge|lab|"
                  "cargo|"
                  "cryonics|botany\nSolo by default. F2 "
@@ -1525,9 +1527,12 @@ int main(int argc, char **argv) {
     }
     SDL_free(pref);
     if (scene) {
+        bool exterior_scene = !strcmp(scene, "arrival") || !strcmp(scene, "skiff") ||
+                              !strcmp(scene, "cabin") || !strcmp(scene, "space") ||
+                              !strcmp(scene, "hull");
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
-        if (strcmp(scene, "guardian")) {
+        if (strcmp(scene, "guardian") && !exterior_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -1640,6 +1645,28 @@ int main(int argc, char **argv) {
             app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, 0)));
             app.game.players[0].yaw = inspect_role >= 0 ? -2.36 : .78;
             app.game.players[0].pitch = inspect_landmark >= 0 ? .26 : .015;
+        }
+        if (exterior_scene) {
+            Player *p = &app.game.players[0];
+            p->pos = position_from(sc_arrival_spawn);
+            p->pitch = -.04;
+            p->crouched = false;
+            if (!strcmp(scene, "skiff")) {
+                p->pos = position_from(v3(18, 10, -68));
+                p->yaw = atan2(-18, -30);
+                p->pitch = -.15;
+            } else if (!strcmp(scene, "cabin")) {
+                p->pos = position_from(v3(0, 4, -97));
+                p->yaw = SC_PI;
+                p->pitch = -.08;
+            } else if (!strcmp(scene, "space")) {
+                p->yaw = SC_PI;
+                p->pitch = .65;
+            } else if (!strcmp(scene, "hull")) {
+                p->yaw = .9;
+                p->pitch = .75;
+            }
+            app.no_save = true;
         }
         Vec3 p = position_absolute(app.game.players[0].pos);
         world_refresh(&app.game.world, &p, 1);

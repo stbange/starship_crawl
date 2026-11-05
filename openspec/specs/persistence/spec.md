@@ -5,7 +5,7 @@ Portable validated saves that preserve the active game when an operation fails.
 ## Requirements
 
 ### Requirement: Portable format and migration
-Saves SHALL use checksums and explicit generator compatibility. Format 11 SHALL retain phase progress, guardian participation and rewards, loadouts, matrix state and narrative state. Compatible formats 1–10 SHALL remain supported without resetting their expeditions or profiles. New expeditions SHALL use ship generator 7, narrative 3 and matrix generator 1.
+Saves SHALL use checksums and explicit generator compatibility. Format 11 SHALL retain phase progress, guardian participation and rewards, loadouts, matrix state and narrative state. Compatible formats 1–10 SHALL remain supported without resetting their expeditions or profiles. New expeditions SHALL use ship generator 8, narrative 3 and matrix generator 1.
 
 #### Scenario: Legacy profile
 - **WHEN** a supported version-1 or version-2 file is loaded
@@ -29,7 +29,7 @@ Saves SHALL use checksums and explicit generator compatibility. Format 11 SHALL 
 
 #### Scenario: New generation opt-in
 - **WHEN** a player starts a new ship after loading a generator-3 expedition
-- **THEN** the new ship uses generator 7 and narrative version 3 with fresh characters and matrix profiles.
+- **THEN** the new ship uses generator 8 and narrative version 3 with fresh characters and matrix profiles.
 
 #### Scenario: Narrative round trip
 - **WHEN** a format-7 expedition resumes
@@ -46,6 +46,10 @@ Saves SHALL use checksums and explicit generator compatibility. Format 11 SHALL 
 #### Scenario: Interrupted guardian attempt
 - **WHEN** a phased save resumes during a guardian fight
 - **THEN** participants return to staging with a reset attempt while completed guardians and confirmed rewards remain intact.
+
+#### Scenario: Saved generator-7 arrival
+- **WHEN** a format-11 generator-7 expedition resumes
+- **THEN** its original exterior collision, coordinates, interior and earned build remain unchanged.
 
 ### Requirement: Transactional validation
 

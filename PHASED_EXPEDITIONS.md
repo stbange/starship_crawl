@@ -86,11 +86,11 @@ selection. Ceiling scale increases across deeper bands while narrow conduits and
 crew spaces retain their contrast. Existing sectors, landmarks and connected
 catastrophe trails remain part of the generator.
 
-New expeditions use **generator 7, narrative 3, matrix generator 1 and save format
+New expeditions use **generator 8, narrative 3, matrix generator 1 and save format
 11**. Formats 1–10 remain supported. Compatible older ships keep their equipment
 and original rules until an explicit new-ship action. Historical `--scene` catalog
 views remain generator-6 sandboxes; `--scene guardian` previews the new arena.
-Normal play and `--seed` start the new ruleset.
+Normal play and `--seed` start the new ruleset. Generator 8 adds the [arrival skiff](ARRIVAL.md) while retaining generator-7 room plans, encounters and phase rules. Existing generator-7 saves keep their original exterior and positions.
 
 The broader [design proposal](PROGRESSION_DESIGN.md) also describes possible future
 vehicles, artifact variants, stat reassignment and encounter combinations. Those
