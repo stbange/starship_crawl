@@ -3,9 +3,13 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
 A [discussion draft for expedition progression and directional worlds](PROGRESSION_DESIGN.md)
-is being developed on `design/expedition-progression`. It proposes earned capabilities,
-four phases with guardian fights, and seeded directional traits. These proposals
-remain under discussion and do not yet replace the agreed behavior below.
+is being developed on `design/expedition-progression`. **Confirmed for the next
+progression ruleset: every new ship starts with a new character.** Saving, checkpoint
+respawns and continuing on the same ship retain that character. This supersedes the
+earlier design decision to carry character power between ships; it is not yet
+implemented. The draft's earned capabilities, four phases with guardian fights and
+seeded directional traits remain under discussion. The implemented milestones and
+original sequence below document the existing behavior.
 
 ## Procedural narrative roadmap
 

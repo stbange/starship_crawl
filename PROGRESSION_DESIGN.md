@@ -2,7 +2,9 @@
 
 Discussion draft, 5 November 2026, on `design/expedition-progression`.
 This proposes the next design direction; it does not change current gameplay or
-replace the implemented OpenSpec requirements. Numbers below are playtest targets.
+replace the implemented OpenSpec requirements. **Confirmed decision: every new
+ship starts with a new character.** Other proposals and numbers below remain
+discussion and playtest targets.
 
 ## The experience to build
 
@@ -22,39 +24,53 @@ beams and flare cannon; rigs and all four powers are immediately usable. Distanc
 largely controls enemy selection and health. This makes a good testing sandbox,
 but provides too little anticipation or structure for earning the strongest toys.
 
-## Power that lasts, and a build that develops
+## A fresh character for every ship
 
-Recommended starting point: retain earned equipment and abilities between ships,
-keep permanent numerical gains bounded, and earn powerful combinations during each
-expedition. The player has been asked which persistence model they prefer; this
-recommendation remains provisional until that discussion is resolved.
+The user has chosen a fresh character on every new ship. All combat progression
+belongs to that ship: levels, attribute gains, currency, weapons, psionic powers,
+vehicles, hacking program unlocks/upgrades and equipment modifications. A new ship
+starts from the basic character and kit, regardless of the previous character's
+strength. No accumulated power or earned starting equipment carries across.
 
-| Progression | What persists | How it is earned |
+Saving and resuming keeps the current ship and character. Death keeps the existing
+checkpoint policy and does not start a new character. Continuing deeper or accepting
+another commission on the same ship also keeps the character and build. Starting a
+new ship is the explicit reset boundary, including when replaying the same seed.
+
+| Progression | Scope | How it is earned |
 | --- | --- | --- |
-| Capability ownership | Weapons, powers, rig chassis, programs and their discovered modifications | First victory over a suitable guardian or elite challenge; selected major missions |
-| Character mastery | A finite allocation of meaningful attribute and specialization choices | Experience and completed challenges; freely reassign at the shelter |
-| Expedition build | Installed artifacts, exceptional overcharges and local system advantages remain for this ship, including through death and reload | Exploration, elites, guardians and optional preparation |
-| Career | Records, faction knowledge, cosmetics, ship discoveries and harder expedition options | Story conclusions and sustained exploration |
+| Capability ownership | Current ship, retained through death and reload | Victory over a suitable guardian or elite challenge; selected major missions |
+| Character mastery | Current character's attribute and specialization choices | Experience and completed challenges; freely reassign at the shelter |
+| Build combinations | Current ship's installed artifacts, overcharges and system advantages | Exploration, elites, guardians and optional preparation |
+| Optional player archive | Non-power records or cosmetics across ships; a separate proposal | Recorded discoveries and conclusions; never grants stats, equipment or combat unlocks |
 
-Owning a mech means you can bring it on a future ship. It should not require
-unlocking the same chassis again. Starting loadout capacity creates a choice:
-initially try two personal guns, two powers and one rig, plus basic utility tools.
-Storage retains everything else; reconfigure at the shelter. Reward variants and
-specialization modules should create tradeoffs rather than equip every passive
-bonus simultaneously. These slot counts need testing, particularly for touch.
+Every ship offers the possibility of earning a mech again, but different routes,
+guardian variants and competing rewards should make that choice interesting. Avoid
+requiring the same fixed unlocking sequence on every ship. Offer a meaningful
+additional capability in the first 5–10 minutes, then substantial rewards at phase
+boundaries. Early optional elites can provide that first change of playstyle.
+
+Equipment capacity still creates choices as the character develops: initially try
+two personal gun slots, two power slots and one rig slot, plus basic utility tools.
+Empty slots do not grant equipment. Storage retains items earned on this ship;
+reconfigure at the shelter. Reward variants and specialization modules should
+create tradeoffs rather than equip every passive bonus simultaneously. These slot
+counts need testing, particularly for touch.
 
 Keep the flashlight, map, shelter, basic matrix access and a reliable free-firing
-weapon available from the start. A fresh character gets a simple combat kit and
-earns its first additional capability early. Existing characters keep ownership;
-they receive different variants or upgrades when a challenge would repeat an unlock.
+weapon available from the start. Every character gets a simple combat kit and earns
+advanced equipment through play. The reward pool is available from the first ship;
+previous playthroughs do not grant an exclusive combat catalog or stronger starters.
 
 Ordinary fights give useful supplies, experience and incremental improvements.
 Exceptional victories give exceptional rewards. An illustrative first-clear offer
 contains three visible, themed choices: a weapon, an ability or chassis, and a
-module suited to an owned item. Choosing one grants it permanently and makes it
-usable immediately at the nearby staging point. Unchosen choices stay discoverable
-on later ships; duplicate protection guarantees a useful offer or a clearly priced
-choice of mastery rewards when the catalog is complete.
+module suited to an owned item. Choosing one grants it for the current ship and
+makes it usable immediately at the nearby staging point. Unchosen choices remain
+possible at other suitable challenges. Duplicate protection considers this ship's
+inventory and guarantees a useful variant, upgrade or mastery reward. Resetting for
+a new ship makes base capabilities valuable again without depending on a permanent
+unlock checklist.
 
 Major rewards should be identifiable before committing to a route. A damaged
 manifest might report a service walker in the forge; an anomalous signal could
@@ -65,16 +81,19 @@ that accidentally give away a phase's signature reward.
 Keep numerical growth strong enough to feel: former elites eventually become
 comfortable targets. Do not automatically raise enemy strength when the player
 equips a better gun. Difficulty comes from the chosen expedition tier, layer and
-encounter, with modest numerical growth and increasingly demanding combinations.
-Experienced characters can select a higher starting challenge with better rewards;
-they may still revisit easier ships for a power fantasy.
+encounter, with substantial but bounded growth during the journey and increasingly
+demanding combinations. Returning to earlier layers of the same ship should show
+how powerful this character has become. Experienced players can select a harder
+expedition with a fresh character; challenge settings do not transfer old equipment
+or statistics. Avoid permanent stat grinding as a prerequisite for harder ships.
 
 ## Four phases with a finish, inside an endless ship
 
 Start with four substantial phases after the safe loading bay. Target roughly
 20–30 minutes per phase, with saving anywhere and optional detours. A complete
 commission is roughly 90–120 minutes as an initial pacing hypothesis, not a timer.
-Continuing beyond the finale remains optional and produces further expeditions.
+Continuing beyond the finale remains optional and produces further commissions on
+the same ship with the same character. Choosing a new ship starts a fresh character.
 
 | Phase | Spatial and dramatic role | Typical challenge | Reward and consequence |
 | --- | --- | --- | --- |
@@ -82,7 +101,7 @@ Continuing beyond the finale remains optional and produces further expeditions.
 | 1: Foothold | Recognizable service and habitation spaces near the hull | Fight a local ruler with one clearly taught mechanic | First major capability, secure a checkpoint, open the next boundary |
 | 2: Commitment | Stronger directional identity; more purposeful routes and scale changes | Choose between rival guardians; prepare through exploration or hacking | A major specialization or vehicle, reveal the target's complication |
 | 3: Transformation | Extreme combinations of the chosen traits; unfamiliar infrastructure | A controller combines known mechanics with one new demand | A build-defining modification, secure an optional story solution |
-| 4: Reckoning | A distinctive destination generated around the commission and history | Confront the entity controlling access to the objective | Final choice, permanent reward, extraction and debrief |
+| 4: Reckoning | A distinctive destination generated around the commission and history | Confront the entity controlling access to the objective | Final choice, debrief and a capstone reward for continuing on this ship |
 
 These are roles, not a fixed sector sequence. Phase 2 might cross a frozen luxury
 district on one ship and burning botanical machinery on another. Every phase
@@ -180,8 +199,9 @@ All required fights must have a direct solo solution. Hacking and preparation ma
 them safer or create another opening. They should not require a second player, an
 unowned power, a mandatory damage type or an ability locked behind that same fight.
 A vehicle encounter needs an on-foot route or a clearly marked temporary loaner;
-permanent ownership is the reward. Avoid making every confrontation an arena lock:
-mix mobile pursuits, holding positions, dismantling machinery and conventional duels.
+ownership for the current ship is the reward. Avoid making every confrontation an
+arena lock: mix mobile pursuits, holding positions, dismantling machinery and
+conventional duels.
 
 Examples of expedition combinations to test:
 
@@ -203,6 +223,10 @@ objectives, confirmed rewards and the expedition build. The current challenge
 resets, rather than making the player repeat a completed phase. Do not add permanent
 injuries, an obligatory corpse run or a timer punishing exploration.
 
+This is a fresh start on a new ship, not permanent character death on a failed
+attempt. The player should be able to learn a difficult guardian without losing
+the equipment that made reaching it enjoyable.
+
 The shelter remains a real safe place to recover, cook, inspect discoveries and
 change a build. Put a dependable staging space near each guardian. Crossing a
 clearly signposted challenge boundary starts an attempt; leaving or retreating into
@@ -213,8 +237,11 @@ farmed by deliberately abandoning the fight.
 
 In co-op, a partner can hold the encounter while the other recovers. Both eligible
 participants earn their own major reward choice exactly once. Shared phase flags
-and individual unlock receipts must survive join/leave and save/load. Encounter
-scaling uses participating players, with bounded extra pressure; a distant partner
+and individual unlock receipts must survive join/leave and save/load. Character
+progression belongs to this ship: starting a new ship resets both local characters,
+including a currently inactive second player. Rejoining this ship restores that
+player's existing build; joining cannot import progression from another ship.
+Encounter scaling uses participating players, with bounded extra pressure; a distant partner
 exploring elsewhere must not double a solo guardian's health. Save/load should
 never reroll rewards, heal an active boss while retaining inflicted damage benefits,
 or duplicate payouts. Exact mid-attempt resume rules belong in the implementation spec.
@@ -243,6 +270,8 @@ Replay value comes from decisions with different consequences:
   reinforcements or infrastructure when defeated.
 - Environmental systems let builds exploit the same room differently.
 - Limited loadouts and curated reward synergies create different ways to fight.
+- A fresh character makes each ship's reward decisions consequential; early choices
+  and guardian offers vary so repeated starts do not become an identical equipment grind.
 - Story dependencies and faction bargains change what “success” means.
 - Optional expedition modifiers and post-finale depth support mastery without
   forcing newcomers through an ever-growing statistics wall.
@@ -257,9 +286,10 @@ after a short expedition already makes choosing, fighting and winning satisfying
    retry and a checkpoint. Use existing geometry and content wherever possible.
    Validate a 15–25 minute playable slice before expanding the generator.
 2. **Progression and ownership.** Separate capability ownership, loadout and
-   expedition modifications; restrict new-profile starting rewards; define mastery
-   bounds and the old-profile conversion policy. Exercise a second ship with the
-   same character, co-op receipts and repeated rewards.
+   expedition modifications; restrict starting rewards and define mastery bounds.
+   Make new-ship creation reset both characters, including advanced matrix progress,
+   while save/resume, checkpoint death and same-ship commissions retain them. Test
+   a second ship for a completely fresh build, co-op receipts and repeated rewards.
 3. **Directional generation.** Introduce a versioned macro plan, trait assignment,
    coherent transitions and boundary contracts. First prove two pairs visibly
    change architecture and tactics; add further pairs after this works.
@@ -272,15 +302,18 @@ after a short expedition already makes choosing, fighting and winning satisfying
 Before implementation, give each agreed milestone an OpenSpec proposal and
 acceptance scenarios. New architecture/population rules require a new ship
 generator version; phase routing may require a narrative version, and ownership,
-loadouts and boss records require a save extension. Preserve existing expeditions
-under their original rules. Do not silently revoke old ownership or reinterpret
-spent attribute points: design an explicit conversion or retained legacy profile
-before enabling a new progression ruleset for those characters.
+loadouts and boss records require a save extension. Existing saved expeditions
+resume under their original rules with their current characters. In the new ruleset,
+the explicit new-ship action creates fresh characters rather than converting old
+power into bonuses. Its description must clearly state that the new ship starts
+with a new character. An optional archive of past expeditions can be designed
+separately; it must not transfer combat progression.
 
 Validation should retain the project's >=95% unit line coverage overall and per
 core file. Add actual-control campaigns through phase transitions, failure/retry,
-reward choice, optional routes, co-op and save/load; inspect native and packaged
-browser presentation with keyboard, controller bindings and touch. Generate many
+reward choice, optional routes, co-op, save/load and fresh-character new-ship resets;
+inspect native and packaged browser presentation with keyboard, controller bindings
+and touch. Generate many
 seeds to check coherent traits, connected mandatory routes, legal guardians,
 starter-kit solvability, stable revealed choices, clearance, encounter budgets and
 load-order independence. Keep geometry and simulation bounded for web and split-screen.
