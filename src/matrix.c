@@ -14,6 +14,10 @@ static float max_integrity(const Player *p) {
 static float max_bandwidth(const Player *p) {
     return 100 + 4 * p->mods[5];
 }
+/* Aiming and swept hits use the same torso point, separate from the camera. */
+static Vec3 avatar_center(const MatrixDiver *d) {
+    return vadd(d->pos, v3(0, .8, 0));
+}
 Vec3 matrix_terminal(Cell c) {
     return vadd(world_center(c), v3(3, .02, 0));
 }
@@ -308,7 +312,7 @@ static void shots(Game *g, MatrixNetwork *w, double dt) {
                 MatrixDiver *d = &g->matrix.divers[p];
                 if (!d->active || !cell_equal(d->key, w->key))
                     continue;
-                double t = sphere(s->pos, dir, vadd(d->pos, v3(0, .8, 0)), .48, distance);
+                double t = sphere(s->pos, dir, avatar_center(d), .48, distance);
                 if (t < distance) {
                     distance = t;
                     target = p;
@@ -389,7 +393,7 @@ static void guards(Game *g, MatrixNetwork *w, double dt) {
             double range = vlen(vsub(matrix_eye(g, p), e->pos));
             if (d->veil <= 0 && d->grace <= 0 && range < distance) {
                 distance = range;
-                at = matrix_eye(g, p);
+                at = avatar_center(d);
                 target = p;
             }
         }

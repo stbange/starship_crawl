@@ -440,6 +440,7 @@ static void combat(void) {
         matrix_step(g, .02);
     CHECK(d->echo_life == 0);
     d->trace = 100;
+    d->veil = 10;
     w->guards[0] = (MatrixGuard){.pos = {0, 1, 2}, .health = 100, .active = true, .stun = 10};
     matrix_step(g, .02);
     CHECK(d->counter > 0 && r->alert == 3);
@@ -623,9 +624,31 @@ static void routing_and_guards(void) {
                 matrix_step(g, .02);
             if (role == 1)
                 CHECK(d->integrity < health);
-            else
+            else {
                 CHECK(g->matrix.networks[d->network].guards[0].cooldown > 0);
+                CHECK(d->integrity < health);
+            }
         }
+        // A real charged shot hits a standing avatar above, but its locked aim can be dodged.
+        clear_guards(g);
+        memset(w->shots, 0, sizeof(w->shots));
+        ready(g);
+        d->pos = v3(0, 0, 0);
+        d->integrity = 100;
+        d->veil = d->grace = 0;
+        g->players[0].journal = false;
+        g->players[0].yaw = 0;
+        g->players[0].pitch = 0;
+        w->guards[0] = (MatrixGuard){.pos = {0, 1.1, 12}, .health = 100, .role = 0, .active = true};
+        matrix_step(g, .02);
+        CHECK(w->guards[0].windup > 0);
+        for (int i = 0; i < 20; i++) {
+            matrix_player_step(g, 0, &(Actions){.strafe = 1}, .02);
+            matrix_step(g, .02);
+        }
+        for (int i = 0; i < 60; i++)
+            matrix_step(g, .02);
+        CHECK(d->pos.x > 3.5 && d->integrity == 100);
         clear_guards(g);
         ready(g);
         d->echo = v3(0, 1, 1);
@@ -635,6 +658,7 @@ static void routing_and_guards(void) {
         matrix_step(g, .02);
         CHECK(d->echo_life == 0);
         clear_guards(g);
+        d->pos = v3(0, 0, 0);
         d->grace = 1;
         d->integrity = 100;
         w->shots[0] = (MatrixShot){.pos = {0, .8, 0},

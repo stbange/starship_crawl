@@ -45,6 +45,8 @@ def run():
             browser = p.chromium.launch(**options)
             context = browser.new_context(viewport={'width': 1280, 'height': 720})
             page = context.new_page()
+            if os.environ.get('SC_CPU_THROTTLE'):
+                context.new_cdp_session(page).send('Emulation.setCPUThrottlingRate', {'rate': float(os.environ['SC_CPU_THROTTLE'])})
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.on('dialog', lambda dialog: dialog.accept())
