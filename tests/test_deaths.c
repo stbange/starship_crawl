@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +13,7 @@
 static Game *fresh(void) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     g->players[0].pos = position_from(v3(0, .02, 12));
     Vec3 p = position_absolute(g->players[0].pos);
     CHECK(world_refresh(&g->world, &p, 1));

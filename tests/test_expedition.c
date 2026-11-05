@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +14,7 @@
 static Game *create(unsigned seed) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, seed);
+    legacy_game_init(g, seed);
     return g;
 }
 static void destroy(Game *g) {
@@ -216,7 +217,9 @@ static void test_arcs(void) {
             unsigned career[SC_OUTCOMES];
             memcpy(career, g->players[0].career, sizeof(career));
             game_new_ship(g, seed + 2000);
-            CHECK(!memcmp(career, g->players[0].career, sizeof(career)));
+            CHECK(memcmp(career, g->players[0].career, sizeof(career)) != 0);
+            for (int i = 0; i < SC_OUTCOMES; i++)
+                CHECK(g->players[0].career[i] == 0);
             valid(g);
             destroy(g);
         }

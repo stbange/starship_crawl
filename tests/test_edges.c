@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +33,7 @@ static void settle(Game *g) {
 static Game *quiet(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     g->players[0].pos = position_from(vadd(world_center((Cell){1, 0, 0}), v3(0, .02, -24)));
     settle(g);
     for (int r = 0; r < g->world.count; r++) {
@@ -257,7 +258,7 @@ static void test_combat_and_movement(void) {
     destroy(g);
     g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     g->players[0].pos = position_from(v3(0, .02, 12));
     before = g->players[0].pos;
     tick(g, (Actions){.forward = 1}, 1);

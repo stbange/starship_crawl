@@ -1,10 +1,11 @@
 # Expedition progression and directional worlds
 
-Discussion draft, 5 November 2026, on `design/expedition-progression`.
-This proposes the next design direction; it does not change current gameplay or
-replace the implemented OpenSpec requirements. **Confirmed decision: every new
-ship starts with a new character.** Other proposals and numbers below remain
-discussion and playtest targets.
+Design direction, 5 November 2026, on `design/expedition-progression`.
+The first playable implementation now includes fresh characters, four phases,
+alternative guardians, reward choices, loadout slots, specialization modules and
+seeded directional traits. [PHASED_EXPEDITIONS.md](PHASED_EXPEDITIONS.md) defines
+what is implemented. The additional examples and numbers below remain discussion
+and playtest targets, including future vehicles, artifact variants and stat respec.
 
 ## The experience to build
 

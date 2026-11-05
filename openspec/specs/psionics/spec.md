@@ -6,7 +6,7 @@ Energy-powered stealth, collision-aware mobility, and a surrounding offensive au
 ## Requirements
 
 ### Requirement: Four psionic powers
-Each character SHALL activate veil, flight, charged long jumps and a surrounding nova using rechargeable energy and explicit controls with visible feedback. Invalid activations SHALL preserve resources.
+Each character SHALL activate only owned and equipped powers in phased expeditions; legacy expeditions SHALL retain unrestricted power access. Supported powers SHALL include veil, flight, charged long jumps and a surrounding nova using rechargeable energy and explicit controls with visible feedback. Invalid activations SHALL preserve resources.
 
 #### Scenario: Veil
 - **WHEN** veil is active

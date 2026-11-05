@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include "interior.h"
 #include "geometry_fingerprint.h"
 #include <stdio.h>
@@ -237,7 +238,7 @@ static void test_legacy(void) {
     }
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 1);
+    legacy_game_init(g, 1);
     CHECK(game_load(g, SC_FIXTURE_DIR "/generator-v6.sav"));
     CHECK(g->world.generator == 3 && g->world.seed == 713 && g->mission == 2);
     CHECK(g->players[0].level == 7 && g->players[0].sheltered && g->players[0].cloaked);
@@ -248,7 +249,7 @@ static void test_legacy(void) {
     for (int i = 0; i < map.side * map.side; i++)
         CHECK(!map.rooms[i].landmark && !map.rooms[i].incident);
     game_new_ship(g, 713);
-    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->players[0].level == 7);
+    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->players[0].level == 1);
     game_destroy(g);
     free(g);
     CHECK(remove("interior-legacy.sav") == 0);
@@ -257,7 +258,7 @@ static void test_legacy(void) {
 static void test_cache_persistence(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     Cell cell = {1, 0, 0};
     pump(&g->world, cell);
     Room *r = world_find(&g->world, cell);
@@ -275,8 +276,7 @@ static void test_cache_persistence(void) {
     CHECK(game_load(g, "interior-cache.sav"));
     pump(&g->world, cell);
     r = world_find(&g->world, cell);
-    CHECK(g->world.generator == SC_GENERATOR_VERSION && !r->pickups[3].active &&
-          !r->pickups[4].active);
+    CHECK(g->world.generator == 6 && !r->pickups[3].active && !r->pickups[4].active);
     CHECK(vlen(position_delta(point, r->pickups[3].pos)) == 0);
     game_destroy(g);
     free(g);

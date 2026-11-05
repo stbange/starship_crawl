@@ -1,4 +1,5 @@
 #include "interior.h"
+#include "campaign.h"
 
 typedef struct {
     Builder *builder;
@@ -394,6 +395,18 @@ static void history_furnishings(Alcove *a, const Room *r) {
     prop(a, 0, 2, -1.15, 3.3, 1.6, .06, rgb(.32f, .6f, .5f), .45f, false);
 }
 void interior_build(Builder *b, const Room *r) {
+    if (b->world->generator >= 7 && campaign_guardian(r->cell) >= 0) {
+        Vec3 c = world_center(r->cell);
+        for (int x = -1; x <= 1; x += 2)
+            for (int z = 0; z < 3; z++) {
+                Vec3 at = vadd(c, v3(x * 14, 1.5, -24 + z * 42));
+                world_box(b, at, v3(4, 3, 5), rgb(.16f, .18f, .19f), 0, true);
+                world_box(b, vadd(at, v3(0, 1.55, 0)), v3(4.2, .1, 5.2), rgb(.6f, .34f, .12f), .6f,
+                          false);
+            }
+        lighting(b, r);
+        return;
+    }
     landmark(b, r);
     Alcove spaces[4];
     for (int i = 0; i < 4; i++) {
@@ -420,6 +433,23 @@ void interior_build(Builder *b, const Room *r) {
             furnishings(&spaces[i], role, theme, r->hash + (unsigned)i);
     }
     lighting(b, r);
+    if (b->world->generator >= 7) {
+        ShipTraits t = campaign_traits(b->world->seed, r->cell);
+        Vec3 center = world_center(b->chunk->cell);
+        for (int side = -1; t.heat && side <= 1; side += 2) {
+            Vec3 at = vadd(center, v3(side * fmin(30, r->width * .35), 0, 22));
+            if (t.heat < 0) {
+                world_box(b, vadd(at, v3(0, r->height - 3, 0)), v3(1.4, 5, 1.4),
+                          rgb(.18f, .42f, .5f), .35f, false);
+                world_box(b, vadd(at, v3(0, .06, 0)), v3(6, .1, 8), rgb(.12f, .3f, .4f), .22f,
+                          false);
+            } else {
+                world_box(b, vadd(at, v3(0, 1, 0)), v3(2, 2, 3), rgb(.22f, .12f, .08f), 0, true);
+                world_box(b, vadd(at, v3(0, 2.05, 0)), v3(1.8, .1, 2.8), rgb(.8f, .2f, .04f), .8f,
+                          false);
+            }
+        }
+    }
     for (int i = 0; i < 4; i++)
         traces(b, r, &spaces[i], world_hash(b->world->seed, b->chunk->cell, 45000 + (unsigned)i));
 }

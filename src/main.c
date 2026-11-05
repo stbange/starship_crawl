@@ -15,6 +15,10 @@ EM_JS(void, browser_flush, (void), {
 EM_JS(int, browser_storage_status, (void),
       { return window.scStorage ? window.scStorage.status : 0; })
 EM_JS(int, browser_touch, (void), { return navigator.maxTouchPoints > 0; })
+EM_JS(void, browser_pointer, (int enabled), {
+    if (window.scPointer)
+        window.scPointer.set(!!enabled);
+})
 EM_JS(void, browser_ready, (void), {
     if (window.scReady)
         window.scReady();
@@ -56,8 +60,15 @@ static void set_pause(bool paused) {
     app.mouse_fire = false;
     memset(app.fingers, 0, sizeof(app.fingers));
     app.accumulator = 0;
-    if (app.window && !app.touch)
+    if (app.window && !app.touch) {
+#ifdef __EMSCRIPTEN__
+        /* The browser look bridge owns capture. SDL and the HTML menu must not
+           issue competing pointer-lock requests when a journal closes. */
+        browser_pointer(!paused);
+#else
         SDL_SetWindowRelativeMouseMode(app.window, !paused);
+#endif
+    }
     if (!paused) {
         for (int i = 0; i < SC_PLAYERS; i++) {
             app.game.players[i].journal = false;
@@ -135,6 +146,10 @@ static bool choose_player(int player, unsigned choice) {
     return app.game.matrix.divers[player].choice ? matrix_choose(&app.game, player, choice)
                                                  : game_story_choose(&app.game, player, choice);
 }
+static void phase_journal(int player) {
+    campaign_journal(&app.game, player);
+    set_pause(true);
+}
 static void matrix_journal(int player) {
     Player *p = &app.game.players[player];
     p->journal = true;
@@ -143,6 +158,20 @@ static void matrix_journal(int player) {
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     MatrixDiver *d = &app.game.matrix.divers[0];
+    if (action >= 220 && action <= 228) {
+        Campaign *c = &app.game.campaign;
+        if (action == 220)
+            phase_journal(0);
+        else if (action == 221 || action == 222)
+            c->slot[0] = (c->slot[0] + (action == 221 ? 5 : 1)) % 6;
+        else if (action == 223 || action == 224)
+            campaign_refit(&app.game, 0, c->slot[0], action == 223 ? -1 : 1);
+        else if (action == 225)
+            campaign_track(&app.game);
+        else if (campaign_choose(&app.game, 0, (unsigned)(action - 225)))
+            campaign_journal(&app.game, 0);
+        return;
+    }
     if (action == 200) {
         matrix_toggle(&app.game, 0);
         return;
@@ -213,9 +242,11 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
                           : action == 80 && app.game.story.version ? 1
                                                                    : 0;
         set_pause(true);
-    } else if (action == 81)
+    } else if (action == 81) {
         game_story_track(&app.game);
-    else if (action == 88)
+        if (app.game.campaign.version)
+            app.game.campaign.tracked = SC_GUARDIANS;
+    } else if (action == 88)
         game_story_event_read(&app.game, 0);
     else if (action == 83)
         game_story_read(&app.game, 0);
@@ -258,7 +289,7 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     else if (action >= 40 && action < 40 + SC_WEAPONS) {
         Player *p = &app.game.players[0];
         unsigned gun = (unsigned)(action - 40);
-        if (p->riding != MECH && (p->weapons & (1u << gun))) {
+        if (p->riding != MECH && (p->weapons & (1u << gun)) && campaign_weapon(&app.game, 0, gun)) {
             p->weapon = gun;
             p->cooldown = .15f;
             app.game.dirty = true;
@@ -267,7 +298,7 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
         game_rig_toggle(&app.game, 0, action == 15 ? MECH : WAGON);
     else if (action == 17) {
         Player *p = &app.game.players[0];
-        if (p->riding != MECH) {
+        if (p->riding != MECH && campaign_weapon(&app.game, 0, SC_FLARE_CANNON)) {
             p->weapon = SC_FLARE_CANNON;
             p->cooldown = .15f;
             app.game.dirty = true;
@@ -313,7 +344,7 @@ EMSCRIPTEN_KEEPALIVE uint32_t sc_web_fingerprint(uint32_t seed, int x, int y, in
     return world_fingerprint(seed, (Cell){x, y, z});
 }
 EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
-    static char result[12288];
+    static char result[16384];
     const Player *p = &app.game.players[0];
     Vec3 feet = position_absolute(p->pos);
     unsigned projectiles = 0, climbers = 0, bodies = 0;
@@ -484,7 +515,26 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
                 used += (size_t)n;
             first = false;
         }
-    snprintf(result + used, sizeof(result) - used, "]}");
+    const Campaign *campaign = &app.game.campaign;
+    const CampaignProfile *build = &campaign->profiles[0];
+    unsigned selected = campaign->tracked < SC_GUARDIANS ? campaign->tracked : 0;
+    Room *guardian_room = world_find(&app.game.world, campaign_site(selected));
+    char offers[3][110];
+    for (unsigned i = 0; i < 3; i++)
+        campaign_reward_name(&app.game, 0, campaign->choice[0] ? campaign->choice[0] - 1 : selected,
+                             i, offers[i], sizeof(offers[i]));
+    snprintf(result + used, sizeof(result) - used,
+             "],\"campaign\":%u,\"phase\":%u,\"defeated\":%u,\"guardian\":%u,"
+             "\"guardian_active\":%s,\"guardian_health\":%.2f,\"reward_pending\":%u,"
+             "\"powers_owned\":%u,\"rigs_owned\":%u,\"modules_owned\":%u,\"claimed\":%u,"
+             "\"gun_slots\":[%u,%u],\"power_slots\":[%u,%u],\"rig_slot\":%u,\"module\":%u,"
+             "\"build_slot\":%u,\"offer1\":\"%s\",\"offer2\":\"%s\",\"offer3\":\"%s\"}",
+             campaign->version, campaign_phase(campaign), campaign->defeated, campaign->tracked,
+             campaign->attempts[selected].active ? "true" : "false",
+             guardian_room && guardian_room->ready ? guardian_room->enemies[0].health : 0,
+             campaign->choice[0], build->powers, build->rigs, build->modules, build->claimed,
+             build->guns[0], build->guns[1], build->power_slots[0], build->power_slots[1],
+             build->rig, build->module, campaign->slot[0], offers[0], offers[1], offers[2]);
     return result;
 }
 static void audio_frame(void) {
@@ -686,6 +736,34 @@ static void events(void) {
                     Player *p = &app.game.players[player];
                     MatrixDiver *d = &app.game.matrix.divers[player];
                     int mb = e.gbutton.button;
+                    if (p->journal && p->journal_page == 5) {
+                        Campaign *c = &app.game.campaign;
+                        if (mb == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER ||
+                            mb == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+                            c->slot[player] = (c->slot[player] +
+                                               (mb == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER ? 5 : 1)) %
+                                              6;
+                        if (mb == SDL_GAMEPAD_BUTTON_DPAD_LEFT ||
+                            mb == SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
+                            campaign_refit(&app.game, player, c->slot[player],
+                                           mb == SDL_GAMEPAD_BUTTON_DPAD_LEFT ? -1 : 1);
+                        if (mb == SDL_GAMEPAD_BUTTON_WEST)
+                            campaign_track(&app.game);
+                        unsigned choice = mb == SDL_GAMEPAD_BUTTON_SOUTH   ? 1
+                                          : mb == SDL_GAMEPAD_BUTTON_NORTH ? 2
+                                          : mb == SDL_GAMEPAD_BUTTON_EAST  ? 3
+                                                                           : 0;
+                        if (choice && campaign_choose(&app.game, player, choice))
+                            campaign_journal(&app.game, player);
+                        if (mb == SDL_GAMEPAD_BUTTON_START)
+                            sc_web_start();
+                        continue;
+                    }
+                    if (mb == SDL_GAMEPAD_BUTTON_START &&
+                        SDL_GetGamepadAxis(app.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16000) {
+                        phase_journal(player);
+                        continue;
+                    }
                     if (p->journal && p->journal_page == 4 && !d->choice) {
                         if (mb == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER ||
                             mb == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
@@ -776,8 +854,11 @@ static void events(void) {
                             else
                                 game_story_read(&app.game, player);
                         }
-                        if (b == SDL_GAMEPAD_BUTTON_NORTH)
+                        if (b == SDL_GAMEPAD_BUTTON_NORTH) {
                             game_story_track(&app.game);
+                            if (app.game.campaign.version)
+                                app.game.campaign.tracked = SC_GUARDIANS;
+                        }
                         if (b == SDL_GAMEPAD_BUTTON_EAST || b == SDL_GAMEPAD_BUTTON_START)
                             sc_web_start();
                         continue;
@@ -878,6 +959,28 @@ static void events(void) {
                 Player *p = &app.game.players[0];
                 MatrixDiver *d = &app.game.matrix.divers[0];
                 SDL_Keycode key = e.key.key;
+                if (key == SDLK_F10) {
+                    phase_journal(0);
+                    break;
+                }
+                if (p->journal && p->journal_page == 5) {
+                    if (key == SDLK_Q || key == SDLK_E) {
+                        sc_web_action(key == SDLK_Q ? 221 : 222);
+                        break;
+                    }
+                    if (key == SDLK_Z || key == SDLK_X) {
+                        sc_web_action(key == SDLK_Z ? 223 : 224);
+                        break;
+                    }
+                    if (key == SDLK_U) {
+                        sc_web_action(225);
+                        break;
+                    }
+                    if (key >= SDLK_1 && key <= SDLK_3) {
+                        sc_web_action(226 + (int)(key - SDLK_1));
+                        break;
+                    }
+                }
                 if (key == SDLK_F8) {
                     matrix_journal(0);
                     break;
@@ -1053,6 +1156,8 @@ static void events(void) {
                 break;
             case SDLK_U:
                 game_story_track(&app.game);
+                if (app.game.campaign.version)
+                    app.game.campaign.tracked = SC_GUARDIANS;
                 break;
             case SDLK_F:
                 game_flashlight(&app.game, 0);
@@ -1073,7 +1178,8 @@ static void events(void) {
             case SDLK_N:
                 set_pause(true);
                 app.new_armed = true;
-                game_message(&app.game, "ENTER CONFIRMS A NEW SHIP / ESC CANCELS");
+                game_message(&app.game,
+                             "NEW SHIP RESETS BOTH CHARACTERS / ENTER CONFIRMS / ESC CANCELS");
                 break;
             case SDLK_C:
                 sc_web_action(4);
@@ -1419,8 +1525,23 @@ int main(int argc, char **argv) {
     }
     SDL_free(pref);
     if (scene) {
+        /* Historical inspection scenes are reproducible generator-6 sandboxes.
+           The guardian preview and ordinary new games use the phased ruleset. */
+        if (strcmp(scene, "guardian")) {
+            game_new_ship(&app.game, seed);
+            world_destroy(&app.game.world);
+            world_init(&app.game.world, seed);
+            app.game.world.generator = 6;
+            app.game.campaign = (Campaign){0};
+            for (int i = 0; i < SC_PLAYERS; i++)
+                app.game.players[i].weapons = SC_START_WEAPONS;
+        }
         app.game.message_time = 0;
         Cell c = {0, 0, 0};
+        if (!strcmp(scene, "guardian")) {
+            c = campaign_site(0);
+            app.no_save = true;
+        }
         if (!strcmp(scene, "hall"))
             c.z = 1;
         else if (!strcmp(scene, "engine"))
@@ -1445,7 +1566,8 @@ int main(int argc, char **argv) {
                 for (int y = 0; y < 9 && !found; y++)
                     for (int z = 0; z < 12 && !found; z++)
                         for (int x = -8; x < 8 && !found; x++) {
-                            RoomSpec spec = world_describe(seed, (Cell){x, y, z});
+                            RoomSpec spec = world_describe_version(seed, app.game.world.generator,
+                                                                   (Cell){x, y, z});
                             if (spec.district == sectors[sector] && spec.theme >= 6 &&
                                 spec.span_x == 1) {
                                 c = spec.cell;
@@ -1476,7 +1598,8 @@ int main(int argc, char **argv) {
         for (int y = 0; interior_scene && y < 9 && !found; y++)
             for (int z = 0; z < 24 && !found; z++)
                 for (int x = -12; x < 12 && !found; x++) {
-                    RoomSpec spec = world_describe(seed, (Cell){x, y, z});
+                    RoomSpec spec =
+                        world_describe_version(seed, app.game.world.generator, (Cell){x, y, z});
                     if (spec.type != BAY && spec.height >= 3 &&
                         (inspect_role < 0 || spec.history_role == inspect_role) &&
                         (inspect_layout < 0 ||
@@ -1510,7 +1633,8 @@ int main(int argc, char **argv) {
             app.inspect_shelter = true;
             app.no_save = true;
         }
-        app.game.players[0].crouched = world_describe(seed, c).type == CONDUIT;
+        app.game.players[0].crouched =
+            world_describe_version(seed, app.game.world.generator, c).type == CONDUIT;
         app.game.players[0].pitch = .03;
         if (interior_scene) {
             app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, 0)));

@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@ static void settle(Game *g) {
 static Game *fresh(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     g->players[0].pos = position_from(v3(0, .02, 12));
     g->players[0].pitch = 0;
     settle(g);
@@ -388,7 +389,7 @@ static void test_flares_and_save(void) {
 static void journey(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     settle(g);
     /* Drive normal actions all the way from the space arrival to usable floor. */
     for (int i = 0; i < 600 && position_absolute(g->players[0].pos).z < 12; i++)

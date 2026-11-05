@@ -383,6 +383,29 @@ static void matrix_stream(Stream *s, MatrixState *m, bool read) {
         c->owner = number(s, c->owner, read);
     }
 }
+static void campaign_stream(Stream *s, Campaign *c, bool read) {
+    c->version = number(s, c->version, read);
+    c->defeated = number(s, c->defeated, read);
+    c->tracked = number(s, c->tracked, read);
+    for (int i = 0; i < SC_GUARDIANS; i++) {
+        c->eligible[i] = number(s, c->eligible[i], read);
+        c->attempts[i].active = matrix_bool(s, c->attempts[i].active, read);
+        c->attempts[i].participants = number(s, c->attempts[i].participants, read);
+    }
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        CampaignProfile *p = &c->profiles[i];
+        p->powers = number(s, p->powers, read);
+        p->rigs = number(s, p->rigs, read);
+        p->modules = number(s, p->modules, read);
+        p->claimed = number(s, p->claimed, read);
+        for (int k = 0; k < 2; k++) {
+            p->guns[k] = number(s, p->guns[k], read);
+            p->power_slots[k] = number(s, p->power_slots[k], read);
+        }
+        p->rig = number(s, p->rig, read);
+        p->module = number(s, p->module, read);
+    }
+}
 bool game_save(const Game *g, const char *path) {
     if (!path || g->world.record_count > 1000000 || g->matrix.count > SC_MATRIX_RECORDS)
         return false;
@@ -399,7 +422,7 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 10, false);
+    number(&s, 11, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -441,6 +464,8 @@ bool game_save(const Game *g, const char *path) {
         matrix_stream(&s, matrix, false);
         free(matrix);
     }
+    Campaign campaign = g->campaign;
+    campaign_stream(&s, &campaign, false);
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -467,8 +492,8 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 10) ||
-        (version == 2 && generator != 2) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 11) ||
+        (version == 2 && generator != 2) || (version < 11 && generator > 6) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
     Player players[SC_PLAYERS];
@@ -543,6 +568,9 @@ bool game_load(Game *g, const char *path) {
         if (version >= 10)
             matrix_stream(&s, matrix, true);
     }
+    Campaign campaign = {0};
+    if (version >= 11)
+        campaign_stream(&s, &campaign, true);
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
@@ -579,13 +607,13 @@ bool game_load(Game *g, const char *path) {
         return false;
     }
     world_init(replacement, seed);
-    if (version >= 3)
-        replacement->generator = generator;
+    replacement->generator = version >= 3 ? generator : 6;
     replacement->records = records;
     replacement->record_count = count;
     replacement->record_cap = count;
     Vec3 start = position_absolute(players[0].pos);
-    if (!matrix_index(matrix) || !matrix_rehydrate(matrix, seed, replacement->generator) ||
+    if (!campaign_valid(&campaign, players, replacement) || !matrix_index(matrix) ||
+        !matrix_rehydrate(matrix, seed, replacement->generator) ||
         !matrix_valid(matrix, seed, replacement->generator, players, &shelter) ||
         !world_index_records(replacement) || !world_refresh(replacement, &start, 1)) {
         matrix_destroy(matrix);
@@ -618,6 +646,10 @@ bool game_load(Game *g, const char *path) {
     g->mission_loot = loot;
     g->contracts = contracts;
     g->story = story;
+    g->campaign = campaign;
+    campaign_resume(g);
+    Vec3 resumed = position_absolute(g->players[0].pos);
+    world_refresh(&g->world, &resumed, 1);
     g->dirty = version < 6;
     game_message(g, version < 3 ? "SHIP GENERATOR UPDATED / CHARACTERS RETAINED / NEW EXPEDITION"
                                 : "EXPEDITION RESUMED / WELCOME BACK");

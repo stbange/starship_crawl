@@ -778,6 +778,7 @@ static void fold_door(Renderer *r, Vec3 feet, double yaw) {
              v3(0, .025, 0), vmul(forward, .1), rgb(.65f, .75f, .55f), .9f);
 }
 #include "render_matrix_scene.inc"
+#include "render_campaign_scene.inc"
 static void fold_interior(Renderer *r, const Game *g, int viewer) {
     Color stone = rgb(.23f, .25f, .27f), wood = rgb(.4f, .27f, .17f);
     block(r, v3(0, -.2, 0), v3(18.4, .4, 16.4), stone, 0);
@@ -1330,8 +1331,8 @@ static void text_at(Renderer *r, float x, float y, float scale, const char *text
 static void centered(Renderer *r, float x, float y, float s, const char *text, Color c) {
     text_at(r, x - (float)strlen(text) * s * 3, y, s, text, c);
 }
-static void wrapped(Renderer *r, float x, float y, float scale, float width, const char *text,
-                    Color c) {
+static float wrapped(Renderer *r, float x, float y, float scale, float width, const char *text,
+                     Color c) {
     unsigned limit = (unsigned)fmaxf(1, fminf(159, width / (6 * scale)));
     while (*text) {
         unsigned n = (unsigned)strlen(text);
@@ -1351,6 +1352,7 @@ static void wrapped(Renderer *r, float x, float y, float scale, float width, con
             text++;
         y += 13 * scale;
     }
+    return y;
 }
 static void frame(Renderer *r, float x, float y, float w, float h, Color c) {
     rect(r, x, y, w, 1, c);
@@ -1395,7 +1397,15 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
             if (!map.valid[at])
                 continue;
             float left = x + xx * tile, top = y + (map.side - 1 - z) * tile;
-            rect(r, left, top, tile, tile, colors[map.rooms[at].district]);
+            Cell mapped = {map.origin.x + xx, map.origin.y, map.origin.z + z};
+            bool locked = g->world.open_layer && campaign_layer(mapped) > g->world.open_layer;
+            rect(r, left, top, tile, tile,
+                 locked ? rgb(.09f, .045f, .11f) : colors[map.rooms[at].district]);
+            if (g->campaign.version && campaign_guardian(map.rooms[at].cell) >= 0) {
+                int id = campaign_guardian(map.rooms[at].cell);
+                frame(r, left + tile * .3f, top + tile * .3f, tile * .4f, tile * .4f,
+                      g->campaign.defeated & (1u << id) ? mint : gold);
+            }
             if (map.rooms[at].landmark) {
                 /* Pink corner brackets distinguish discoveries from gold goals. */
                 Color discovery = rgb(.86f, .42f, .63f);
@@ -1569,6 +1579,7 @@ static void debrief_journal(Renderer *r, const Game *g, int player, float w, flo
             "L PREVIOUS EVENT / I EXPEDITION / F4 CHARACTER / ENTER CLOSE / PAD RB PAGES", gold);
 }
 #include "render_matrix_hud.inc"
+#include "render_campaign_hud.inc"
 static void hud(Renderer *r, Game *g, int player, int width, int height, bool paused, bool touch,
                 bool debug, double fps, const char *save_status) {
     Player *p = &g->players[player];
@@ -1684,6 +1695,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         centered(r, w * .5f, h * .58f, s, label, gold);
     }
     const Enemy *aimed = NULL;
+    int aimed_guardian = -1;
     double nearest = 55;
     Vec3 eye = player_eye(p), aim = facing(p->yaw, p->pitch);
     for (int j = 0; !p->sheltered && j < g->world.count; j++)
@@ -1694,14 +1706,21 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
             if (e->alive && distance < nearest && vdot(vnorm(delta), aim) > .985 &&
                 world_raycast(&g->world, eye, vnorm(delta), distance) >= distance - .1) {
                 aimed = e;
+                aimed_guardian =
+                    g->campaign.version && i == 0 ? campaign_guardian(g->world.rooms[j].cell) : -1;
                 nearest = distance;
             }
         }
     if (aimed && !paused) {
         EnemyBody body = sc_enemy_bodies[aimed->kind];
-        snprintf(label, sizeof(label), "%s / %s %s / %.0f", sc_enemies[aimed->kind].name,
-                 sc_body_names[body.form], sc_body_variants[body.form][body.variant],
-                 aimed->health);
+        if (aimed_guardian >= 0)
+            snprintf(label, sizeof(label), "%s / %.0f",
+                     campaign_guardian_name(g->world.seed, (unsigned)aimed_guardian),
+                     aimed->health);
+        else
+            snprintf(label, sizeof(label), "%s / %s %s / %.0f", sc_enemies[aimed->kind].name,
+                     sc_body_names[body.form], sc_body_variants[body.form][body.variant],
+                     aimed->health);
         centered(r, w * .5f, h * .43f, s, label, mint);
     }
     float exp = (float)p->xp / (float)player_next_level(p);
@@ -1777,11 +1796,25 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         text_at(r, w - 260 * s, by + 53 * s, .9f * s, "T MECH / Y WAGON / K FLARE", dim);
     snprintf(label, sizeof(label), "V VEIL%s / B FLY %.0f / J LEAP %.0f / H NOVA %.0f",
              p->cloaked ? " ON" : "", p->flight, p->leap, p->nova);
+    if (g->campaign.version) {
+        char powers[4][25];
+        const char *names[] = {"VEIL", "FLY", "LEAP", "NOVA"};
+        float life[] = {p->cloaked ? 1 : 0, p->flight, p->leap, p->nova};
+        for (unsigned i = 0; i < 4; i++)
+            if (campaign_power(g, player, i))
+                snprintf(powers[i], sizeof(powers[i]), "%s %.0f", names[i], life[i]);
+            else
+                snprintf(powers[i], sizeof(powers[i]), "%s LOCKED", names[i]);
+        snprintf(label, sizeof(label), "V %s / B %s / J %s / H %s", powers[0], powers[1], powers[2],
+                 powers[3]);
+    }
     if (!touch && !p->riding)
         centered(r, w * .5f, h - 158 * s, .85f * s, label, p->cloaked ? rgb(.65f, .45f, 1) : mint);
     if (touch) {
         if (p->riding)
             snprintf(label, sizeof(label), "%s / ENERGY %.0f", game_gun(p)->name, p->energy);
+        else if (!campaign_power(g, player, p->selected_power))
+            snprintf(label, sizeof(label), "PSI LOCKED / EARN AND EQUIP IN BUILD MENU");
         else
             snprintf(label, sizeof(label), "PSI: %s / %.0f ENERGY",
                      sc_psionic_names[p->selected_power], sc_psionic_costs[p->selected_power]);
@@ -1793,7 +1826,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         centered(r, w * .5f, h - 181 * s, .85f * s, label, gold);
     }
     if (g->message_time > 0 && !paused)
-        centered(r, w * .5f, h * .19f, 1.2f * s, g->message, gold);
+        centered(r, w * .5f, g->campaign.version ? fmaxf(174 * s, h * .33f) : h * .19f, 1.2f * s,
+                 g->message, gold);
     if (!p->sheltered && position_absolute(p->pos).z < 0 && !paused)
         centered(r, w * .5f, h * .72f, 1.2f * s,
                  touch ? "DRAG LEFT TO DRIFT / RIGHT TO AIM"
@@ -1863,12 +1897,16 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         centered(r, w * .5f, my + 173 * s, 1.1f * s,
                  "E / Q LIFTS   G USE   I JOURNAL   Z / X WEAPONS", dim);
         centered(r, w * .5f, my + 192 * s, 1.1f * s, "F2 OPTIONAL CO-OP   F5 SAVE   F9 LOAD", dim);
-        centered(r, w * .5f, my + 223 * s, 1.1f * s, "N + ENTER / NEW SHIP WITH THIS CHARACTER",
+        centered(r, w * .5f, my + 223 * s, 1.1f * s, "N + ENTER / NEW SHIP AND NEW CHARACTERS",
                  gold);
         if (g->message_time > 0)
             centered(r, w * .5f, my + 242 * s, .9f * s, g->message, mint);
     }
-    if (p->journal && p->journal_page == 4)
+    if (!paused)
+        campaign_hud(r, g, player, w, h, s);
+    if (p->journal && p->journal_page == 5)
+        campaign_journal_draw(r, g, player, w, h);
+    else if (p->journal && p->journal_page == 4)
         matrix_journal_draw(r, g, player, w, h);
     else if (p->journal && p->journal_page == 3)
         debrief_journal(r, g, player, w, h);
@@ -2004,6 +2042,7 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         else {
             draw_chunks(r, g);
             actors(r, g, p);
+            campaign_scene(r, g, p);
         }
         flush(r);
         if (!paused && !player->sheltered && !matrix) {

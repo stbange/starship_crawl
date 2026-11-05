@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 6u
+#define SC_GENERATOR_VERSION 7u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -137,6 +137,7 @@ typedef struct {
 } Chunk;
 typedef struct {
     uint32_t seed, generator;
+    unsigned open_layer; /* Zero disables phase barriers for legacy/inspection worlds. */
     Room rooms[SC_MAX_ROOMS];
     int count;
     Chunk chunks[SC_MAX_CHUNKS];

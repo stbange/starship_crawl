@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,7 +57,7 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
     Game *g = malloc(sizeof(*g));
     if (!g)
         return 2;
-    game_init(g, seed);
+    legacy_game_init(g, seed);
     if (version < 2) {
         world_destroy(&g->world);
         world_init(&g->world, seed);

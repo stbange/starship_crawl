@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -117,7 +118,7 @@ static const char *checkpoint_dir;
 static void run(unsigned seed, unsigned choice) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
-    game_init(g, seed);
+    legacy_game_init(g, seed);
     for (int i = 0; i < 2400 && position_absolute(g->players[0].pos).z < 12; i++)
         tick(g, (Actions){.forward = 1});
     CHECK(position_absolute(g->players[0].pos).z >= 12);

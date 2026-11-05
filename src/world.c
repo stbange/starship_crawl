@@ -1,7 +1,10 @@
 #include "interior.h"
+#include "campaign.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+
+static bool overlap_world(const World *w, Vec3 p, double radius, double height, bool gates);
 
 void world_init(World *w, uint32_t seed) {
     memset(w, 0, sizeof(*w));
@@ -656,14 +659,16 @@ static void populate(World *w, Room *r) {
             e->pos = position_from(
                 vadd(world_room_center(r), v3(((v & 65535) / 65535.0 - .5) * (r->width - 4), .02,
                                               ((v >> 16) / 65535.0 - .5) * (r->depth - 4))));
-            if (!world_overlap(w, position_absolute(e->pos), .42, 1.25))
+            if (!overlap_world(w, position_absolute(e->pos), .42, 1.25, false))
                 break;
         }
         if (i == 0 && e->kind == 26 && contains(r, (Cell){2, 1, 2}))
             e->pos = position_from(vadd(world_lift((Cell){2, 1, 2}), v3(0, 0, 9)));
-        if (world_overlap(w, position_absolute(e->pos), .42, 1.25))
+        if (overlap_world(w, position_absolute(e->pos), .42, 1.25, false))
             e->pos = position_from(vadd(world_center(r->cell), v3(0, .02, 2 + (i % 4) * 2)));
     }
+    if (w->generator >= 7)
+        campaign_populate(w, r);
 }
 unsigned world_stream(World *w, unsigned budget) {
     w->last_work = 0;
@@ -766,14 +771,16 @@ static const Box hull[] = {
     {{42, -1000000000, -4}, {1000000000, 1000000000, 0}, {0, 0, 0}, 0, true},
     {{-42, 28, -4}, {42, 1000000000, 0}, {0, 0, 0}, 0, true},
     {{-42, -1000000000, -4}, {42, 0, 0}, {0, 0, 0}, 0, true}};
-bool world_overlap(const World *w, Vec3 p, double radius, double height) {
+static bool overlap_world(const World *w, Vec3 p, double radius, double height, bool gates) {
     /* Unfinished rooms are solid. A frontier can never be crossed into missing
        floors, even when generation is deliberately throttled to one chunk. */
     if (p.z + radius >= 0)
         for (int z = -1; z <= 1; z += 2)
             for (int x = -1; x <= 1; x += 2) {
                 Vec3 sample = vadd(p, v3(x * radius, 0, z * radius));
-                if (sample.z >= 0 && !world_ready(w, world_cell(sample)))
+                if (sample.z >= 0 && (!world_ready(w, world_cell(sample)) ||
+                                      (gates && w->open_layer &&
+                                       campaign_layer(world_cell(sample)) > w->open_layer)))
                     return true;
             }
     for (size_t i = 0; i < sizeof(hull) / sizeof(hull[0]); i++)
@@ -792,6 +799,9 @@ bool world_overlap(const World *w, Vec3 p, double radius, double height) {
                 return true;
     }
     return false;
+}
+bool world_overlap(const World *w, Vec3 p, double radius, double height) {
+    return overlap_world(w, p, radius, height, true);
 }
 static double ray_box(const Box *b, Vec3 o, Vec3 d, double best) {
     if (!b->solid)
@@ -816,7 +826,7 @@ static double ray_box(const Box *b, Vec3 o, Vec3 d, double best) {
     return hi >= lo && lo < best ? lo : best;
 }
 double world_raycast(const World *w, Vec3 o, Vec3 d, double limit) {
-    double best = limit;
+    double best = campaign_gate_ray(w, o, d, limit);
     for (size_t i = 0; i < sizeof(hull) / sizeof(hull[0]); i++)
         best = ray_box(&hull[i], o, d, best);
     for (int i = 0; i < SC_MAX_CHUNKS; i++) {

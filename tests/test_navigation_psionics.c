@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@ static void settle(Game *g) {
 static Game *fresh(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     g->players[0].pos = position_from(v3(96, .02, 24));
     settle(g);
     for (int i = 0; i < g->world.count; i++) {
@@ -93,11 +94,12 @@ static void test_maps(void) {
                     CHECK(map.valid[at] == (cell.z >= 0));
                     if (!map.valid[at])
                         continue;
-                    RoomSpec r = world_describe(seed, cell);
+                    RoomSpec r = world_describe_version(seed, g->world.generator, cell);
                     CHECK(cell_equal(r.cell, map.rooms[at].cell) &&
                           r.theme == map.rooms[at].theme && r.span_x == map.rooms[at].span_x);
                     for (int d = 0; d < 4; d++)
-                        CHECK(!!(map.doors[at] & (1 << d)) == world_door(seed, cell, (Direction)d));
+                        CHECK(!!(map.doors[at] & (1 << d)) ==
+                              world_door_version(seed, g->world.generator, cell, (Direction)d));
                 }
         }
     CHECK(g->world.generated == generated && g->world.revision == revision);

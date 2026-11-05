@@ -6,7 +6,7 @@ Character builds, defensive resources, shared caches, and persistent equipment.
 
 ### Requirement: Ten attributes
 
-Characters SHALL support damage, vitality, haste, armor, shield, mobility, precision, recovery, reactor, and salvage upgrades, each capped at 50.
+Characters SHALL support damage, vitality, haste, armor, shield, mobility, precision, recovery, reactor, and salvage upgrades, capped at 12 for phased expeditions and 50 for compatible legacy expeditions.
 
 #### Scenario: Upgrade payment
 
@@ -48,7 +48,7 @@ A cache SHALL have one recipient per expedition, persist consumption, and leave 
 
 ### Requirement: Armory and records
 
-Weapon ownership and 12 collectible ship records SHALL persist with each character between expeditions.
+Weapon ownership and 12 collectible ship records SHALL persist with each character through checkpoint death, saves and additional commissions on the same ship. Starting a new ship SHALL reset both profiles.
 
 #### Scenario: Duplicate weapon
 

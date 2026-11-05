@@ -50,6 +50,7 @@ void game_init(Game *g, uint32_t seed) {
     for (int i = 0; i < SC_PLAYERS; i++)
         player_init(&g->players[i]);
     game_equipment_reset(g);
+    campaign_init(g);
     Vec3 p = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &p, 1);
     game_message(g, story_commission(seed));
@@ -104,43 +105,15 @@ void game_leave(Game *g) {
     game_message(g, "SOLO EXPLORATION");
 }
 void game_new_ship(Game *g, uint32_t seed) {
-    matrix_reset_ship(g);
-    world_destroy(&g->world);
-    world_init(&g->world, seed);
-    memset(g->projectiles, 0, sizeof(g->projectiles));
-    game_deaths_reset(g);
-    g->mission = g->mission_kills = g->mission_loot = g->contracts = 0;
-    story_init(&g->story);
-    memset(&g->shelter, 0, sizeof(g->shelter));
-    for (int i = 0; i < SC_PLAYERS; i++) {
-        Player *p = &g->players[i];
-        p->pos = position_from(v3(i * 1.4, 4, -34));
-        p->checkpoint = position_from(v3(0, .02, 12));
-        p->velocity = v3(0, 0, 0);
-        p->yaw = 0;
-        p->pitch = -.04;
-        p->health = player_max_health(p);
-        p->shield = player_max_shield(p);
-        p->armor = player_max_armor(p);
-        p->energy = player_max_energy(p);
-        p->grounded = false;
-        p->crouched = false;
-        p->slow = p->hurt = p->cooldown = 0;
-        p->journal = false;
-        p->decision_open = false;
-        p->journal_page = p->story_reading = 0;
-        p->map_open = p->cloaked = false;
-        p->flight = p->leap = p->nova = p->nova_tick = p->nova_flash = 0;
-        p->sheltered = false;
-        p->resting = p->nourished = 0;
-    }
-    game_equipment_reset(g);
-    Vec3 positions[2] = {position_absolute(g->players[0].pos),
-                         position_absolute(g->players[1].pos)};
-    world_refresh(&g->world, positions, g->player_count);
+    int participants = g->player_count;
+    game_destroy(g);
+    game_init(g, seed);
+    g->player_count = participants;
+    position_move(&g->players[1].pos, v3(1.4, 0, 0));
     g->dirty = true;
-    game_message(g, "NEW SHIP / YOUR CHARACTER ENDURES");
+    game_message(g, "NEW SHIP / NEW CHARACTERS / EARN YOUR EQUIPMENT ON THIS EXPEDITION");
 }
+
 bool game_upgrade(Game *g, int player, int upgrade) {
     if (player < 0 || player >= g->player_count || upgrade < 0 || upgrade >= SC_ATTRIBUTES)
         return false;
@@ -149,7 +122,7 @@ bool game_upgrade(Game *g, int player, int upgrade) {
     unsigned cost = 60 + *attribute * 25;
     if (!p->points && p->credits < cost)
         return false;
-    if (*attribute >= 50)
+    if (*attribute >= (g->campaign.version ? 12u : 50u))
         return false;
     (*attribute)++;
     if (p->points)
@@ -208,6 +181,9 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
     Enemy *e = &room->enemies[index];
     if (!e->alive || e->allegiance == 2)
         return;
+    damage = campaign_damage(g, room, index, owner, damage);
+    if (damage <= 0)
+        return;
     const EnemyDef *def = &sc_enemies[e->kind];
     if (def->flags & ARMORED)
         damage *= .72f;
@@ -232,6 +208,11 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
         world_kill(&g->world, room, index);
         if (e->alive)
             return;
+        if (g->campaign.version && index == 0) {
+            int guardian = campaign_guardian(room->cell);
+            if (guardian >= 0)
+                campaign_defeat(g, (unsigned)guardian);
+        }
         game_enemy_death(g, e, owner);
         award(g, &g->players[owner],
               20 + def->tier * 5 + (unsigned)fmin(world_difficulty(room->cell), 30));
@@ -255,11 +236,17 @@ void game_nova(Game *g, int player) {
         (g->players[player].sheltered || g->players[player].riding))
         return;
     Player *p = &g->players[player];
-    blast_enemies(g, player_eye(p), player, 14 * (1 + .2f * p->power), 7, 0);
+    blast_enemies(g, player_eye(p), player,
+                  14 * (1 + .2f * p->power) * campaign_attack_bonus(g, player), 7, 0);
 }
 static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin);
 static void shoot(Game *g, Player *p) {
-    const WeaponDef *w = game_gun(p);
+    int player = (int)(p - g->players);
+    if (!p->riding && !campaign_weapon(g, player, p->weapon))
+        p->weapon = g->campaign.profiles[player].guns[0];
+    WeaponDef shot = *game_gun(p);
+    shot.damage *= campaign_attack_bonus(g, player);
+    const WeaponDef *w = &shot;
     if (p->energy < w->cost) {
         p->cooldown = .2f;
         game_message(g, "ENERGY RECHARGING / Z OR X SWITCHES WEAPONS");
@@ -368,6 +355,10 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
     diff.y = 0;
     if (!outside && vlen(diff) < 3.3 && p->lift_cooldown <= 0 && (a->lift_up || a->lift_down)) {
         cell.y += a->lift_up ? 1 : -1;
+        if (g->world.open_layer && campaign_layer(cell) > g->world.open_layer) {
+            game_message(g, "LAYER SEALED / DEFEAT A PHASE GUARDIAN / F10 ROUTES");
+            return;
+        }
         if (!world_ready(&g->world, cell)) {
             game_message(g, "SURVEYING DESTINATION / LIFT CHARGING");
             return;
@@ -650,6 +641,8 @@ static void enemies_step(Game *g, double dt) {
             Enemy *e = &room->enemies[i];
             if (!e->alive)
                 continue;
+            if (campaign_enemy_step(g, room, i, dt))
+                continue;
             if (matrix_control_enemy(g, room, e, dt))
                 continue;
             if (game_story_inert(g, e)) {
@@ -683,7 +676,9 @@ static void enemies_step(Game *g, double dt) {
                 e->windup = 0;
                 continue;
             }
-            double maxhealth = def->health + world_difficulty(room->cell) * 5;
+            double growth = g->campaign.version ? 10 * fmin(campaign_layer(room->cell), 8)
+                                                : world_difficulty(room->cell) * 5;
+            double maxhealth = def->health + growth;
             if ((def->flags & REGENERATE) && e->flash <= 0)
                 e->health = fminf((float)maxhealth, e->health + (float)dt * 5);
             e->special -= (float)dt;
@@ -703,8 +698,7 @@ static void enemies_step(Game *g, double dt) {
                     Enemy *ally = &room->enemies[j];
                     if (ally->alive && j != i && vlen(position_delta(ally->pos, e->pos)) < 14)
                         ally->health =
-                            fminf(sc_enemies[ally->kind].health + world_difficulty(room->cell) * 5,
-                                  ally->health + 18);
+                            fminf(sc_enemies[ally->kind].health + (float)growth, ally->health + 18);
                 }
                 e->special = 3;
                 e->flash = .3f;
@@ -838,10 +832,12 @@ void game_step(Game *g, const Actions *actions, double dt) {
     }
     game_progression_step(g, dt);
     game_story_step(g);
+    campaign_step(g, dt);
     enemies_step(g, dt);
     projectiles_step(g, dt);
     game_deaths_step(g, dt);
     matrix_step(g, dt);
+    campaign_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         if (p->health <= 0 || position_absolute(p->pos).z < -400) {

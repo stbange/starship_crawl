@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +14,7 @@
 static Game *fresh(uint32_t seed) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
-    game_init(g, seed);
+    legacy_game_init(g, seed);
     g->players[0].pos = position_from(matrix_terminal((Cell){0}));
     Vec3 at = position_absolute(g->players[0].pos);
     CHECK(world_refresh(&g->world, &at, 1));
@@ -218,7 +219,7 @@ static void entry_and_programs(void) {
     CHECK(!matrix_goal(g, 0, &goal));
     unsigned owned = p->programs, level = p->upgrades[MX_VEIL];
     game_new_ship(g, 42);
-    CHECK(g->matrix.count == 0 && p->programs == owned && p->upgrades[MX_VEIL] == level);
+    CHECK(g->matrix.count == 0 && p->programs == 7 && p->upgrades[MX_VEIL] == 0);
     destroy(g);
 }
 static void consequences(void) {

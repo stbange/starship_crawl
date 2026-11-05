@@ -6,7 +6,7 @@ Deployable armored rigs, visible beam weapons and upgradeable persistent surface
 ## Requirements
 
 ### Requirement: Fold-deployed personal rigs
-Each player SHALL deploy and pack an owned mech and small wagon on clear supported ship floors, mount them nearby, and exit to a clear position. Occupied rigs SHALL resist packing. Larger collision bodies SHALL respect doors, ceilings, obstacles and unfinished rooms.
+Each player SHALL deploy and pack their owned and equipped rig on clear supported ship floors, mount it nearby, and exit to a clear position. Phased expeditions SHALL equip one earned mech or wagon; compatible legacy expeditions SHALL retain access to both. Occupied rigs SHALL resist packing. Larger collision bodies SHALL respect doors, ceilings, obstacles, unopened phase boundaries and unfinished rooms.
 
 #### Scenario: Mech deployment
 - **WHEN** the player deploys and mounts a mech

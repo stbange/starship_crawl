@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -208,20 +209,20 @@ static void test_streaming(void) {
     World *w = malloc(sizeof(*w));
     CHECK(w);
     world_init(w, 51);
-    Vec3 origin = world_center((Cell){0, 0, 1});
+    Vec3 origin = world_center((Cell){1, 0, 1});
     origin.y += .02;
     CHECK(world_refresh(w, &origin, 1));
     CHECK(w->chunk_count == 0 && w->pending > 0);
     CHECK(world_overlap(w, origin, .34, 1.78));
     CHECK(world_stream(w, 1) == 1);
-    CHECK(!world_ready(w, (Cell){0, 0, 1})); /* Hall publication is atomic. */
+    CHECK(!world_ready(w, (Cell){1, 0, 1})); /* Hall publication is atomic. */
     settle(w);
-    Room *r = world_find(w, (Cell){0, 0, 1});
+    Room *r = world_find(w, (Cell){1, 0, 1});
     CHECK(r && r->ready && r->enemy_count > 0);
     world_kill(w, r, 0);
     CHECK(w->record_count == 1);
     /* Repeated seam crossing should reuse the retained neighborhood. */
-    Vec3 seam = world_center((Cell){1, 0, 1});
+    Vec3 seam = world_center((Cell){2, 0, 1});
     CHECK(world_refresh(w, &seam, 1));
     settle(w);
     CHECK(world_refresh(w, &origin, 1));
@@ -250,7 +251,7 @@ static void test_streaming(void) {
     }
     CHECK(world_refresh(w, &origin, 1));
     settle(w);
-    r = world_find(w, (Cell){0, 0, 1});
+    r = world_find(w, (Cell){1, 0, 1});
     CHECK(r && !r->enemies[0].alive);
     Vec3 same[] = {origin, origin};
     CHECK(world_refresh(w, same, 2));
@@ -275,9 +276,9 @@ static void test_movement(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g != NULL);
     unsigned seed = 17;
-    while (!world_door(seed, (Cell){0, -1, 0}, EAST))
+    while (!world_door_version(seed, 6, (Cell){0, -1, 0}, EAST))
         seed++;
-    game_init(g, seed);
+    legacy_game_init(g, seed);
     settle_game(g);
     for (int r = 0; r < g->world.count; r++)
         g->world.rooms[r].enemy_count = 0;
@@ -325,7 +326,7 @@ static void test_movement(void) {
 static void test_combat(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g != NULL);
-    game_init(g, 81);
+    legacy_game_init(g, 81);
     settle_game(g);
     Player *p = &g->players[0];
     p->pos = position_from(v3(0, .02, 20));
@@ -356,10 +357,10 @@ static void test_combat(void) {
     CHECK(vlen(position_delta(position, p->pos)) < 1e-6);
     game_leave(g);
     CHECK(g->player_count == 1);
-    uint32_t level = p->level;
+
     game_new_ship(g, 999);
     CHECK(g->world.seed == 999);
-    CHECK(p->level == level);
+    CHECK(p->level == 1 && p->weapons == 3 && g->campaign.version == 1);
     CHECK(position_absolute(p->pos).z < 0);
     game_destroy(g);
     free(g);
@@ -369,7 +370,7 @@ static void test_save(void) {
     const char *path = "sc-test-expedition.sav";
     Game *g = malloc(sizeof(*g));
     CHECK(g != NULL);
-    game_init(g, 123456);
+    legacy_game_init(g, 123456);
     settle_game(g);
     game_join(g);
     g->players[0].level = 7;
@@ -407,7 +408,7 @@ static void test_save(void) {
     g->players[0].flashlight = false;
     CHECK(game_load(g, SC_FIXTURE_DIR "/generator-v2.sav"));
     settle_game(g);
-    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->dirty);
+    CHECK(g->world.generator == 6 && g->dirty);
     CHECK(g->players[0].level == 7 && g->players[0].kills == 81 && g->players[0].power == 3);
     CHECK(g->players[1].level == 4 && g->players[1].haste == 2);
     CHECK(position_absolute(g->players[0].pos).z == -34);
@@ -421,9 +422,9 @@ static void test_save(void) {
 static void test_migration_and_precision(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g != NULL);
-    game_init(g, 77);
+    legacy_game_init(g, 77);
     CHECK(game_load(g, SC_FIXTURE_DIR "/generator-v1.sav"));
-    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->world.seed != 123456);
+    CHECK(g->world.generator == 6 && g->world.seed != 123456);
     CHECK(g->player_count == 1 && g->world.record_count == 0 && g->dirty);
     Player *p = &g->players[0];
     CHECK(p->level == 7 && p->xp == 31 && p->kills == 81 && p->points == 4);
@@ -438,7 +439,7 @@ static void test_migration_and_precision(void) {
     CHECK(g->world.seed == seed && !g->dirty);
     g->world.generator = 999;
     CHECK(game_save(g, path));
-    g->world.generator = SC_GENERATOR_VERSION;
+    g->world.generator = 6;
     CHECK(!game_load(g, path));
     CHECK(g->world.seed == seed && p->level == 7);
     remove(path);
@@ -476,7 +477,7 @@ static void test_migration_and_precision(void) {
          "co-op collision and save/resume");
 }
 static Room *quiet_encounter(Game *g) {
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     g->players[0].pos = position_from(vadd(world_center((Cell){1, 0, 0}), v3(0, .02, -24)));
     g->players[0].hurt = 10;
     g->players[0].shield = 0;
@@ -757,8 +758,8 @@ static void test_expansion(void) {
     CHECK(g->mission == 6 && g->contracts == 7 && p->weapon == 15 && p->mods[0] == 4 &&
           p->mods[1] == 3 && p->logs == 4095 && p->victories == 1);
     game_new_ship(g, 89);
-    CHECK(g->mission == 0 && g->contracts == 0 && p->weapon == 15 && p->logs == 4095 &&
-          p->victories == 1);
+    CHECK(g->mission == 0 && g->contracts == 0 && p->weapon == 0 && p->logs == 0 &&
+          p->victories == 0);
     remove("sc-expansion.sav");
     game_destroy(g);
     free(g);

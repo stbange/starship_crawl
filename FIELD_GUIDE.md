@@ -1,3 +1,5 @@
+New phased expeditions require earning and equipping weapons, rigs and powers. F10 shows routes, guardian rewards and loadouts; see [Phased expeditions](PHASED_EXPEDITIONS.md).
+
 The ship now has a deck schematic, six distinct enemy anatomies, visible weapon fire and four psionic powers. The original 27 species IDs remain stable. Generator 6 adds five robot species; older generators retain their original encounter roster, positions and defeat records.
 
 **Navigation.** The top-left HUD map is north-up and follows your position. Green marks your position and facing, gold marks the mission console, violet marks your deployed shelter, and blue marks an ally or the lift needed for a different deck. Off-map goals stay pinned to the appropriate edge. The goal caption states whether you need to change decks.

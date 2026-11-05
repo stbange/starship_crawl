@@ -3,6 +3,7 @@
 #include "world.h"
 #include "story.h"
 #include "matrix.h"
+#include "campaign.h"
 #define SC_PLAYERS 2
 #define SC_MAX_PROJECTILES 192
 #define SC_MAP_SIDE 9
@@ -66,6 +67,7 @@ typedef struct {
     int pierce, hit_count;
     Cell hit_rooms[4];
     uint8_t hit_ids[4];
+    uint8_t guardian;
 } Projectile;
 typedef struct {
     Position pos;
@@ -117,6 +119,7 @@ typedef struct Game {
     EnemyDeath deaths[SC_MAX_DEATHS];
     DeathHazard death_hazards[SC_MAX_DEATH_HAZARDS];
     MatrixState matrix;
+    Campaign campaign;
     bool dirty;
 } Game;
 typedef struct {
@@ -210,7 +213,7 @@ void expedition_conclude(Game *g, unsigned choice);
 const char *expedition_option(const Game *g, unsigned scene, unsigned choice);
 const char *expedition_title(const Game *g, unsigned scene);
 void expedition_entry(const Game *g, unsigned scene, char *text, size_t size);
-bool expedition_valid(const Story *s, uint32_t seed);
+bool expedition_valid(const Story *s, uint32_t seed, uint32_t generator);
 void game_story_debrief(const Game *g, int player, int line, char *text, size_t size);
 void game_story_event_read(Game *g, int player);
 bool game_story_safe(const Game *g, Vec3 feet);

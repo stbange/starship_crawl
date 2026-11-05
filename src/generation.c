@@ -1,4 +1,5 @@
 #include "world.h"
+#include "campaign.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -202,6 +203,8 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
         hx = 0;
         hz = 1;
     }
+    if (generator >= 7 && campaign_arena_region(region))
+        hx = hz = 1;
     for (int z = 0; z < 4; z++)
         for (int x = 0; x < 4; x++) {
             if (x >= hx && x < hx + 2 && z >= hz && z < hz + 2 && (x != hx || z != hz))
@@ -344,6 +347,8 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
                     r->history_role = HISTORY_CONTROL;
             }
     }
+    if (generator >= 7)
+        campaign_plan(seed, p);
 }
 RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell c) {
     RegionPlan p;

@@ -90,7 +90,7 @@ The armory contains 16 weapons. The carbine, shotgun, and nail repeater are avai
 | Seraph Beam | Rapid piercing and burning |
 | Storm Relic | Chaining and freezing relic |
 
-Ten attributes each accept up to 50 upgrades. Spend one ascension point, or salvage when no points remain; salvage cost is 60 plus 25 per current attribute level. Upgrades refill defensive and weapon resources.
+Ten attributes each accept up to 12 upgrades in phased expeditions, or 50 in compatible legacy expeditions. Spend one ascension point, or salvage when no points remain; salvage cost is 60 plus 25 per current attribute level. Upgrades refill defensive and weapon resources.
 
 | Attribute | Effect per upgrade |
 | --- | --- |

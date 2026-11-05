@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +16,7 @@ static unsigned narrative_version = 2;
 static Game *create(unsigned seed) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, seed);
+    legacy_game_init(g, seed);
     if (narrative_version == 1) {
         world_destroy(&g->world);
         world_init(&g->world, seed);
@@ -198,7 +199,7 @@ static void test_arcs(void) {
             roundtrip(g);
             game_new_ship(g, seed + 987);
             CHECK(g->mission == 0 && g->story.version == 3 && g->story.seen == 0);
-            CHECK(g->players[0].credits == money && g->players[0].victories == 1);
+            CHECK(g->players[0].credits == 0 && g->players[0].victories == 0);
             valid(g);
             destroy(g);
         }
@@ -373,7 +374,7 @@ static void test_validation_and_legacy(void) {
     bad.seen = 1;
     rejected(g, bad, g->mission);
     game_new_ship(g, 713);
-    CHECK(g->story.version == 3 && g->players[0].level == 7);
+    CHECK(g->story.version == 3 && g->players[0].level == 1);
     valid(g);
     destroy(g);
 }
@@ -407,7 +408,7 @@ static void test_history_discovery(void) {
         unsigned money = g->players[0].credits, stage = g->mission;
         for (int y = -1; y <= 1; y++) {
             RegionPlan plan;
-            world_plan(seed, (Cell){0, y, 0}, &plan);
+            world_plan_version(seed, g->world.generator, (Cell){0, y, 0}, &plan);
             for (int i = 0; i < plan.count; i++) {
                 unsigned role = plan.rooms[i].history_role;
                 if (!role)

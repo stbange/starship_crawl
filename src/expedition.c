@@ -168,7 +168,7 @@ static void settle(Game *g, int player, bool follow) {
                 (uint32_t)fmin(1000000000, (double)g->players[p].career[k] + s->last[k]);
         if (s->support[0] >= 70)
             g->players[p].credits += 100;
-        if (s->support[1] >= 70)
+        if (!g->campaign.version && s->support[1] >= 70)
             g->players[p].weapons |= BIT(16);
         if (follow) {
             const unsigned pay[] = {0, 250, 180, 400};
@@ -572,7 +572,7 @@ void game_story_debrief(const Game *g, int player, int line, char *text, size_t 
                      : "FOLLOW THE GOLD MAP LEAD / EXTRACT TO RECORD CAREER REWARDS");
 }
 
-bool expedition_valid(const Story *s, uint32_t seed) {
+bool expedition_valid(const Story *s, uint32_t seed, uint32_t generator) {
     if (s->version < 3) {
         Story empty = {0};
         return memcmp(s->support, empty.support, sizeof(*s) - offsetof(Story, support)) == 0;
@@ -656,7 +656,7 @@ bool expedition_valid(const Story *s, uint32_t seed) {
             if (!cell_equal(c, (Cell){0}))
                 return false;
         } else {
-            RoomSpec r = world_describe_version(seed, 5, c);
+            RoomSpec r = world_describe_version(seed, generator, c);
             if ((e->scene < 64 && (r.type == BAY || r.height < 3)) ||
                 (!cell_equal(c, r.cell) && !(e->scene == STORY_RESOLUTION && e->arc == HARROW_ARC &&
                                              cell_equal(c, (Cell){2, 1, 2}))))

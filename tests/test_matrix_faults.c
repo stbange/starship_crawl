@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +14,7 @@ extern int sc_fail_allocation;
 static Game *fresh(void) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     g->players[0].pos = position_from(matrix_terminal((Cell){0}));
     Vec3 at = position_absolute(g->players[0].pos);
     CHECK(world_refresh(&g->world, &at, 1));
@@ -191,8 +192,8 @@ static void saves_and_faults(void) {
     size_t size;
     unsigned char *original = read_file("matrix-fault.sav", &size), *bytes = malloc(size);
     CHECK(bytes);
-    size_t appendix = size - 4 - 1584 - 64 * g->matrix.count;
-    CHECK(original[4] == 10 && original[appendix] == 1);
+    size_t appendix = size - 4 - 200 - 1584 - 64 * g->matrix.count;
+    CHECK(original[4] == 11 && original[appendix] == 1);
     size_t offsets[] = {0, 4, 8, 20, 52, 68};
     uint32_t values[] = {2, SC_MATRIX_RECORDS + 1, 1, 0x10000, 8, 9};
     for (unsigned i = 0; i < sizeof(offsets) / sizeof(offsets[0]); i++) {

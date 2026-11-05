@@ -44,6 +44,10 @@ bool game_rig_blocks(const Game *g, int player, Vec3 feet, double radius, double
 void game_rig_toggle(Game *g, int player, RigKind kind) {
     if (player < 0 || player >= g->player_count || kind < MECH || kind > WAGON)
         return;
+    if (!campaign_rig(g, player, (unsigned)kind)) {
+        game_message(g, "RIG LOCKED OR STORED / DEFEAT GUARDIANS / F10 LOADOUT");
+        return;
+    }
     Player *p = &g->players[player];
     Rig *r = &g->rigs[player][kind - 1];
     if (p->sheltered || p->riding) {
@@ -122,6 +126,10 @@ bool game_rig_interact(Game *g, int player) {
     RigKind kind = game_rig_near(g, player);
     if (kind == ON_FOOT)
         return false;
+    if (!campaign_rig(g, player, kind)) {
+        game_message(g, "EQUIP THIS RIG AT A SAFE REFIT LOCATION FIRST");
+        return true;
+    }
     Rig *r = &g->rigs[player][kind - 1];
     if (r->armor <= 0) {
         game_message(g, "RIG DEPLETED / REPAIR AT YOUR SHELTER MED STATION");
@@ -171,6 +179,10 @@ bool game_flare_upgrade(Game *g, int player, bool strength) {
     if (player < 0 || player >= g->player_count)
         return false;
     Player *p = &g->players[player];
+    if (g->campaign.version && !(p->weapons & (1u << 19))) {
+        game_message(g, "EARN A FLARE CANNON FROM A GUARDIAN BEFORE UPGRADING IT");
+        return false;
+    }
     uint32_t *level = strength ? &p->flare_strength : &p->flare_lifetime;
     unsigned cost = 80 + 50 * (*level);
     if (*level >= 5) {

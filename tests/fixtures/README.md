@@ -94,3 +94,21 @@ Existing format-7 and format-8 fixtures stay unchanged.
 `generator-v5-enemies.txt` was captured from the unmodified native core at commit `44ffa10` before adding machines. Its 16 rows cover four seeds and four locations, including the Warden room. Each row records seed, requested cell, encounter count and FNV-1a fingerprint of stable species IDs, millimetre-rounded absolute spawn coordinates and health. It is immutable compatibility evidence for generator 5, independent of the new generator-6 roster.
 
 `generator-v6-format9.sav` was captured from the unmodified core at commit `382301d`, before matrix headers or format-10 code were introduced. It is a fresh seed-713, generator-6/narrative-3 expedition with both default profiles. Matrix migration tests require retention of the existing ship and progression, a fresh network record store, and default owned/equipped programs. It remains an immutable format-9 fixture. Matrix controller browser checkpoints are generated separately by the ordinary movement/combat driver `sc_matrix_journey --checkpoints DIRECTORY`, never by rewriting this fixture.
+
+
+`generator-v6-format10.sav` was written by the unmodified core at commit
+16f41b3, using `game_init(713)` and its original format-10 writer. It verifies
+that the matrix-era sandbox resumes with its original character kit and rules.
+Explicit new-ship creation then selects generator 7 with fresh profiles.
+
+`phase-reward.sav`, `phase-attempt.sav`, `phase-midship.sav`,
+`phase-unbound.sav` and `phase-decision.sav` are format-11/generator-7 checkpoints
+from `./build/sc_phase_journey --fixtures tests/fixtures`. The seed-713 driver
+starts in space, accepts the commission, walks/lifts/fights with the starter gun,
+spends earned points, defeats the early elite and four guardians, investigates
+the witness, reaches the generated target and extracts. These files capture an
+unclaimed elite reward, an active attempt, the second phase after resuming, all
+four boundaries open, and the generated final decision. Browser tests import
+through the ordinary file UI; no runtime test control grants their progress.
+Historical `--scene` catalog views remain generator-6 diagnostic sandboxes;
+new progression tests start normal generator-7 games and import played saves.

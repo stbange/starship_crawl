@@ -2,14 +2,17 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
-A [discussion draft for expedition progression and directional worlds](PROGRESSION_DESIGN.md)
-is being developed on `design/expedition-progression`. **Confirmed for the next
-progression ruleset: every new ship starts with a new character.** Saving, checkpoint
-respawns and continuing on the same ship retain that character. This supersedes the
-earlier design decision to carry character power between ships; it is not yet
-implemented. The draft's earned capabilities, four phases with guardian fights and
-seeded directional traits remain under discussion. The implemented milestones and
-original sequence below document the existing behavior.
+**Expedition progression (implemented on `design/expedition-progression`).**
+Every new ship starts fresh characters, including the inactive co-op partner.
+Current-ship saves, deaths and further commissions preserve the build. Four spatial
+phases, two guardian approaches per phase, an early optional elite, earned equipment,
+six loadout slots, four specialization modules and seeded thermal/order directions
+now form the progression loop. Generator 7 / narrative 3 / matrix 1 / save 11 retain
+compatible older expeditions. See [the playable rules](PHASED_EXPEDITIONS.md) and
+[the broader design](PROGRESSION_DESIGN.md). Next: human playtesting of encounter
+pacing, route readability, rewards and build balance; then additional vehicles and
+artifact variants if they improve those choices. Earlier roadmap entries below
+record the sequence that led here.
 
 ## Procedural narrative roadmap
 
@@ -25,7 +28,7 @@ Implemented with four causes and matching controllers, profile-specific agendas,
 
 **Narrative milestone 3 — reactive missions and factions (implemented).** Give scene templates prerequisites, room/sector tags, gameplay, revelations and persistent effects. Respond to meaningful discoveries and choices, not background chunk preloading. Reserve compatible destinations ahead of exploration and keep them fixed once revealed. Allow different routes to uncover different evidence about the same cause. Optional missions should restore safe routes, secure beacons, recover evidence, disable controllers or obtain equipment that changes the available endings. Add survivor groups with conflicting but understandable goals and short contextual transmissions; longer records remain optional shelter reading. Persist event history and share one expedition correctly in split-screen. Seed plus actual player events, never cache scheduling, determine the result.
 
-**Narrative milestone 4 — consequences beyond extraction (implemented).** Keep the ship endless while each story has a finite victory/extraction. Reflect rescued people, recovered knowledge or technology, restored systems and contained/released threats in rewards and a debrief. Let players remain aboard, pursue follow-on stories or start a new ship with their persistent character. Reintroduce HARROW/ORISON as one possible newly generated arc as well as a legacy campaign. Expand the template library and combinations only when causal consistency, branch reachability and replay variety are tested.
+**Narrative milestone 4 — consequences beyond extraction (implemented).** Keep the ship endless while each story has a finite victory/extraction. Reflect rescued people, recovered knowledge or technology, restored systems and contained/released threats in rewards and a debrief. Let players remain aboard, pursue follow-on stories or start a new ship with a fresh character. Reintroduce HARROW/ORISON as one possible newly generated arc as well as a legacy campaign. Expand the template library and combinations only when causal consistency, branch reachability and replay variety are tested.
 
 Milestones 3 and 4 add a prerequisite-driven operation library, persistent room power/beacons/controller shutdowns, two survivor groups with support and assistance, council decisions and contextual transmissions. All actual observations and completed interactions enter a bounded persistent event history. Debriefs record rescued people, knowledge, technology, contained threats and character careers. Players can accept repeatable follow-on rescue, catalogue, containment, fabrication and HARROW/ORISON commissions aboard the same ship, with fixed revealed destinations, their own optional preparation and extraction. HARROW retains its original room-owned Warden gate. The current versions are generator 6 / narrative 3 / save 9; earlier stories and layouts remain intact. See NARRATIVE.md for player behavior and TESTING.md for validation.
 
@@ -48,7 +51,7 @@ The initial defaults below resolve details that were not specified. They can be 
 
 - Single-player is the default and the initial gameplay-testing priority. Split-screen is optional and activates only through an explicit join action. Desktop and browser co-op support keyboard and mouse for one player plus a gamepad for the other, or two gamepads. A resumed session opens in solo mode while retaining the second character profile.
 - Mobile touch controls initially support one player. Two-player browser support remains part of the engine; two simultaneous touch layouts are a later extension rather than the mobile baseline.
-- A new expedition creates a new ship seed. Saving and resuming, character death, or a second player joining do not regenerate the active ship. Starting a new expedition is an explicit action that preserves both players' characters.
+- A new expedition creates a new ship seed. Saving and resuming, character death, or a second player joining do not regenerate the active ship. Starting a new expedition is an explicit action that resets both players' characters.
 - The first death policy retains experience, skills, and equipped items, and respawns at the last activated checkpoint. A surviving partner continues playing. Exact respawn timing and temporary penalties are tuning decisions.
 - Each local player can select a persistent character profile. Guests can play without overwriting an existing profile. The expedition save records the shared ship and participating character identities.
 - Ship difficulty is based on three-dimensional spatial distance from the entrance, with a safe starting region. Additional players affect encounter budgets in their shared encounter area, not the geography or base difficulty of the ship.

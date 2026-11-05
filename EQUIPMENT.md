@@ -1,4 +1,4 @@
-Every reclaimer starts with two fold rigs, three beam weapons and a Lantern Flare Cannon. Existing characters receive the four new personal guns when migrated. The original 16 weapon IDs and generator-3 cache rewards remain stable.
+New phased expeditions begin with the carbine and shotgun. Earn beam weapons, the Lantern Flare Cannon, mech and wagon from guardian rewards; equip them through F10. Compatible older expeditions keep their original gear. The original weapon IDs remain stable. See [Phased expeditions](PHASED_EXPEDITIONS.md) for ownership and loadout rules.
 
 | Action | Keyboard | Controller / touch |
 | --- | --- | --- |

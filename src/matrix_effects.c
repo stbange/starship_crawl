@@ -167,6 +167,11 @@ bool matrix_service(Game *g, int p) {
         return false;
     }
     Cell owner = w->nodes[node].room;
+    if (g->campaign.version && campaign_guardian(owner) >= 0 &&
+        (service == MX_ROBOT || service == MX_TRAFFIC)) {
+        game_message(g, "GUARDIAN CONTROL HARDENED / RESTORE POWER OR SILENCE ITS SECURITY");
+        return false;
+    }
     uint32_t old = world_systems(&g->world, owner), flags = old;
     if (service == MX_POWER)
         flags = (old | SYSTEM_POWER) & ~SYSTEM_BLACKOUT;

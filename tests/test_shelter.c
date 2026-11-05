@@ -1,4 +1,5 @@
 #include "game.h"
+#include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@ static void settle(Game *g) {
 static Game *fresh(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     g->players[0].pos = position_from(v3(0, .02, 12));
     g->players[0].yaw = .2;
     g->players[0].pitch = -.1;
@@ -262,7 +263,7 @@ static void walk(Game *g, Vec3 target) {
 static void journey(void) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    game_init(g, 713);
+    legacy_game_init(g, 713);
     settle(g);
     for (int i = 0; i < 1800 && position_absolute(g->players[0].pos).z < 12; i++)
         tick(g, (Actions){.forward = 1}, 1);

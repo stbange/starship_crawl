@@ -4,6 +4,10 @@ const float sc_psionic_costs[SC_PSIONICS] = {25, 20, 15, 35};
 void game_psionic(Game *g, int player, Psionic power) {
     if (player < 0 || player >= g->player_count || power < 0 || power >= SC_PSIONICS)
         return;
+    if (!campaign_power(g, player, (unsigned)power)) {
+        game_message(g, "POWER LOCKED OR STORED / DEFEAT GUARDIANS / F10 LOADOUT");
+        return;
+    }
     Player *p = &g->players[player];
     p->selected_power = (uint8_t)power;
     if (p->sheltered || p->riding || p->health <= 0) {

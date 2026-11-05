@@ -125,11 +125,15 @@ def run():
                 data = state(page)['matrix_data']
                 page.keyboard.press('g')
                 assert state(page)['matrix_data'] == data
+                # A prior import may already report synced. Observe simulation
+                # ticks so SDL has processed this F5 before trusting that status.
+                before_save = state(page)['time']
                 page.keyboard.press('F5')
+                expect(page, f's.time > {before_save + .08}')
                 wait_for(page, 'window.scStorage.status === 3')
                 page.goto(base)
                 wait_ready(page)
-                assert state(page)['matrix_outcome'] == choice
+                assert state(page)['matrix_outcome'] == choice, (choice, state(page))
                 start_play(page)
             # Old format-9 files retain the physical expedition and start a fresh network.
             import_fixture(page, ROOT / 'tests/fixtures/generator-v6-format9.sav')

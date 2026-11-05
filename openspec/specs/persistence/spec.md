@@ -5,7 +5,7 @@ Portable validated saves that preserve the active game when an operation fails.
 ## Requirements
 
 ### Requirement: Portable format and migration
-Saves SHALL use checksums and explicit generator compatibility. Format 10 SHALL retain matrix state and all format-9 reactive events, support, outcomes, sites and careers. Formats 7–8 SHALL retain their narrative 1/generator 4 and narrative 2/generator 5 expeditions; formats 3–6 SHALL retain compatible legacy ships. New expeditions SHALL use ship generator 6, narrative 3 and matrix generator 1. Generator-5 expeditions SHALL retain their original encounters and geometry.
+Saves SHALL use checksums and explicit generator compatibility. Format 11 SHALL retain phase progress, guardian participation and rewards, loadouts, matrix state and narrative state. Compatible formats 1–10 SHALL remain supported without resetting their expeditions or profiles. New expeditions SHALL use ship generator 7, narrative 3 and matrix generator 1.
 
 #### Scenario: Legacy profile
 - **WHEN** a supported version-1 or version-2 file is loaded
@@ -29,7 +29,7 @@ Saves SHALL use checksums and explicit generator compatibility. Format 10 SHALL 
 
 #### Scenario: New generation opt-in
 - **WHEN** a player starts a new ship after loading a generator-3 expedition
-- **THEN** the new ship uses generator 6 and narrative version 3 while keeping character progression.
+- **THEN** the new ship uses generator 7 and narrative version 3 with fresh characters and matrix profiles.
 
 #### Scenario: Narrative round trip
 - **WHEN** a format-7 expedition resumes
@@ -42,6 +42,10 @@ Saves SHALL use checksums and explicit generator compatibility. Format 10 SHALL 
 #### Scenario: Reactive chapter round trip
 - **WHEN** a format-9 expedition resumes during a follow-on story
 - **THEN** effects, support, events, fixed leads, debriefs and both character careers remain consistent.
+
+#### Scenario: Interrupted guardian attempt
+- **WHEN** a phased save resumes during a guardian fight
+- **THEN** participants return to staging with a reset attempt while completed guardians and confirmed rewards remain intact.
 
 ### Requirement: Transactional validation
 

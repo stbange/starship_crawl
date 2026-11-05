@@ -32,7 +32,7 @@ void game_weapon(Game *g, int player, int delta) {
 
     for (int i = 0; i < SC_WEAPONS; i++) {
         p->weapon = (p->weapon + SC_WEAPONS + (delta < 0 ? -1 : 1)) % SC_WEAPONS;
-        if (p->weapons & (1u << p->weapon))
+        if ((p->weapons & (1u << p->weapon)) && campaign_weapon(g, player, p->weapon))
             break;
     }
     p->cooldown = fmaxf(p->cooldown, .15f);
@@ -43,8 +43,9 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags) {
     if (player < 0 || player >= g->player_count || !isfinite(damage) || damage <= 0)
         return;
     Player *p = &g->players[player];
-    if (p->sheltered || game_story_safe(g, position_absolute(p->pos)) ||
-        matrix_protected(g, player))
+    if (p->sheltered ||
+        (!campaign_engaged(g, player) &&
+         (game_story_safe(g, position_absolute(p->pos)) || matrix_protected(g, player))))
         return;
     if (flags & CHILL)
         p->slow = 2;
@@ -71,6 +72,8 @@ static const char *missions[] = {"ANSWER THE DISTRESS CONSOLE",
                                  "RETURN AND IGNITE THE BEACON",
                                  "THE SLEEPERS HAVE A SKY / EXPEDITION COMPLETE"};
 bool game_objective(const Game *g, Cell *cell) {
+    if (campaign_objective(g, cell))
+        return true;
     if (g->story.version) {
         if (!game_story_available(g, g->story.tracked))
             return false;
@@ -83,6 +86,9 @@ bool game_objective(const Game *g, Cell *cell) {
     return true;
 }
 const char *game_mission(const Game *g) {
+    Cell target;
+    if (campaign_objective(g, &target))
+        return campaign_guardian_name(g->world.seed, (unsigned)campaign_guardian(target));
     if (g->story.version)
         return !game_story_available(g, g->story.tracked) && g->mission == 6
                    ? "EXPEDITION COMPLETE / YOUR CHOICE ENDURES"
@@ -103,6 +109,8 @@ void game_interact(Game *g, int player) {
     if (game_rig_interact(g, player))
         return;
     if (game_shelter_interact(g, player))
+        return;
+    if (campaign_interact(g, player))
         return;
     if (g->story.version) {
         game_story_interact(g, player);

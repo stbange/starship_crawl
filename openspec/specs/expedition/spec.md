@@ -35,9 +35,9 @@ Mission rewards SHALL go to participating characters and each side contract SHAL
 
 ### Requirement: New expedition
 
-Starting a new ship SHALL retain character builds, armory, lore, salvage, and victories while resetting ship changes, missions, contracts, and projectiles.
+Starting a new ship SHALL start both characters from baseline and reset earned equipment, attributes, matrix profiles, careers, ship changes, missions, contracts, and projectiles.
 
 #### Scenario: Another ship
 
 - **WHEN** the player confirms a new expedition
-- **THEN** the ship seed and expedition state change while persistent character progression remains.
+- **THEN** a new ship and two new characters replace the current expedition, including when replaying the same seed.

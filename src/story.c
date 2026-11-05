@@ -107,6 +107,8 @@ bool game_story_prepared(const Game *g) {
            (g->story.version >= 3 && g->story.council == 3);
 }
 const char *game_story_title(const Game *g, unsigned scene) {
+    if (g->world.generator >= 7 && scene == STORY_SOURCE)
+        return "REACH THE DEEP CONTAINMENT CONTROL";
     if (g->story.version >= 3 && scene >= STORY_POWER)
         return expedition_title(g, scene);
     if (direct(g)) {
@@ -162,7 +164,7 @@ void story_reserve(Game *g, unsigned scene, Cell from) {
     if (s->assigned & BIT(scene))
         return;
     ShipHistory past = world_history(g->world.seed);
-    if (scene == STORY_SOURCE) {
+    if (scene == STORY_SOURCE && g->world.generator < 7) {
         s->sites[scene] = past.origin;
         s->assigned |= BIT(scene);
         return;
@@ -177,12 +179,24 @@ void story_reserve(Game *g, unsigned scene, Cell from) {
     /* Bounded introductory catchment; all cells have lifts and connected doors.
        Logical-room owners avoid putting two operations in one multi-chunk hall. */
     int zbase = scene >= STORY_CONTACT ? 4 + (int)(s->chapter - 1) * 4 : 0;
+    int xbase = g->campaign.version && scene < STORY_CONTACT
+                    ? (scene == game_story_target(g)      ? 12
+                       : scene == game_story_operation(g) ? 8
+                                                          : 0)
+                    : 0;
+    if (xbase) {
+        unsigned foothold = g->campaign.defeated & 3u;
+        bool port = foothold == 2 || (!foothold && (history(g->world.seed, 91, 2) != 0));
+        if (port)
+            xbase = -xbase - 4;
+    }
     for (int y = -1; y <= 1; y++)
         for (int z = zbase; z < zbase + (scene >= STORY_CONTACT ? 8 : 4); z++)
-            for (int x = 0; x < (scene >= STORY_CONTACT ? 8 : 4); x++) {
+            for (int x = xbase; x < xbase + (scene >= STORY_CONTACT ? 8 : 4); x++) {
                 Cell c = {x, y, z};
                 RoomSpec room = world_describe_version(g->world.seed, g->world.generator, c);
                 if (!site_room(room) || !cell_equal(c, room.cell) ||
+                    (g->campaign.version && campaign_guardian(c) >= 0) ||
                     (scene == STORY_OVERRIDE &&
                      cell_equal(c, world_describe_version(g->world.seed, g->world.generator,
                                                           (Cell){2, 1, 2})
@@ -311,6 +325,11 @@ bool story_clear(Game *g, unsigned scene) {
     if (scene == STORY_BRIEFING || scene == STORY_EXTRACTION || scene == STORY_CONTINUE ||
         scene == STORY_RETURN)
         return true;
+    if (g->campaign.version && scene == game_story_target(g) &&
+        campaign_phase(&g->campaign) < SC_PHASES) {
+        game_message(g, "TARGET ACCESS SEALED / DEFEAT THE FOUR PHASE GUARDIANS / F10 ROUTES");
+        return false;
+    }
     Vec3 site = game_terminal(g->story.sites[scene]);
     for (int r = 0; r < g->world.count; r++)
         for (int i = 0; i < g->world.rooms[r].enemy_count; i++) {
@@ -350,12 +369,14 @@ void story_complete(Game *g, int player, unsigned scene) {
         p->shield = player_max_shield(p);
         p->energy = player_max_energy(p);
         p->checkpoint = g->players[player].pos;
-        p->weapons |= BIT(scene == STORY_BRIEFING ? 1 : 4 + motivation(g));
+        if (!g->campaign.version)
+            p->weapons |= BIT(scene == STORY_BRIEFING ? 1 : 4 + motivation(g));
         if (scene == STORY_EXTRACTION) {
             const unsigned pay[] = {0, 250, 180, 400};
             p->credits += pay[s->choice];
             p->victories++;
-            p->weapons |= BIT(15);
+            if (!g->campaign.version)
+                p->weapons |= BIT(15);
         }
     }
     g->dirty = true;
@@ -664,7 +685,7 @@ bool story_valid(const Story *s, uint32_t seed, uint32_t generator, uint32_t mis
         Story empty = {0};
         return memcmp(s, &empty, sizeof(*s)) == 0 && mission <= 6;
     }
-    if (!expedition_valid(s, seed))
+    if (!expedition_valid(s, seed, generator))
         return false;
     unsigned goal = target(seed, s->version), op = optional(seed, s->version);
     unsigned m = story_motivation_version(seed, s->version);
@@ -715,9 +736,11 @@ bool story_valid(const Story *s, uint32_t seed, uint32_t generator, uint32_t mis
             if (!(s->seen & BIT(i)) || room.history_role != (unsigned)i - STORY_ORIGIN_RECORD + 1)
                 return false;
         } else {
-            if (i == STORY_SOURCE && !cell_equal(c, world_history(seed).origin))
+            if (i == STORY_SOURCE && generator < 7 && !cell_equal(c, world_history(seed).origin))
                 return false;
-            if (i < STORY_CONTACT && (c.x < 0 || c.x > 3 || c.y < -1 || c.y > 1 || c.z > 3))
+            if (i < STORY_CONTACT &&
+                (c.x < (generator >= 7 ? -16 : 0) || c.x > (generator >= 7 ? 15 : 3) || c.y < -1 ||
+                 c.y > 1 || c.z > 3))
                 return false;
             for (int j = i >= STORY_CONTACT ? STORY_CONTACT : STORY_REFUGE; j < i; j++)
                 if (j != STORY_EXTRACTION && !(PASSIVE & BIT(j)) && (s->assigned & BIT(j)) &&
