@@ -45,7 +45,7 @@ static void test_plans(void) {
         CHECK(strlen(world_profile_name(world_profile(seed))) > 4);
         for (int y = -2; y <= 2; y++) {
             RegionPlan p;
-            world_plan(seed, (Cell){2, y, 2}, &p);
+            world_plan_version(seed, 7, (Cell){2, y, 2}, &p);
             int source = -1, affected = 0;
             for (int i = 0; i < p.count; i++) {
                 const RoomSpec *r = &p.rooms[i];
@@ -116,6 +116,7 @@ static void test_interiors(void) {
         Cell cell = {(int)seed % 5 * 4 + 8, (int)seed % 9 - 4, (int)seed % 3 * 4 + 8};
         world_init(w, seed);
         world_init(reverse, seed);
+        w->generator = reverse->generator = 9; /* Immutable furnished-layout contract. */
         pump(w, cell);
         pump(reverse, world_neighbor(cell, EAST));
         pump(reverse, cell);
@@ -176,6 +177,7 @@ static void test_interiors(void) {
     /* A large undercroft shares the CONDUIT family, but must still receive
        its rare hall structure, overhead light and side-space rewards. */
     world_init(w, conduit_seed);
+    w->generator = 9;
     pump(w, conduit_cell);
     Room *hall = world_find(w, conduit_cell);
     CHECK(hall && hall->type == CONDUIT && hall->height == 58 && hall->landmark);

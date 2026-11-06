@@ -1,5 +1,6 @@
 #include "render.h"
 #include "exterior.h"
+#include "habitat.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,7 +18,8 @@ static const char *vertex_source = "layout(location=0) in vec3 aPosition;\n"
                                    "vPosition,1.0);}\n";
 static const char *fragment_source =
     "in vec3 vPosition;in vec3 vNormal;in vec3 vColor;in float vGlow;\n"
-    "uniform vec3 uEye;uniform vec3 uGrid;uniform int uUI;uniform float uTime;uniform float uFogDensity;\n"
+    "uniform vec3 uEye;uniform vec3 uGrid;uniform int uUI;uniform float uTime;uniform float "
+    "uFogDensity;uniform vec3 uFogColor;\n"
     "uniform vec4 uTorch;uniform int uLampCount;uniform vec4 uLampPos[12];uniform vec4 "
     "uLampColor[12];out vec4 result;\n"
     "float lamp(float phase){if(mod(phase,4.0)<0.5)return 0.0;float "
@@ -47,7 +49,7 @@ static const char *fragment_source =
     " float emissive=vGlow>=4.0?lamp(floor(vGlow-4.0))*.8:max(vGlow,0.0)*.55;\n"
     " color+=vColor*emissive;\n"
     " if(vGlow<0.0)color+=vec3(.13,.16,.12)*pow(max(dot(n,view),0.0),18.0)*beam*.16;\n"
-    " float fog=1.0-exp(-distance*uFogDensity);color=mix(color,vec3(.004,.008,.012),fog);\n"
+    " float fog=1.0-exp(-distance*uFogDensity);color=mix(color,uFogColor,fog);\n"
     " color=pow(max(color,vec3(0.0)),vec3(.75));\n"
     " float d=mod(gl_FragCoord.x,2.0)*.25+mod(gl_FragCoord.y,2.0)*.5;\n"
     " color=floor(color*42.0+d)/42.0;result=vec4(color,1.0);}\n";
@@ -73,6 +75,8 @@ static GLuint shader(GLenum type, const char *source) {
     }
     return id;
 }
+#include "render_atmosphere.inc"
+
 static void layout(GLuint buffer) {
     gl.BindBuffer(GL_ARRAY_BUFFER, buffer);
     gl.EnableVertexAttribArray(0);
@@ -121,6 +125,7 @@ bool renderer_init(Renderer *r) {
     r->torch = gl.GetUniformLocation(r->program, "uTorch");
     r->time = gl.GetUniformLocation(r->program, "uTime");
     r->fog_density = gl.GetUniformLocation(r->program, "uFogDensity");
+    r->fog_color = gl.GetUniformLocation(r->program, "uFogColor");
     r->lamp_count = gl.GetUniformLocation(r->program, "uLampCount");
     r->lamp_pos = gl.GetUniformLocation(r->program, "uLampPos[0]");
     r->lamp_color = gl.GetUniformLocation(r->program, "uLampColor[0]");
@@ -144,10 +149,22 @@ bool renderer_init(Renderer *r) {
                                         : rgb(brightness, brightness * .87f, brightness * .70f),
                                   .28 + ((h >> 8) % 100) * .0045};
     }
+    if (!atmosphere_init(r)) {
+        renderer_destroy(r);
+        return false;
+    }
     SDL_Log("Renderer: %s / %s", gl.GetString(GL_RENDERER), gl.GetString(GL_VERSION));
     return true;
 }
 void renderer_destroy(Renderer *r) {
+    if (r->sprite_program)
+        gl.DeleteProgram(r->sprite_program);
+    if (r->sprite_vao)
+        gl.DeleteVertexArrays(1, &r->sprite_vao);
+    if (r->sprite_vbo)
+        gl.DeleteBuffers(1, &r->sprite_vbo);
+    if (r->sprite_atlas)
+        gl.DeleteTextures(1, &r->sprite_atlas);
     if (r->program)
         gl.DeleteProgram(r->program);
     if (r->vao)
@@ -428,13 +445,16 @@ static void upload_world(Renderer *r, Game *g) {
     r->world_revision = w->revision ? w->revision : 1;
 }
 #include "render_exterior.inc"
+static bool visible_deck(const World *w, int viewer, int target) {
+    return abs(viewer - target) <= (w->generator >= 10 ? 1 : 0);
+}
 static void draw_chunks(Renderer *r, Game *g) {
     World *w = &g->world;
     for (int i = 0; i < SC_MAX_CHUNKS; i++) {
         const Chunk *c = &w->chunks[i];
         if (!c->active || r->chunk_serial[i] != c->serial || !world_ready(w, c->cell))
             continue;
-        if (c->cell.y != world_cell(r->origin).y)
+        if (!visible_deck(w, world_cell(r->origin).y, c->cell.y))
             continue;
         Vec3 delta = vsub(world_center(c->cell), r->origin);
         if (fabs(delta.x) > 520 || fabs(delta.y) > 480 || fabs(delta.z) > 520)
@@ -669,7 +689,7 @@ static void death_mesh(Renderer *r, const EnemyDeath *d) {
     }
     double scale = sc_enemies[e->kind].size * (.05 + .95 * fade);
     BodyPose pose = {at, right, up, forward, scale};
-    Color shell = sc_enemies[e->kind].color;
+    Color shell = habitat_enemy_color(e);
     shell = rgb(shell.r * (float)fade, shell.g * (float)fade, shell.b * (float)fade);
     body_form(r, e, &pose, d->age * .1, shell, rgb(.12f * fade, .06f * fade, .08f * fade), -.3f);
     for (int part = 0; part < 6; part++) {
@@ -725,7 +745,7 @@ static void creature(Renderer *r, const Enemy *e, double time, double distance) 
         return;
     }
     Color flesh = e->flash > 0 ? rgb(.62f, .63f, .49f) : rgb(.18f, .09f, .12f);
-    Color shell = e->flash > 0 ? rgb(.55f, .48f, .36f) : def->color;
+    Color shell = e->flash > 0 ? rgb(.55f, .48f, .36f) : habitat_enemy_color(e);
     float glow = e->flash > 0 ? .25f : -1;
     BodyPose pose = {center, right, up, forward, size};
     body_form(r, e, &pose, time, shell, flesh, glow);
@@ -904,7 +924,8 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                                  : g->player_count;
         for (int i = 0; i < total; i++) {
             const Chunk *chunk = group == 0 ? &g->world.chunks[i] : NULL;
-            if (chunk && (!chunk->active || chunk->cell.y != world_cell(eye).y))
+            if (chunk &&
+                (!chunk->active || !visible_deck(&g->world, world_cell(eye).y, chunk->cell.y)))
                 continue;
             int lamps = chunk ? chunk->light_count : 1;
             for (int j = 0; j < lamps; j++) {
@@ -1069,7 +1090,8 @@ static void actors(Renderer *r, Game *g, int viewer) {
         for (int i = 0; i < g->world.rooms[j].enemy_count; i++) {
             Enemy *e = &g->world.rooms[j].enemies[i];
             double distance = vlen(vsub(enemy_center(e), eye));
-            if (!e->alive || distance > 130 || world_cell(enemy_center(e)).y != cell.y)
+            if (!e->alive || distance > 130 ||
+                !visible_deck(&g->world, cell.y, world_cell(enemy_center(e)).y))
                 continue;
             /* Reserve the bounded draw budget for the closest threats. */
             int slot = count;
@@ -1096,13 +1118,13 @@ static void actors(Renderer *r, Game *g, int viewer) {
     for (int i = 0; i < SC_MAX_DEATHS; i++) {
         const EnemyDeath *d = &g->deaths[i];
         if (d->active && vlen(vsub(enemy_center(&d->body), eye)) < 130 &&
-            world_cell(enemy_center(&d->body)).y == cell.y)
+            visible_deck(&g->world, cell.y, world_cell(enemy_center(&d->body)).y))
             death_mesh(r, d);
     }
     for (int i = 0; i < SC_MAX_DEATH_HAZARDS; i++) {
         const DeathHazard *h = &g->death_hazards[i];
         if (h->active && vlen(position_delta(h->pos, g->players[viewer].pos)) < 130 &&
-            h->pos.sector.y == cell.y)
+            visible_deck(&g->world, cell.y, h->pos.sector.y))
             hazard_mesh(r, h);
     }
     for (int i = 0; i < SC_MAX_PROJECTILES; i++) {
@@ -1122,7 +1144,8 @@ static void actors(Renderer *r, Game *g, int viewer) {
         for (int k = 0; k < room->pickup_count; k++) {
             const Pickup *loot = &room->pickups[k];
             Vec3 p = position_absolute(loot->pos);
-            if (!loot->active || world_cell(p).y != cell.y || vlen(vsub(p, eye)) > 100)
+            if (!loot->active || !visible_deck(&g->world, cell.y, world_cell(p).y) ||
+                vlen(vsub(p, eye)) > 100)
                 continue;
             p.y += .15 * sin(g->time * 2 + k);
             Color colors[] = {{.8f, .2f, .18f},  {.2f, .5f, 1},     {.75f, .65f, .35f},
@@ -1565,7 +1588,7 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
     text_at(r, x, y + 491 * s, .85f * s,
             "F6 DOSSIER / F7 DEBRIEF / F4 CHARACTER / ENTER CLOSE / PAD RB PAGES", gold);
 }
-static void history_journal(Renderer *r, const Game *g, float w, float h) {
+static void history_journal(Renderer *r, const Game *g, int player, float w, float h) {
     float s = fminf((w - 24) / 800, (h - 24) / 510), x = (w - 800 * s) * .5f,
           y = (h - 510 * s) * .5f;
     Color gold = rgb(.88f, .7f, .4f), ink = rgb(.8f, .85f, .8f);
@@ -1575,10 +1598,20 @@ static void history_journal(Renderer *r, const Game *g, float w, float h) {
     char text[320];
     for (int line = 0; line < (g->story.version < 2 ? 1 : 8); line++) {
         game_story_dossier(g, line, text, sizeof(text));
-        wrapped(r, x + 18 * s, y + (52 + line * 49) * s, s, 760 * s, text, ink);
+        wrapped(r, x + 18 * s, y + (52 + line * 40) * s, .88f * s, 760 * s, text, ink);
     }
-    text_at(r, x + 18 * s, y + 455 * s, .9f * s,
-            "ROOM NOTICES AND WITNESS RECORDS REVEAL THE SHIP'S HISTORY", gold);
+    if (g->world.generator >= 10 && !g->players[player].sheltered &&
+        !g->matrix.divers[player].active && position_absolute(g->players[player].pos).z >= 0) {
+        RoomSpec room =
+            world_describe_version(g->world.seed, g->world.generator,
+                                   world_cell(position_absolute(g->players[player].pos)));
+        char account[600];
+        habitat_account(&room, account, sizeof(account));
+        text_at(r, x + 18 * s, y + 384 * s, .9f * s, "LOCAL TRACE / F6", gold);
+        wrapped(r, x + 18 * s, y + 404 * s, .82f * s, 760 * s, account, ink);
+    } else
+        text_at(r, x + 18 * s, y + 455 * s, .9f * s,
+                "ROOM NOTICES AND WITNESS RECORDS REVEAL THE SHIP'S HISTORY", gold);
     text_at(r, x + 18 * s, y + 486 * s, .85f * s,
             "I EXPEDITION / F4 CHARACTER / ENTER CLOSE / PAD RB EXPEDITION", gold);
 }
@@ -1621,12 +1654,14 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     deck_map(r, g, player, pad, pad + 16 * s, 112 * s, false);
     Cell cell = world_cell(position_absolute(p->pos));
     Room *room = world_find(&g->world, cell);
-    const char *name = position_absolute(p->pos).z < 0
-                           ? (exterior_cabin(&g->world, position_absolute(p->pos))
-                                  ? "BOARDING SKIFF" : "THE SILENT EXPANSE")
-                           : (room ? (room->landmark ? world_landmark_name(room->landmark)
-                                                     : sc_themes[room->theme].name)
-                                   : "BETWEEN DECKS");
+    const char *name =
+        position_absolute(p->pos).z < 0
+            ? (exterior_cabin(&g->world, position_absolute(p->pos)) ? "BOARDING SKIFF"
+                                                                    : "THE SILENT EXPANSE")
+            : (room ? (room->landmark       ? world_landmark_name(room->landmark)
+                       : room->habitat.form ? sc_habitat_forms[room->habitat.form]
+                                            : sc_themes[room->theme].name)
+                    : "BETWEEN DECKS");
     centered(r, w * .5f, pad, 1.6f * s,
              p->sheltered         ? "THE FOLD / SANCTUARY"
              : p->riding == MECH  ? "REAVER / MECH PILOT LINK"
@@ -1640,6 +1675,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     if (!p->sheltered && room && position_absolute(p->pos).z >= 0) {
         snprintf(label, sizeof(label), "%s / %s", world_district_name(room->district),
                  g->world.generator >= 4 ? world_incident_name(room->incident) : "UNSURVEYED");
+        if (g->world.generator >= 10)
+            snprintf(label, sizeof(label), "%s / %s / F6 TRACE",
+                     world_district_name(room->district),
+                     sc_atmospheres[room->habitat.atmosphere].name);
         if (room->history_role)
             snprintf(label, sizeof(label), "%s / F6 DOSSIER",
                      world_history_role(room->history_role));
@@ -1942,7 +1981,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     else if (p->journal && p->journal_page == 3)
         debrief_journal(r, g, player, w, h);
     else if (p->journal && p->journal_page == 2)
-        history_journal(r, g, w, h);
+        history_journal(r, g, player, w, h);
     else if (p->journal && g->story.version && p->journal_page)
         story_journal(r, g, player, w, h);
     else if (p->journal) {
@@ -2080,6 +2119,7 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
     gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     bool vertical = width >= height * 1.5;
     int count = g->player_count;
+    r->sprite_drawn[0] = r->sprite_drawn[1] = 0;
     for (int p = 0; p < count; p++) {
         int vw = count == 1 ? width : (vertical ? width / 2 : width),
             vh = count == 1 ? height : (vertical ? height : height / 2);
@@ -2115,7 +2155,17 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         gl.Uniform3f(r->eye, (float)eye.x, (float)eye.y, (float)eye.z);
         gl.Uniform3f(r->grid, (float)fmod(r->origin.x, 4096), (float)fmod(r->origin.y, 4096),
                      (float)fmod(r->origin.z, 4096));
-        gl.Uniform1f(r->fog_density, outside ? 0 : .009f);
+        AtmosphereDef atmosphere = sc_atmospheres[STILL_AIR];
+        if (g->world.generator >= 10 && !outside && !matrix && !player->sheltered) {
+            RoomSpec room = world_describe_version(g->world.seed, g->world.generator,
+                                                   world_cell(position_absolute(player->pos)));
+            atmosphere = sc_atmospheres[room.habitat.atmosphere];
+        }
+        gl.Uniform1f(r->fog_density, outside ? 0
+                                     : g->world.generator < 10 || matrix || player->sheltered
+                                         ? .009f
+                                         : atmosphere.density);
+        gl.Uniform3f(r->fog_color, atmosphere.fog.r, atmosphere.fog.g, atmosphere.fog.b);
         lights(r, g, player);
         if (matrix)
             matrix_scene(r, g, p);
@@ -2130,6 +2180,9 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
             campaign_scene(r, g, p);
         }
         flush(r);
+        r->sprite_drawn[p] = 0;
+        if (!outside && !player->sheltered && !matrix && g->world.generator >= 10)
+            atmosphere_draw(r, g, p, m, eye, atmosphere);
         if (!paused && !player->sheltered && !matrix) {
             gl.Clear(GL_DEPTH_BUFFER_BIT);
             weapon(r, player);

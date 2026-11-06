@@ -114,7 +114,7 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
                     fprintf(stderr,
                             "Resume refused: phase=%d story=%d matrix=%d scene=%u mission=%u\n",
                             campaign_valid(&g->campaign, g->players, &g->world),
-                            story_valid(&g->story, seed, 7, g->mission),
+                            story_valid(&g->story, seed, g->world.generator, g->mission),
                             matrix_valid(&g->matrix, seed, 7, g->players, &g->shelter),
                             g->story.tracked, g->mission);
                     return 1;
@@ -206,8 +206,9 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
             actions[0].strafe = (float)vdot(move, right);
         }
         actions[0].crouch =
-            world_describe_version(seed, 7, cell).height < 2 ||
-            (distance > 1 && world_describe_version(seed, 7, world_cell(waypoint)).height < 2);
+            world_describe_version(seed, g->world.generator, cell).height < 2 ||
+            (distance > 1 &&
+             world_describe_version(seed, g->world.generator, world_cell(waypoint)).height < 2);
         game_step(g, actions, 1.0 / 60);
         if (g->world.last_work > SC_STREAM_BUDGET || !isfinite(p->health) || !isfinite(p->energy) ||
             g->respawns > 12)

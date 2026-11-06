@@ -5,6 +5,7 @@
 #include "platform_input.h"
 #define SC_VIEW_LIGHTS 12
 #define SC_SPACE_STARS 1800
+#define SC_VIEW_SPRITES 1536
 typedef struct {
     Vec3 direction;
     Color color;
@@ -19,10 +20,24 @@ typedef struct {
     bool failed;
 } Mesh;
 typedef struct {
+    Vec3 center, right, up;
+    Color color;
+    float alpha, glow;
+    double distance;
+    unsigned tile, order;
+} SpriteDraw;
+typedef struct {
+    float x, y, z, u, v, r, g, b, a, glow;
+} SpriteVertex;
+typedef struct {
     GLuint program, vao, vbo;
     GLuint framebuffer[SC_PLAYERS], texture[SC_PLAYERS], depth[SC_PLAYERS];
     GLint mvp, eye, grid, ui, offset;
-    GLint torch, time, lamp_count, lamp_pos, lamp_color, fog_density;
+    GLint torch, time, lamp_count, lamp_pos, lamp_color, fog_density, fog_color;
+    GLuint sprite_program, sprite_vao, sprite_vbo, sprite_atlas;
+    SpriteDraw sprite_draws[SC_VIEW_SPRITES];
+    SpriteVertex sprite_vertices[SC_VIEW_SPRITES * 6];
+    unsigned sprite_drawn[SC_PLAYERS];
     int width[SC_PLAYERS], height[SC_PLAYERS];
     unsigned target_resizes[SC_PLAYERS];
     uint32_t world_revision;

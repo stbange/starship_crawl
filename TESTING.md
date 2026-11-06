@@ -1,6 +1,46 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
-**Controls and traversal (generator 9).** There are now 25 native CTests: 14 unit,
+**Living ship generation (generator 10).** The suite now contains 27 native
+CTests: 15 unit, 11 gameplay and one SDL platform test. `living_ship` checks eight
+macro forms, matching paired decks, masked ownership, actual open floor volumes,
+rails, supported enemies (including narrow conduits), all climates/tales/ecologies,
+clear portals, spawn load-order/phase independence and unchanged generator-9
+geometry/populations. It also verifies brood reproduction with inherited coloration
+and separated co-op at adverse region corners. The desired union is bounded at
+174 chunks inside the 192-resident cache; the sampled geometry peak is 302/512
+boxes. `living_ship_journey` walks across both vault levels and saves/resumes
+through the production APIs after unlocking the required campaign phases.
+
+Unit-only coverage is **98.50% (6776/6879 lines)**, with every executable core
+source above 95% and `habitat.c` at 100%. All 27 native tests and the 11 separately
+labelled gameplay campaigns passed. The complete 26-test ASan/UBSan core suite
+passed, followed by focused sanitizer checks of the final generation/spawn changes.
+The six coverage-gate self-tests and strict OpenSpec validation also passed.
+
+All thirteen packaged Chromium/WebGL suites passed. The new
+`test_habitat_browser.py` tours seven conditions, both vault levels and bent/horseshoe
+plans; checks real screenshot pixels and animation; opens the local dossier/map;
+walks through a generated space; checks bounded split-screen sprites; enters the
+shelter with weather still rendered in the other view; and exercises mobile-sized
+rendering/rotation. The main browser regression checks native/WASM fingerprints.
+Existing combat, equipment, story, matrix, input and persistence regressions remain
+in the publishing workflow. Final atmosphere and main-browser checks were repeated
+after layout/renderer refinements; final spawn refinements also passed the focused
+atmosphere suite, unit/coverage checks and gameplay campaigns.
+
+Linux, Windows x86-64 cross-compilation and Emscripten builds succeeded without
+compiler diagnostics. Native Mesa smoke checks cover both vault levels, steam,
+runoff, split-screen, matrix, shelter and skiff cabin views. This is automated
+Linux/software-GL and Chromium execution, with touch emulation; physical Windows
+GPUs/controllers, Safari and actual mobile performance remain unverified.
+See [LIVING_SHIP.md](LIVING_SHIP.md) and [captures](docs/screenshots/README.md).
+
+```sh
+ctest --test-dir build -R 'living_ship' --output-on-failure
+python3 tests/test_habitat_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+```
+
+**Controls and traversal (generator 9).** The foundation milestone recorded 25 native CTests: 14 unit,
 10 gameplay and one SDL platform test. `platform_input` uses SDL virtual gamepads
 and actual axis/button events to verify controller ownership, disconnect/reconnect,
 player-count changes, preferences, safe bounds and atomic persistence. It runs in
@@ -31,7 +71,7 @@ traversal suite and the existing story, matrix, combat, equipment and persistenc
 regressions. Captures of the new routes are in [docs/screenshots](docs/screenshots/README.md).
 
 The new core source `traversal.c` is included in the same >=95% per-file gate.
-Latest unit-only core coverage is **98.41% (6448/6552 lines)**, with every measured
+Foundation unit-only core coverage was **98.41% (6448/6552 lines)**, with every measured
 source above 95% and `traversal.c` at 100%. All 25 native tests, ten separately
 labelled gameplay tests and 24 ASan/UBSan core tests passed; the final traversal
 refinements also passed focused sanitizer checks. Linux, Windows x86-64 and

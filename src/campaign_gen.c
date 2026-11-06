@@ -112,7 +112,7 @@ void campaign_populate(World *w, Room *r) {
         Enemy *e = &r->enemies[i];
         if (e->kind == 26)
             continue;
-        if (r->height >= 3 && i % 3 == 0) {
+        if (w->generator < 10 && r->height >= 3 && i % 3 == 0) {
             static const uint8_t machines[] = {27, 28, 29, 30};
             static const uint8_t swarm[] = {3, 11, 8, 23};
             if (t.order > 0)

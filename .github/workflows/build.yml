@@ -110,6 +110,9 @@ jobs:
           EGL_PLATFORM: surfaceless
         run: |
           ./build/starship_crawl --seed 713 --smoke 10 --no-save
+          ./build/starship_crawl --seed 713 --scene volume1 --smoke 60 --no-save
+          ./build/starship_crawl --seed 713 --scene volume2 --split --smoke 60 --no-save
+          ./build/starship_crawl --seed 713 --scene biome1 --split --smoke 60 --no-save
           ./build/starship_crawl --seed 713 --scene stairs --smoke 30 --no-save
           ./build/starship_crawl --seed 713 --scene ramp --split --smoke 30 --no-save
           ./build/starship_crawl --seed 713 --scene lift --smoke 30 --no-save
@@ -209,6 +212,8 @@ jobs:
         run: python tests/test_foundation_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Explore generated interiors and discoveries
         run: python tests/test_interiors_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Living ship generation and atmosphere
+        run: python tests/test_habitat_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play generated histories, dossiers and decisions
         run: python tests/test_story_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play reactive factions, debriefs and continuing stories

@@ -35,7 +35,7 @@ def run():
             page.on('dialog', lambda dialog: dialog.accept())
             page.goto(base + '?seed=713')
             wait_ready(page)
-            expect(page, 's.generator === 9 && s.campaign === 1 && s.weapons === 3 && s.phase === 0 && s.programs === 7')
+            expect(page, 's.generator === 10 && s.campaign === 1 && s.weapons === 3 && s.phase === 0 && s.programs === 7')
             start_play(page)
             page.keyboard.press('v')
             page.keyboard.press('t')
@@ -101,7 +101,7 @@ def run():
             expect(page, 's.generator === 6 && s.campaign === 0 && s.weapons !== 3')
             page.keyboard.press('n')
             page.keyboard.press('Enter')
-            expect(page, 's.generator === 9 && s.campaign === 1 && s.weapons === 3')
+            expect(page, 's.generator === 10 && s.campaign === 1 && s.weapons === 3')
             # Emulated mobile input uses the same earned reward and refit actions.
             mobile = browser.new_context(viewport={'width': 844, 'height': 390}, is_mobile=True, has_touch=True)
             touch = mobile.new_page()

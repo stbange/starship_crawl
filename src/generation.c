@@ -1,4 +1,5 @@
 #include "world.h"
+#include "habitat.h"
 #include "campaign.h"
 #include <string.h>
 #include <stdlib.h>
@@ -168,7 +169,7 @@ static void history(RegionPlan *p, uint32_t hash, int preferred, unsigned incide
 }
 void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPlan *p) {
     /* Versions 8/9 add exterior/traversal geometry to the version-7 room plan. */
-    if (generator >= 8)
+    if (generator == 8 || generator == 9)
         generator = 7;
     /* Version 6 expands encounters; its architecture and historical sites stay on version 5. */
     if (generator == 6)
@@ -208,16 +209,26 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
     }
     if (generator >= 7 && campaign_arena_region(region))
         hx = hz = 1;
+    RoomSpec macro = {.span_x = 2, .span_z = 2};
+    if (generator >= 10)
+        habitat_reserve(seed, region, &hx, &hz, &macro);
+    Cell macro_cell = {p->origin.x + hx, region.y, p->origin.z + hz};
     for (int z = 0; z < 4; z++)
         for (int x = 0; x < 4; x++) {
-            if (x >= hx && x < hx + 2 && z >= hz && z < hz + 2 && (x != hx || z != hz))
+            Cell part = {p->origin.x + x, region.y, p->origin.z + z};
+            bool in_macro =
+                habitat_owns(macro_cell, macro.span_x, macro.span_z, macro.habitat.mask, part);
+            if (in_macro && (x != hx || z != hz))
                 continue;
             int id = p->count++;
             RoomSpec *r = &p->rooms[id];
             r->cell = (Cell){p->origin.x + x, region.y, p->origin.z + z};
             r->hash = world_hash(seed ^ generator, r->cell, 123);
             r->district = p->district;
-            r->span_x = r->span_z = (uint8_t)(x == hx && z == hz ? 2 : 1);
+            r->span_x = in_macro ? macro.span_x : 1;
+            r->span_z = in_macro ? macro.span_z : 1;
+            if (in_macro)
+                r->habitat = macro.habitat;
             unsigned choices[SC_THEMES], count = 0;
             for (unsigned t = 1; t < SC_THEMES; t++)
                 if (sc_themes[t].sector == p->district)
@@ -272,9 +283,24 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
                 r->width -= (r->hash >> 12) % 4 * 2;
                 r->depth -= (r->hash >> 16) % 4 * 2;
             }
+            if (r->habitat.form) {
+                r->width = r->span_x * SC_CELL - 12;
+                r->depth = r->span_z * SC_CELL - 12;
+                r->height = r->habitat.volume == 1 ? 64 : 58;
+                r->type = ENGINE; /* Dedicated architecture; avoid low tunnels in macro volumes. */
+                r->layout = ARCADES;
+                r->landmark = (uint8_t)((r->hash >> 24) % 4 == 0
+                                            ? (p->district == LUXURY      ? BANQUET
+                                               : p->district == BOTANY    ? CONSERVATORY
+                                               : p->district == MACHINERY ? SUSPENDED_ENGINE
+                                                                          : RELIQUARY)
+                                            : NO_LANDMARK);
+            }
             for (int dz = 0; dz < r->span_z; dz++)
                 for (int dx = 0; dx < r->span_x; dx++)
-                    p->owner[(z + dz) * 4 + x + dx] = (uint8_t)id;
+                    if (habitat_owns(r->cell, r->span_x, r->span_z, r->habitat.mask,
+                                     (Cell){r->cell.x + dx, r->cell.y, r->cell.z + dz}))
+                        p->owner[(z + dz) * 4 + x + dx] = (uint8_t)id;
         }
     struct Edge {
         int a, b;
@@ -352,6 +378,9 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
     }
     if (generator >= 7)
         campaign_plan(seed, p);
+    if (generator >= 10)
+        for (int i = 0; i < p->count; i++)
+            habitat_plan(seed, &p->rooms[i]);
 }
 RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell c) {
     RegionPlan p;
@@ -408,9 +437,16 @@ uint32_t world_fingerprint_version(uint32_t seed, uint32_t generator, Cell regio
                              r->incident,
                              r->intensity,
                              r->landmark,
-                             r->history_role};
+                             r->history_role,
+                             r->habitat.mask,
+                             r->habitat.form,
+                             r->habitat.volume,
+                             r->habitat.atmosphere,
+                             r->habitat.tale,
+                             r->habitat.ecology};
         for (size_t j = 0; j < (generator == 3   ? 13
                                 : generator == 4 ? 17
+                                : generator < 10 ? 18
                                                  : sizeof(values) / sizeof(values[0]));
              j++)
             for (int byte = 0; byte < 4; byte++) {

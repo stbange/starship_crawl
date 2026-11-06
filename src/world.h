@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 9u
+#define SC_GENERATOR_VERSION 10u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -18,6 +18,7 @@
 #define SC_MAX_ENEMIES 20
 #define SC_CHUNK_LIGHTS 6
 #define SC_CHUNK_DRESSING 32
+#define SC_CHUNK_SPRITES 32
 typedef struct {
     int32_t x, y, z;
 } Cell;
@@ -57,12 +58,40 @@ typedef struct {
     double width, clearance;
     Vec3 local_center;
 } Connector;
+typedef enum {
+    STILL_AIR,
+    STEAM_LEAK,
+    FLOODED,
+    SPORE_AIR,
+    RIME_AIR,
+    EMBER_AIR,
+    VOID_GLOW,
+    ATMOSPHERES
+} AtmosphereKind;
+typedef enum {
+    EVACUATION,
+    LAST_FEAST,
+    TRIAGE,
+    CONTAINMENT,
+    REPAIR,
+    PILGRIMAGE,
+    MUTINY,
+    CULTIVATION,
+    LOCAL_TALES
+} LocalTale;
+typedef enum { FERAL, MECHANICAL, BROOD_NEST, CRYOPHILE, PHANTOM, SCAVENGER, ECOLOGIES } Ecology;
+typedef struct {
+    uint16_t mask;        /* Four-bit rows relative to the owner; zero means a legacy rectangle. */
+    uint8_t form, volume; /* 0 ordinary, 1 lower vault, 2 upper gallery. */
+    uint8_t atmosphere, tale, ecology;
+} Habitat;
 typedef struct {
     Cell cell;
     RoomType type;
     District district;
     uint8_t theme, layout, incident, intensity, landmark, history_role;
     uint8_t span_x, span_z;
+    Habitat habitat;
     double width, depth, height;
     uint32_t hash;
 } RoomSpec;
@@ -89,7 +118,7 @@ typedef struct {
     float health, cooldown, flash;
     float windup, climb_time, vertical_speed, special, slow, burn;
     Vec3 aim, normal, heading;
-    uint8_t kind, id, last_player, allegiance, ally_owner;
+    uint8_t kind, id, last_player, allegiance, ally_owner, ecology;
     bool alive, climbing;
 } Enemy;
 typedef struct {
@@ -105,6 +134,26 @@ typedef struct {
     DressingKind kind;
     float scale;
 } Dressing;
+typedef enum {
+    SPR_STEAM,
+    SPR_RAIN,
+    SPR_WATER,
+    SPR_MIST,
+    SPR_MOTE,
+    SPR_FUNGUS,
+    SPR_CLOTH,
+    SPR_BONES,
+    SPR_PAPERS,
+    SPR_GLYPH,
+    SPR_SPARK,
+    SPR_SPRITES
+} SpriteKind;
+typedef struct {
+    Vec3 pos, normal;
+    float width, height;
+    uint32_t hash;
+    uint8_t kind, atmosphere;
+} EnvSprite;
 typedef struct {
     Position pos;
     uint8_t kind, item, id;
@@ -117,6 +166,7 @@ typedef struct {
     District district;
     uint8_t theme, layout, incident, intensity, landmark, history_role;
     uint8_t span_x, span_z;
+    Habitat habitat;
     double width, depth, height;
     uint32_t hash;
     int pickup_count;
@@ -142,6 +192,8 @@ typedef struct {
     PointLight lights[SC_CHUNK_LIGHTS];
     Dressing dressing[SC_CHUNK_DRESSING];
     int light_count, dressing_count;
+    EnvSprite sprites[SC_CHUNK_SPRITES];
+    int sprite_count;
     uint32_t serial;
     bool active;
 } Chunk;
@@ -218,6 +270,7 @@ double flight_ray(const Flight *flight, Vec3 origin, Vec3 direction, double limi
 void world_move(const World *world, Position *position, Vec3 delta, double radius, double height,
                 bool walking, bool *grounded);
 bool world_overlap(const World *w, Vec3 feet, double radius, double height);
+bool world_spawn_supported(const World *w, Vec3 feet, double height);
 double world_raycast(const World *w, Vec3 origin, Vec3 direction, double limit);
 void world_kill(World *w, Room *room, int enemy);
 uint32_t world_systems(const World *w, Cell cell);

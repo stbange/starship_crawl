@@ -758,6 +758,7 @@ static void enemies_step(Game *g, double dt) {
                 position_move(&spawn, v3(1.5, 0, 1.5));
                 if (!world_overlap(&g->world, position_absolute(spawn), .42, 1.25)) {
                     room->enemies[id] = (Enemy){.pos = spawn,
+                                                .ecology = e->ecology,
                                                 .health = 24,
                                                 .kind = 3,
                                                 .id = (uint8_t)id,

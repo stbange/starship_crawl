@@ -222,7 +222,7 @@ static void test_discovery_and_contest(void) {
             }
     for (int y = -12; y <= 12 && observed != 62; y++)
         for (int x = 0; x < 12 && observed != 62; x++) {
-            RoomSpec lab = world_describe(713, (Cell){x, y, 8});
+            RoomSpec lab = world_describe_version(713, g->world.generator, (Cell){x, y, 8});
             if (lab.district == RESEARCH && lab.incident != FROST && lab.height >= 3) {
                 arrive(g, lab.cell);
                 game_story_step(g);

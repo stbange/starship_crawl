@@ -1,4 +1,5 @@
 #include "game.h"
+#include "habitat.h"
 #include "legacy_game.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,12 +57,15 @@ static void test_topology(void) {
                       (r->history_role == HISTORY_ORIGIN &&
                        r->district ==
                            sc_themes[world_history_theme(world_history(seed).cause)].sector));
-                if (r->span_x > 1) {
+                if (r->span_x > 1 || r->span_z > 1) {
                     large++;
-                    CHECK(r->width >= 180 && r->height >= 58);
+                    CHECK((r->width >= 180 || r->depth >= 180) && r->height >= 58);
                 }
                 for (int z = 0; z < r->span_z; z++)
                     for (int x = 0; x < r->span_x; x++) {
+                        if (!habitat_owns(r->cell, r->span_x, r->span_z, r->habitat.mask,
+                                          (Cell){r->cell.x + x, r->cell.y, r->cell.z + z}))
+                            continue;
                         int index = (r->cell.z - p.origin.z + z) * 4 + r->cell.x - p.origin.x + x;
                         CHECK(index >= 0 && index < 16);
                         CHECK(p.owner[index] == i);

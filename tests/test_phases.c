@@ -610,7 +610,7 @@ static void generated_stories(void) {
         use_story(g, target);
         CHECK(g->players[0].decision_open);
         CHECK(game_story_choose(g, 0, seed % 3 + 1));
-        CHECK(story_valid(&g->story, seed, 7, g->mission));
+        CHECK(story_valid(&g->story, seed, g->world.generator, g->mission));
         CHECK(game_save(g, "phase-story.sav") && game_load(g, "phase-story.sav"));
         use_story(g, STORY_EXTRACTION);
         CHECK(g->players[0].victories == 1);
@@ -628,7 +628,7 @@ static void generated_stories(void) {
     use_story(port, port->story.tracked);
     CHECK(port->story.sites[game_story_target(port)].x < 0);
     CHECK(port->story.sites[game_story_operation(port)].x < 0);
-    CHECK(story_valid(&port->story, 713, 7, port->mission));
+    CHECK(story_valid(&port->story, 713, port->world.generator, port->mission));
     destroy(port);
     remove("phase-story.sav");
 }

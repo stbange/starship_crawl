@@ -108,7 +108,7 @@ def run():
             page.goto(base + '?seed=713')
             wait_ready(page)
             initial = state(page)
-            assert initial['generator'] == 9 and abs(initial['z'] + 84) < .01
+            assert initial['generator'] == 10 and abs(initial['z'] + 84) < .01
             start_play(page)
             face_forward(page)
             drift(page, 'z', -98, 's')
@@ -126,7 +126,7 @@ def run():
             page.goto(base)
             wait_ready(page)
             loaded = state(page)
-            assert loaded['generator'] == 9 and abs(loaded['z'] - saved['z']) < .1
+            assert loaded['generator'] == 10 and abs(loaded['z'] - saved['z']) < .1
             start_play(page)
             face_forward(page)
             page.keyboard.press('F2')

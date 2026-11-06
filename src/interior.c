@@ -454,6 +454,8 @@ void interior_build(Builder *b, const Room *r) {
         traces(b, r, &spaces[i], world_hash(b->world->seed, b->chunk->cell, 45000 + (unsigned)i));
 }
 Vec3 interior_cache(const Room *r, int pickup) {
+    if (r->habitat.form)
+        return vadd(world_center(r->cell), v3(pickup == 3 ? 6 : -6, .47, 15));
     /* Just inside the front entrance, away from furniture and either doorway. */
     Builder b = {.origin = world_center(r->cell)};
     Alcove a = alcove(&b, r, pickup == 3 ? 1 : -1, 1);

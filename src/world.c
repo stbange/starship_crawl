@@ -1,4 +1,5 @@
 #include "interior.h"
+#include "habitat.h"
 #include "exterior.h"
 #include "campaign.h"
 #include <limits.h>
@@ -71,8 +72,7 @@ static size_t record_for(World *w, Cell c, bool create) {
     return i;
 }
 static bool contains(const Room *r, Cell c) {
-    return c.y == r->cell.y && c.x >= r->cell.x && c.x < r->cell.x + r->span_x &&
-           c.z >= r->cell.z && c.z < r->cell.z + r->span_z;
+    return habitat_owns(r->cell, r->span_x, r->span_z, r->habitat.mask, c);
 }
 Room *world_find(World *w, Cell c) {
     for (int i = 0; i < w->count; i++)
@@ -402,8 +402,12 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
         stone = rgb(.14f, .20f, .17f);
         light = rgb(.40f, .76f, .19f);
     }
-    local(&b, c, 0, -.4, 0, r->width, .8, r->depth, floor, 0, true);
-    local(&b, c, 0, h + .4, 0, r->width, .8, r->depth, stone, 0, true);
+    if (r->habitat.form)
+        habitat_floor(&b, r);
+    else
+        local(&b, c, 0, -.4, 0, r->width, .8, r->depth, floor, 0, true);
+    if (r->habitat.volume != 1)
+        local(&b, c, 0, h + .4, 0, r->width, .8, r->depth, stone, 0, true);
     double tx = tile.x - c.x, tz = tile.z - c.z;
     for (int d = 0; d < 4; d++) {
         bool xp = d <= EAST;
@@ -411,11 +415,15 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
                     : d == EAST  ? chunk->cell.x == r->cell.x + r->span_x - 1
                     : d == SOUTH ? chunk->cell.z == r->cell.z
                                  : chunk->cell.z == r->cell.z + r->span_z - 1;
-        if (!edge)
+        bool notch =
+            r->habitat.mask && !edge && !contains(r, world_neighbor(chunk->cell, (Direction)d));
+        if (!edge && !notch)
             continue;
         Connector port = world_connector_version(w->seed, w->generator, chunk->cell, (Direction)d);
         bool open = port.open;
         double at = (d == WEST || d == SOUTH) ? -(xp ? x : z) : (xp ? x : z);
+        if (notch)
+            at = (xp ? tx : tz) + ((d == WEST || d == SOUTH) ? -48 : 48);
         double mid = xp ? tz : tx, half = xp ? z : x;
         bool entry = r->type == BAY && d == SOUTH;
         wall(&b, c, xp, at, fmax(-half, mid - 48), fmin(half, mid + 48), mid,
@@ -502,9 +510,11 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
         room_dressing(&b, r);
         if (w->generator >= 4 && r->type == CONDUIT)
             interior_conduit(&b, r);
-    } else {
+    } else if (!r->habitat.form) {
         interior_build(&b, r);
     }
+    if (w->generator >= 10)
+        habitat_build(&b, r);
     if (w->generator >= 9)
         traversal_build(&b);
 }
@@ -523,6 +533,8 @@ static bool retained(const World *w, const Room *r) {
     for (int z = 0; z < r->span_z; z++)
         for (int x = 0; x < r->span_x; x++) {
             Cell c = {r->cell.x + x, r->cell.y, r->cell.z + z};
+            if (!contains(r, c))
+                continue;
             if (wanted(w, c))
                 return true;
             for (int p = 0; p < w->anchor_count; p++)
@@ -569,6 +581,8 @@ bool world_refresh(World *w, const Vec3 *positions, int players) {
                     for (int dz = 0; dz < r.span_z; dz++)
                         for (int dx = 0; dx < r.span_x; dx++) {
                             Cell part = {r.cell.x + dx, r.cell.y, r.cell.z + dz};
+                            if (!habitat_owns(r.cell, r.span_x, r.span_z, r.habitat.mask, part))
+                                continue;
                             if (!wanted(w, part)) {
                                 if (w->desired_count == SC_MAX_CHUNKS) {
                                     w->failed = true;
@@ -608,6 +622,7 @@ static Room *room_create(World *w, RoomSpec spec) {
     r->history_role = spec.history_role;
     r->span_x = spec.span_x;
     r->span_z = spec.span_z;
+    r->habitat = spec.habitat;
     r->width = spec.width;
     r->depth = spec.depth;
     r->height = spec.height;
@@ -632,6 +647,9 @@ static void populate(World *w, Room *r) {
 
     unsigned difficulty = world_difficulty(r->cell);
     r->enemy_count = r->type == BAY ? 0 : (int)(5 + (difficulty > 12 ? 12 : difficulty));
+    if (r->habitat.form)
+        /* Reserve offspring slots so brood species retain their defining ability. */
+        r->enemy_count = (int)fmin(SC_MAX_ENEMIES - 2, r->enemy_count + r->span_x + r->span_z);
     for (int i = 0; i < r->enemy_count; i++) {
         uint32_t population_version = w->generator == 8 ? 7 : w->generator;
         uint32_t h = world_hash(w->seed ^ population_version, r->cell, 1000 + (uint32_t)i * 31);
@@ -646,6 +664,10 @@ static void populate(World *w, Room *r) {
             if (sc_enemies[e->kind].tier <= difficulty)
                 break;
             choice = (choice + 1) % pool;
+        }
+        if (w->generator >= 10) {
+            e->kind = (uint8_t)habitat_enemy(r, difficulty, h);
+            e->ecology = r->habitat.ecology + 1;
         }
         if (r->height < 3 && sc_enemies[e->kind].size > .8f)
             e->kind = (uint8_t)(h % 2 ? 0 : 3);
@@ -663,12 +685,14 @@ static void populate(World *w, Room *r) {
             e->pos = position_from(
                 vadd(world_room_center(r), v3(((v & 65535) / 65535.0 - .5) * (r->width - 4), .02,
                                               ((v >> 16) / 65535.0 - .5) * (r->depth - 4))));
-            if (!overlap_world(w, position_absolute(e->pos), .42, 1.25, false))
+            if (w->generator >= 10 ? habitat_spawn(w, r, position_absolute(e->pos))
+                                   : !overlap_world(w, position_absolute(e->pos), .42, 1.25, false))
                 break;
         }
         if (i == 0 && e->kind == 26 && contains(r, (Cell){2, 1, 2}))
             e->pos = position_from(vadd(world_lift((Cell){2, 1, 2}), v3(0, 0, 9)));
-        if (overlap_world(w, position_absolute(e->pos), .42, 1.25, false))
+        if (w->generator >= 10 ? !habitat_spawn(w, r, position_absolute(e->pos))
+                               : overlap_world(w, position_absolute(e->pos), .42, 1.25, false))
             e->pos = position_from(vadd(world_center(r->cell), v3(0, .02, 2 + (i % 4) * 2)));
     }
     if (w->generator >= 7)
@@ -686,9 +710,7 @@ unsigned world_stream(World *w, unsigned budget) {
             if (!world_chunk(w, w->desired[i])) {
                 Cell c = w->desired[i];
                 int score = distance(c, w->anchors[viewer]) * 10;
-                if (c.y == focus.cell.y && c.x >= focus.cell.x &&
-                    c.x < focus.cell.x + focus.span_x && c.z >= focus.cell.z &&
-                    c.z < focus.cell.z + focus.span_z)
+                if (habitat_owns(focus.cell, focus.span_x, focus.span_z, focus.habitat.mask, c))
                     score = 0;
                 if (score < best) {
                     best = score;
@@ -756,7 +778,8 @@ unsigned world_stream(World *w, unsigned budget) {
         bool complete = true;
         for (int z = 0; z < r->span_z; z++)
             for (int x = 0; x < r->span_x; x++)
-                if (!world_chunk(w, (Cell){r->cell.x + x, r->cell.y, r->cell.z + z}))
+                if (contains(r, (Cell){r->cell.x + x, r->cell.y, r->cell.z + z}) &&
+                    !world_chunk(w, (Cell){r->cell.x + x, r->cell.y, r->cell.z + z}))
                     complete = false;
         if (complete && !r->ready)
             populate(w, r);
@@ -811,6 +834,11 @@ static bool overlap_world(const World *w, Vec3 p, double radius, double height, 
                 return true;
     }
     return false;
+}
+bool world_spawn_supported(const World *w, Vec3 p, double height) {
+    /* Encounters reconstruct identically behind phase/frontier gates. */
+    return !overlap_world(w, p, .55, height, false) &&
+           overlap_world(w, vadd(p, v3(0, -.12, 0)), .3, .1, false);
 }
 bool world_overlap(const World *w, Vec3 p, double radius, double height) {
     return overlap_world(w, p, radius, height, true);

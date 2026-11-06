@@ -481,7 +481,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         result, sizeof(result),
         "{\"seed\":%u,\"players\":%d,\"paused\":%s,\"frames\":%d,\"rooms\":%d,"
         "\"x\":%.5f,\"y\":%.5f,\"z\":%.5f,\"rank\":%u,\"kills\":%u,\"shots\":%u,\"failed\":%s,"
-        "\"generator\":%u,\"chunks\":%d,\"pending\":%d,\"generated\":%u,\"work\":%u,\"uploads\":%u,"
+        "\"generator\":%u,\"form\":%u,\"volume\":%u,\"atmosphere\":%u,\"ecology\":%u,\"tale\":%u,"
+        "\"sprites\":%u,\"sprites2\":%u,\"room_height\":%.1f,\"chunks\":%d,\"pending\":%d,"
+        "\"generated\":%u,\"work\":%u,\"uploads\":%u,"
         "\"span\":%d,\"ready\":%s,\"fingerprint\":%u,\"flashlight\":%s,\"projectiles\":%u,\"enemy_"
         "shots\":%u,\"projectile_hits\":%u,\"climbers\":%u,\"mission\":%u,\"weapon\":%u,"
         "\"weapons\":%u,\"shield\":%.2f,\"armor\":%.2f,\"energy\":%.2f,\"credits\":%u,\"pickups\":%"
@@ -511,9 +513,12 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "\"hazard_kinds\":%u,\"hazard_triggered\":%u,\"hazard_spent\":%u,\"respawns\":%u}",
         app.game.world.seed, app.game.player_count, app.paused ? "true" : "false", app.frame,
         app.game.world.count, feet.x, feet.y, feet.z, p->level, p->kills, app.game.shots,
-        app.failed ? "true" : "false", app.game.world.generator, app.game.world.chunk_count,
-        app.game.world.pending, app.game.world.generated, app.game.world.last_work,
-        app.renderer.last_uploads, room ? room->span_x * room->span_z : 0,
+        app.failed ? "true" : "false", app.game.world.generator, room ? room->habitat.form : 0,
+        room ? room->habitat.volume : 0, room ? room->habitat.atmosphere : 0,
+        room ? room->habitat.ecology : 0, room ? room->habitat.tale : 0,
+        app.renderer.sprite_drawn[0], app.renderer.sprite_drawn[1], room ? room->height : 0,
+        app.game.world.chunk_count, app.game.world.pending, app.game.world.generated,
+        app.game.world.last_work, app.renderer.last_uploads, room ? room->span_x * room->span_z : 0,
         room && room->ready ? "true" : "false",
         world_fingerprint_version(app.game.world.seed, app.game.world.generator,
                                   world_region(world_cell(feet))),
@@ -1664,6 +1669,8 @@ int main(int argc, char **argv) {
     }
     SDL_free(pref);
     if (scene) {
+        bool habitat_scene = !strncmp(scene, "biome", 5) || !strncmp(scene, "volume", 6) ||
+                             !strncmp(scene, "shape", 5);
         bool traversal_scene =
             !strcmp(scene, "stairs") || !strcmp(scene, "ramp") || !strcmp(scene, "lift");
         bool exterior_scene = !strcmp(scene, "arrival") || !strcmp(scene, "skiff") ||
@@ -1671,7 +1678,7 @@ int main(int argc, char **argv) {
                               !strcmp(scene, "hull");
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
-        if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene) {
+        if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene && !habitat_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -1784,6 +1791,46 @@ int main(int argc, char **argv) {
             app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, 0)));
             app.game.players[0].yaw = inspect_role >= 0 ? -2.36 : .78;
             app.game.players[0].pitch = inspect_landmark >= 0 ? .26 : .015;
+        }
+        if (habitat_scene) {
+            bool found = false;
+            for (int y = -4; y <= 4 && !found; y++)
+                for (int rz = 1; rz < 5 && !found; rz++)
+                    for (int rx = -4; rx <= 4 && !found; rx++) {
+                        RegionPlan plan;
+                        world_plan_version(seed, SC_GENERATOR_VERSION, (Cell){rx, y, rz}, &plan);
+                        for (int i = 0; i < plan.count && !found; i++) {
+                            RoomSpec room = plan.rooms[i];
+                            int desired = atoi(scene + (!strncmp(scene, "volume", 6) ? 6 : 5));
+                            bool match =
+                                !strncmp(scene, "biome", 5)    ? room.habitat.atmosphere == desired
+                                : !strncmp(scene, "volume", 6) ? room.habitat.volume == desired
+                                                               : room.habitat.form == desired;
+                            if (match && room.height >= 3) {
+                                c = room.cell;
+                                found = true;
+                            }
+                        }
+                    }
+            Player *p = &app.game.players[0];
+            p->pos = position_from(vadd(world_center(c), v3(0, .02, 0)));
+            p->checkpoint = position_from(world_lift(c));
+            p->yaw = .4;
+            p->pitch = .05;
+            if (!strncmp(scene, "volume", 6)) {
+                if (scene[6] == '2') {
+                    p->pos = position_from(vadd(world_center(c), v3(9.2, .02, 24)));
+                    p->yaw = SC_PI * .5;
+                    p->pitch = -.8;
+                } else {
+                    p->pos = position_from(vadd(world_center(c), v3(0, .02, 18)));
+                    p->yaw = .7;
+                    p->pitch = .52;
+                }
+            }
+            app.game.campaign = (Campaign){0};
+            app.game.world.open_layer = 0;
+            app.no_save = true;
         }
         if (traversal_scene) {
             Player *p = &app.game.players[0];

@@ -121,3 +121,10 @@ use for stairs, with 11 XP and 23 salvage. The 20 semantic geometry fingerprints
 cover four seeds and positive/negative deck and horizontal coordinates. Do not
 regenerate these from generator 9. `vertical_traversal` checks exact old geometry,
 profile/position retention and legacy lift behavior.
+
+
+`generator-v9-format11.sav` and `generator-v9-geometry.txt` were captured from the
+unmodified `ef568f5` core before generator 10. The save has seed 713, XP 17 and
+29 salvage. Twenty rows contain seed/cell, semantic geometry hash and population
+kind/position hash. `living_ship` verifies them exactly; never regenerate them
+from the new generator.

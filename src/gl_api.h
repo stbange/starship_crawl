@@ -17,6 +17,8 @@
     X(void, Clear, (GLbitfield))                                                                   \
     X(void, Enable, (GLenum))                                                                      \
     X(void, Disable, (GLenum))                                                                     \
+    X(void, DepthMask, (GLboolean))                                                                \
+    X(void, BlendFunc, (GLenum, GLenum))                                                           \
     X(void, DepthFunc, (GLenum))                                                                   \
     X(void, GenBuffers, (GLsizei, GLuint *))                                                       \
     X(void, BindBuffer, (GLenum, GLuint))                                                          \

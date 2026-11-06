@@ -25,3 +25,24 @@ keyboard input and seed 713 (Chromium software rendering):
 The [controls and traversal guide](../../FOUNDATIONS.md) includes reproducible
 inspection scenes. The lift capture is from a normal expedition; the browser test
 then saves during transit and verifies safe recovery at the departure pad.
+
+
+Generator-10 WebGL captures from the packaged Chromium test, seed 713. These are
+actual game frames; the low resolution and darkness are the game's retro renderer.
+See [the living ship guide](../../LIVING_SHIP.md) for inspection scenes and controls.
+
+The lower vault, looking towards the upper gallery:
+
+![Paired-deck vault](living-vault.png)
+
+Colored runoff, furniture evidence and pixel sprite details:
+
+![Runoff and environmental detail](living-runoff.png)
+
+The current room's local account in the F6 dossier:
+
+![Local environmental account](living-local-account.png)
+
+One player sheltered while the second remains in ship weather:
+
+![Independent shelter and weather views](living-split-shelter.png)
