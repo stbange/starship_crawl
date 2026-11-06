@@ -25,6 +25,18 @@ static uint32_t geometry_fingerprint(const Chunk *c) {
         h = fingerprint_word(h, llround(b->glow * 10000));
         h = fingerprint_word(h, b->solid);
     }
+    /* Old chunks have no flights: retain historical fixture hashes verbatim. */
+    if (c->flight_count) {
+        h = fingerprint_word(h, c->flight_count);
+        for (int i = 0; i < c->flight_count; i++) {
+            const Flight *f = &c->flights[i];
+            h = fingerprint_vector(h, f->min);
+            h = fingerprint_vector(h, f->max);
+            h = fingerprint_vector(h, v3(f->color.r, f->color.g, f->color.b));
+            h = fingerprint_word(h, f->reverse);
+            h = fingerprint_word(h, f->stairs);
+        }
+    }
     h = fingerprint_word(h, c->light_count);
     for (int i = 0; i < c->light_count; i++) {
         const PointLight *p = &c->lights[i];

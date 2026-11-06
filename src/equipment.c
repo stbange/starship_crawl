@@ -44,6 +44,8 @@ bool game_rig_blocks(const Game *g, int player, Vec3 feet, double radius, double
 void game_rig_toggle(Game *g, int player, RigKind kind) {
     if (player < 0 || player >= g->player_count || kind < MECH || kind > WAGON)
         return;
+    if (g->players[player].lift_active)
+        return;
     if (!campaign_rig(g, player, (unsigned)kind)) {
         game_message(g, "RIG LOCKED OR STORED / DEFEAT GUARDIANS / F10 LOADOUT");
         return;
@@ -95,7 +97,7 @@ RigKind game_rig_near(const Game *g, int player) {
     return ON_FOOT;
 }
 bool game_rig_interact(Game *g, int player) {
-    if (player < 0 || player >= g->player_count)
+    if (player < 0 || player >= g->player_count || g->players[player].lift_active)
         return false;
     Player *p = &g->players[player];
     if (p->riding) {

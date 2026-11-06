@@ -86,6 +86,7 @@ static void layout(GLuint buffer) {
 }
 bool renderer_init(Renderer *r) {
     memset(r, 0, sizeof(*r));
+    preferences_default(&r->preferences);
     if (!gl_load())
         return false;
     GLuint vs = shader(GL_VERTEX_SHADER, vertex_source),
@@ -125,9 +126,9 @@ bool renderer_init(Renderer *r) {
     r->lamp_color = gl.GetUniformLocation(r->program, "uLampColor[0]");
     gl.GenVertexArrays(1, &r->vao);
     gl.GenBuffers(1, &r->vbo);
-    gl.GenFramebuffers(1, &r->framebuffer);
-    gl.GenTextures(1, &r->texture);
-    gl.GenRenderbuffers(1, &r->depth);
+    gl.GenFramebuffers(SC_PLAYERS, r->framebuffer);
+    gl.GenTextures(SC_PLAYERS, r->texture);
+    gl.GenRenderbuffers(SC_PLAYERS, r->depth);
     gl.BindVertexArray(r->vao);
     layout(r->vbo);
     gl.DepthFunc(GL_LEQUAL);
@@ -153,12 +154,14 @@ void renderer_destroy(Renderer *r) {
         gl.DeleteVertexArrays(1, &r->vao);
     if (r->vbo)
         gl.DeleteBuffers(1, &r->vbo);
-    if (r->framebuffer)
-        gl.DeleteFramebuffers(1, &r->framebuffer);
-    if (r->texture)
-        gl.DeleteTextures(1, &r->texture);
-    if (r->depth)
-        gl.DeleteRenderbuffers(1, &r->depth);
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        if (r->framebuffer[i])
+            gl.DeleteFramebuffers(1, &r->framebuffer[i]);
+        if (r->texture[i])
+            gl.DeleteTextures(1, &r->texture[i]);
+        if (r->depth[i])
+            gl.DeleteRenderbuffers(1, &r->depth[i]);
+    }
     for (int i = 0; i < SC_MAX_CHUNKS; i++)
         if (r->chunk_vbo[i])
             gl.DeleteBuffers(1, &r->chunk_vbo[i]);
@@ -346,22 +349,25 @@ static void flush(Renderer *r) {
     gl.DrawArrays(GL_TRIANGLES, 0, (GLsizei)r->mesh.count);
     r->mesh.count = 0;
 }
-static void resize_target(Renderer *r, int w, int h) {
-    if (r->width == w && r->height == h)
+static void resize_target(Renderer *r, int player, int w, int h) {
+    if (r->width[player] == w && r->height[player] == h)
         return;
-    r->width = w;
-    r->height = h;
-    gl.BindTexture(GL_TEXTURE_2D, r->texture);
+    r->width[player] = w;
+    r->height[player] = h;
+    r->target_resizes[player]++;
+    gl.BindTexture(GL_TEXTURE_2D, r->texture[player]);
     gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    gl.BindRenderbuffer(GL_RENDERBUFFER, r->depth);
+    gl.BindRenderbuffer(GL_RENDERBUFFER, r->depth[player]);
     gl.RenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, w, h);
-    gl.BindFramebuffer(GL_FRAMEBUFFER, r->framebuffer);
-    gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, r->texture, 0);
-    gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, r->depth);
+    gl.BindFramebuffer(GL_FRAMEBUFFER, r->framebuffer[player]);
+    gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, r->texture[player],
+                            0);
+    gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
+                               r->depth[player]);
     if (gl.CheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         SDL_Log("Incomplete render target");
         r->failed = true;
@@ -389,6 +395,20 @@ static void upload_world(Renderer *r, Game *g) {
             for (size_t j = 0; j < c->box_count; j++) {
                 const Box *b = &c->boxes[j];
                 block(r, vmul(vadd(b->min, b->max), .5), vsub(b->max, b->min), b->color, b->glow);
+            }
+            for (int j = 0; j < c->flight_count; j++) {
+                const Flight *f = &c->flights[j];
+                int n = f->stairs ? 32 : 1;
+                for (int k = 0; k < n; k++) {
+                    double za = f->min.z + (f->max.z - f->min.z) * k / n;
+                    double zb = f->min.z + (f->max.z - f->min.z) * (k + 1) / n;
+                    double ya = flight_top(f, f->stairs ? (za + zb) * .5 : za);
+                    double yb = flight_top(f, f->stairs ? (za + zb) * .5 : zb);
+                    cube(&r->mesh,
+                         v3((f->min.x + f->max.x) * .5, (ya + yb) * .5 - .175, (za + zb) * .5),
+                         v3(f->max.x - f->min.x, 0, 0), v3(0, .35, 0), v3(0, yb - ya, zb - za),
+                         f->color, 0);
+                }
             }
             for (int j = 0; j < c->dressing_count; j++)
                 dressing_mesh(r, &c->dressing[j]);
@@ -1135,6 +1155,14 @@ static void actors(Renderer *r, Game *g, int viewer) {
                  1.5f);
         }
     }
+    for (int i = 0; i < g->player_count; i++)
+        if (g->players[i].lift_active) {
+            Vec3 at = position_absolute(g->players[i].pos);
+            block(r, vadd(at, v3(0, -.14, 0)), v3(4.6, .24, 4.6), rgb(.09f, .21f, .25f), .3f);
+            for (int side = -1; side <= 1; side += 2)
+                block(r, vadd(at, v3(side * 2.25, .04, 0)), v3(.08, .08, 4.5), rgb(.1f, .7f, .9f),
+                      2);
+        }
     for (int owner = 0; owner < SC_PLAYERS; owner++)
         for (int k = 0; k < 2; k++) {
             const Rig *rig = &g->rigs[owner][k];
@@ -1735,7 +1763,17 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     Vec3 lift = world_lift(cell), d = vsub(position_absolute(p->pos), lift);
     d.y = 0;
-    if (!p->sheltered && position_absolute(p->pos).z >= 0 && vlen(d) < 3.3)
+    if (g->world.generator >= 9 && !p->sheltered && !p->lift_active &&
+        position_absolute(p->pos).z >= 0 && world_service_column(g->world.seed, cell) &&
+        fabs(position_absolute(p->pos).x - world_center(cell).x) < 16 &&
+        position_absolute(p->pos).z - world_center(cell).z < -5)
+        centered(r, w * .5f, h * .59f, 1.15f * s, "SERVICE SHAFT / AMBER STAIRS / BLUE RAMPS",
+                 gold);
+    if (p->lift_active) {
+        snprintf(label, sizeof(label), "GRAV TRANSIT / DECK %d / %d%%", p->lift_to.sector.y,
+                 (int)(100 * p->lift_progress));
+        centered(r, w * .5f, h * .65f, 1.7f * s, label, mint);
+    } else if (!p->sheltered && position_absolute(p->pos).z >= 0 && vlen(d) < 3.3)
         centered(r, w * .5f, h * .65f, 1.7f * s,
                  touch ? "GRAV LIFT / UP OR DOWN" : "GRAV LIFT  /  E UP  /  Q DOWN", mint);
     if (p->riding) {
@@ -1888,7 +1926,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                  dim);
         centered(r, w * .5f, my + 173 * s, 1.1f * s,
                  "E / Q LIFTS   G USE   I JOURNAL   Z / X WEAPONS", dim);
-        centered(r, w * .5f, my + 192 * s, 1.1f * s, "F2 OPTIONAL CO-OP   F5 SAVE   F9 LOAD", dim);
+        centered(r, w * .5f, my + 192 * s, 1.1f * s, "F1 SETTINGS / PAD BACK   F2 CO-OP   F5 SAVE",
+                 dim);
         centered(r, w * .5f, my + 223 * s, 1.1f * s, "N + ENTER / NEW SHIP AND NEW CHARACTERS",
                  gold);
         if (g->message_time > 0)
@@ -1984,6 +2023,50 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     flush(r);
 }
+void renderer_options(Renderer *r, int width, int height, int player, int selected) {
+    if (width < 80 || height < 80)
+        return;
+    float s = fminf((width - 20) / 650.0f, (height - 20) / 420.0f);
+    float x = (width - 650 * s) * .5f, y = (height - 420 * s) * .5f, matrix[16];
+    Color gold = rgb(.9f, .72f, .4f), ink = rgb(.76f, .84f, .8f), dim = rgb(.4f, .55f, .56f);
+    gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl.Viewport(0, 0, width, height);
+    ortho(matrix, (float)width, (float)height);
+    gl.UniformMatrix4fv(r->mvp, 1, GL_FALSE, matrix);
+    gl.Uniform1i(r->ui, 1);
+    gl.Uniform3f(r->offset, 0, 0, 0);
+    gl.Disable(GL_DEPTH_TEST);
+    rect(r, x, y, 650 * s, 420 * s, rgb(.015f, .03f, .04f));
+    frame(r, x, y, 650 * s, 420 * s, gold);
+    text_at(r, x + 22 * s, y + 20 * s, 1.5f * s, "CONTROLS AND DISPLAY", gold);
+    const char *labels[] = {
+        "PLAYER",         "MOUSE SENSITIVITY",    "TOUCH SENSITIVITY", "STICK SENSITIVITY",
+        "STICK DEADZONE", "INVERT VERTICAL LOOK", "WORLD RESOLUTION",  "RESET THIS PLAYER"};
+    for (int row = 0; row < 8; row++) {
+        float yy = y + (68 + row * 36) * s;
+        if (row == selected)
+            rect(r, x + 12 * s, yy - 8 * s, 626 * s, 30 * s, rgb(.06f, .12f, .13f));
+        text_at(r, x + 24 * s, yy, s, labels[row], row == selected ? gold : ink);
+        char value[64] = "LEFT / RIGHT TO RESET";
+        if (row == 0)
+            snprintf(value, sizeof(value), "%d", player + 1);
+        else if (row < 5)
+            snprintf(value, sizeof(value), "%.2f",
+                     preferences_get(&r->preferences, player, row - 1));
+        else if (row == 5)
+            snprintf(value, sizeof(value), "%s",
+                     r->preferences.view[player].inverted ? "ON" : "OFF");
+        else if (row == 6)
+            snprintf(value, sizeof(value), "%s",
+                     preferences_quality(r->preferences.view[player].quality));
+        text_at(r, x + 380 * s, yy, s, value, row == selected ? gold : ink);
+    }
+    text_at(r, x + 22 * s, y + 372 * s, .85f * s,
+            "ARROWS / DPAD SELECT AND ADJUST / ENTER OR START RESUMES", dim);
+    text_at(r, x + 22 * s, y + 394 * s, .85f * s,
+            "F1 OPTIONS / DEVICE SETTINGS ARE SEPARATE FROM SHIP SAVES", dim);
+    flush(r);
+}
 void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, bool touch, bool debug,
                    double fps, const char *save_status) {
     if (width <= 0 || height <= 0)
@@ -2002,13 +2085,16 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
             vh = count == 1 ? height : (vertical ? height : height / 2);
         int vx = count == 1 ? 0 : (vertical ? p * vw : 0),
             vy = count == 1 ? 0 : (vertical ? 0 : (1 - p) * vh);
-        int rh = touch ? 240 : 360, rw = (int)((double)rh * vw / vh);
+        if (vw < 1 || vh < 1)
+            continue;
+        int rh = preferences_height(&r->preferences, p, touch), rw = (int)((double)rh * vw / vh);
+        r->view_height[p] = rh;
         if (rw < 160)
             rw = 160;
         if (rw > 960)
             rw = 960;
-        resize_target(r, rw, rh);
-        gl.BindFramebuffer(GL_FRAMEBUFFER, r->framebuffer);
+        resize_target(r, p, rw, rh);
+        gl.BindFramebuffer(GL_FRAMEBUFFER, r->framebuffer[p]);
         gl.Viewport(0, 0, rw, rh);
         Player *player = &g->players[p];
         bool matrix = g->matrix.divers[p].active;
@@ -2049,7 +2135,7 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
             weapon(r, player);
             flush(r);
         }
-        gl.BindFramebuffer(GL_READ_FRAMEBUFFER, r->framebuffer);
+        gl.BindFramebuffer(GL_READ_FRAMEBUFFER, r->framebuffer[p]);
         gl.BindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         gl.BlitFramebuffer(0, 0, rw, rh, vx, vy, vx + vw, vy + vh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         gl.BindFramebuffer(GL_FRAMEBUFFER, 0);

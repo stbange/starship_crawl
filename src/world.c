@@ -104,7 +104,7 @@ void world_box(Builder *b, Vec3 center, Vec3 size, Color color, float glow, bool
     hi.z = fmin(hi.z, 48);
     if (hi.x - lo.x < .0001 || hi.z - lo.z < .0001)
         return;
-    if (b->chunk->box_count == SC_CHUNK_BOXES) {
+    if (b->chunk->box_count >= (b->world->generator >= 9 ? SC_CHUNK_BOXES : SC_LEGACY_BOXES)) {
         b->world->failed = true;
         return;
     }
@@ -166,7 +166,7 @@ static void dressing(Chunk *chunk, DressingKind kind, Vec3 pos, Vec3 normal, flo
         chunk->dressing[chunk->dressing_count++] = (Dressing){pos, normal, hash, kind, scale};
 }
 static void detail(Builder *b, Vec3 p, Vec3 size, Color col, float glow) {
-    if (b->chunk->box_count < SC_CHUNK_BOXES)
+    if (b->chunk->box_count < SC_LEGACY_BOXES)
         world_box(b, vadd(b->origin, p), size, col, glow, false);
 }
 static void room_dressing(Builder *b, const Room *r) {
@@ -505,6 +505,8 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
     } else {
         interior_build(&b, r);
     }
+    if (w->generator >= 9)
+        traversal_build(&b);
 }
 
 static bool wanted(const World *w, Cell c) {
@@ -801,6 +803,9 @@ static bool overlap_world(const World *w, Vec3 p, double radius, double height, 
         if (fabs(local_p.x) > 48 + radius || fabs(local_p.z) > 48 + radius ||
             local_p.y + height < -.8 || local_p.y > SC_DECK)
             continue;
+        for (int j = 0; j < c->flight_count; j++)
+            if (flight_overlap(&c->flights[j], local_p, radius, height))
+                return true;
         for (size_t j = 0; j < c->box_count; j++)
             if (overlaps(&c->boxes[j], local_p, radius, height))
                 return true;
@@ -850,6 +855,8 @@ double world_raycast(const World *w, Vec3 o, Vec3 d, double limit) {
         Box bounds = {v3(-48, -1, -48), v3(48, SC_DECK, 48), {0, 0, 0}, 0, true};
         if (ray_box(&bounds, local_o, d, best) >= best)
             continue;
+        for (int j = 0; j < c->flight_count; j++)
+            best = flight_ray(&c->flights[j], local_o, d, best);
         for (size_t j = 0; j < c->box_count; j++)
             best = ray_box(&c->boxes[j], local_o, d, best);
     }

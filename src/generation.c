@@ -167,8 +167,8 @@ static void history(RegionPlan *p, uint32_t hash, int preferred, unsigned incide
         }
 }
 void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPlan *p) {
-    /* Version 8 adds the exterior skiff without reshuffling version-7 interiors. */
-    if (generator == 8)
+    /* Versions 8/9 add exterior/traversal geometry to the version-7 room plan. */
+    if (generator >= 8)
         generator = 7;
     /* Version 6 expands encounters; its architecture and historical sites stay on version 5. */
     if (generator == 6)

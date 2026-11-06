@@ -32,6 +32,8 @@ bool shelter_clear(Vec3 feet) {
 void game_summon(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
+    if (g->players[player].lift_active)
+        return;
     if (g->matrix.divers[player].active)
         return;
     if (g->players[player].riding) {

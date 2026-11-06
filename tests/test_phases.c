@@ -570,10 +570,11 @@ static void phase_boundaries(void) {
     win(g, 0);
     g->players[0].pos = position_from(world_lift((Cell){0, 1, 0}));
     settle(g);
-    for (int i = 0; i < 60; i++) {
+    for (int i = 0; i < 190; i++) {
         world_stream(&g->world, 2);
         game_step(g, actions, 1.0 / 60);
     }
+    CHECK(!g->players[0].lift_active);
     CHECK(world_cell(position_absolute(g->players[0].pos)).y == 2);
     destroy(g);
 }

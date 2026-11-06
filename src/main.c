@@ -38,20 +38,22 @@ typedef struct {
     SDL_Window *window;
     SDL_GLContext context;
     SDL_AudioStream *audio;
-    SDL_Gamepad *pads[2];
+    InputDevices devices;
     Game game;
     Renderer renderer;
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
     bool demo_encounter, inspect_shelter, inspect_matrix;
     int frame, smoke_frames, inspect_form, inspect_rig;
+    bool options;
+    int option_player, option_row;
     double last, accumulator, fps, autosave, audio_time;
     Uint64 look_after;
     bool discard_look;
     float ambience[DISTRICT_TYPES];
     uint32_t audio_shots, audio_noise;
     int shot_sample;
-    char save_path[1024], save_status[96];
+    char save_path[1024], preferences_path[1024], save_status[96];
     const char *capture;
 } App;
 static App app;
@@ -61,6 +63,7 @@ static void set_pause(bool paused) {
     app.mouse_fire = false;
     memset(app.fingers, 0, sizeof(app.fingers));
     app.accumulator = 0;
+    SDL_ResetKeyboard();
     if (app.window && !app.touch) {
 #ifdef __EMSCRIPTEN__
         /* The browser look bridge owns capture. SDL and the HTML menu must not
@@ -103,6 +106,7 @@ static void save_game(void) {
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_start(void) {
     app.started = true;
+    app.options = false;
     app.new_armed = false;
     set_pause(false);
 }
@@ -120,7 +124,88 @@ EMSCRIPTEN_KEEPALIVE void sc_web_look(double dx, double dy) {
         app.discard_look = false;
         return;
     }
-    game_look(&app.game.players[0], dx * .0023, -dy * .0023);
+    const ViewPreferences *v = &app.renderer.preferences.view[0];
+    game_look(&app.game.players[0], dx * .0023 * v->mouse,
+              dy * .0023 * v->mouse * (v->inverted ? 1 : -1));
+}
+EMSCRIPTEN_KEEPALIVE void sc_web_reset_input(void) {
+    if (!app.window)
+        return;
+    app.mouse_fire = false;
+    memset(app.fingers, 0, sizeof(app.fingers));
+    SDL_ResetKeyboard();
+    SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
+    app.accumulator = 0;
+    app.discard_look = true;
+}
+static bool save_preferences(void) {
+    if (app.no_save || !*app.preferences_path)
+        return false;
+    if (!preferences_save(&app.renderer.preferences, app.preferences_path)) {
+        game_message(&app.game, "SETTINGS APPLY THIS SESSION / COULD NOT SAVE DEVICE PREFERENCES");
+        return false;
+    }
+#ifdef __EMSCRIPTEN__
+    browser_flush();
+#endif
+    return true;
+}
+EMSCRIPTEN_KEEPALIVE int sc_web_setting(int player, int setting, double value) {
+    if (player < 0 || player >= SC_PLAYERS)
+        return 0;
+    if (setting == -1) {
+        Preferences defaults;
+        preferences_default(&defaults);
+        app.renderer.preferences.view[player] = defaults.view[player];
+    } else if (!preferences_set(&app.renderer.preferences, player, setting, value))
+        return 0;
+    return save_preferences() ? 1 : 2;
+}
+EMSCRIPTEN_KEEPALIVE const char *sc_web_preferences(void) {
+    static char result[1024];
+    const ViewPreferences *a = &app.renderer.preferences.view[0],
+                          *b = &app.renderer.preferences.view[1];
+    const Player *p = &app.game.players[1];
+    Vec3 v = position_absolute(p->pos);
+    snprintf(
+        result, sizeof(result),
+        "{\"views\":[[%.4f,%.4f,%.4f,%.4f,%u,%u],[%.4f,%.4f,%.4f,%.4f,%u,%u]],"
+        "\"pads\":[%d,%d],\"height\":[%d,%d],\"resizes\":[%u,%u],\"options\":%s,\"selected\":%d,"
+        "\"p2\":[%.5f,%.5f,%.5f,%.5f,%.5f],\"transit\":%s,\"progress\":%.3f,\"deck\":%d}",
+        a->mouse, a->touch, a->stick, a->deadzone, (unsigned)a->inverted, a->quality, b->mouse,
+        b->touch, b->stick, b->deadzone, (unsigned)b->inverted, b->quality,
+        app.devices.pads[0] ? app.devices.owner[0] : -1,
+        app.devices.pads[1] ? app.devices.owner[1] : -1, app.renderer.view_height[0],
+        app.renderer.view_height[1], app.renderer.target_resizes[0], app.renderer.target_resizes[1],
+        app.options ? "true" : "false", app.option_player, v.x, v.y, v.z, p->yaw, p->pitch,
+        app.game.players[0].lift_active ? "true" : "false", app.game.players[0].lift_progress,
+        app.game.players[0].lift_to.sector.y);
+    return result;
+}
+static void options_open(int player) {
+    set_pause(true);
+    app.options = true;
+    app.option_player = player;
+    app.option_row = 0;
+}
+static void options_adjust(int direction) {
+    if (!app.option_row) {
+        app.option_player = 1 - app.option_player;
+        return;
+    }
+    if (app.option_row == 7) {
+        sc_web_setting(app.option_player, -1, 0);
+        return;
+    }
+    int setting = app.option_row - 1;
+    double value = preferences_get(&app.renderer.preferences, app.option_player, setting);
+    if (setting == PREF_INVERT)
+        value = !value;
+    else if (setting == PREF_QUALITY)
+        value = ((int)value + direction + 5) % 5;
+    else
+        value += direction * (setting == PREF_DEADZONE ? .02 : .25);
+    sc_web_setting(app.option_player, setting, value);
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_save(void) {
     save_game();
@@ -595,21 +680,15 @@ static void audio_frame(void) {
     }
 }
 static void open_pad(SDL_JoystickID id) {
-    for (int i = 0; i < 2; i++)
-        if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == id)
-            return;
-    for (int i = 0; i < 2; i++)
-        if (!app.pads[i]) {
-            app.pads[i] = SDL_OpenGamepad(id);
-            return;
-        }
+    input_devices_add(&app.devices, id, app.game.player_count);
 }
 static int pad_player(int slot) {
-    return app.game.player_count == 2 ? (app.pads[1] ? slot : 1) : 0;
+    input_devices_players(&app.devices, app.game.player_count);
+    return app.devices.owner[slot] >= 0 ? app.devices.owner[slot] : 0;
 }
-static float axis(SDL_Gamepad *pad, SDL_GamepadAxis axis_id) {
-    float v = SDL_GetGamepadAxis(pad, axis_id) / 32767.0f;
-    return fabsf(v) < .16f ? 0 : (v > 0 ? (v - .16f) / .84f : (v + .16f) / .84f);
+static float axis(SDL_Gamepad *pad, SDL_GamepadAxis axis_id, int player) {
+    return input_axis(SDL_GetGamepadAxis(pad, axis_id),
+                      app.renderer.preferences.view[player].deadzone);
 }
 static int finger_role(float x, float y) {
     const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f, .64f, .51f, .51f, .51f},
@@ -672,7 +751,10 @@ static void touch_event(const SDL_TouchFingerEvent *e, Uint32 type) {
                 else {
                     if (f->role == 1 && !app.paused && !app.game.players[0].map_open &&
                         !app.game.matrix.divers[0].map)
-                        game_look(&app.game.players[0], (e->x - f->x) * 3.5, -(e->y - f->y) * 2.8);
+                        game_look(&app.game.players[0],
+                                  (e->x - f->x) * 3.5 * app.renderer.preferences.view[0].touch,
+                                  (e->y - f->y) * 2.8 * app.renderer.preferences.view[0].touch *
+                                      (app.renderer.preferences.view[0].inverted ? 1 : -1));
                     f->x = e->x;
                     f->y = e->y;
                 }
@@ -686,8 +768,14 @@ static void events(void) {
         case SDL_EVENT_QUIT:
             app.running = false;
             break;
+        case SDL_EVENT_WILL_ENTER_BACKGROUND:
         case SDL_EVENT_WINDOW_FOCUS_LOST:
             set_pause(true);
+            break;
+        case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+        case SDL_EVENT_DISPLAY_ORIENTATION:
+            sc_web_reset_input();
             break;
         case SDL_EVENT_MOUSE_MOTION:
 #ifndef __EMSCRIPTEN__
@@ -697,7 +785,9 @@ static void events(void) {
                     app.discard_look = false;
                     break;
                 }
-                game_look(&app.game.players[0], e.motion.xrel * .0023, -e.motion.yrel * .0023);
+                const ViewPreferences *v = &app.renderer.preferences.view[0];
+                game_look(&app.game.players[0], e.motion.xrel * .0023 * v->mouse,
+                          e.motion.yrel * .0023 * v->mouse * (v->inverted ? 1 : -1));
             }
 #endif
             break;
@@ -723,20 +813,37 @@ static void events(void) {
             open_pad(e.gdevice.which);
             break;
         case SDL_EVENT_GAMEPAD_REMOVED:
-            for (int i = 0; i < 2; i++)
-                if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == e.gdevice.which) {
-                    SDL_CloseGamepad(app.pads[i]);
-                    app.pads[i] = NULL;
-                    set_pause(true);
-                }
+            if (input_devices_remove(&app.devices, e.gdevice.which)) {
+                set_pause(true);
+                game_message(&app.game,
+                             "CONTROLLER DISCONNECTED / OTHER PLAYER KEEPS THEIR CONTROLS");
+            }
             break;
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
             for (int i = 0; i < 2; i++)
-                if (app.pads[i] && SDL_GetGamepadID(app.pads[i]) == e.gbutton.which) {
+                if (app.devices.pads[i] &&
+                    SDL_GetGamepadID(app.devices.pads[i]) == e.gbutton.which) {
                     int player = pad_player(i);
                     Player *p = &app.game.players[player];
                     MatrixDiver *d = &app.game.matrix.divers[player];
                     int mb = e.gbutton.button;
+                    if (app.options) {
+                        if (mb == SDL_GAMEPAD_BUTTON_DPAD_UP || mb == SDL_GAMEPAD_BUTTON_DPAD_DOWN)
+                            app.option_row =
+                                (app.option_row + (mb == SDL_GAMEPAD_BUTTON_DPAD_UP ? 7 : 1)) % 8;
+                        if (mb == SDL_GAMEPAD_BUTTON_DPAD_LEFT ||
+                            mb == SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
+                            options_adjust(mb == SDL_GAMEPAD_BUTTON_DPAD_LEFT ? -1 : 1);
+                        if (mb == SDL_GAMEPAD_BUTTON_START || mb == SDL_GAMEPAD_BUTTON_SOUTH)
+                            sc_web_start();
+                        if (mb == SDL_GAMEPAD_BUTTON_BACK || mb == SDL_GAMEPAD_BUTTON_EAST)
+                            app.options = false;
+                        break;
+                    }
+                    if (app.paused && !p->journal && mb == SDL_GAMEPAD_BUTTON_BACK) {
+                        options_open(player);
+                        break;
+                    }
                     if (p->journal && p->journal_page == 5) {
                         Campaign *c = &app.game.campaign;
                         if (mb == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER ||
@@ -761,7 +868,8 @@ static void events(void) {
                         continue;
                     }
                     if (mb == SDL_GAMEPAD_BUTTON_START &&
-                        SDL_GetGamepadAxis(app.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16000) {
+                        SDL_GetGamepadAxis(app.devices.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) >
+                            16000) {
                         phase_journal(player);
                         continue;
                     }
@@ -787,7 +895,8 @@ static void events(void) {
                         continue;
                     }
                     if (mb == SDL_GAMEPAD_BUTTON_RIGHT_STICK &&
-                        SDL_GetGamepadAxis(app.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16000) {
+                        SDL_GetGamepadAxis(app.devices.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) >
+                            16000) {
                         matrix_journal(player);
                         continue;
                     }
@@ -887,7 +996,8 @@ static void events(void) {
                         if (b != SDL_GAMEPAD_BUTTON_START)
                             continue;
                     }
-                    if (SDL_GetGamepadAxis(app.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16000) {
+                    if (SDL_GetGamepadAxis(app.devices.pads[i], SDL_GAMEPAD_AXIS_LEFT_TRIGGER) >
+                        16000) {
                         int b = e.gbutton.button;
                         if (b == SDL_GAMEPAD_BUTTON_BACK) {
                             p->journal = true;
@@ -956,6 +1066,24 @@ static void events(void) {
         case SDL_EVENT_KEY_DOWN:
             if (e.key.repeat)
                 break;
+            if (e.key.key == SDLK_F1) {
+                if (app.options)
+                    sc_web_start();
+                else
+                    options_open(0);
+                break;
+            }
+            if (app.options) {
+                if (e.key.key == SDLK_UP || e.key.key == SDLK_DOWN)
+                    app.option_row = (app.option_row + (e.key.key == SDLK_UP ? 7 : 1)) % 8;
+                if (e.key.key == SDLK_LEFT || e.key.key == SDLK_RIGHT)
+                    options_adjust(e.key.key == SDLK_LEFT ? -1 : 1);
+                if (e.key.key == SDLK_RETURN)
+                    sc_web_start();
+                if (e.key.key == SDLK_ESCAPE)
+                    app.options = false;
+                break;
+            }
             {
                 Player *p = &app.game.players[0];
                 MatrixDiver *d = &app.game.matrix.divers[0];
@@ -1215,6 +1343,7 @@ static void events(void) {
 }
 static void read_actions(Actions actions[2], double dt) {
     memset(actions, 0, 2 * sizeof(*actions));
+    input_devices_players(&app.devices, app.game.player_count);
     const bool *k = SDL_GetKeyboardState(NULL);
     Actions *a = &actions[0];
     a->forward = (float)(k[SDL_SCANCODE_W] - k[SDL_SCANCODE_S]);
@@ -1253,16 +1382,19 @@ static void read_actions(Actions actions[2], double dt) {
             }
         }
     for (int i = 0; i < 2; i++)
-        if (app.pads[i]) {
-            if (app.game.player_count == 1 && i == 1 && app.pads[0])
+        if (app.devices.pads[i]) {
+            if (app.game.player_count == 1 && i == 1 && app.devices.pads[0])
                 continue;
-            SDL_Gamepad *pad = app.pads[i];
+            SDL_Gamepad *pad = app.devices.pads[i];
             int player = pad_player(i);
             a = &actions[player];
-            a->strafe += axis(pad, SDL_GAMEPAD_AXIS_LEFTX);
-            a->forward -= axis(pad, SDL_GAMEPAD_AXIS_LEFTY);
-            game_look(&app.game.players[player], axis(pad, SDL_GAMEPAD_AXIS_RIGHTX) * dt * 2.3,
-                      -axis(pad, SDL_GAMEPAD_AXIS_RIGHTY) * dt * 1.8);
+            a->strafe += axis(pad, SDL_GAMEPAD_AXIS_LEFTX, player);
+            a->forward -= axis(pad, SDL_GAMEPAD_AXIS_LEFTY, player);
+            const ViewPreferences *v = &app.renderer.preferences.view[player];
+            game_look(&app.game.players[player],
+                      axis(pad, SDL_GAMEPAD_AXIS_RIGHTX, player) * dt * 2.3 * v->stick,
+                      axis(pad, SDL_GAMEPAD_AXIS_RIGHTY, player) * dt * 1.8 * v->stick *
+                          (v->inverted ? 1 : -1));
             a->fire |= SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > 8000;
             if (SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) <= 16000) {
                 a->jump |= SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_SOUTH);
@@ -1279,9 +1411,7 @@ static void read_actions(Actions actions[2], double dt) {
 static void shutdown_app(void) {
     if (!app.no_save && !app.failed)
         save_game();
-    for (int i = 0; i < 2; i++)
-        if (app.pads[i])
-            SDL_CloseGamepad(app.pads[i]);
+    input_devices_close(&app.devices);
     if (app.audio)
         SDL_DestroyAudioStream(app.audio);
     renderer_destroy(&app.renderer);
@@ -1389,6 +1519,8 @@ static void frame(void *unused) {
 #endif
     renderer_draw(&app.renderer, &app.game, w, h, draw_pause, app.touch, app.debug, app.fps,
                   app.save_status);
+    if (app.options)
+        renderer_options(&app.renderer, w, h, app.option_player, app.option_row);
     GLenum error = gl.GetError();
     if (error != GL_NO_ERROR || app.renderer.failed || app.game.world.failed) {
         SDL_Log("Frame failed: GL error 0x%x", error);
@@ -1418,6 +1550,7 @@ int main(int argc, char **argv) {
     memset(&app, 0, sizeof(app));
     app.running = true;
     app.paused = true;
+    input_devices_init(&app.devices);
     app.fps = 60;
     app.shot_sample = 1800;
     uint32_t seed = (uint32_t)time(NULL);
@@ -1522,17 +1655,23 @@ int main(int argc, char **argv) {
     if (save_dir && strlen(save_dir) + 20 < sizeof(app.save_path)) {
         SDL_CreateDirectory(save_dir);
         snprintf(app.save_path, sizeof(app.save_path), "%s/expedition.sav", save_dir);
+        snprintf(app.preferences_path, sizeof(app.preferences_path), "%s/preferences.cfg",
+                 save_dir);
+        if (!scene && !app.no_save)
+            preferences_load(&app.renderer.preferences, app.preferences_path);
         if (!fresh && !app.no_save)
             game_load(&app.game, app.save_path);
     }
     SDL_free(pref);
     if (scene) {
+        bool traversal_scene =
+            !strcmp(scene, "stairs") || !strcmp(scene, "ramp") || !strcmp(scene, "lift");
         bool exterior_scene = !strcmp(scene, "arrival") || !strcmp(scene, "skiff") ||
                               !strcmp(scene, "cabin") || !strcmp(scene, "space") ||
                               !strcmp(scene, "hull");
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
-        if (strcmp(scene, "guardian") && !exterior_scene) {
+        if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -1645,6 +1784,15 @@ int main(int argc, char **argv) {
             app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, 0)));
             app.game.players[0].yaw = inspect_role >= 0 ? -2.36 : .78;
             app.game.players[0].pitch = inspect_landmark >= 0 ? .26 : .015;
+        }
+        if (traversal_scene) {
+            Player *p = &app.game.players[0];
+            p->pos = position_from(!strcmp(scene, "lift")
+                                       ? world_lift((Cell){0, 0, 0})
+                                       : v3(!strcmp(scene, "stairs") ? 6 : -6, .02, 17));
+            p->yaw = 0;
+            p->pitch = .25;
+            app.no_save = true;
         }
         if (exterior_scene) {
             Player *p = &app.game.players[0];

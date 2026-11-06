@@ -2,6 +2,7 @@
 #define SC_RENDER_H
 #include "game.h"
 #include "gl_api.h"
+#include "platform_input.h"
 #define SC_VIEW_LIGHTS 12
 #define SC_SPACE_STARS 1800
 typedef struct {
@@ -18,10 +19,12 @@ typedef struct {
     bool failed;
 } Mesh;
 typedef struct {
-    GLuint program, vao, vbo, framebuffer, texture, depth;
+    GLuint program, vao, vbo;
+    GLuint framebuffer[SC_PLAYERS], texture[SC_PLAYERS], depth[SC_PLAYERS];
     GLint mvp, eye, grid, ui, offset;
     GLint torch, time, lamp_count, lamp_pos, lamp_color, fog_density;
-    int width, height;
+    int width[SC_PLAYERS], height[SC_PLAYERS];
+    unsigned target_resizes[SC_PLAYERS];
     uint32_t world_revision;
     size_t world_vertices;
     GLuint chunk_vbo[SC_MAX_CHUNKS];
@@ -31,6 +34,8 @@ typedef struct {
     Vec3 origin;
     SpaceStar stars[SC_SPACE_STARS];
     Mesh mesh;
+    Preferences preferences;
+    int view_height[SC_PLAYERS];
     bool failed;
 } Renderer;
 bool renderer_init(Renderer *r);
@@ -38,4 +43,5 @@ void renderer_destroy(Renderer *r);
 void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, bool touch, bool debug,
                    double fps, const char *save_status);
 bool renderer_capture(int width, int height, const char *path);
+void renderer_options(Renderer *r, int width, int height, int player, int selected);
 #endif

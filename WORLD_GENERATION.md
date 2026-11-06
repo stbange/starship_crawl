@@ -14,11 +14,11 @@ Random choices use the fixed `uint32_t` hash in `generation.c`, with explicit co
 
 `world_refresh` requests the union of a one-chunk neighborhood around each active player, expanded to include complete room footprints. It does not generate geometry. The application calls `world_stream` once per displayed frame, including while paused, with a maximum of two chunk jobs. Requests alternate between players and prioritize their immediate rooms. Overlapping requests share the same chunk and encounter population.
 
-Chunks within a two-chunk retention neighborhood remain cached for backtracking. When the cache fills, only rooms outside the required set can be evicted. Eviction removes complete footprints, including their collision and GPU data. The limits are 192 resident chunks, 256 boxes per chunk, and 20 enemy slots per room. Dormant rooms leave the simulation. A new room remains collision-blocked until its complete footprint is available; visible bulkheads close unfinished passages. Lifts wait for a ready destination. These checks also apply during save loading and checkpoint travel.
+Chunks within a two-chunk retention neighborhood remain cached for backtracking. When the cache fills, only rooms outside the required set can be evicted. Eviction removes complete footprints, including their collision and GPU data. The limits are 192 resident chunks, 512 boxes and 16 compact flights per generator-9 chunk, and 20 enemy slots per room. Generators 3–8 retain their 256-box limit. Dormant rooms leave the simulation. A new room remains collision-blocked until its complete footprint is available; visible bulkheads close unfinished passages. Lifts wait for a ready destination. These checks also apply during save loading and checkpoint travel.
 
 The interior builder combines sector furnishings with a secondary service/storage function: bunks and lockers, reactor machinery, chapel pews, banquet seating, command consoles, surgical stations, cargo containers, cryopods and planters, plus theme-specific baths, gaming tables, workshops, turbines, archives and fungi. Solid partitions and furniture affect movement; flat surface details and organic dressing stay cosmetic. The central cross, lifts, mission consoles, six-metre side-space doorways and a perimeter route remain clear. Weapon and record caches move just inside side-room entrances; their existing IDs and consumed bits stay stable. Bay and crawl-space caches retain their familiar locations. Crawl-space lighting and surface marks carry incident trails through narrow routes too.
 
-Each chunk holds at most 32 organic/clutter groups and six light fittings; at least half the fixtures are dead. Both fixtures and the light they cast share a deterministic flicker phase. Cosmetic pieces cannot overflow the 256-box budget. The current 24-seed interior traversal sweep peaks at 219 boxes per chunk. Generator 3 retains its historical furniture and dressing code path, guarded by original geometry fixtures.
+Each chunk holds at most 32 organic/clutter groups and six light fittings; at least half the fixtures are dead. Both fixtures and the light they cast share a deterministic flicker phase. Base-room cosmetics stop at the historical 256-box budget; generator 9 reserves additional capacity for shaft carving and landings. The current 24-seed interior traversal sweep peaks at 219 boxes per chunk. Generator 3 retains its historical furniture and dressing code path, guarded by original geometry fixtures.
 
 The renderer maintains one reusable GPU buffer per resident chunk and uploads at most two changed chunks per frame. Unchanged meshes are retained. All generation and GL uploads run on the main thread, without workers or cross-origin-isolation requirements. These are work budgets, not a guaranteed number of milliseconds on every device.
 
@@ -52,3 +52,22 @@ the same seed. The skiff is a bounded static exterior object, outside the stream
 room grid. Only new expeditions receive its collision and the farther starting
 position; older saves retain their coordinates and original exterior. Cosmetic
 stars and hull lights apply to all generations.
+
+
+## Generator 9: service columns
+
+Generator 9 keeps the version-7 room plans and overlays deterministic vertical
+architecture. Each horizontal four-by-four region chooses one column independently
+of deck height; the bay column is guaranteed. Eight switchback stair flights and
+eight ramp flights span the full 64 metres. Their compact definitions drive mesh
+construction, body support/overlap and projectile rays. Stairs have 32 treads per
+flight; ramps are true sloped slabs. Landings, rails, room exits and a level lift
+apron keep both vertical and horizontal routes connected. Non-service pads have
+compact shafts. Base geometry is carved only for generator 9; older chunks retain
+their exact recorded geometry and old lift behavior.
+
+Walking can climb a 0.30-metre step with sufficient head clearance and snap down
+0.32 metres. Phase gates and unfinished rooms still use the normal collision rules.
+Grav-lift cradles cross walkable field-grates kinematically over three seconds after
+the destination is validated. A rider's save snapshot remains on the departure pad.
+See [FOUNDATIONS.md](FOUNDATIONS.md) for routes, controls and physical-device checks.

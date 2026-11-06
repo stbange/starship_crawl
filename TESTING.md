@@ -1,5 +1,53 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
+**Controls and traversal (generator 9).** There are now 25 native CTests: 14 unit,
+10 gameplay and one SDL platform test. `platform_input` uses SDL virtual gamepads
+and actual axis/button events to verify controller ownership, disconnect/reconnect,
+player-count changes, preferences, safe bounds and atomic persistence. It runs in
+the Linux and Windows CI jobs; it does not certify physical controllers.
+
+`vertical_traversal` checks shared stair/ramp surfaces, collision and rays, step
+limits, crouch/headroom, phase and pending-deck barriers, regional column alignment,
+landing/terminal clearance, lifts, co-op, rigs and safe transit save snapshots. A
+24-seed shaft sweep peaks at 277 of the 512 available boxes; flight storage is
+bounded at 16 per chunk. Twenty immutable generator-8 geometry fingerprints and
+a real format-11 save protect older ships. `traversal_journeys` separately walks
+both complete 64-metre routes up/down through normal gameplay actions, reloads on
+a landing and crosses a negative-deck seam. Campaign runs do not contribute to the
+unit coverage report.
+
+`test_foundation_browser.py` exercises labelled HTML settings, native F1 controls,
+IndexedDB reload, import/new-ship independence, independent cached split targets,
+virtual browser gamepads, the DOM blur boundary, held-touch rotation/cancellation,
+tiny viewports, real keyboard stair/ramp movement, separate split-screen lift
+positions, saving/reloading during transit and mobile lift buttons. Headless
+Chromium retains focus on background tabs, so the blur check dispatches the
+browser event explicitly and observes the production WASM adapter; physical tab
+switching remains on the manual checklist. Other browser interactions use normal
+DOM, keyboard, mouse and CDP touch input, with read-only runtime diagnostics.
+
+All twelve packaged Chromium/WebGL suites passed, including the new controls/
+traversal suite and the existing story, matrix, combat, equipment and persistence
+regressions. Captures of the new routes are in [docs/screenshots](docs/screenshots/README.md).
+
+The new core source `traversal.c` is included in the same >=95% per-file gate.
+Latest unit-only core coverage is **98.41% (6448/6552 lines)**, with every measured
+source above 95% and `traversal.c` at 100%. All 25 native tests, ten separately
+labelled gameplay tests and 24 ASan/UBSan core tests passed; the final traversal
+refinements also passed focused sanitizer checks. Linux, Windows x86-64 and
+Emscripten compilation succeeded without compiler diagnostics. Native Mesa smoke
+checks include stairs, ramps, lifts, cabin, hall, shelter and matrix split views.
+The [device checklist](FOUNDATIONS.md#physical-device-checklist-not-completed-in-cloud)
+explicitly leaves physical Windows GPU, controllers, Safari and mobile devices
+unverified.
+
+```sh
+ctest --test-dir build -R 'platform_input|vertical_traversal|traversal_journeys' --output-on-failure
+python3 tests/test_foundation_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+SDL_VIDEODRIVER=offscreen EGL_PLATFORM=surfaceless SDL_AUDIODRIVER=dummy \
+  ./build/starship_crawl --seed 713 --scene stairs --split --smoke 30 --no-save
+```
+
 **Arrival exterior.** `space_exterior` adds unit checks for sky/hull visibility,
 the shared skiff collision and weapon-ray geometry, cabin save/resume, co-op,
 generator-7/8 interior and population parity across eight seeds, and a real older

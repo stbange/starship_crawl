@@ -17,12 +17,14 @@ main ship. Ordinary gravity resumes inside. **F** toggles your flashlight; fixed
 hull and cabin lamps work independently. Optional **F2** split-screen supports
 players inside and outside the craft at the same time.
 
-New expeditions use **generator 8**, with the same interior plans and encounter
-placements as generator 7 for the same seed. Save format **11**, narrative **3**
+New expeditions use **generator 9**. It keeps the existing room plans and adds
+[continuous stair/ramp shafts and animated grav lifts](FOUNDATIONS.md) inside the
+ship. Generator 8 introduced the skiff; saved generator-8 ships keep their original
+interiors and lift behavior. Save format **11**, narrative **3**
 and matrix generator **1** are unchanged. Saves made in the cabin resume there;
 the second character is retained when loading solo. Older expeditions receive
 the new sky and hull presentation but retain their original exterior collision
-and positions. Press **N**, then **Enter**, to start a fresh ship with the skiff.
+and positions. Press **N**, then **Enter**, to start a fresh ship with the skiff and new vertical routes.
 
 Inspection scenes are `arrival`, `hull`, `space`, `skiff` and `cabin`. For example:
 

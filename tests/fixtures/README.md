@@ -112,3 +112,12 @@ four boundaries open, and the generated final decision. Browser tests import
 through the ordinary file UI; no runtime test control grants their progress.
 Historical `--scene` catalog views remain generator-6 diagnostic sandboxes;
 new progression tests start normal generator-7 games and import played saves.
+
+
+`generator-v8-format11.sav` and `generator-v8-geometry.txt` were captured from
+main's generator-8 core before implementing traversal (baseline 981983b). The save
+places a seed-713 character at (6, .02, 24), inside the footprint a *new* ship will
+use for stairs, with 11 XP and 23 salvage. The 20 semantic geometry fingerprints
+cover four seeds and positive/negative deck and horizontal coordinates. Do not
+regenerate these from generator 9. `vertical_traversal` checks exact old geometry,
+profile/position retention and legacy lift behavior.

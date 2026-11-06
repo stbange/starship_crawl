@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 8u
+#define SC_GENERATOR_VERSION 9u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -11,7 +11,9 @@
 #define SC_REGION_CELLS 16
 #define SC_MAX_CHUNKS 192
 #define SC_MAX_ROOMS SC_MAX_CHUNKS
-#define SC_CHUNK_BOXES 256
+#define SC_LEGACY_BOXES 256
+#define SC_CHUNK_BOXES 512
+#define SC_CHUNK_FLIGHTS 16
 #define SC_STREAM_BUDGET 2
 #define SC_MAX_ENEMIES 20
 #define SC_CHUNK_LIGHTS 6
@@ -125,10 +127,18 @@ typedef struct {
     Enemy enemies[SC_MAX_ENEMIES];
 } Room;
 /* Geometry is relative to its integer chunk coordinate, never a distant camera. */
+/* A thin sloped slab, optionally quantized into 32 physical stair treads. */
+typedef struct {
+    Vec3 min, max;
+    Color color;
+    bool reverse, stairs;
+} Flight;
 typedef struct {
     Cell cell, owner;
     Box *boxes;
     size_t box_count;
+    Flight flights[SC_CHUNK_FLIGHTS];
+    int flight_count;
     PointLight lights[SC_CHUNK_LIGHTS];
     Dressing dressing[SC_CHUNK_DRESSING];
     int light_count, dressing_count;
@@ -200,6 +210,13 @@ Room *world_find(World *w, Cell cell);
 const Chunk *world_chunk(const World *w, Cell cell);
 bool world_ready(const World *w, Cell cell);
 Vec3 world_lift(Cell cell);
+bool world_service_column(uint32_t seed, Cell cell);
+double flight_top(const Flight *flight, double z);
+bool flight_overlap(const Flight *flight, Vec3 feet, double radius, double height);
+double flight_ray(const Flight *flight, Vec3 origin, Vec3 direction, double limit);
+/* Shared physical movement. Stepping is enabled only for grounded walkers. */
+void world_move(const World *world, Position *position, Vec3 delta, double radius, double height,
+                bool walking, bool *grounded);
 bool world_overlap(const World *w, Vec3 feet, double radius, double height);
 double world_raycast(const World *w, Vec3 origin, Vec3 direction, double limit);
 void world_kill(World *w, Room *room, int enemy);

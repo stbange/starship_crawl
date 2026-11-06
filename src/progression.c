@@ -101,6 +101,8 @@ Vec3 game_terminal(Cell cell) {
 void game_interact(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
+    if (g->players[player].lift_active)
+        return;
     if (g->matrix.divers[player].active) {
         matrix_use(g, player);
         return;

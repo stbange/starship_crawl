@@ -50,7 +50,7 @@ static void sky_visibility(void) {
 static void cabin_geometry(void) {
     Game *g = fresh();
     World *w = &g->world;
-    CHECK(w->generator == 8);
+    CHECK(w->generator == SC_GENERATOR_VERSION);
     CHECK(!world_overlap(w, sc_arrival_spawn, .34, 1.78));
     CHECK(!exterior_cabin(w, sc_arrival_spawn));
     CHECK(exterior_cabin(w, v3(0, 4, -98)));
@@ -92,6 +92,7 @@ static void interior_parity(void) {
         world_init(a, seed);
         world_init(b, seed);
         a->generator = 7;
+        b->generator = 8;
         for (int n = 0; n < 3; n++) {
             Cell c = n == 0 ? (Cell){0, 0, 0} : n == 1 ? (Cell){-8, 1, 8} : (Cell){8, -2, 12};
             CHECK(world_fingerprint_version(seed, 7, world_region(c)) ==
@@ -137,7 +138,7 @@ static void persistence(void) {
     game_join(g);
     CHECK(!world_overlap(&g->world, position_absolute(g->players[1].pos), .34, 1.78));
     CHECK(game_save(g, "exterior-test.sav") && game_load(copy, "exterior-test.sav"));
-    CHECK(copy->world.generator == 8 && copy->player_count == 1);
+    CHECK(copy->world.generator == SC_GENERATOR_VERSION && copy->player_count == 1);
     CHECK(exterior_cabin(&copy->world, position_absolute(copy->players[0].pos)));
     CHECK(exterior_cabin(&copy->world, position_absolute(copy->players[1].pos)));
     game_join(copy);
@@ -151,7 +152,7 @@ static void persistence(void) {
     CHECK(game_load(copy, SC_FIXTURE_DIR "/phase-midship.sav"));
     CHECK(copy->world.generator == 7 && campaign_phase(&copy->campaign) == 2);
     game_new_ship(copy, 713);
-    CHECK(copy->world.generator == 8 &&
+    CHECK(copy->world.generator == SC_GENERATOR_VERSION &&
           !vlen(position_delta(copy->players[0].pos, position_from(sc_arrival_spawn))));
     remove("exterior-test.sav");
     discard(copy);

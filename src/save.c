@@ -428,6 +428,8 @@ bool game_save(const Game *g, const char *path) {
     /* A saved session always opens in solo; the other profile remains available. */
     for (int i = 0; i < SC_PLAYERS; i++) {
         Player p = g->players[i];
+        if (p.lift_active)
+            p.pos = p.lift_from;
         profile(&s, &p, false, 10);
     }
     number(&s, g->mission, false);
@@ -446,11 +448,17 @@ bool game_save(const Game *g, const char *path) {
     Shelter shelter = g->shelter;
     Player players[SC_PLAYERS];
     memcpy(players, g->players, sizeof(players));
+    for (int i = 0; i < SC_PLAYERS; i++)
+        if (players[i].lift_active)
+            players[i].pos = players[i].lift_from;
     sanctuary(&s, &shelter, players, false);
     powers(&s, players, false);
     Rig rigs[SC_PLAYERS][2];
     Flare flares[SC_MAX_FLARES];
     memcpy(rigs, g->rigs, sizeof(rigs));
+    for (int i = 0; i < SC_PLAYERS; i++)
+        if (players[i].lift_active && players[i].riding)
+            rigs[i][players[i].riding - 1].pos = players[i].lift_from;
     memcpy(flares, g->flares, sizeof(flares));
     equipment(&s, players, rigs, flares, false);
     Story story = g->story;

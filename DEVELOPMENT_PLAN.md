@@ -6,16 +6,16 @@ This document records the agreed direction and the longer-term implementation pl
 
 The original six milestones now have a playable foundation. The remaining work
 below is distinct from the four completed narrative milestones, four completed
-hacking milestones, implemented phase/reward loop, and generator-8 arrival.
+hacking milestones, implemented phase/reward loop, the arrival, and the controls/traversal completion described in [FOUNDATIONS.md](FOUNDATIONS.md).
 
 | Original milestone | Implemented foundation | Still outstanding |
 | --- | --- | --- |
-| 1. Portable engine, input and views | C17/SDL3/OpenGL, native/web builds, solo, optional split-screen, touch, input and save integration | Physical Windows graphics, gamepad, Safari and mobile-device validation; performance and control tuning |
-| 2. Arrival and architectural scale | Space approach, lit immense hull, surrounding stars, returnable skiff, loading bay, huge halls, narrow tunnels, free flight and normal gravity | Continuous stairs/ramps and animated vertical transport; current grav lifts transfer between decks |
+| 1. Portable engine, input and views | C17/SDL3/OpenGL, native/web builds, solo/split-screen, touch, persistent per-player controls/quality, stable controller ownership, lifecycle resets and cached per-view targets | Physical Windows graphics, gamepad, Safari and mobile-device validation; tuning from device measurements |
+| 2. Arrival and architectural scale | Space approach, lit immense hull, stars, returnable skiff, huge halls/narrow tunnels, gravity, connected stairs/ramps, step/slope movement and animated per-player lifts | Human review of traversal feel and readability on physical devices |
 | 3. Deterministic generation and streaming | Connected seeded districts, reserved multi-chunk halls, bounded shared streaming, stable revisits and camera-relative rendering | More footprint shapes and structures spanning several decks, developed further in milestone 6 |
 | 4. Combat and progression | Hordes, ranged/heavy/robot enemies, weapons, defenses, pickups, powers, rigs, guardian phases, earned loadouts, checkpoints and forgiving death | Navigation through more complex room routes; human tuning of combat, guardian pacing, rewards, build variety and co-op balance |
 | 5. Character profiles and persistence | Both current-ship profiles, three color choices, loadouts, native/browser saves, import/export and migration | Profile/guest selection, richer appearance and visible character customization, equipment/armor item inventories and broader skill configuration |
-| 6. World variety and sustained play | Nine sectors, 28 room themes, floor-plan families, landmarks, connected incidents, directional traits, physical system effects and generator diagnostics | Multi-level architecture, additional gravity anomalies, environmental trap/puzzle routes, more contextual systems, long-session profiling, visibility/rendering optimizations and device quality settings |
+| 6. World variety and sustained play | Nine sectors, 28 room themes, floor-plan families, landmarks, connected incidents, directional traits, physical system effects and generator diagnostics | More rooms spanning several decks, additional gravity anomalies, environmental trap/puzzle routes, more contextual systems, long-session profiling, visibility/rendering optimizations; selectable device quality is now implemented |
 
 The immediate next step is playtesting the current four-phase expedition: time to
 the first useful reward, travel versus fighting, guardian retries, route clarity,

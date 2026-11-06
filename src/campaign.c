@@ -45,7 +45,7 @@ bool campaign_safe_refit(const Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return false;
     const Player *p = &g->players[player];
-    if (p->health <= 0 || p->riding || g->matrix.divers[player].active)
+    if (p->health <= 0 || p->riding || p->lift_active || g->matrix.divers[player].active)
         return false;
     if (p->sheltered || cell_equal(world_cell(position_absolute(p->pos)), (Cell){0}))
         return true;

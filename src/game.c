@@ -64,6 +64,21 @@ void game_look(Player *p, double yaw, double pitch) {
     p->yaw = remainder(p->yaw + yaw, SC_PI * 2);
     p->pitch = clampd(p->pitch + pitch, -1.48, 1.48);
 }
+void game_lift_cancel(Game *g, int player) {
+    if (player < 0 || player >= SC_PLAYERS)
+        return;
+    Player *p = &g->players[player];
+    if (!p->lift_active)
+        return;
+    p->pos = p->lift_from;
+    p->velocity = v3(0, 0, 0);
+    p->lift_active = false;
+    p->lift_progress = 0;
+    p->lift_cooldown = 1;
+    if (p->riding)
+        g->rigs[player][p->riding - 1].pos = p->pos;
+    g->dirty = true;
+}
 void game_join(Game *g) {
     if (g->player_count == 2)
         return;
@@ -74,7 +89,9 @@ void game_join(Game *g) {
         return;
     }
     Player *p = &g->players[1];
-    p->pos = g->players[0].pos;
+    p->lift_active = false;
+    p->pos = g->players[0].lift_active ? g->players[0].lift_from : g->players[0].pos;
+    Position join = p->pos;
     position_move(&p->pos, v3(1.4, 0, 0));
     p->checkpoint = g->players[0].checkpoint;
     p->sheltered = g->players[0].sheltered;
@@ -85,7 +102,7 @@ void game_join(Game *g) {
     p->riding = 0;
     p->drive_speed = 0;
     if (world_overlap(&g->world, position_absolute(p->pos), .34, 1.78))
-        p->pos = g->players[0].pos;
+        p->pos = join;
     p->crouched = world_overlap(&g->world, position_absolute(p->pos), .34, 1.78);
     p->velocity = v3(0, 0, 0);
     p->yaw = g->players[0].yaw;
@@ -96,6 +113,7 @@ void game_join(Game *g) {
     game_message(g, "LOCAL CO-OP JOINED / PLAYER TWO USES A GAMEPAD");
 }
 void game_leave(Game *g) {
+    game_lift_cancel(g, 1);
     matrix_disconnect(g, 1, false);
     g->players[1].riding = 0;
     g->players[1].drive_speed = 0;
@@ -157,23 +175,7 @@ static void award(Game *g, Player *p, unsigned xp) {
 }
 static void move_body(World *w, Position *p, Vec3 delta, double radius, double height,
                       bool *grounded) {
-    int steps = (int)ceil(vlen(delta) / .16);
-    if (steps < 1)
-        steps = 1;
-    if (steps > 64)
-        steps = 64;
-    delta = vmul(delta, 1.0 / steps);
-    for (int i = 0; i < steps; i++)
-        for (int axis = 0; axis < 3; axis++) {
-            Position q = *p;
-            Vec3 part =
-                v3(axis == 0 ? delta.x : 0, axis == 2 ? delta.y : 0, axis == 1 ? delta.z : 0);
-            position_move(&q, part);
-            if (!world_overlap(w, position_absolute(q), radius, height))
-                *p = q;
-            else if (axis == 2 && delta.y < 0 && grounded)
-                *grounded = true;
-        }
+    world_move(w, p, delta, radius, height, true, grounded);
 }
 void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, uint32_t flags) {
     if (!room || index < 0 || index >= room->enemy_count || owner < 0 || owner >= SC_PLAYERS ||
@@ -295,6 +297,30 @@ static void shoot(Game *g, Player *p) {
     }
 }
 static void move_player(Game *g, Player *p, const Actions *a, double dt) {
+    if (p->lift_active) {
+        Cell destination = world_cell(position_absolute(p->lift_to));
+        if (!world_ready(&g->world, destination) ||
+            (g->world.open_layer && campaign_layer(destination) > g->world.open_layer)) {
+            game_lift_cancel(g, (int)(p - g->players));
+            game_message(g, "GRAV LIFT RETURNED / DESTINATION UNAVAILABLE");
+            return;
+        }
+        p->lift_progress = fminf(1, p->lift_progress + (float)(dt / 3));
+        double t = p->lift_progress, eased = t * t * (3 - 2 * t);
+        p->pos = p->lift_from;
+        position_move(&p->pos, vmul(position_delta(p->lift_to, p->lift_from), eased));
+        p->velocity = v3(0, 0, 0);
+        if (t >= 1) {
+            p->pos = p->lift_to;
+            p->checkpoint = p->pos;
+            p->lift_active = false;
+            p->lift_cooldown = 1;
+            p->grounded = true;
+            game_message(g, "GRAV LIFT / ARRIVED / CHECKPOINT SYNCHRONIZED");
+        }
+        g->dirty = true;
+        return;
+    }
     bool riding = p->riding != ON_FOOT;
     bool outside = !riding && position_absolute(p->pos).z < 0, flying = !riding && p->flight > 0;
     if (riding)
@@ -339,7 +365,8 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
     Vec3 delta = vmul(p->velocity, dt);
     if (riding && position_absolute(p->pos).z + delta.z < .8)
         delta.z = fmax(0, .8 - position_absolute(p->pos).z);
-    move_body(&g->world, &p->pos, delta, game_body_radius(p), game_body_height(p), &p->grounded);
+    world_move(&g->world, &p->pos, delta, game_body_radius(p), game_body_height(p),
+               !outside && !flying, &p->grounded);
     if (game_rig_blocks(g, (int)(p - g->players), position_absolute(p->pos), game_body_radius(p),
                         game_body_height(p)))
         p->pos = before;
@@ -353,8 +380,10 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
     p->lift_cooldown = fmaxf(0, p->lift_cooldown - (float)dt);
     Cell cell = world_cell(position_absolute(p->pos));
     Vec3 lift = world_lift(cell), diff = vsub(position_absolute(p->pos), lift);
+    bool on_pad = g->world.generator < 9 || fabs(diff.y) < 1;
     diff.y = 0;
-    if (!outside && vlen(diff) < 3.3 && p->lift_cooldown <= 0 && (a->lift_up || a->lift_down)) {
+    if (on_pad && !outside && vlen(diff) < 3.3 && p->lift_cooldown <= 0 &&
+        (a->lift_up || a->lift_down)) {
         cell.y += a->lift_up ? 1 : -1;
         if (g->world.open_layer && campaign_layer(cell) > g->world.open_layer) {
             game_message(g, "LAYER SEALED / DEFEAT A PHASE GUARDIAN / F10 ROUTES");
@@ -367,6 +396,25 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
         if (riding &&
             world_overlap(&g->world, world_lift(cell), game_body_radius(p), game_body_height(p))) {
             game_message(g, "LIFT DESTINATION TOO SMALL / DISMOUNT FIRST");
+            return;
+        }
+        if (g->world.generator >= 9) {
+            if (world_overlap(&g->world, world_lift(cell), game_body_radius(p),
+                              game_body_height(p)) ||
+                game_rig_blocks(g, (int)(p - g->players), world_lift(cell), game_body_radius(p),
+                                game_body_height(p))) {
+                game_message(g, "LIFT DESTINATION OBSTRUCTED");
+                return;
+            }
+            p->lift_from = position_from(lift);
+            p->lift_to = position_from(world_lift(cell));
+            p->pos = p->lift_from;
+            p->velocity = v3(0, 0, 0);
+            p->lift_progress = 0;
+            p->lift_active = true;
+            p->grounded = false;
+            game_message(g, "GRAV LIFT / IN TRANSIT / LOOK AROUND");
+            g->dirty = true;
             return;
         }
         p->pos = position_from(world_lift(cell));
@@ -828,7 +876,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
             g->rigs[i][p->riding - 1].pos = p->pos;
             g->rigs[i][p->riding - 1].yaw = p->yaw;
         }
-        if (actions[i].fire && p->cooldown <= 0)
+        if (!p->lift_active && actions[i].fire && p->cooldown <= 0)
             shoot(g, p);
     }
     game_progression_step(g, dt);
@@ -842,6 +890,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         if (p->health <= 0 || position_absolute(p->pos).z < -400) {
+            game_lift_cancel(g, i);
             matrix_disconnect(g, i, true);
             p->riding = 0;
             p->drive_speed = 0;

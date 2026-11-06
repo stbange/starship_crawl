@@ -16,6 +16,9 @@ typedef enum { ON_FOOT, MECH, WAGON } RigKind;
 typedef enum { PSI_VEIL, PSI_FLIGHT, PSI_LEAP, PSI_NOVA } Psionic;
 typedef struct Player {
     Position pos, checkpoint;
+    Position lift_from, lift_to;
+    float lift_progress;
+    bool lift_active; /* Transient: saves snapshot the departure pad. */
     Vec3 velocity;
     double yaw, pitch;
     float health, cooldown, hurt, muzzle, lift_cooldown;
@@ -130,6 +133,7 @@ typedef struct {
     bool valid[SC_MAP_SIDE * SC_MAP_SIDE], has_objective, has_shelter;
     int side, plans;
 } MapView;
+void game_lift_cancel(Game *g, int player);
 void game_map_toggle(Game *g, int player);
 void game_map_pan(Game *g, int player, int x, int y, int z);
 bool game_map_build(const Game *g, int player, Cell center, int radius, MapView *view);

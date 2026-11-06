@@ -15,7 +15,7 @@ static const Color incident_colors[INCIDENT_TYPES] = {{.50f, .42f, .29f}, {.20f,
 
 static void piece(Builder *b, Vec3 p, Vec3 size, Color color, float glow, bool solid) {
     /* Cosmetic pieces may use only the capacity left by the planned structure. */
-    if (!solid && b->chunk->box_count == SC_CHUNK_BOXES)
+    if (!solid && b->chunk->box_count >= SC_LEGACY_BOXES)
         return;
     world_box(b, vadd(b->origin, p), size, color, glow, solid);
 }

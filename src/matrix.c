@@ -100,7 +100,7 @@ bool matrix_toggle(Game *g, int p) {
         matrix_disconnect(g, p, false);
         return true;
     }
-    if (body->riding || body->health <= 0 || !matrix_near(g, p)) {
+    if (body->lift_active || body->riding || body->health <= 0 || !matrix_near(g, p)) {
         game_message(g, "C / FIND A MATRIX TERMINAL / DISMOUNT BEFORE LINKING");
         return false;
     }
