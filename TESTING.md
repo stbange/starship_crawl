@@ -95,10 +95,17 @@ This is a reproducible navigation/combat regression, with an automated aiming dr
 **Sanitizers.** Native GCC/Clang address and undefined-behavior checks run all component and campaign tests:
 
 ```sh
-cmake -S . -B build-sanitize -DSC_BUILD_GAME=OFF -DSC_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug
+cmake -S . -B build-sanitize -DSC_BUILD_GAME=OFF -DSC_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug '-DCMAKE_C_FLAGS_DEBUG=-O1 -g'
 cmake --build build-sanitize --parallel 4
-ctest --test-dir build-sanitize --output-on-failure
+ctest --test-dir build-sanitize --output-on-failure --output-junit sanitizer-tests.xml
 ```
+
+The sanitizer build uses modest optimization to keep the full simulation campaigns
+within their test timeouts while retaining debug symbols, assertions, frame
+pointers and both sanitizers. Coverage remains a separate unoptimized build with
+the same 95% gate. CI pins its quality runner to Ubuntu 24.04 and publishes failed
+test names/output as annotations; the `quality-test-diagnostics` artifact retains
+JUnit reports and sanitizer test logs.
 
 **Actual browser game.** Build with Emscripten, package the exact Pages layout, and exercise keyboard/mouse, optional split-screen, eleven interiors, first-mission rewards, journal upgrades, weapon switching, save/reload/import, native/WASM parity, flashlight controls, mobile multitouch, and resizing:
 
