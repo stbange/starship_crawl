@@ -1,0 +1,658 @@
+[
+  {
+    "route": 0,
+    "name": "inward",
+    "exit": 0,
+    "wall_seconds": 40.54,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 2731,
+    "deaths": 0,
+    "rank": 84,
+    "max_coordinate_layer": 28,
+    "stage": 108,
+    "recoveries": 3,
+    "end_xyz": [
+      31.37,
+      0.0,
+      10496.86
+    ],
+    "unique_cells": 217,
+    "unique_themes": 24,
+    "macro_forms": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      6,
+      7,
+      8
+    ],
+    "late_cell_visits": 132,
+    "late_themes": {
+      "26": 49,
+      "7": 19,
+      "9": 18,
+      "6": 8,
+      "5": 10,
+      "21": 4,
+      "27": 1,
+      "8": 17,
+      "15": 3,
+      "16": 2,
+      "17": 1
+    },
+    "late_conditions": {
+      "4": 72,
+      "2": 48,
+      "3": 8,
+      "0": 4
+    },
+    "late_heat": {
+      "0": 132
+    },
+    "late_order": {
+      "0": 132
+    },
+    "late_alien": {
+      "3": 132
+    }
+  },
+  {
+    "route": 1,
+    "name": "east",
+    "exit": 0,
+    "wall_seconds": 41.51,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 2505,
+    "deaths": 0,
+    "rank": 83,
+    "max_coordinate_layer": 26,
+    "stage": 103,
+    "recoveries": 0,
+    "end_xyz": [
+      9855.66,
+      0.0,
+      238.38
+    ],
+    "unique_cells": 207,
+    "unique_themes": 18,
+    "macro_forms": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      6,
+      7,
+      8
+    ],
+    "late_cell_visits": 129,
+    "late_themes": {
+      "26": 67,
+      "7": 4,
+      "9": 15,
+      "5": 10,
+      "8": 16,
+      "6": 9,
+      "3": 8
+    },
+    "late_conditions": {
+      "5": 129
+    },
+    "late_heat": {
+      "3": 129
+    },
+    "late_order": {
+      "0": 129
+    },
+    "late_alien": {
+      "0": 125,
+      "1": 4
+    }
+  },
+  {
+    "route": 2,
+    "name": "west",
+    "exit": 0,
+    "wall_seconds": 37.68,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 2570,
+    "deaths": 0,
+    "rank": 82,
+    "max_coordinate_layer": 30,
+    "stage": 119,
+    "recoveries": 0,
+    "end_xyz": [
+      -11327.94,
+      0.0,
+      171.98
+    ],
+    "unique_cells": 217,
+    "unique_themes": 22,
+    "macro_forms": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "late_cell_visits": 127,
+    "late_themes": {
+      "26": 51,
+      "1": 9,
+      "25": 2,
+      "24": 3,
+      "20": 3,
+      "19": 3,
+      "15": 3,
+      "16": 5,
+      "17": 1,
+      "8": 18,
+      "5": 6,
+      "6": 7,
+      "7": 4,
+      "9": 9,
+      "22": 2,
+      "23": 1
+    },
+    "late_conditions": {
+      "4": 127
+    },
+    "late_heat": {
+      "-3": 127
+    },
+    "late_order": {
+      "0": 127
+    },
+    "late_alien": {
+      "0": 127
+    }
+  },
+  {
+    "route": 3,
+    "name": "up",
+    "exit": 0,
+    "wall_seconds": 54.94,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 2606,
+    "deaths": 0,
+    "rank": 82,
+    "max_coordinate_layer": 360,
+    "stage": 1440,
+    "recoveries": 0,
+    "end_xyz": [
+      0.0,
+      46069.21,
+      230.0
+    ],
+    "unique_cells": 752,
+    "unique_themes": 28,
+    "macro_forms": [
+      0
+    ],
+    "late_cell_visits": 448,
+    "late_themes": {
+      "26": 212,
+      "19": 9,
+      "25": 15,
+      "5": 9,
+      "27": 12,
+      "17": 8,
+      "24": 5,
+      "1": 15,
+      "23": 19,
+      "3": 20,
+      "20": 7,
+      "4": 6,
+      "22": 16,
+      "11": 3,
+      "18": 5,
+      "21": 14,
+      "16": 9,
+      "9": 10,
+      "8": 8,
+      "6": 6,
+      "15": 9,
+      "10": 7,
+      "12": 4,
+      "13": 5,
+      "7": 5,
+      "14": 7,
+      "2": 3
+    },
+    "late_conditions": {
+      "3": 38,
+      "4": 296,
+      "6": 17,
+      "2": 39,
+      "1": 18,
+      "0": 40
+    },
+    "late_heat": {
+      "0": 448
+    },
+    "late_order": {
+      "3": 448
+    },
+    "late_alien": {
+      "0": 448
+    }
+  },
+  {
+    "route": 4,
+    "name": "down",
+    "exit": 0,
+    "wall_seconds": 53.69,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 2781,
+    "deaths": 0,
+    "rank": 84,
+    "max_coordinate_layer": 361,
+    "stage": 1440,
+    "recoveries": 0,
+    "end_xyz": [
+      0.0,
+      -46069.17,
+      230.0
+    ],
+    "unique_cells": 753,
+    "unique_themes": 28,
+    "macro_forms": [
+      0
+    ],
+    "late_cell_visits": 448,
+    "late_themes": {
+      "12": 5,
+      "1": 12,
+      "19": 7,
+      "14": 12,
+      "21": 14,
+      "26": 207,
+      "9": 9,
+      "27": 17,
+      "6": 9,
+      "23": 16,
+      "17": 4,
+      "22": 13,
+      "15": 10,
+      "3": 28,
+      "13": 2,
+      "25": 16,
+      "24": 10,
+      "2": 4,
+      "18": 9,
+      "5": 4,
+      "10": 6,
+      "16": 5,
+      "4": 8,
+      "20": 5,
+      "11": 4,
+      "8": 8,
+      "7": 4
+    },
+    "late_conditions": {
+      "4": 306,
+      "0": 47,
+      "3": 39,
+      "2": 32,
+      "1": 10,
+      "6": 14
+    },
+    "late_heat": {
+      "0": 448
+    },
+    "late_order": {
+      "-3": 448
+    },
+    "late_alien": {
+      "0": 448
+    }
+  },
+  {
+    "route": 5,
+    "name": "east-inward",
+    "exit": 0,
+    "wall_seconds": 40.84,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 2657,
+    "deaths": 0,
+    "rank": 84,
+    "max_coordinate_layer": 20,
+    "stage": 77,
+    "recoveries": 0,
+    "end_xyz": [
+      7487.71,
+      0.0,
+      7581.75
+    ],
+    "unique_cells": 231,
+    "unique_themes": 24,
+    "macro_forms": [
+      0,
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "late_cell_visits": 133,
+    "late_themes": {
+      "7": 16,
+      "26": 55,
+      "6": 8,
+      "8": 12,
+      "9": 9,
+      "5": 16,
+      "22": 3,
+      "23": 1,
+      "21": 7,
+      "27": 1,
+      "3": 1,
+      "25": 1,
+      "1": 3
+    },
+    "late_conditions": {
+      "5": 133
+    },
+    "late_heat": {
+      "3": 133
+    },
+    "late_order": {
+      "0": 133
+    },
+    "late_alien": {
+      "3": 133
+    }
+  },
+  {
+    "route": 6,
+    "name": "west-inward",
+    "exit": 0,
+    "wall_seconds": 51.7,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 2738,
+    "deaths": 0,
+    "rank": 83,
+    "max_coordinate_layer": 19,
+    "stage": 74,
+    "recoveries": 0,
+    "end_xyz": [
+      -7103.46,
+      0.0,
+      7258.97
+    ],
+    "unique_cells": 226,
+    "unique_themes": 21,
+    "macro_forms": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "late_cell_visits": 131,
+    "late_themes": {
+      "6": 13,
+      "5": 9,
+      "9": 10,
+      "26": 59,
+      "8": 12,
+      "7": 20,
+      "1": 1,
+      "25": 1,
+      "14": 1,
+      "23": 5
+    },
+    "late_conditions": {
+      "4": 131
+    },
+    "late_heat": {
+      "-3": 131
+    },
+    "late_order": {
+      "0": 131
+    },
+    "late_alien": {
+      "3": 131
+    }
+  },
+  {
+    "route": 7,
+    "name": "up-inward",
+    "exit": 0,
+    "wall_seconds": 64.52,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 3012,
+    "deaths": 0,
+    "rank": 88,
+    "max_coordinate_layer": 29,
+    "stage": 113,
+    "recoveries": 1,
+    "end_xyz": [
+      0.0,
+      3584.0,
+      11027.75
+    ],
+    "unique_cells": 277,
+    "unique_themes": 28,
+    "macro_forms": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "late_cell_visits": 153,
+    "late_themes": {
+      "26": 78,
+      "23": 6,
+      "9": 7,
+      "8": 3,
+      "6": 1,
+      "27": 6,
+      "16": 3,
+      "24": 2,
+      "25": 2,
+      "10": 3,
+      "4": 4,
+      "12": 1,
+      "22": 5,
+      "3": 10,
+      "1": 4,
+      "17": 3,
+      "14": 2,
+      "11": 1,
+      "7": 2,
+      "21": 8,
+      "20": 1,
+      "13": 1
+    },
+    "late_conditions": {
+      "4": 94,
+      "2": 25,
+      "3": 18,
+      "0": 7,
+      "6": 5,
+      "1": 4
+    },
+    "late_heat": {
+      "0": 153
+    },
+    "late_order": {
+      "3": 153
+    },
+    "late_alien": {
+      "3": 153
+    }
+  },
+  {
+    "route": 8,
+    "name": "down-inward",
+    "exit": 0,
+    "wall_seconds": 59.63,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 3554,
+    "deaths": 0,
+    "rank": 96,
+    "max_coordinate_layer": 27,
+    "stage": 102,
+    "recoveries": 0,
+    "end_xyz": [
+      0.0,
+      -3264.0,
+      10002.69
+    ],
+    "unique_cells": 277,
+    "unique_themes": 28,
+    "macro_forms": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "late_cell_visits": 164,
+    "late_themes": {
+      "26": 79,
+      "18": 2,
+      "19": 2,
+      "16": 14,
+      "17": 2,
+      "1": 5,
+      "3": 10,
+      "9": 2,
+      "5": 4,
+      "22": 7,
+      "12": 1,
+      "7": 1,
+      "10": 1,
+      "4": 1,
+      "24": 2,
+      "21": 4,
+      "8": 2,
+      "27": 3,
+      "25": 5,
+      "14": 4,
+      "6": 2,
+      "20": 1,
+      "15": 9,
+      "23": 1
+    },
+    "late_conditions": {
+      "4": 116,
+      "6": 9,
+      "0": 15,
+      "2": 15,
+      "1": 1,
+      "3": 8
+    },
+    "late_heat": {
+      "0": 161,
+      "1": 3
+    },
+    "late_order": {
+      "-3": 164
+    },
+    "late_alien": {
+      "3": 164
+    }
+  },
+  {
+    "route": 9,
+    "name": "east-down-inward",
+    "exit": 0,
+    "wall_seconds": 57.68,
+    "sim_seconds": 3600.0,
+    "phase4_seconds": 438.3,
+    "kills": 3238,
+    "deaths": 0,
+    "rank": 93,
+    "max_coordinate_layer": 20,
+    "stage": 77,
+    "recoveries": 0,
+    "end_xyz": [
+      7391.83,
+      -2432.0,
+      7603.1
+    ],
+    "unique_cells": 274,
+    "unique_themes": 27,
+    "macro_forms": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "late_cell_visits": 149,
+    "late_themes": {
+      "15": 4,
+      "26": 74,
+      "3": 8,
+      "5": 6,
+      "22": 13,
+      "23": 6,
+      "11": 1,
+      "9": 4,
+      "6": 3,
+      "25": 4,
+      "20": 2,
+      "24": 2,
+      "16": 3,
+      "14": 1,
+      "17": 2,
+      "27": 6,
+      "7": 3,
+      "10": 1,
+      "12": 1,
+      "1": 1,
+      "21": 2,
+      "8": 2
+    },
+    "late_conditions": {
+      "5": 145,
+      "1": 4
+    },
+    "late_heat": {
+      "3": 149
+    },
+    "late_order": {
+      "-3": 149
+    },
+    "late_alien": {
+      "3": 149
+    }
+  }
+]

@@ -1,5 +1,7 @@
 # Expedition design review — 6 November 2026
 
+Follow-up: [ten one-hour directional expeditions and revised proposals](../2026-11-06-deep-expeditions/README.md). The original observations below are preserved.
+
 Review of game commit `537f785d8b0ecd43aab08b0cab896975fb9c1f9c`. These are proposals for discussion, not implemented balance changes.
 
 ## Method and evidence
