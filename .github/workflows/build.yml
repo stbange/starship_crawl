@@ -1,4 +1,6 @@
 name: Build, test, and publish
+run-name: >-
+  ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && 'Build, test, and publish Pages' || 'Build and test only (Pages requires main)' }} — ${{ github.ref_name }}
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -79,6 +81,18 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Explain Pages publishing target
+        shell: bash
+        env:
+          SC_EVENT_NAME: ${{ github.event_name }}
+          SC_REF: ${{ github.ref }}
+        run: |
+          if [[ "$SC_EVENT_NAME" != "pull_request" && "$SC_REF" == "refs/heads/main" ]]; then
+            echo 'This main-branch run publishes GitHub Pages after all quality, native, and web checks pass.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'This run tests the selected branch. GitHub Pages publishes from main only. To publish manually, choose main in the Run workflow branch selector after merging your changes.' >> "$GITHUB_STEP_SUMMARY"
+            echo '::notice title=Pages requires main::This branch is tested without deployment. Select main when manually running the publishing workflow.'
+          fi
       - name: Pinned Emscripten SDK
         run: |
           git clone --depth 1 --branch 4.0.23 https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"

@@ -64,6 +64,13 @@ Open `starship_crawl.html` through the HTTP server. Keep the HTML, JavaScript, a
 
 **GitHub Pages deployment.** The `Build, test, and publish` workflow builds the web game, stages `index.html` with its JavaScript and WASM files, and exercises the complete browser suite under `/starship_crawl/`. Successful runs on `main` publish the tested artifact through the official GitHub Pages actions. Pull requests build and test without deploying. In repository Settings → Pages, set the publishing source to **GitHub Actions** once. The expected project address is `https://stbange.github.io/starship_crawl/`; the Actions deployment result confirms when it is live.
 
+For a manual publication, open **Actions → Build, test, and publish → Run workflow**
+and select **main**. Other branches can pass every test while their Pages job is
+skipped. Merge the desired changes into `main` first; the push also starts
+publication automatically. The run title and web job summary state whether that
+run will publish. [Approach screenshots](docs/screenshots/README.md) show the
+generator-8 arrival and boarding craft.
+
 To inspect the exact static site locally:
 
 ```sh

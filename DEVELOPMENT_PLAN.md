@@ -2,6 +2,32 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+## Remaining work reviewed on 2026-11-06
+
+The original six milestones now have a playable foundation. The remaining work
+below is distinct from the four completed narrative milestones, four completed
+hacking milestones, implemented phase/reward loop, and generator-8 arrival.
+
+| Original milestone | Implemented foundation | Still outstanding |
+| --- | --- | --- |
+| 1. Portable engine, input and views | C17/SDL3/OpenGL, native/web builds, solo, optional split-screen, touch, input and save integration | Physical Windows graphics, gamepad, Safari and mobile-device validation; performance and control tuning |
+| 2. Arrival and architectural scale | Space approach, lit immense hull, surrounding stars, returnable skiff, loading bay, huge halls, narrow tunnels, free flight and normal gravity | Continuous stairs/ramps and animated vertical transport; current grav lifts transfer between decks |
+| 3. Deterministic generation and streaming | Connected seeded districts, reserved multi-chunk halls, bounded shared streaming, stable revisits and camera-relative rendering | More footprint shapes and structures spanning several decks, developed further in milestone 6 |
+| 4. Combat and progression | Hordes, ranged/heavy/robot enemies, weapons, defenses, pickups, powers, rigs, guardian phases, earned loadouts, checkpoints and forgiving death | Navigation through more complex room routes; human tuning of combat, guardian pacing, rewards, build variety and co-op balance |
+| 5. Character profiles and persistence | Both current-ship profiles, three color choices, loadouts, native/browser saves, import/export and migration | Profile/guest selection, richer appearance and visible character customization, equipment/armor item inventories and broader skill configuration |
+| 6. World variety and sustained play | Nine sectors, 28 room themes, floor-plan families, landmarks, connected incidents, directional traits, physical system effects and generator diagnostics | Multi-level architecture, additional gravity anomalies, environmental trap/puzzle routes, more contextual systems, long-session profiling, visibility/rendering optimizations and device quality settings |
+
+The immediate next step is playtesting the current four-phase expedition: time to
+the first useful reward, travel versus fighting, guardian retries, route clarity,
+and whether different ships produce different builds. More vehicle roles,
+artifact variants, optional challenge tiers and deeper post-finale progression
+remain later extensions in the progression design. Broad puzzles, elaborate
+models and arbitrarily rotated gravity are also later scope.
+
+Every new ship starts a fresh character. Save/resume, death and further
+commissions on the same ship preserve that character's build. This supersedes the
+original proposal to carry combat progression between ships.
+
 **Expedition progression (implemented on `design/expedition-progression`).**
 Every new ship starts fresh characters, including the inactive co-op partner.
 Current-ship saves, deaths and further commissions preserve the build. Four spatial
@@ -30,7 +56,7 @@ Implemented with four causes and matching controllers, profile-specific agendas,
 
 **Narrative milestone 4 — consequences beyond extraction (implemented).** Keep the ship endless while each story has a finite victory/extraction. Reflect rescued people, recovered knowledge or technology, restored systems and contained/released threats in rewards and a debrief. Let players remain aboard, pursue follow-on stories or start a new ship with a fresh character. Reintroduce HARROW/ORISON as one possible newly generated arc as well as a legacy campaign. Expand the template library and combinations only when causal consistency, branch reachability and replay variety are tested.
 
-Milestones 3 and 4 add a prerequisite-driven operation library, persistent room power/beacons/controller shutdowns, two survivor groups with support and assistance, council decisions and contextual transmissions. All actual observations and completed interactions enter a bounded persistent event history. Debriefs record rescued people, knowledge, technology, contained threats and character careers. Players can accept repeatable follow-on rescue, catalogue, containment, fabrication and HARROW/ORISON commissions aboard the same ship, with fixed revealed destinations, their own optional preparation and extraction. HARROW retains its original room-owned Warden gate. The current versions are generator 6 / narrative 3 / save 9; earlier stories and layouts remain intact. See NARRATIVE.md for player behavior and TESTING.md for validation.
+Milestones 3 and 4 add a prerequisite-driven operation library, persistent room power/beacons/controller shutdowns, two survivor groups with support and assistance, council decisions and contextual transmissions. All actual observations and completed interactions enter a bounded persistent event history. Debriefs record rescued people, knowledge, technology, contained threats and character careers. Players can accept repeatable follow-on rescue, catalogue, containment, fabrication and HARROW/ORISON commissions aboard the same ship, with fixed revealed destinations, their own optional preparation and extraction. HARROW retains its original room-owned Warden gate. Those narrative milestones introduced generator 6 / narrative 3 / save 9; earlier stories and layouts remain intact. Current new ships use generator 8 / narrative 3 / matrix 1 / save 11. See NARRATIVE.md for player behavior and TESTING.md for validation.
 
 An example target experience is a salvage commission aboard *Saint Vesper*. Recent maintenance leads to a refuge under a ruined banquet hall. Evidence reveals that the requested alien drive keeps its life support running; an archive identifies an isolated backup reactor. The player can take the drive immediately, leave it and secure the refuge, or restore the reactor and save the residents while completing the salvage. The environment, optional work, final choice and debrief all refer to the same underlying situation. The scene library generalizes this dependency pattern into other arc shapes so each run can reveal a different situation.
 
@@ -40,8 +66,8 @@ The agreed design is:
 
 - First-person movement, with normal gravity through most of the ship and different gravity conditions in selected areas.
 - The loading bay is level 0 and offers routes left, right, upward, downward, and farther into the ship. Players can backtrack after entering.
-- Characters persist between newly generated ships. Death returns the player to a checkpoint while retaining character progression.
-- Character builds start with equipment and freely chosen skills, accompanied by simple appearance customization.
+- Every newly generated ship starts fresh characters. Death returns the player to a checkpoint while retaining that ship's character progression.
+- Character builds start with a modest kit and earn stronger equipment and abilities through challenges. Appearance customization is currently limited to color choices.
 - Linux, Windows, and browsers through Emscripten are target platforms. Mobile browsers should have on-screen controls.
 - Multiplayer is local split-screen. Players share one machine and one simulated world.
 - Graphics are dark, gloomy, retro, and pixelated. The ship feels infested, with detailed rooms, broken colored lighting, and a flashlight. Enemies have dark, strange silhouettes, tentacles, fast movement, wall climbing, and avoidable glowing shots.
@@ -53,7 +79,7 @@ The initial defaults below resolve details that were not specified. They can be 
 - Mobile touch controls initially support one player. Two-player browser support remains part of the engine; two simultaneous touch layouts are a later extension rather than the mobile baseline.
 - A new expedition creates a new ship seed. Saving and resuming, character death, or a second player joining do not regenerate the active ship. Starting a new expedition is an explicit action that resets both players' characters.
 - The first death policy retains experience, skills, and equipped items, and respawns at the last activated checkpoint. A surviving partner continues playing. Exact respawn timing and temporary penalties are tuning decisions.
-- Each local player can select a persistent character profile. Guests can play without overwriting an existing profile. The expedition save records the shared ship and participating character identities.
+- Profile selection and guest slots remain planned. The expedition save currently retains two ship-local character profiles, including the inactive co-op partner.
 - Ship difficulty is based on three-dimensional spatial distance from the entrance, with a safe starting region. Additional players affect encounter budgets in their shared encounter area, not the geography or base difficulty of the ship.
 
 The technology foundation is C17, SDL3, CMake, and OpenGL. Linux and Windows use an OpenGL 3.3 core context; Emscripten uses OpenGL ES 3 through WebGL 2. The renderer uses the feature set shared by these targets, with small platform-specific shader headers and context setup. WebGL 2 is required; an unsupported browser receives a clear capability message.
@@ -124,7 +150,7 @@ The implementation sequence is:
 
    Version both saves and generation rules. Do not silently resume an old expedition using incompatible generation rules. Test the joint save of shared world changes and individual progression so a partial save cannot duplicate rewards or erase a character's gains.
 
-   Completion means closing and reopening the game restores the same active ship and both character profiles. Starting a new expedition creates different architecture while retaining progression. Browser saves survive a page reload, and export/import restores a profile and expedition as documented.
+   Completion means closing and reopening the game restores the same active ship and both character profiles. Starting a new expedition creates different architecture and fresh characters, as required by the revised progression model. Browser saves survive a page reload, and export/import restores a profile and expedition as documented.
 
 6. **Expand the world and validate sustained play.**
 
