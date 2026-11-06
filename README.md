@@ -11,7 +11,7 @@ The prototype includes:
 - Seven environmental conditions with steam sprites, shallow rippling water, colored rain, spores, strange glows and local fog; decorative banners, fungi, bones, papers and glyphs. Eight local tales connect visible evidence to the F6 dossier, while six enemy ecologies match the surroundings.
 - Suites with two entrances, staggered work bays and open arcades; weapon and record caches reward side-room exploration. Pink map markings identify landmark discoveries.
 - Incremental chunk generation and GPU uploads, retained neighborhoods during backtracking, and one shared bounded cache for optional co-op.
-- Rusted panels, damaged vents, hanging cables, reactor pipework, cabin furnishings, egg nests, and branching growths in generated rooms.
+- Rusted panels, damaged vents, hanging cables, reactor pipework, cabin furnishings, egg nests, and branching growths with animated curling tentacles, suckers and faint luminous tips. Floating gazers carry trailing tentacles too.
 - Dark district materials, mostly dead light fittings, weak colored pools of flickering light, a player flashlight, ambient drones, and an F3 district map with streaming diagnostics.
 - Movement, collision, jumping, crouching, sprinting, and grav lifts that activate checkpoints.
 - 32 enemy species, including five robotic machines, built from climbing, leaping, charging, strafing, armor, directional wards, regeneration, healing, brood spawning, cloaking, hovering, turrets, bursts, frost, energy drain, and explosive attacks.

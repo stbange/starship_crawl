@@ -35,6 +35,7 @@ def run():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--site-dir', type=Path, default=BUILD)
     parser.add_argument('--url-path', default='/starship_crawl.html')
+    parser.add_argument('--tentacles-only', action='store_true', help='Run the tentacle and view-isolation checks without the weather tour')
     args = parser.parse_args()
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(QuietHandler, directory=str(args.site_dir.resolve())))
@@ -53,8 +54,9 @@ def run():
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
             hashes = set()
-            for scene, field, value in [(f'biome{i}', 'atmosphere', i) for i in range(7)] + [
-                    ('volume1', 'volume', 1), ('volume2', 'volume', 2), ('shape4', 'form', 4), ('shape6', 'form', 6)]:
+            tour = [(f'biome{i}', 'atmosphere', i) for i in range(7)] + [
+                    ('volume1', 'volume', 1), ('volume2', 'volume', 2), ('shape4', 'form', 4), ('shape6', 'form', 6)]
+            for scene, field, value in ([] if args.tentacles_only else tour):
                 page.goto(base + f'?seed=713&scene={scene}')
                 wait_ready(page)
                 s = state(page)
@@ -87,35 +89,57 @@ def run():
                     page.keyboard.press('m')
                 assert not state(page)['failed'], state(page)
                 print(f'PASS {scene}: bounded sprites, correct profile, rendered detail', flush=True)
-            assert len(hashes) == 11, hashes
+            assert len(hashes) == (0 if args.tentacles_only else len(tour)), hashes
+            # Inspect actual seeded growth, then freeze the rendered game rather
+            # than altering time or replacing the production animation.
+            page.goto(base + '?seed=713&scene=tentacles')
+            wait_ready(page)
+            expect(page, 's.tentacles > 0 && s.tentacles <= 96 && s.tentacles2 === 0')
+            start_play(page)
+            before = state(page)
+            still = capture(page, 'tentacles')
+            expect(page, f"s.time > {before['time'] + 1.2}")
+            moving = capture(page, 'tentacles-motion')
+            assert moving['sum'] != still['sum'], (still, moving)
+            page.keyboard.press('Escape')
+            expect(page, 's.paused')
+            frozen = state(page)
+            first = capture(page, 'tentacles-paused')
+            expect(page, f"s.frames > {frozen['frames'] + 8}")
+            second = capture(page, 'tentacles-paused-again')
+            assert state(page)['time'] == frozen['time'] and first == second, (first, second)
+            page.keyboard.press('Enter')
+            expect(page, '!s.paused')
             # Two independently rendered cameras retain their own sprite budgets.
             page.keyboard.press('F2')
-            expect(page, 's.players === 2 && s.sprites > 0 && s.sprites2 > 0')
+            expect(page, 's.players === 2 && s.sprites > 0 && s.sprites2 > 0 && s.tentacles > 0 && s.tentacles2 > 0')
             assert state(page)['sprites2'] <= 1536
+            assert state(page)['tentacles'] <= 96 and state(page)['tentacles2'] <= 96
             capture(page, 'split')
             page.keyboard.press('r')
             expect(page, 's.shelter_deployed')
             page.keyboard.press('g')
-            expect(page, 's.sheltered && s.sprites === 0 && s.sprites2 > 0')
+            expect(page, 's.sheltered && s.sprites === 0 && s.sprites2 > 0 && s.tentacles === 0 && s.tentacles2 > 0')
             capture(page, 'independent-shelter-weather')
             # Existing special interiors must not inherit atmosphere from the last view.
-            for scene in ['shelter', 'matrix', 'cabin']:
+            for scene in ['shelter', 'matrix', 'cabin', 'arrival']:
                 page.goto(base + f'?seed=713&scene={scene}')
                 wait_ready(page)
-                assert state(page)['sprites'] == 0, state(page)
+                assert state(page)['sprites'] == 0 and state(page)['tentacles'] == 0, state(page)
                 capture(page, scene)
             context.close()
             mobile = browser.new_context(viewport={'width': 844, 'height': 390}, is_mobile=True, has_touch=True)
             page = mobile.new_page()
             page.on('pageerror', lambda error: errors.append(str(error)))
-            page.goto(base + '?seed=713&scene=biome3')
+            page.goto(base + '?seed=713&scene=tentacles')
             wait_ready(page)
             page.locator('#start').tap()
-            expect(page, '!s.paused && s.sprites > 0')
+            expect(page, '!s.paused && s.sprites > 0 && s.tentacles > 0')
             capture(page, 'mobile-spores')
             page.set_viewport_size({'width': 390, 'height': 844})
             expect(page, 's.frames > 20 && !s.failed')
             assert state(page)['sprites'] <= 1536
+            assert state(page)['tentacles'] <= 96
             assert not errors, errors
             mobile.close()
             browser.close()

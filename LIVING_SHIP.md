@@ -12,6 +12,8 @@ Eight local tale families leave physical evidence: an abandoned evacuation queue
 
 Both cameras render their own atmosphere in optional split-screen. Sprite work is capped at 1,536 quads per view and 32 anchors per chunk; chunk generation and GPU uploads retain the two-per-frame limit. Fog/effects are kept out of the shelter, matrix and space. These bounds are resource limits, not a promised frame rate on every GPU.
 
+Existing floor growths and wall nests now carry living 3D tentacles: tapered hooked limbs, rows of suckers, slow travelling waves and faint green or violet tips. Floating gazers have longer trailing tentacles in the same style. These environmental limbs are decorative; their roots keep the original seed and they add no collision or attacks. The improvement also appears in existing saves, without starting a new ship. Motion pauses with the game. Each camera selects up to 32 nearby roots (at most 96 limbs), with less detail at distance; ship tentacles stay out of the shelter, matrix and exterior views.
+
 For a quick visual tour, use the normal executable's inspection scenes (or add the equivalent query to the web URL):
 
 | Preview | Native argument | Browser query |
@@ -20,6 +22,7 @@ For a quick visual tour, use the normal executable's inspection scenes (or add t
 | Upper gallery | `--scene volume2` | `?seed=713&scene=volume2` |
 | Eight footprint forms | `--scene shape1` through `shape8` | `?seed=713&scene=shape4` |
 | Seven conditions | `--scene biome0` through `biome6` | `?seed=713&scene=biome1` |
+| Close-up infestation | `--scene tentacles` | `?seed=713&scene=tentacles` |
 
 These find real generated spaces for the seed, open progression for inspection, and disable saving. Ordinary expeditions retain guardian gates. Use **F** to compare the flashlight with the room's weak lighting, **M** to inspect its footprint, and **F6** to read its evidence.
 

@@ -43,7 +43,7 @@ typedef struct {
     Renderer renderer;
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
-    bool demo_encounter, inspect_shelter, inspect_matrix;
+    bool demo_encounter, inspect_shelter, inspect_matrix, inspect_tentacles;
     int frame, smoke_frames, inspect_form, inspect_rig;
     bool options;
     int option_player, option_row;
@@ -482,7 +482,8 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         "{\"seed\":%u,\"players\":%d,\"paused\":%s,\"frames\":%d,\"rooms\":%d,"
         "\"x\":%.5f,\"y\":%.5f,\"z\":%.5f,\"rank\":%u,\"kills\":%u,\"shots\":%u,\"failed\":%s,"
         "\"generator\":%u,\"form\":%u,\"volume\":%u,\"atmosphere\":%u,\"ecology\":%u,\"tale\":%u,"
-        "\"sprites\":%u,\"sprites2\":%u,\"room_height\":%.1f,\"chunks\":%d,\"pending\":%d,"
+        "\"sprites\":%u,\"sprites2\":%u,\"tentacles\":%u,\"tentacles2\":%u,"
+        "\"room_height\":%.1f,\"chunks\":%d,\"pending\":%d,"
         "\"generated\":%u,\"work\":%u,\"uploads\":%u,"
         "\"span\":%d,\"ready\":%s,\"fingerprint\":%u,\"flashlight\":%s,\"projectiles\":%u,\"enemy_"
         "shots\":%u,\"projectile_hits\":%u,\"climbers\":%u,\"mission\":%u,\"weapon\":%u,"
@@ -516,9 +517,10 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         app.failed ? "true" : "false", app.game.world.generator, room ? room->habitat.form : 0,
         room ? room->habitat.volume : 0, room ? room->habitat.atmosphere : 0,
         room ? room->habitat.ecology : 0, room ? room->habitat.tale : 0,
-        app.renderer.sprite_drawn[0], app.renderer.sprite_drawn[1], room ? room->height : 0,
-        app.game.world.chunk_count, app.game.world.pending, app.game.world.generated,
-        app.game.world.last_work, app.renderer.last_uploads, room ? room->span_x * room->span_z : 0,
+        app.renderer.sprite_drawn[0], app.renderer.sprite_drawn[1], app.renderer.tentacle_drawn[0],
+        app.renderer.tentacle_drawn[1], room ? room->height : 0, app.game.world.chunk_count,
+        app.game.world.pending, app.game.world.generated, app.game.world.last_work,
+        app.renderer.last_uploads, room ? room->span_x * room->span_z : 0,
         room && room->ready ? "true" : "false",
         world_fingerprint_version(app.game.world.seed, app.game.world.generator,
                                   world_region(world_cell(feet))),
@@ -1440,6 +1442,38 @@ static void frame(void *unused) {
                                 position_absolute(app.game.players[1].pos)};
     world_refresh(&app.game.world, stream_positions, app.game.player_count);
     world_stream(&app.game.world, SC_STREAM_BUDGET);
+    if (app.inspect_tentacles && !app.game.world.pending) {
+        Player *p = &app.game.players[0];
+        Cell focus = world_cell(position_absolute(p->pos));
+        for (int i = 0; i < SC_MAX_CHUNKS && app.inspect_tentacles; i++) {
+            const Chunk *c = &app.game.world.chunks[i];
+            if (!c->active || !cell_equal(c->cell, focus))
+                continue;
+            for (int j = 0; j < c->dressing_count; j++) {
+                const Dressing *d = &c->dressing[j];
+                if (d->kind != GROWTH || d->normal.y < .9 || d->scale < .5)
+                    continue;
+                Vec3 root = vadd(world_center(c->cell), d->pos);
+                double distance = clampd(d->scale * 3.5, 2.5, 6);
+                Vec3 feet = vadd(root, v3(d->pos.x > 0 ? -distance * .5 : distance * .5,
+                                          .02 - d->pos.y, d->pos.z > 0 ? -distance : distance));
+                if (!world_spawn_supported(&app.game.world, feet, 1.8) ||
+                    world_overlap(&app.game.world, feet, .35, 1.8))
+                    continue;
+                p->pos = position_from(feet);
+                p->yaw = atan2(root.x - feet.x, root.z - feet.z);
+                p->pitch = atan2(d->scale * .8 - 1.6, distance * 1.12);
+                app.inspect_tentacles = false;
+                if (app.game.player_count == 2) {
+                    app.game.players[1].pos = p->pos;
+                    app.game.players[1].yaw = p->yaw;
+                    app.game.players[1].pitch = p->pitch;
+                }
+                break;
+            }
+        }
+        app.inspect_tentacles = false;
+    }
     if (app.inspect_matrix && matrix_near(&app.game, 0) && matrix_toggle(&app.game, 0))
         app.inspect_matrix = false;
     if (app.inspect_form && !app.game.world.pending) {
@@ -1600,7 +1634,7 @@ int main(int argc, char **argv) {
                  "encounter|shelter|mech|wagon|luxury|"
                  "bridge|lab|"
                  "cargo|"
-                 "cryonics|botany\nSolo by default. F2 "
+                 "cryonics|botany|tentacles\nSolo by default. F2 "
                  "explicitly "
                  "toggles local "
                  "split-screen.");
@@ -1670,7 +1704,7 @@ int main(int argc, char **argv) {
     SDL_free(pref);
     if (scene) {
         bool habitat_scene = !strncmp(scene, "biome", 5) || !strncmp(scene, "volume", 6) ||
-                             !strncmp(scene, "shape", 5);
+                             !strncmp(scene, "shape", 5) || !strcmp(scene, "tentacles");
         bool traversal_scene =
             !strcmp(scene, "stairs") || !strcmp(scene, "ramp") || !strcmp(scene, "lift");
         bool exterior_scene = !strcmp(scene, "arrival") || !strcmp(scene, "skiff") ||
@@ -1803,7 +1837,11 @@ int main(int argc, char **argv) {
                             RoomSpec room = plan.rooms[i];
                             int desired = atoi(scene + (!strncmp(scene, "volume", 6) ? 6 : 5));
                             bool match =
-                                !strncmp(scene, "biome", 5)    ? room.habitat.atmosphere == desired
+                                !strcmp(scene, "tentacles")
+                                    ? (room.incident == BLOOM || room.district == BOTANY) &&
+                                          room.height >= 8 && !room.habitat.volume &&
+                                          room.span_x == 1 && room.span_z == 1
+                                : !strncmp(scene, "biome", 5)  ? room.habitat.atmosphere == desired
                                 : !strncmp(scene, "volume", 6) ? room.habitat.volume == desired
                                                                : room.habitat.form == desired;
                             if (match && room.height >= 3) {
@@ -1831,6 +1869,7 @@ int main(int argc, char **argv) {
             app.game.campaign = (Campaign){0};
             app.game.world.open_layer = 0;
             app.no_save = true;
+            app.inspect_tentacles = !strcmp(scene, "tentacles");
         }
         if (traversal_scene) {
             Player *p = &app.game.players[0];

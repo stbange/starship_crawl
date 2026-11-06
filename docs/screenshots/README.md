@@ -46,3 +46,12 @@ The current room's local account in the F6 dossier:
 One player sheltered while the second remains in ship weather:
 
 ![Independent shelter and weather views](living-split-shelter.png)
+
+## Living tentacles
+
+Actual native Mesa captures of the animated tentacle renderer, seed 713:
+
+- [Rooted growth](tentacle-growth.png): a hooked floor tentacle with sucker rims and a faint violet tip beside its original root mat.
+- [Gazer family](tentacle-gazers.png): floating eye creatures with trailing tentacles, including the larger brood variant.
+
+Reproduce with `--scene tentacles` or `--scene form1`, `--seed 713 --smoke 100 --no-save`. The saving-disabled `tentacles` scene finds an actual botanical/infested room. Existing expeditions receive this rendering change without generating a new ship.

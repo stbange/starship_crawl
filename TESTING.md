@@ -1,5 +1,28 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
+**Animated tentacles.** The habitat browser suite now inspects rooted tentacles in
+an actual seeded room, checks changing rendered pixels while running and identical
+pixels/time while paused, and verifies the 96-limb per-view limit. It checks both
+split views, one player sheltered while the other retains tentacles, no ship limbs
+in matrix/shelter/exterior views, and mobile-sized rotation. The existing anatomy
+and death suites exercise the gazer variants and their corpse poses. Native CI
+also renders the `tentacles` scene in split-screen.
+
+All 27 native CTests and the 11 separately labelled gameplay campaigns passed.
+The packaged main-game, anatomy, death, interior, shelter and exterior suites
+passed, alongside the habitat tour and focused tentacle/view-isolation checks.
+Native Mesa also rendered floor tentacles, the gazer family, split-screen and
+special interiors; the final curve refinement passed repeated native captures
+and browser checks. Linux, Windows x86-64 cross-compilation and Emscripten builds
+succeeded, and strict OpenSpec validation passed.
+
+The change is confined to presentation and inspection; core executable code,
+generator 10 and format 11 are unchanged. Its geometry is validated through native
+OpenGL and real browser WebGL execution, outside the core unit coverage metric.
+See [captures](docs/screenshots/README.md#living-tentacles) and the
+[player guide](LIVING_SHIP.md). Physical GPU/mobile performance remains a device
+playtest task.
+
 **Living ship generation (generator 10).** The suite now contains 27 native
 CTests: 15 unit, 11 gameplay and one SDL platform test. `living_ship` checks eight
 macro forms, matching paired decks, masked ownership, actual open floor volumes,

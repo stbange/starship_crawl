@@ -6,6 +6,7 @@
 #define SC_VIEW_LIGHTS 12
 #define SC_SPACE_STARS 1800
 #define SC_VIEW_SPRITES 1536
+#define SC_TENTACLE_ROOTS 32
 typedef struct {
     Vec3 direction;
     Color color;
@@ -38,6 +39,7 @@ typedef struct {
     SpriteDraw sprite_draws[SC_VIEW_SPRITES];
     SpriteVertex sprite_vertices[SC_VIEW_SPRITES * 6];
     unsigned sprite_drawn[SC_PLAYERS];
+    unsigned tentacle_drawn[SC_PLAYERS];
     int width[SC_PLAYERS], height[SC_PLAYERS];
     unsigned target_resizes[SC_PLAYERS];
     uint32_t world_revision;

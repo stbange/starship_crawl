@@ -448,6 +448,7 @@ static void upload_world(Renderer *r, Game *g) {
 static bool visible_deck(const World *w, int viewer, int target) {
     return abs(viewer - target) <= (w->generator >= 10 ? 1 : 0);
 }
+#include "render_tentacles.inc"
 static void draw_chunks(Renderer *r, Game *g) {
     World *w = &g->world;
     for (int i = 0; i < SC_MAX_CHUNKS; i++) {
@@ -541,14 +542,12 @@ static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double tim
         organ(r, p, v3(0, .3, .66), v3(.09, .24, .05), rgb(.05f, .07f, .03f), .1f);
         int arms = v == 4 ? 8 : 3 + v;
         for (int i = 0; i < arms; i++) {
-            double a = i * SC_PI * 2 / arms, phase = time * 2 + i;
-            Vec3 last = v3(cos(a) * .4, 0, sin(a) * .4);
-            for (int j = 1; j <= 3; j++) {
-                Vec3 next = v3(cos(a) * (.4 + j * .16) + sin(phase + j) * .12, -j * .26,
-                               sin(a) * (.4 + j * .16));
-                bone(r, p, last, next, .07, flesh, glow);
-                last = next;
-            }
+            double a = i * SC_PI * 2 / arms;
+            Vec3 root = anatomical(p, v3(cos(a) * .4, 0, sin(a) * .4));
+            Vec3 bend = vadd(vmul(p->right, cos(a)), vmul(p->forward, sin(a)));
+            tentacle_mesh(r, root, vmul(p->up, -1), bend, (1.25 + v * .13) * p->size,
+                          .105 * p->size, i * 1.7 + e->id, time * 1.5, shell, flesh,
+                          rgb(.38f, .55f, .23f), glow, 8, true);
             if (v == 1)
                 bone(r, p, v3(cos(a) * .4, .6, sin(a) * .4), v3(cos(a) * .8, 1.1, sin(a) * .8), .12,
                      shell, glow);
@@ -2120,6 +2119,7 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
     bool vertical = width >= height * 1.5;
     int count = g->player_count;
     r->sprite_drawn[0] = r->sprite_drawn[1] = 0;
+    r->tentacle_drawn[0] = r->tentacle_drawn[1] = 0;
     for (int p = 0; p < count; p++) {
         int vw = count == 1 ? width : (vertical ? width / 2 : width),
             vh = count == 1 ? height : (vertical ? height : height / 2);
@@ -2139,8 +2139,7 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
         Player *player = &g->players[p];
         bool matrix = g->matrix.divers[p].active;
         bool outside = !matrix && !player->sheltered && position_absolute(player->pos).z < 0;
-        gl.ClearColor(outside ? .001f : .012f, outside ? .002f : .024f,
-                      outside ? .004f : .039f, 1);
+        gl.ClearColor(outside ? .001f : .012f, outside ? .002f : .024f, outside ? .004f : .039f, 1);
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         gl.Enable(GL_DEPTH_TEST);
         gl.Uniform1i(r->ui, 0);
@@ -2176,6 +2175,8 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
             draw_chunks(r, g);
             hull_view(r, g, player_eye(player));
             boarding_skiff(r, g, player_eye(player));
+            if (!outside)
+                infestation_tentacles(r, g, p);
             actors(r, g, p);
             campaign_scene(r, g, p);
         }
