@@ -50,7 +50,20 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libgl1-mesa-dev libegl1-mesa-dev
       - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build --config Release --parallel 4
-      - run: ctest --test-dir build -C Release --output-on-failure
+      - run: ctest --test-dir build -C Release --output-on-failure --output-junit native-tests.xml
+      - name: Report native test failures
+        if: failure()
+        shell: python
+        run: |
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          report = Path('build/native-tests.xml')
+          if report.is_file():
+              for case in ET.parse(report).iter('testcase'):
+                  if case.find('failure') is not None or case.find('error') is not None:
+                      detail = case.get('name', 'Native test') + '\n' + (case.findtext('system-out') or '')[-10000:]
+                      detail = detail.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+                      print('::error title=Native test failure::' + detail)
       - name: Linux render smoke test
         if: runner.os == 'Linux'
         env:

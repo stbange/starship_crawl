@@ -112,7 +112,16 @@ static void interior_parity(void) {
                 if (a->chunks[i].active) {
                     const Chunk *left = &a->chunks[i], *right = world_chunk(b, left->cell);
                     CHECK(right && left->box_count == right->box_count);
-                    CHECK(!memcmp(left->boxes, right->boxes, left->box_count * sizeof(Box)));
+                    /* C leaves struct padding unspecified. Compare geometry and
+                       materials, not compiler-dependent object representations. */
+                    for (size_t j = 0; j < left->box_count; j++) {
+                        const Box *x = &left->boxes[j], *y = &right->boxes[j];
+                        CHECK(x->min.x == y->min.x && x->min.y == y->min.y && x->min.z == y->min.z);
+                        CHECK(x->max.x == y->max.x && x->max.y == y->max.y && x->max.z == y->max.z);
+                        CHECK(x->color.r == y->color.r && x->color.g == y->color.g &&
+                              x->color.b == y->color.b);
+                        CHECK(x->glow == y->glow && x->solid == y->solid);
+                    }
                 }
         }
         world_destroy(a);
