@@ -1,5 +1,14 @@
 # Project workflow
 
+Work directly on `main` and push completed, validated work to `origin/main` unless
+the user explicitly requests another branch. Keep `main` tracking `origin/main`.
+Every push to `main` triggers the complete checks and publishes GitHub Pages after
+they pass; do not skip the publishing checks for documentation-only changes.
+
+If a required GitHub operation is blocked by permissions or unavailable access,
+ask the user for help with the exact GitHub URL and specific clicks or commands
+needed. Explain what is blocked and why. Complete any independent work first.
+
 Starship Crawl is C17 with SDL3/OpenGL and an Emscripten WebGL build. Read README.md,
 TESTING.md, openspec/config.yaml, and the relevant openspec/specs before changing behavior.
 

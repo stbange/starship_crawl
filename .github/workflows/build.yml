@@ -1,7 +1,13 @@
 name: Build, test, and publish
 run-name: >-
   ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && 'Build, test, and publish Pages' || 'Build and test only (Pages requires main)' }} — ${{ github.ref_name }}
-on: [push, pull_request, workflow_dispatch]
+on:
+  # Every push to main runs the full checks and publishes after they pass.
+  # Keep this unfiltered by paths so documentation/configuration commits run too.
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
