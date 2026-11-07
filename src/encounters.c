@@ -89,6 +89,8 @@ void encounter_populate(World *w, Room *r) {
     (void)w;
 }
 const char *encounter_name(const Room *r) {
+    if (r->habitat.challenge)
+        return frontier_name(r->habitat.challenge);
     return r->habitat.ecology == MECHANICAL ? "CHOIR RELAY" : "NEST CONDUCTOR";
 }
 Vec3 encounter_console(const Room *r) {
@@ -111,6 +113,16 @@ const char *local_action(unsigned tale) {
     return actions[tale % LOCAL_TALES];
 }
 CampaignReward encounter_reward(const Game *g, int player, const Room *r) {
+    if (r->habitat.challenge) {
+        static const CampaignReward tools[CHALLENGES - 1] = {{REWARD_POWER, PSI_FLIGHT},
+                                                             {REWARD_POWER, PSI_NOVA},
+                                                             {REWARD_RIG, MECH},
+                                                             {REWARD_RIG, WAGON},
+                                                             {REWARD_MODULE, MOD_SABOTEUR}};
+        CampaignReward tool = tools[r->habitat.challenge - 1];
+        if (!campaign_owns(g, player, tool))
+            return tool;
+    }
     static const CampaignReward rewards[2][7] = {{{REWARD_GUN, 10},
                                                   {REWARD_POWER, PSI_NOVA},
                                                   {REWARD_GUN, 5},
@@ -162,8 +174,9 @@ bool encounter_attack(const Room *r, int index) {
             (!r->enemies[0].alive || (r->frontier_attacker == index && r->enemies[0].windup <= 0)));
 }
 bool encounter_linked(const World *w, const Room *r, int index) {
-    if (r->habitat.pace != PACE_FRONTIER || !r->frontier_active || index <= 0 || index >= 4 ||
-        r->frontier_disrupt > 0 || !r->enemies[0].alive || !r->enemies[index].alive)
+    if (r->habitat.challenge || r->habitat.pace != PACE_FRONTIER || !r->frontier_active ||
+        index <= 0 || index >= 4 || r->frontier_disrupt > 0 || !r->enemies[0].alive ||
+        !r->enemies[index].alive)
         return false;
     Vec3 from = enemy_center(&r->enemies[0]), delta = vsub(enemy_center(&r->enemies[index]), from);
     double length = vlen(delta);
@@ -174,7 +187,7 @@ float encounter_damage(Game *g, Room *r, int index, float damage, uint32_t flags
         return 0;
     if (r->habitat.pace != PACE_FRONTIER || index >= 4)
         return damage;
-    bool linked = encounter_linked(&g->world, r, index);
+    bool linked = !r->habitat.challenge && encounter_linked(&g->world, r, index);
     if ((linked || index == 0) && (flags & W_BEAM) && r->enemies[0].alive) {
         Enemy *core = &r->enemies[0];
         core->link_strain += damage / 50;
@@ -219,9 +232,13 @@ bool game_encounter_interact(Game *g, int player) {
                 game_reward_drill(g, player, reward, r->cell);
             game_message(g, owned ? "FRONTIER REWARD / +2 POINTS / +100 SALVAGE"
                                   : "FRONTIER TOOL EARNED / TRY IT HERE / F10 LOADOUT");
+            frontier_claim(g, player, r);
         } else {
             if (r->frontier_active) {
-                game_message(g, "CHALLENGE ACTIVE / DESTROY THE SUPPORT AND ITS THREE GUARDS");
+                game_message(g,
+                             r->habitat.challenge
+                                 ? frontier_hint(r->habitat.challenge)
+                                 : "CHALLENGE ACTIVE / DESTROY THE SUPPORT AND ITS THREE GUARDS");
                 return true;
             }
             uint32_t participants = 0;
@@ -233,7 +250,13 @@ bool game_encounter_interact(Game *g, int player) {
                 return true;
             r->frontier_active = true;
             r->frontier_timer = 1;
-            game_message(g, "CHALLENGE AWAKENED / BREAK THE VISIBLE SUPPORT / EXITS REMAIN OPEN");
+            r->hazard_time = 0;
+            r->circuit = 0;
+            r->circuit_time = 0;
+            game_message(
+                g, r->habitat.challenge
+                       ? frontier_hint(r->habitat.challenge)
+                       : "CHALLENGE AWAKENED / BREAK THE VISIBLE SUPPORT / EXITS REMAIN OPEN");
         }
         g->dirty = true;
         return true;
@@ -340,6 +363,7 @@ void game_encounters_step(Game *g, double dt) {
             }
             continue;
         }
+        frontier_step(g, r, dt);
         r->frontier_disrupt = fmaxf(0, r->frontier_disrupt - (float)dt);
         if (!r->enemies[0].alive) {
             if (r->frontier_attacker != 255) {

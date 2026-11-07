@@ -1,0 +1,36 @@
+APPROACH kind=1 first=19,0,2
+FRONTIER tool=0 gun=0 cell=19,0,2 seconds=63.92 kills=11 deaths=0 shots=42 damage=5.00 min_energy=100.00 disrupted_frames=57 recoveries=0
+  kind=1 contract=1 circuit_at=0.00 relics=1,0,0,0,0
+FRONTIER tool=0 gun=0 cell=30,0,3 seconds=2.80 kills=4 deaths=0 shots=7 damage=0.00 min_energy=100.00 disrupted_frames=72 recoveries=0
+  kind=1 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+FRONTIER tool=1 gun=0 cell=30,0,3 seconds=3.33 kills=4 deaths=0 shots=5 damage=0.00 min_energy=80.20 disrupted_frames=59 recoveries=0
+  kind=1 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+APPROACH kind=2 first=22,0,0
+FRONTIER tool=0 gun=10 cell=22,0,0 seconds=113.38 kills=38 deaths=0 shots=61 damage=24.00 min_energy=51.80 disrupted_frames=0 recoveries=0
+  kind=2 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+FRONTIER tool=0 gun=0 cell=16,0,2 seconds=2.72 kills=4 deaths=0 shots=7 damage=0.00 min_energy=100.00 disrupted_frames=91 recoveries=0
+  kind=2 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+FRONTIER tool=1 gun=0 cell=16,0,2 seconds=3.05 kills=4 deaths=0 shots=4 damage=0.00 min_energy=65.20 disrupted_frames=23 recoveries=0
+  kind=2 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+APPROACH kind=3 first=19,0,16
+FRONTIER tool=0 gun=0 cell=19,0,16 seconds=216.67 kills=68 deaths=0 shots=294 damage=21.00 min_energy=100.00 disrupted_frames=91 recoveries=0
+  kind=3 contract=5 circuit_at=0.00 relics=2,0,0,0,1
+FRONTIER tool=0 gun=0 cell=23,0,20 seconds=15.92 kills=4 deaths=0 shots=15 damage=0.00 min_energy=100.00 disrupted_frames=91 recoveries=0
+  kind=3 contract=5 circuit_at=0.00 relics=2,0,0,0,1
+FRONTIER tool=1 gun=0 cell=23,0,20 seconds=20.20 kills=4 deaths=0 shots=11 damage=0.00 min_energy=99.20 disrupted_frames=91 recoveries=0
+  kind=3 contract=5 circuit_at=0.00 relics=2,0,0,0,1
+APPROACH kind=4 first=23,0,19
+FRONTIER tool=0 gun=15 cell=23,0,19 seconds=18.60 kills=4 deaths=0 shots=5 damage=0.00 min_energy=59.00 disrupted_frames=186 recoveries=0
+  kind=4 contract=5 circuit_at=15.40 relics=2,0,0,0,1
+FRONTIER tool=0 gun=0 cell=22,0,22 seconds=10.67 kills=5 deaths=0 shots=11 damage=0.00 min_energy=100.00 disrupted_frames=213 recoveries=0
+  kind=4 contract=1 circuit_at=6.85 relics=2,0,0,0,1
+FRONTIER tool=1 gun=0 cell=22,0,22 seconds=8.27 kills=4 deaths=0 shots=11 damage=22.00 min_energy=100.00 disrupted_frames=238 recoveries=0
+  kind=4 contract=1 circuit_at=4.23 relics=2,0,0,0,1
+APPROACH kind=5 first=21,0,21
+FRONTIER tool=0 gun=0 cell=21,0,21 seconds=17.90 kills=5 deaths=0 shots=15 damage=0.00 min_energy=100.00 disrupted_frames=55 recoveries=0
+  kind=5 contract=1 circuit_at=0.00 relics=2,0,0,0,1
+FRONTIER tool=0 gun=0 cell=18,0,19 seconds=3.52 kills=4 deaths=0 shots=10 damage=0.00 min_energy=100.00 disrupted_frames=44 recoveries=0
+  kind=5 contract=1 circuit_at=0.00 relics=2,0,0,0,1
+FRONTIER tool=1 gun=0 cell=18,0,19 seconds=2.83 kills=4 deaths=0 shots=5 damage=0.00 min_energy=100.00 disrupted_frames=42 recoveries=0
+  kind=5 contract=1 circuit_at=0.00 relics=2,0,0,0,1
+PASS five earned-tool encounter comparisons

@@ -514,8 +514,11 @@ static void panel(Renderer *r, const BodyPose *p, Vec3 at, Vec3 size, Color colo
     cube(&r->mesh, vsub(anatomical(p, at), r->origin), vmul(p->right, 2 * size.x * p->size),
          vmul(p->up, 2 * size.y * p->size), vmul(p->forward, 2 * size.z * p->size), color, glow);
 }
+#include "render_alien.inc"
 static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double time, Color shell,
                       Color flesh, float glow) {
+    if (alien_form(r, e, p, time, shell, flesh, glow))
+        return;
     EnemyBody body = sc_enemy_bodies[e->kind];
     int v = body.variant;
     double gait = sin((e->behavior && e->alive ? e->stride * 4 : time * 7) + e->id) * .13;
@@ -527,7 +530,8 @@ static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double tim
             head.right = vnorm(vcross(head.up, head.forward));
             organ(r, &head, v3(0, .32, .12), v3(.28, .25, .26), flesh, glow);
             for (int side = -1; side <= 1; side += 2)
-                organ(r, &head, v3(side * .1, 1, .29), v3(.045, .055, .04), rgb(.7f, .5f, .28f), .8f);
+                organ(r, &head, v3(side * .1, 1, .29), v3(.045, .055, .04), rgb(.7f, .5f, .28f),
+                      .8f);
         }
         organ(r, &head, v3(0, .95, .04), v3(.28, .3, .26), flesh, glow);
         for (int side = -1; side <= 1; side += 2) {
@@ -556,7 +560,8 @@ static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double tim
         }
         organ(r, &swing, v3(0, .25, 0), v3(.68, .68, .6), shell, glow);
         organ(r, &eye, v3(0, .3, .55), v3(.36, .36, .1), rgb(.5f, .65f, .35f), .65f);
-        organ(r, &eye, v3(0, .3, .66), v3(e->windup > 0 ? .035 : .09, .24, .05), rgb(.05f, .07f, .03f), .1f);
+        organ(r, &eye, v3(0, .3, .66), v3(e->windup > 0 ? .035 : .09, .24, .05),
+              rgb(.05f, .07f, .03f), .1f);
         int arms = v == 4 ? 8 : 3 + v;
         for (int i = 0; i < arms; i++) {
             double a = i * SC_PI * 2 / arms;
@@ -1579,7 +1584,8 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
                 "GREEN YOU / CYAN NEXT / GOLD GOAL / VIOLET SHELTER / PINK DISCOVERY / TEAL WARD",
                 wall);
         if (g->world.generator >= 11)
-            text_at(r, x, y + size + 65, .85f * text_scale, "WHITE BEACON / OPTIONAL CHALLENGE", wall);
+            text_at(r, x, y + size + 65, .85f * text_scale, "WHITE BEACON / OPTIONAL CHALLENGE",
+                    wall);
     }
 }
 static void story_journal(Renderer *r, const Game *g, int player, float w, float h) {
@@ -1845,11 +1851,19 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                      aimed->health);
         else if (aimed->behavior == ALIEN_CONDUCTOR)
             snprintf(label, sizeof(label), "SUPPORT / BREAK THE LINKS / %.0f", aimed->health);
+        else if (aimed->behavior >= ALIEN_LISTENER)
+            snprintf(label, sizeof(label), "%s / %.0f", sc_enemies[aimed->kind].name,
+                     aimed->health);
         else
             snprintf(label, sizeof(label), "%s / %s %s / %.0f", sc_enemies[aimed->kind].name,
                      sc_body_names[body.form], sc_body_variants[body.form][body.variant],
                      aimed->health);
-        centered(r, w * .5f, h * .43f, s, label, mint);
+        centered(r, w * .5f, h * .43f, fminf(s, (w - 24 * s) / (6 * strlen(label))), label, mint);
+        if (aimed->behavior) {
+            const char *hint = alien_hint(aimed->behavior);
+            centered(r, w * .5f, h * .43f + 14 * s,
+                     fminf(.75f * s, (w - 24 * s) / (6 * fmax(1, strlen(hint)))), hint, mint);
+        }
     }
     float exp = (float)p->xp / (float)player_next_level(p);
     rect(r, 0, h - 3, w * exp, 3, gold);

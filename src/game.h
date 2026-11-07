@@ -5,6 +5,7 @@
 #include "matrix.h"
 #include "campaign.h"
 #include "encounters.h"
+#include "frontier.h"
 #define SC_PLAYERS 2
 #define SC_MAX_PROJECTILES 192
 #define SC_MAP_SIDE 9
@@ -37,7 +38,7 @@ typedef struct Player {
     bool lift_active;  /* Transient: saves snapshot the departure pad. */
     bool lift_latched; /* Release at the landing before requesting another ride. */
     float arrival_time, navigation_time;
-    unsigned shots_fired; /* Transient, per-player field-drill observation. */
+    unsigned shots_fired;  /* Transient, per-player field-drill observation. */
     Navigation navigation; /* Derived, per-view, never serialized. */
     Vec3 velocity;
     double yaw, pitch;
@@ -60,6 +61,7 @@ typedef struct Player {
     Cell map_center;
     uint32_t riding, rig_weapon, flare_lifetime, flare_strength;
     float drive_speed;
+    float noise, relic_cooldown;
 } Player;
 typedef struct Shelter {
     Position door;
@@ -144,6 +146,7 @@ typedef struct Game {
     MatrixState matrix;
     Campaign campaign;
     RewardDrill drills[SC_PLAYERS];
+    FrontierProgress frontier;
     bool dirty;
 } Game;
 typedef struct {

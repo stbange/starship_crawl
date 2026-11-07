@@ -1,5 +1,57 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
+**Deep frontiers (review items 2, 4, 5 and 6).** All **34 native CTests** pass:
+18 unit, 15 gameplay and one SDL platform test. All 15 gameplay-labelled tests
+also pass separately. `deep_frontiers` retains 24 immutable generator-11
+plan/geometry/population references and format-12 migration, samples all six
+encounter patterns, nine focal structures, five contracts and ten new species,
+and checks physical spawns, lift clearance and bounded geometry (355/512 peak
+boxes in this sample). It covers actual fragment/tail bullet and beam hits,
+shared deaths, one molt, co-op sight, warned hazards, relic attacks/mobility,
+both saved profiles, once-only claims and malformed format-13 rollback.
+The final focused checks also cover crouch on the first movement frame and a
+real wall-to-ceiling transition followed by a locked, avoidable drop.
+
+Unit-only line coverage is **98.43% (7884/8010)**, with every core source above
+95%. `frontier.c` is 98.52%, `alien_special.c` 97.30% and `reveals.c` 100%; all
+three are required by the coverage gate. Six gate self-tests pass. Renderer,
+audio and input adapters remain outside this core unit percentage.
+
+`frontier_journeys` loads an earned generator-12 checkpoint, walks to five new
+patterns, fights and claims through production APIs, and refits owned equipment
+inside an actual summoned shelter. Paired comparisons reload the same next
+arena and use a carbine with or without the relevant capability. The cipher
+route links at its physical terminal and uses real matrix Veil/SECURITY.
+It does not inject position, inventory, health, damage or enemy state.
+These are strong late-game builds: fast clears remain possible and these
+observations do not establish human balance. See [Deep frontiers](DEEP_FRONTIERS.md).
+
+Linux, Windows x86-64 cross-compilation and Emscripten builds pass. Native Mesa
+captures cover focal structures, split-screen courier circuits, colonies and
+molters. All sixteen packaged Chromium/WebGL suites pass. The final presentation
+refinements additionally pass earned-claim/save checks, creature HUD inspection,
+desktop/portrait journals, wrapped mobile contract previews and tactics, rotation,
+and a native split-screen smoke check.
+
+All 33 core ASan/UBSan checks pass, combining the original 32 successful tests
+with the rerun of `imperfect_expeditions`. That four-profile run initially hit
+600 seconds, then passed in 925.64 seconds with a sanitizer-only 1,200-second
+allowance; its frame/death assertions and the native allowance are unchanged.
+The final deep-frontier unit test and four-profile journey also pass
+LeakSanitizer outside the sandbox. The full 33-test run used leak detection off;
+do not interpret this as full-suite leak coverage. Browser failure logs now
+appear in retained artifacts and public Actions annotations.
+See the retained [follow-up evidence](docs/reviews/2026-11-07-deep-frontiers/README.md).
+Physical Windows graphics/controllers, mobile GPUs, Safari, human difficulty
+and the final sound mix remain playtest work.
+
+```sh
+ctest --test-dir build -R 'deep_frontiers|frontier_journeys' --output-on-failure
+ctest --test-dir build -L gameplay --output-on-failure
+python3 scripts/check-coverage.py
+python3 tests/test_frontier_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+```
+
 **Regional encounters (P1).** There are **32 native CTests: 17 unit, 14 gameplay
 and one SDL platform test**. All 32 passed, followed by all 14 gameplay-labelled
 tests separately. `regional_encounters` verifies immutable generator-10 plans,

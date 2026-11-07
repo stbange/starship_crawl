@@ -44,7 +44,7 @@ typedef struct {
     Finger fingers[10];
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
     bool demo_encounter, inspect_shelter, inspect_matrix, inspect_tentacles;
-    int frame, smoke_frames, inspect_form, inspect_rig;
+    int frame, smoke_frames, inspect_form, inspect_rig, inspect_alien;
     bool options;
     int option_player, option_row;
     double last, accumulator, fps, autosave, audio_time;
@@ -659,14 +659,14 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              local ? local->habitat.pace : 0, world_local_state(&app.game.world, local),
              local && local->frontier_active ? "true" : "false", living,
              local && local->enemy_count ? local->enemies[0].health : 0,
-             local ? local->frontier_attacker : 0, local ? local->frontier_disrupt : 0,
-             behaviors, motions, offer, app.game.drills[0].time,
+             local ? local->frontier_attacker : 0, local ? local->frontier_disrupt : 0, behaviors,
+             motions, offer, app.game.drills[0].time,
              app.game.drills[0].complete ? "true" : "false");
     used = strlen(result) - 1;
     Vec3 console = local ? encounter_console(local) : v3(0, 0, 0);
     snprintf(result + used, sizeof(result) - used,
-             ",\"encounter_console\":[%.3f,%.3f,%.3f],\"regional_enemies\":[",
-             console.x, console.y, console.z);
+             ",\"encounter_console\":[%.3f,%.3f,%.3f],\"regional_enemies\":[", console.x, console.y,
+             console.z);
     if (local && local->habitat.pace == PACE_FRONTIER)
         for (int i = 0; i < 4; i++) {
             const Enemy *e = &local->enemies[i];
@@ -674,7 +674,31 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
             used = strlen(result);
             snprintf(result + used, sizeof(result) - used,
                      "%s{\"at\":[%.3f,%.3f,%.3f],\"alive\":%s,\"motion\":%u,\"health\":%.2f}",
-                     i ? "," : "", at.x, at.y, at.z, e->alive ? "true" : "false", e->motion, e->health);
+                     i ? "," : "", at.x, at.y, at.z, e->alive ? "true" : "false", e->motion,
+                     e->health);
+        }
+    used = strlen(result);
+    snprintf(result + used, sizeof(result) - used, "]}");
+    used = strlen(result) - 1;
+    snprintf(result + used, sizeof(result) - used,
+             ",\"challenge\":%u,\"reveal\":%u,\"contract\":%u,\"circuit\":%u,\"hazard_time\":%.3f,"
+             "\"relics\":[%u,%u,%u,%u,%u],\"specialists\":[",
+             local ? local->habitat.challenge : 0, local ? local->habitat.reveal : 0,
+             local ? local->habitat.contract : 0, local ? local->circuit : 0,
+             local ? local->hazard_time : 0, app.game.frontier.ranks[0][0],
+             app.game.frontier.ranks[0][1], app.game.frontier.ranks[0][2],
+             app.game.frontier.ranks[0][3], app.game.frontier.ranks[0][4]);
+    if (local)
+        for (int i = 0; i < local->enemy_count; i++) {
+            const Enemy *e = &local->enemies[i];
+            Vec3 at = enemy_center(e);
+            used = strlen(result);
+            snprintf(result + used, sizeof(result) - used,
+                     "%s{\"kind\":%u,\"behavior\":%u,\"motion\":%u,\"alive\":%s,\"observed\":%s,"
+                     "\"molted\":%s,\"unfold\":%.3f,\"sound\":%.3f,\"at\":[%.3f,%.3f,%.3f]}",
+                     i ? "," : "", e->kind, e->behavior, e->motion, e->alive ? "true" : "false",
+                     e->observed ? "true" : "false", e->molted ? "true" : "false", e->unfold,
+                     e->warning_sound, at.x, at.y, at.z);
         }
     used = strlen(result);
     snprintf(result + used, sizeof(result) - used, "]}");
@@ -703,6 +727,22 @@ static void audio_frame(void) {
     }
     /* A small single mixed output: district drones crossfade, including co-op
        views in different districts. Generation never touches the audio device. */
+    double warning[ALIEN_BEHAVIORS] = {0};
+    for (int room = 0; room < app.game.world.count; room++)
+        for (int n = 0; n < app.game.world.rooms[room].enemy_count; n++) {
+            const Enemy *e = &app.game.world.rooms[room].enemies[n];
+            if (!e->alive || !e->behavior || e->warning_sound <= 0)
+                continue;
+            for (int player = 0; player < app.game.player_count; player++) {
+                const Player *p = &app.game.players[player];
+                if (p->sheltered || app.game.matrix.divers[player].active)
+                    continue;
+                double distance = vlen(vsub(player_eye(p), enemy_center(e)));
+                if (distance < 35)
+                    warning[e->behavior] =
+                        fmax(warning[e->behavior], (1 - distance / 35) * e->warning_sound);
+            }
+        }
     int queued = SDL_GetAudioStreamQueued(app.audio);
     for (int block = 0; block < 4 && queued < 8192; block++) {
         float samples[512];
@@ -721,6 +761,12 @@ static void audio_frame(void) {
                     app.ambience[d] *
                     (sin(t * SC_PI * 2 * (42 + d * 5)) + .25 * sin(t * SC_PI * 2 * (84 + d * 7))) *
                     .007;
+            for (int k = 1; k < ALIEN_BEHAVIORS; k++) {
+                if (warning[k] <= 0)
+                    continue;
+                double pulse = pow(fmax(0, sin(t * (k == ALIEN_MACHINE ? 28 : 12 + k))), 6);
+                ambient += warning[k] * .024 * pulse * sin(t * SC_PI * 2 * (95 + k * 37));
+            }
             double shot = 0;
             if (app.shot_sample < 1800) {
                 double age = (double)app.shot_sample++ / 22050;
@@ -1526,11 +1572,33 @@ static void frame(void *unused) {
     }
     if (app.inspect_matrix && matrix_near(&app.game, 0) && matrix_toggle(&app.game, 0))
         app.inspect_matrix = false;
+    if (app.inspect_alien && !app.game.world.pending) {
+        Room *room =
+            world_find(&app.game.world, world_cell(position_absolute(app.game.players[0].pos)));
+        if (room && room->ready) {
+            for (int n = 0; n < app.game.world.count; n++)
+                app.game.world.rooms[n].enemy_count = 0;
+            room->enemy_count = 1;
+            unsigned kind = 31 + (unsigned)app.inspect_alien;
+            Vec3 at = vadd(world_center(room->cell), v3(0, .02, 12));
+            room->enemies[0] = (Enemy){.kind = (uint8_t)kind,
+                                       .behavior = (uint8_t)(ALIEN_LISTENER + kind - 32),
+                                       .pos = position_from(at),
+                                       .home = at,
+                                       .health = sc_enemies[kind].health,
+                                       .normal = {0, 1, 0},
+                                       .heading = {0, 0, -1},
+                                       .body_heading = {0, 0, -1},
+                                       .alive = true};
+            alien_fragments(&app.game.world, &room->enemies[0]);
+            app.inspect_alien = 0;
+        }
+    }
     if (app.inspect_form && !app.game.world.pending) {
         Room *room = world_find(&app.game.world, (Cell){0, 0, 0});
         if (room) {
             room->enemy_count = 0;
-            for (int kind = 0; kind < SC_ENEMY_TYPES; kind++)
+            for (int kind = 0; kind < SC_LEGACY_ENEMIES; kind++)
                 if ((kind < 25 || kind >= 27) &&
                     sc_enemy_bodies[kind].form == app.inspect_form - 1) {
                     int at = room->enemy_count++;
@@ -1753,8 +1821,10 @@ int main(int argc, char **argv) {
     }
     SDL_free(pref);
     if (scene) {
-        bool encounter_scene = !strcmp(scene, "nest") || !strcmp(scene, "relay") ||
-                               !strncmp(scene, "local", 5);
+        bool frontier_scene = !strncmp(scene, "front", 5) || !strncmp(scene, "deep", 4) ||
+                              !strncmp(scene, "reveal", 6) || !strncmp(scene, "alien", 5);
+        bool encounter_scene =
+            !strcmp(scene, "nest") || !strcmp(scene, "relay") || !strncmp(scene, "local", 5);
         bool habitat_scene = !strncmp(scene, "biome", 5) || !strncmp(scene, "volume", 6) ||
                              !strncmp(scene, "shape", 5) || !strcmp(scene, "tentacles");
         bool traversal_scene =
@@ -1764,7 +1834,8 @@ int main(int argc, char **argv) {
                               !strcmp(scene, "hull");
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
-        if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene && !habitat_scene && !encounter_scene) {
+        if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene && !habitat_scene &&
+            !encounter_scene && !frontier_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -1924,6 +1995,7 @@ int main(int argc, char **argv) {
             app.inspect_tentacles = !strcmp(scene, "tentacles");
         }
         if (encounter_scene) {
+            app.game.world.generator = 11;
             bool found = false;
             RoomSpec selected_room = {0};
             bool local_scene = !strncmp(scene, "local", 5);
@@ -1931,14 +2003,16 @@ int main(int argc, char **argv) {
                 for (int z = 1; z <= 5 && !found; z++)
                     for (int x = -5; x <= 5 && !found; x++) {
                         RegionPlan plan;
-                        world_plan(seed, (Cell){x, y, z}, &plan);
+                        world_plan_version(seed, app.game.world.generator, (Cell){x, y, z}, &plan);
                         for (int i = 0; i < plan.count && !found; i++) {
                             RoomSpec a = plan.rooms[i];
                             bool match = local_scene
-                                ? (a.habitat.pace == PACE_QUIET || a.habitat.pace == PACE_TRACE) &&
-                                      a.habitat.tale == (unsigned)atoi(scene + 5)
-                                : a.habitat.pace == PACE_FRONTIER &&
-                                  (a.habitat.ecology == MECHANICAL) == !strcmp(scene, "relay");
+                                             ? (a.habitat.pace == PACE_QUIET ||
+                                                a.habitat.pace == PACE_TRACE) &&
+                                                   a.habitat.tale == (unsigned)atoi(scene + 5)
+                                             : a.habitat.pace == PACE_FRONTIER &&
+                                                   (a.habitat.ecology == MECHANICAL) ==
+                                                       !strcmp(scene, "relay");
                             if (match && a.height >= 5 && a.width >= 40 && !a.habitat.volume) {
                                 selected_room = a;
                                 c = a.cell;
@@ -1947,11 +2021,55 @@ int main(int argc, char **argv) {
                         }
                     }
             Player *p = &app.game.players[0];
-            p->pos = position_from(vadd(world_center(c),
-                local_scene ? v3(selected_room.hash & 1 ? 18 : -18, .02, 2) : v3(0, .02, 0)));
+            p->pos = position_from(
+                vadd(world_center(c),
+                     local_scene ? v3(selected_room.hash & 1 ? 18 : -18, .02, 2) : v3(0, .02, 0)));
             p->checkpoint = p->pos;
             p->yaw = 0;
             p->pitch = -.03;
+            app.game.campaign = (Campaign){0};
+            app.game.world.open_layer = 0;
+            app.no_save = true;
+        }
+        if (frontier_scene) {
+            bool found = false;
+            RoomSpec chosen = {0};
+            unsigned desired = (unsigned)atoi(scene + (!strncmp(scene, "reveal", 6) ? 6
+                                                       : !strncmp(scene, "deep", 4) ? 4
+                                                                                    : 5));
+            for (int y = -4; y <= 4 && !found; y++)
+                for (int z = 1; z <= 7 && !found; z++)
+                    for (int x = -7; x <= 7 && !found; x++) {
+                        RegionPlan plan;
+                        world_plan(seed, (Cell){x, y, z}, &plan);
+                        for (int i = 0; i < plan.count && !found; i++) {
+                            RoomSpec a = plan.rooms[i];
+                            bool match = !strncmp(scene, "reveal", 6)
+                                             ? a.habitat.reveal == desired && a.habitat.form
+                                         : !strncmp(scene, "alien", 5)
+                                             ? a.habitat.pace == PACE_QUIET && a.height >= 10
+                                         : !strncmp(scene, "deep", 4)
+                                             ? a.habitat.contract == desired + 1
+                                             : a.habitat.pace == PACE_FRONTIER &&
+                                                   a.habitat.challenge == desired;
+                            if (match && a.height >= 10 && a.width >= 50 && !a.habitat.volume) {
+                                chosen = a;
+                                c = a.cell;
+                                found = true;
+                            }
+                        }
+                    }
+            Player *p = &app.game.players[0];
+            p->pos = position_from(vadd(world_center(c), v3(0, .02, 0)));
+            p->checkpoint = p->pos;
+            p->yaw = 0;
+            p->pitch = -.02;
+            if (!strncmp(scene, "reveal", 6)) {
+                p->yaw = 0;
+                p->pitch = atan2(fmax(10, chosen.height * .60) - 1.62, 26);
+            }
+            if (!strncmp(scene, "alien", 5) && desired < 10)
+                app.inspect_alien = (int)desired + 1;
             app.game.campaign = (Campaign){0};
             app.game.world.open_layer = 0;
             app.no_save = true;

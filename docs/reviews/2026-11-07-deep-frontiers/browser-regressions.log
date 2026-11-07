@@ -1,0 +1,101 @@
+aftermath.log
+PASS powered room and event journal
+PASS ward boundary, map, streaming state and IndexedDB
+PASS factions, agreement persistence and assisted conclusion
+PASS extraction careers, two follow-ons and deterministic destinations
+PASS aftermath browser: physical systems, faction agreement, debrief/events, persistent careers, continuing missions, deterministic sites and touch controls
+
+deaths.log
+PASS finite corpse animation, pause and duplicate-reward refusal
+PASS organic death and acid residue through real beam fire
+PASS robot wrecks, dropped mine, cloak detection and moving out of a triggered blast
+PASS death browser: animated corpses, acid, machine silhouettes/wrecks, armed mine and dodge, keyboard/mouse and touch combat
+
+equipment.log
+PASS equipment browser: mech deploy/mount/arsenal/cockpit/reload, wagon driving/braking, three personal beams, earned flare upgrades, attached lights/reload and touch deployment/boarding
+
+exterior.log
+PASS exterior keyboard: cabin collision, save/resume, split views, bay and return
+PASS exterior render arrival
+PASS exterior render hull
+PASS exterior render space
+PASS exterior render skiff
+PASS exterior render cabin
+PASS exterior browser: surrounding stars, opaque hull, lamps without flashlight, lit cabin, touch entry and exit
+
+features.log
+PASS features browser: 30 body variants, HUD/deck maps and objective, pan/deck/recenter, visible shots reveal veil, flight, charged jump, nova, v10 reload, shelter toggle, mobile powers/map
+
+foundation.log
+PASS foundation desktop: persisted settings, import/new-ship independence, cached split targets, gamepad ownership and focus
+PASS foundation traversal: actual keyboard stair/ramp ascent and split-screen lift, safe IndexedDB ride snapshot and round trip
+PASS foundation mobile: rotation/cancellation clear held touches and fresh input/settings and touch lifts remain usable
+
+frontier.log
+PASS nine generated focal structures and rendered scale cues
+PASS all encounter previews, activation, warnings, foot circuit and paused simulation
+PASS ten rendered species, quiet approach, observation freeze and actual molt combat
+PASS earned combat, relic evolution, once-only claim, journal and IndexedDB resume
+PASS deep frontiers WebGL; physical-device and human play remain separate
+
+guidance.log
+PASS navigation WebGL: held lift, release and return, independent co-op, bounded maps and responsive HUD
+
+habitat.log
+PASS biome0: bounded sprites, correct profile, rendered detail
+PASS biome1: bounded sprites, correct profile, rendered detail
+PASS biome2: bounded sprites, correct profile, rendered detail
+PASS biome3: bounded sprites, correct profile, rendered detail
+PASS biome4: bounded sprites, correct profile, rendered detail
+PASS biome5: bounded sprites, correct profile, rendered detail
+PASS biome6: bounded sprites, correct profile, rendered detail
+PASS biome7: bounded sprites, correct profile, rendered detail
+PASS biome8: bounded sprites, correct profile, rendered detail
+PASS biome9: bounded sprites, correct profile, rendered detail
+PASS biome10: bounded sprites, correct profile, rendered detail
+PASS biome11: bounded sprites, correct profile, rendered detail
+PASS biome12: bounded sprites, correct profile, rendered detail
+PASS biome13: bounded sprites, correct profile, rendered detail
+PASS volume1: bounded sprites, correct profile, rendered detail
+PASS volume2: bounded sprites, correct profile, rendered detail
+PASS shape4: bounded sprites, correct profile, rendered detail
+PASS shape6: bounded sprites, correct profile, rendered detail
+PASS generated atmospheres, vaults, dossier, map, split budgets and touch-sized rendering
+
+interiors.log
+PASS generated interior layout0
+PASS generated interior layout1
+PASS generated interior layout2
+PASS generated interior history0
+PASS generated interior history1
+PASS generated interior history2
+PASS generated interior history3
+PASS generated interior history4
+PASS generated interior history5
+PASS generated interior landmark1
+PASS generated interior landmark2
+PASS generated interior landmark3
+PASS generated interior landmark4
+PASS generated interiors browser: all layouts/history/landmarks, maps, reachable caches, persistence, legacy/new-ship transition, mobile rendering
+
+main.log
+PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, eleven interiors, first mission and rewarded armor upgrade, weapon cycling, journal, v11 reload, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize
+
+matrix.log
+PASS matrix journey seed 713 / choice 1 / shots 30 / integrity 100 / data 14
+PASS matrix journey seed 42 / choice 2 / shots 26 / integrity 100 / data 13
+PASS matrix journey seed 1 / choice 3 / shots 28 / integrity 100 / data 17
+PASS packaged matrix controls, power, programs, schematic, co-op, active saves, 3 outcomes, legacy and touch
+
+phases.log
+PASS phased WebGL: fresh builds, keyboard routes/rewards/refit, retry, phase map, legacy/new ship and mobile reward persistence
+
+regional.log
+PASS optional activation, warnings, animation pause, shared co-op and local repair
+PASS earned beam disruption, claims, field practice, save/reload and touch USE
+
+shelter.log
+PASS shelter browser: portal, separate split-screen, no firing inside, kitchen, bed, med station, v10 IndexedDB reload, exact return, mobile summon/enter/exit
+
+story.log
+PASS narrative browser: four briefings, physical origin discovery, dossier, map lead, old/new IndexedDB saves, direct and containment decisions, mobile locked/prepared choices

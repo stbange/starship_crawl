@@ -47,6 +47,8 @@ bool game_alien_step(Game *g, Room *r, int index, int player, bool attack, doubl
     Enemy *e = &r->enemies[index];
     if (!e->behavior)
         return false;
+    if (alien_special_step(g, r, index, player, attack, dt))
+        return true;
     Player *p = &g->players[player];
     Vec3 start = position_absolute(e->pos), feet = position_absolute(p->pos);
     Vec3 delta = vsub(feet, start), direction = vnorm(v3(delta.x, 0, delta.z));
@@ -70,7 +72,11 @@ bool game_alien_step(Game *g, Room *r, int index, int player, bool attack, doubl
             phase(e, MOTION_RECOVER, .8f);
             e->cooldown = .9f;
         } else if (e->motion_time <= 0) {
-            phase(e, MOTION_COMMIT, e->behavior == ALIEN_GAZER ? .15f : .55f);
+            phase(e, MOTION_COMMIT,
+                  e->behavior == ALIEN_GAZER ? .15f
+                  : e->behavior == ALIEN_SEAM && g->world.generator >= 12
+                      ? (float)clampd(e->climb_time / 18, .55, 7)
+                      : .55f);
             if (e->behavior == ALIEN_GAZER) {
                 game_enemy_shot(g, r, e);
                 e->attack_done = true;
@@ -98,31 +104,42 @@ bool game_alien_step(Game *g, Room *r, int index, int player, bool attack, doubl
             e->cooldown = sc_enemies[e->kind].interval;
         }
     } else if (e->motion == MOTION_APPROACH) {
-        double range = e->behavior == ALIEN_GAZER ? 32 : e->behavior == ALIEN_SEAM ? 9 : 10;
+        double range = e->behavior == ALIEN_GAZER ? 32
+                       : e->behavior == ALIEN_SEAM
+                           ? (g->world.generator >= 12 && e->normal.y < -.5 ? 140 : 9)
+                           : 10;
         if (attack && sight && distance < range && e->cooldown <= 0) {
-            e->aim = e->behavior == ALIEN_GAZER ? player_eye(p) : direction;
+            e->aim = e->behavior == ALIEN_GAZER                              ? player_eye(p)
+                     : e->behavior == ALIEN_SEAM && g->world.generator >= 12 ? vnorm(delta)
+                                                                             : direction;
+            e->warning_sound = 1;
+            e->climb_time = (float)distance;
             phase(e, MOTION_WARN, e->behavior == ALIEN_GAZER ? 1.05f : .85f);
         } else if (e->behavior == ALIEN_SEAM) {
-            Vec3 wall = surface(&g->world, e);
-            double height = start.y - r->cell.y * SC_DECK;
-            if (vlen(wall) > .5 && distance > 3 && height < fmin(5.5, r->height - 2)) {
-                e->climbing = true;
-                e->normal = wall;
-                e->vertical_speed = 0;
-                plant(g, e, wall);
-                Vec3 along = vsub(direction, vmul(wall, vdot(direction, wall)));
-                if (vlen(along) < .1)
-                    along = vmul(vcross(v3(0, 1, 0), wall), e->id & 1 ? 1 : -1);
-                /* Short planted pauses contrast with the committed drop. */
-                double grip = fmod(g->time + e->id * .17, .55) < .14 ? 0 : 1;
-                travel(g, e, vmul(vadd(vmul(vnorm(along), 2.3), v3(0, 2.6, 0)), dt * grip));
+            if (g->world.generator >= 12) {
+                alien_surface_step(g, r, e, direction, dt);
             } else {
-                e->climbing = false;
-                e->normal = v3(0, 1, 0);
-                if (distance > 2) {
-                    Vec3 flank = vadd(direction, vmul(vcross(direction, v3(0, 1, 0)),
-                                                      (e->id & 1 ? 1 : -1) * .45));
-                    travel(g, e, vmul(vnorm(flank), speed * dt));
+                Vec3 wall = surface(&g->world, e);
+                double height = start.y - r->cell.y * SC_DECK;
+                if (vlen(wall) > .5 && distance > 3 && height < fmin(5.5, r->height - 2)) {
+                    e->climbing = true;
+                    e->normal = wall;
+                    e->vertical_speed = 0;
+                    plant(g, e, wall);
+                    Vec3 along = vsub(direction, vmul(wall, vdot(direction, wall)));
+                    if (vlen(along) < .1)
+                        along = vmul(vcross(v3(0, 1, 0), wall), e->id & 1 ? 1 : -1);
+                    /* Short planted pauses contrast with the committed drop. */
+                    double grip = fmod(g->time + e->id * .17, .55) < .14 ? 0 : 1;
+                    travel(g, e, vmul(vadd(vmul(vnorm(along), 2.3), v3(0, 2.6, 0)), dt * grip));
+                } else {
+                    e->climbing = false;
+                    e->normal = v3(0, 1, 0);
+                    if (distance > 2) {
+                        Vec3 flank = vadd(direction, vmul(vcross(direction, v3(0, 1, 0)),
+                                                          (e->id & 1 ? 1 : -1) * .45));
+                        travel(g, e, vmul(vnorm(flank), speed * dt));
+                    }
                 }
             }
         } else if (e->behavior == ALIEN_GAZER) {

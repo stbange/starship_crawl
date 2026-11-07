@@ -148,3 +148,25 @@ saves `regional-comparison.sav`. These format-12 checkpoints use no position,
 health, inventory, damage or enemy injection. Unit fixtures and saving-disabled
 inspection scenes are separate. Normal tests read these played checkpoints;
 regeneration requires the explicit `--prepare` command.
+
+`generator-v11-geometry.txt` was captured from unmodified `04df654` before the
+deep-frontier implementation. Its 24 rows preserve generator-11 plan, semantic
+geometry and population fingerprints. The unchanged format-12
+`regional-comparison.sav` also verifies migration into format 13. Do not regenerate
+these compatibility references from generator 12.
+
+`frontier-expedition.sav` is generator 12 / format 13, copied from the
+`phase-unbound.sav` produced by `sc_phase_journey --fixtures /tmp/frontier-phase`.
+That production-input run reached all four open boundaries after 393.4 simulated
+seconds, rank 11, 75 kills and no deaths; its full extraction route took 727.1
+seconds and 88 kills. It starts in space and earns its progression normally.
+
+`sc_frontier_journey --prepare` loads that checkpoint, walks to each of the five
+new optional encounter patterns, fights, claims and uses an actual shelter to
+equip an owned capability. It then saves `frontier-1.sav` through `frontier-5.sav`
+before the next matching encounter, at `(30,0,3)`, `(16,0,2)`, `(23,0,20)`,
+`(22,0,22)` and `(18,0,19)`. Comparisons reload identical checkpoints, use the
+starter carbine and optionally use flight, Nova, mech, wagon or terminal/matrix
+Veil/SECURITY. No position, health, inventory, enemy or damage injection creates
+these checkpoints. Ordinary tests read them; explicit regeneration is separate
+from immutable old-generator evidence and saving-disabled inspection scenes.

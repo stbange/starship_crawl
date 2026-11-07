@@ -1,5 +1,10 @@
 New phased expeditions require earning and equipping weapons, rigs and powers. F10 shows routes, guardian rewards and loadouts; see [Phased expeditions](PHASED_EXPEDITIONS.md).
 
+Generator 12 adds ten species with listening, observation, molting, shared colony
+bodies, hydraulic rhythms, physical ambushes and regional counterplay. See the
+[creature table and deep contract guide](DEEP_FRONTIERS.md#architecture-and-creatures).
+The roster is now 42; earlier generators retain their original populations.
+
 The ship now has a deck schematic, six distinct enemy anatomies, visible weapon fire and four psionic powers. The original 27 species IDs remain stable. Generator 6 adds five robot species; older generators retain their original encounter roster, positions and defeat records.
 
 **Navigation.** The top-left HUD map is north-up and follows your position. Green marks your position and facing, gold marks the mission console, violet marks your deployed shelter, and blue marks an ally or the lift needed for a different deck. Off-map goals stay pinned to the appropriate edge. The goal caption states whether you need to change decks.
@@ -23,7 +28,7 @@ Inspection scenes `--scene form0` through `--scene form5` show five variants of 
 
 **Visible weapons.** The original 16 weapons emit finite projectiles: fast carbine/rail bolts, spreading shotgun/flechette volleys, short-range embers, needles, plasma and rockets. Speeds differ; all shots use swept collision so fast bolts hit the nearest body or wall. Piercing, chain, blast, burn, chill and life-steal remain active on impact. A full projectile pool refuses an entire volley without charging energy. Shots take time to arrive and cannot damage through bulkheads.
 
-**Psionics.** These use the same rechargeable energy as weapons and are available to each character from the start. Press a power key again to release an active effect without another energy cost.
+**Psionics.** These use the same rechargeable energy as weapons. On new phased expeditions they must be earned and equipped. Press a power key again to release an active effect without another energy cost.
 
 | Power | Key | Activation cost | Effect |
 | --- | --- | --- | --- |
@@ -56,4 +61,4 @@ Blasts respect bulkheads and can kill other enemies, starting their own delayed 
 | Coffin Tread | Tracked armored platform with burst fire and an unstable core |
 | Martyr Mine | Fast magnetic wheeled crawler that climbs surfaces and begins a delayed blast on contact |
 
-See [HACKING.md](HACKING.md) for a proposed matrix layer that could eventually let terminals reboot or override these machines. That layer is not implemented yet.
+See [HACKING.md](HACKING.md) for the implemented matrix layer, including services that reboot or override machines.

@@ -15,6 +15,7 @@ static Game *fresh(void) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
     game_init(g, 713);
+    g->world.generator = 11; /* Preserve the original linked-encounter regression. */
     return g;
 }
 static void destroy(Game *g) {
@@ -34,7 +35,7 @@ static Room *find(Game *g, unsigned pace, int ecology, int tale) {
         for (int z = 1; z <= 5; z++)
             for (int x = -5; x <= 5; x++) {
                 RegionPlan plan;
-                world_plan(g->world.seed, (Cell){x, y, z}, &plan);
+                world_plan_version(g->world.seed, g->world.generator, (Cell){x, y, z}, &plan);
                 for (int i = 0; i < plan.count; i++) {
                     RoomSpec *r = &plan.rooms[i];
                     if (r->habitat.pace != pace || r->height < 5 || r->width < 40 ||
@@ -152,7 +153,7 @@ static void plans(void) {
     for (int y = -4; y <= 4; y++)
         for (int x = -4; x < 4; x++) {
             RegionPlan plan;
-            world_plan(713, (Cell){x, y, 2}, &plan);
+            world_plan_version(713, 11, (Cell){x, y, 2}, &plan);
             for (int i = 0; i < plan.count; i++)
                 if (plan.rooms[i].habitat.pace == PACE_FRONTIER) {
                     settle(g, plan.rooms[i].cell);
@@ -537,7 +538,8 @@ static void malformed_local(void) {
                                 FRONTIER_CLAIMED | FRONTIER_ELIGIBLE};
     for (unsigned n = 0; n < sizeof(invalid) / sizeof(invalid[0]); n++) {
         for (int b = 0; b < 4; b++)
-            bytes[length - 8 + b] = (unsigned char)(invalid[n] >> (8 * b));
+            bytes[length - 8 - SC_PLAYERS * RELICS * 4 + b] =
+                (unsigned char)(invalid[n] >> (8 * b));
         unsigned hash = 2166136261u;
         for (long i = 0; i < length - 4; i++)
             hash = (hash ^ bytes[i]) * 16777619u;

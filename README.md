@@ -1,4 +1,4 @@
-Starship Crawl is a playable first-person prototype in C17, SDL3, and OpenGL / WebGL 2. Enter an enormous gothic ship from space, explore its infested decks, fight strange creatures, and grow a persistent character.
+Starship Crawl is a playable first-person prototype in C17, SDL3, and OpenGL / WebGL 2. Enter an enormous gothic ship from space, explore its infested decks, fight strange creatures, and grow a character whose progress persists for that expedition.
 
 **Play begins with one player.** Split-screen is optional: press F2, or use the browser menu, to explicitly add a second player. Loading a save always starts in solo mode and retains the second character's progression.
 
@@ -14,8 +14,9 @@ The prototype includes:
 - Rusted panels, damaged vents, hanging cables, reactor pipework, cabin furnishings, egg nests, and branching growths with animated curling tentacles, suckers and faint luminous tips. Floating gazers carry trailing tentacles too.
 - Dark district materials, mostly dead light fittings, weak colored pools of flickering light, a player flashlight, ambient drones, and an F3 district map with streaming diagnostics.
 - Movement, collision, jumping, crouching, sprinting, and grav lifts that activate checkpoints.
-- 32 enemy species, including five robotic machines, built from climbing, leaping, charging, strafing, armor, directional wards, regeneration, healing, brood spawning, cloaking, hovering, turrets, bursts, frost, energy drain, and explosive attacks.
+- 42 enemy species, including robotic machines, listening membranes, gaze-bound scavengers, reversing worms, dividing colonies and molting sentinels. Cold/hot specialists, actual ceiling traversal, locked attacks and audible warnings add regional counterplay.
 - Backwards pilgrims, pendulum gazers and wall-gripping seam-runners; optional linked nest/relay fights with earned equipment rewards, guided practice, and quiet/trace/horde room pacing. See [P1 gameplay changes](REGIONAL_ENCOUNTERS.md).
+- Five more optional fight patterns reward flight, area damage, mech armor, wagon speed and matrix services. Directional contracts evolve five ship-local relics at layers 5, 8 and 11; nine district focal structures, distant lights and framed approaches strengthen scale. See [Deep frontiers](DEEP_FRONTIERS.md). New ships use generator 12; older expeditions retain their original worlds.
 - Eight local repair, ward, food and medical actions with saved lighting, atmosphere and machine consequences.
 - 20 personal weapons, including three true beams and a wall-lighting flare cannon; rechargeable weapon energy keeps combat moving.
 - Fold-space mech with heavy plating, cockpit HUD and three built-in weapons, plus a fast deployable wagon.

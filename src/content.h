@@ -16,7 +16,8 @@ typedef enum {
     DISTRICT_TYPES
 } District;
 #define SC_THEMES 28
-#define SC_ENEMY_TYPES 32
+#define SC_ENEMY_TYPES 42
+#define SC_LEGACY_ENEMIES 32
 #define SC_WEAPONS 20
 #define SC_GENERATED_WEAPONS 16
 #define SC_MECH_WEAPONS 3

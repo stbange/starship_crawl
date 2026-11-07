@@ -20,12 +20,13 @@ void game_psionic(Game *g, int player, Psionic power) {
                   : power == PSI_FLIGHT ? p->flight > 0
                   : power == PSI_LEAP   ? p->leap > 0
                                         : p->nova > 0;
-    if (!active && p->energy < sc_psionic_costs[power]) {
+    float cost = sc_psionic_costs[power] * (g->frontier.ranks[player][RELIC_ALIEN] >= 2 ? .75f : 1);
+    if (!active && p->energy < cost) {
         game_message(g, "NOT ENOUGH ENERGY / REACTOR RECHARGING");
         return;
     }
     if (!active)
-        p->energy -= sc_psionic_costs[power];
+        p->energy -= cost;
     if (power == PSI_VEIL) {
         p->cloaked = !active;
         p->nova = p->nova_tick = 0;

@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 11u
+#define SC_GENERATOR_VERSION 12u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -92,7 +92,8 @@ typedef struct {
     uint16_t mask;        /* Four-bit rows relative to the owner; zero means a legacy rectangle. */
     uint8_t form, volume; /* 0 ordinary, 1 lower vault, 2 upper gallery. */
     uint8_t atmosphere, tale, ecology;
-    uint8_t pace; /* Generator 11: density and optional encounter grammar. */
+    uint8_t pace;                        /* Generator 11: density and optional encounter grammar. */
+    uint8_t challenge, reveal, contract; /* Generator 12; zero retains older behavior. */
 } Habitat;
 typedef struct {
     Cell cell;
@@ -123,12 +124,37 @@ typedef struct {
 } RoomRecord;
 enum { SYSTEM_POWER = 1, SYSTEM_BEACON = 2, SYSTEM_SILENCED = 4, SYSTEM_BLACKOUT = 8 };
 enum {
-    LOCAL_RESOLVED = 1, FRONTIER_CLEARED = 2,
-    FRONTIER_ELIGIBLE = 4, FRONTIER_CLAIMED = 16
+    LOCAL_RESOLVED = 1,
+    FRONTIER_CLEARED = 2,
+    FRONTIER_ELIGIBLE = 4,
+    FRONTIER_CLAIMED = 16
 }; /* Eligible and claimed are two-bit player masks; format 12 appends this word. */
-typedef enum { ALIEN_NONE, ALIEN_PILGRIM, ALIEN_GAZER, ALIEN_SEAM, ALIEN_CONDUCTOR } AlienBehavior;
-typedef enum { MOTION_DORMANT, MOTION_ALERT, MOTION_APPROACH, MOTION_WARN,
-               MOTION_COMMIT, MOTION_RECOVER } AlienMotion;
+typedef enum {
+    ALIEN_NONE,
+    ALIEN_PILGRIM,
+    ALIEN_GAZER,
+    ALIEN_SEAM,
+    ALIEN_CONDUCTOR,
+    ALIEN_LISTENER,
+    ALIEN_WATCHED,
+    ALIEN_REVERSER,
+    ALIEN_COLONY,
+    ALIEN_MOLTER,
+    ALIEN_MACHINE,
+    ALIEN_AMBUSH,
+    ALIEN_REFLECTION,
+    ALIEN_BRITTLE,
+    ALIEN_PRESSURE,
+    ALIEN_BEHAVIORS
+} AlienBehavior;
+typedef enum {
+    MOTION_DORMANT,
+    MOTION_ALERT,
+    MOTION_APPROACH,
+    MOTION_WARN,
+    MOTION_COMMIT,
+    MOTION_RECOVER
+} AlienMotion;
 typedef struct {
     Position pos;
     float health, cooldown, flash;
@@ -140,6 +166,9 @@ typedef struct {
     float motion_time, stride, travel_speed, link_strain;
     Vec3 body_heading, contacts[4];
     bool attack_done;
+    bool molted, reversed, observed;
+    float warning_sound, unfold;
+    Vec3 home, fragments[3];
 } Enemy;
 typedef struct {
     Vec3 pos;
@@ -201,6 +230,8 @@ typedef struct {
     bool frontier_active;
     uint8_t frontier_attacker;
     float frontier_timer, frontier_disrupt;
+    float hazard_time, circuit_time, alarm_time;
+    uint8_t circuit, hazard_stage;
 } Room;
 /* Geometry is relative to its integer chunk coordinate, never a distant camera. */
 /* A thin sloped slab, optionally quantized into 32 physical stair treads. */
@@ -296,6 +327,7 @@ double flight_ray(const Flight *flight, Vec3 origin, Vec3 direction, double limi
 void world_move(const World *world, Position *position, Vec3 delta, double radius, double height,
                 bool walking, bool *grounded);
 bool world_overlap(const World *w, Vec3 feet, double radius, double height);
+bool world_spawn_clear(const World *w, Vec3 feet, double radius, double height);
 bool world_spawn_supported(const World *w, Vec3 feet, double height);
 double world_raycast(const World *w, Vec3 origin, Vec3 direction, double limit);
 void world_kill(World *w, Room *room, int enemy);

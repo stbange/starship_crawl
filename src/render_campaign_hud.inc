@@ -17,6 +17,12 @@ static void campaign_journal_draw(Renderer *r, const Game *g, int player, float 
     snprintf(text, sizeof(text), "EXPEDITION / %s / PHASE %u OF 4", campaign_phase_name(phase),
              phase < 4 ? phase + 1 : 4);
     cursor = wrapped(r, left, cursor, 1.1f * s, width, text, gold) + gap;
+    if (g->world.generator >= 12) {
+        const uint32_t *ranks = g->frontier.ranks[player];
+        snprintf(text, sizeof(text), "RELICS / CINDER %u RIME %u AEGIS %u MOLT %u RIFT %u",
+                 ranks[0], ranks[1], ranks[2], ranks[3], ranks[4]);
+        cursor = wrapped(r, left, cursor, s, width, text, mint) + 1;
+    }
     if (!c->version) {
         cursor = wrapped(r, left, cursor, s, width,
                          "LEGACY EXPEDITION / EXISTING CHARACTER RETAINED", ink) +

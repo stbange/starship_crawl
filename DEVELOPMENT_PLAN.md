@@ -2,6 +2,20 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+## Gameplay-review follow-up — 2026-11-07
+
+Review items **2, 4, 5 and 6** are implemented for generator 12: five additional
+tool-oriented encounter patterns, nine architectural focal structures and scale
+cues, directional contracts with five three-rank relic evolutions, eight alien
+concepts plus cold/hot specialists, real ceiling traversal and audible warnings.
+See [Deep frontiers](DEEP_FRONTIERS.md) for mechanics and validation limits.
+The previously completed P1 scope remains documented in
+[Regional encounters](REGIONAL_ENCOUNTERS.md).
+
+Overall combat/resource balance and the remaining review items are separate work.
+Human playtesting, physical device checks and optional express lift travel remain
+open; these automated encounter comparisons do not establish human difficulty.
+
 ## P0 exploration improvements — 2026-11-07
 
 Implemented next-connection guidance, readable service landings, deliberate lift
@@ -12,8 +26,8 @@ with per-update resource and navigation observations. See [P0 details](NAVIGATIO
 
 The [human/physical checklist](docs/playtests/P0_CHECKLIST.md) supplies repeatable
 checkpoints and a results sheet; actual human, Windows GPU/controller and mobile
-device sessions remain pending. P1/P2 gameplay/content proposals remain future
-work. Multi-stop express lift routing is a later extension; this milestone makes
+device sessions remain pending. P1 and the selected follow-up content above are
+implemented. Multi-stop express lift routing is a later extension; this milestone makes
 adjacent-deck selection deliberate and readable.
 
 ## Remaining work reviewed on 2026-11-06

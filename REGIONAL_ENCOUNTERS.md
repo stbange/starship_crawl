@@ -1,10 +1,14 @@
 # P1: regions, alien behavior and optional encounters
 
+The generator-12 [Deep frontiers follow-up](DEEP_FRONTIERS.md) implements review
+items 2, 4, 5 and 6. The evidence below records the earlier P1 release; its retained
+generator-11 fixtures continue to protect those worlds and mechanics.
+
 This implements the agreed P1 scope from the [first gameplay review](docs/reviews/2026-11-06-expeditions/README.md)
 and [deep directional review](docs/reviews/2026-11-06-deep-expeditions/README.md).
-Start **a new ship** to see generator 11. Existing ships retain their generator,
-geometry, populations and progression. The writer uses format 12; formats 1–11
-remain readable. New ships still start with fresh characters.
+P1 introduced generator 11; current new ships include P1 and its follow-up. Existing ships retain their generator,
+geometry, populations and progression. P1 used format 12; the current format-13
+writer still reads supported earlier saves. New ships start with fresh characters.
 
 ## Implemented checklist
 

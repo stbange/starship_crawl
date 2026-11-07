@@ -12,7 +12,7 @@ spec.loader.exec_module(gate)
 class CoverageGateTests(unittest.TestCase):
     def report(self):
         return {"files": [{"file": name, "lines": [{"count": 1}] * 20} for name in (
-            "src/game.c", "src/encounters.c", "src/alien.c", "src/generation.c", "src/history.c", "src/interior.c", "src/habitat.c", "src/world.c", "src/traversal.c", "src/exterior.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/death.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/matrix.c", "src/matrix_gen.c", "src/matrix_state.c", "src/matrix_effects.c", "src/campaign.c", "src/campaign_gen.c", "src/campaign_combat.c", "src/math3d.h") ]}
+            "src/frontier.c", "src/reveals.c", "src/alien_special.c", "src/game.c", "src/encounters.c", "src/alien.c", "src/generation.c", "src/history.c", "src/interior.c", "src/habitat.c", "src/world.c", "src/traversal.c", "src/exterior.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/death.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/matrix.c", "src/matrix_gen.c", "src/matrix_state.c", "src/matrix_effects.c", "src/campaign.c", "src/campaign_gen.c", "src/campaign_combat.c", "src/math3d.h") ]}
 
     def test_empty_report_is_rejected(self):
         with self.assertRaises(SystemExit):

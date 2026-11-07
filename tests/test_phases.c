@@ -49,7 +49,8 @@ static void win(Game *g, unsigned id) {
 }
 static void fresh_characters(void) {
     Game *g = fresh(713);
-    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->campaign.version == 1 && g->world.open_layer == 1);
+    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->campaign.version == 1 &&
+          g->world.open_layer == 1);
     for (int i = 0; i < 2; i++) {
         CHECK(g->players[i].weapons == 3 && g->players[i].level == 1);
         CHECK(!g->campaign.profiles[i].powers && !g->campaign.profiles[i].rigs);
@@ -510,7 +511,8 @@ static void malformed_appendix(void) {
     CHECK(before); /* A world snapshot exceeds the default Windows stack. */
     for (unsigned n = 0; n < sizeof(offsets) / sizeof(offsets[0]); n++) {
         memcpy(data, original, (size_t)length);
-        size_t at = (size_t)length - 204 - g->world.record_count * 4 + offsets[n];
+        size_t at =
+            (size_t)length - 204 - SC_PLAYERS * RELICS * 4 - g->world.record_count * 4 + offsets[n];
         for (int b = 0; b < 4; b++)
             data[at + b] = (unsigned char)(values[n] >> (b * 8));
         uint32_t hash = 2166136261u;

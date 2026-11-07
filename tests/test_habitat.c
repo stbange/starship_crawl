@@ -106,7 +106,8 @@ static void plans(void) {
             for (int i = 0; i < 16; i++)
                 CHECK(seen[i] == 1);
         }
-    CHECK(forms == 511 && climates == (1u << ATMOSPHERES) - 1 && tales == 255 && ecologies == 63 && volumes == 7);
+    CHECK(forms == 511 && climates == (1u << ATMOSPHERES) - 1 && tales == 255 && ecologies == 63 &&
+          volumes == 7);
     CHECK(!habitat_owns((Cell){0}, 2, 2, 0x13, (Cell){1, 0, 1}));
     CHECK(habitat_owns((Cell){0}, 2, 2, 0, (Cell){1, 0, 1}));
     CHECK(!habitat_owns((Cell){0}, 2, 2, 0, (Cell){0, 1, 0}));
@@ -152,7 +153,9 @@ static void geometry(void) {
             tales |= 1u << r->habitat.tale;
             CHECK(world_find(a, r->cell) == r);
             for (int e = 0; e < r->enemy_count; e++) {
-                if (!(habitat_spawn(a, r, position_absolute(r->enemies[e].pos)))) {
+                if (!(habitat_spawn(a, r, position_absolute(r->enemies[e].pos)) ||
+                      (r->habitat.challenge == CH_AERIE && e == 0 &&
+                       !world_overlap(a, position_absolute(r->enemies[e].pos), .5, 1.5)))) {
                     Vec3 pos = position_absolute(r->enemies[e].pos);
                     fprintf(stderr,
                             "bad spawn seed%u room %d %d %d form%u vol%u e%d kind%d pos %.2f %.2f "
@@ -235,7 +238,8 @@ static void geometry(void) {
         world_destroy(a);
         world_destroy(b);
     }
-    CHECK(forms == 511 && climates == (1u << ATMOSPHERES) - 1 && tales == 255 && sprites == (1u << SPR_SPRITES) - 1);
+    CHECK(forms == 511 && climates == (1u << ATMOSPHERES) - 1 && tales == 255 &&
+          sprites == (1u << SPR_SPRITES) - 1);
     free(a);
     free(b);
     printf("PASS surface support, open vaults/guard rails, reproducible detail, spawn fit; maximum "

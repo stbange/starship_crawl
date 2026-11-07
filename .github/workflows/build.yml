@@ -115,6 +115,9 @@ jobs:
           ./build/starship_crawl --seed 713 --scene biome1 --split --smoke 60 --no-save
           ./build/starship_crawl --seed 713 --scene tentacles --split --smoke 100 --no-save
           ./build/starship_crawl --seed 713 --scene relay --split --smoke 60 --no-save
+          ./build/starship_crawl --seed 713 --scene reveal2 --smoke 60 --no-save
+          ./build/starship_crawl --seed 713 --scene front4 --split --smoke 60 --no-save
+          ./build/starship_crawl --seed 713 --scene alien4 --smoke 60 --no-save
           ./build/starship_crawl --seed 713 --scene local4 --smoke 30 --no-save
           ./build/starship_crawl --seed 713 --scene biome11 --smoke 30 --no-save
           ./build/starship_crawl --seed 713 --scene stairs --smoke 30 --no-save
@@ -201,33 +204,35 @@ jobs:
       - name: Test the deployed URL structure
         env:
           SC_CORE_TEST: build-parity/sc_tests
-        run: python tests/test_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play sanctuary recovery and return
-        run: python tests/test_shelter_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_shelter_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Board the arrival skiff and inspect the surrounding space
-        run: python tests/test_exterior_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_exterior_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play phase rewards, loadouts, guardian retry and fresh characters
-        run: python tests/test_phases_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_phases_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play navigation, body variants and psionics
-        run: python tests/test_features_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_features_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play fold rigs, beams and flare lighting
-        run: python tests/test_equipment_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_equipment_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Preferences, controllers, touch lifecycle and vertical traversal
-        run: python tests/test_foundation_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_foundation_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Actionable navigation and deliberate lift controls
-        run: python tests/test_guidance_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_guidance_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Explore generated interiors and discoveries
-        run: python tests/test_interiors_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_interiors_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Optional encounters, earned tools and local consequences
-        run: python tests/test_regional_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_regional_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Deep contracts, alien specialists and architectural reveals
+        run: python scripts/run-browser-test.py tests/test_frontier_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Living ship generation and atmosphere
-        run: python tests/test_habitat_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_habitat_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play generated histories, dossiers and decisions
-        run: python tests/test_story_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_story_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play reactive factions, debriefs and continuing stories
-        run: python tests/test_aftermath_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_aftermath_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Play enemy deaths, machines and avoidable traps
-        run: python tests/test_deaths_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+        run: python scripts/run-browser-test.py tests/test_deaths_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Retain browser captures
         if: always()
         uses: actions/upload-artifact@v4

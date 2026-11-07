@@ -3,6 +3,7 @@
 #include "exterior.h"
 #include "campaign.h"
 #include "encounters.h"
+#include "frontier.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -516,6 +517,8 @@ static void geometry(World *w, Chunk *chunk, const Room *r) {
     }
     if (w->generator >= 10)
         habitat_build(&b, r);
+    if (w->generator >= 12)
+        frontier_build(&b, r);
     if (w->generator >= 9)
         traversal_build(&b);
 }
@@ -658,7 +661,7 @@ static void populate(World *w, Room *r) {
         e->id = (uint8_t)i;
         e->normal = v3(0, 1, 0);
         e->heading = v3(0, 0, 1);
-        unsigned pool = w->generator >= 6 ? SC_ENEMY_TYPES - 1 : 26;
+        unsigned pool = w->generator >= 6 ? SC_LEGACY_ENEMIES - 1 : 26;
         unsigned choice = h % pool;
         for (unsigned retry = 0; retry < pool; retry++) {
             e->kind = (uint8_t)(choice + (w->generator >= 6 && choice >= 26));
@@ -681,8 +684,8 @@ static void populate(World *w, Room *r) {
         e->cooldown = (float)(h % 200) / 100;
         e->alive = r->record == SIZE_MAX || !(w->records[r->record].killed & (UINT32_C(1) << i));
         for (unsigned attempt = 0; attempt < 64; attempt++) {
-            uint32_t v =
-                world_hash(w->seed ^ population_version, r->cell, 7000 + (uint32_t)i * 131 + attempt);
+            uint32_t v = world_hash(w->seed ^ population_version, r->cell,
+                                    7000 + (uint32_t)i * 131 + attempt);
             e->pos = position_from(
                 vadd(world_room_center(r), v3(((v & 65535) / 65535.0 - .5) * (r->width - 4), .02,
                                               ((v >> 16) / 65535.0 - .5) * (r->depth - 4))));
@@ -700,6 +703,8 @@ static void populate(World *w, Room *r) {
         campaign_populate(w, r);
     if (w->generator >= 11)
         encounter_populate(w, r);
+    if (w->generator >= 12)
+        frontier_populate(w, r);
 }
 unsigned world_stream(World *w, unsigned budget) {
     w->last_work = 0;
@@ -804,7 +809,9 @@ static const Box hull[] = {
 static bool overlap_world(const World *w, Vec3 p, double radius, double height, bool gates) {
     /* Unfinished rooms are solid. A frontier can never be crossed into missing
        floors, even when generation is deliberately throttled to one chunk. */
-    if (p.z + radius >= 0)
+    /* Generator 12 spawn queries inspect physical geometry only. A pending
+       lower deck is a movement barrier, never evidence of a gallery floor. */
+    if (p.z + radius >= 0 && (gates || w->generator < 12))
         for (int z = -1; z <= 1; z += 2)
             for (int x = -1; x <= 1; x += 2) {
                 Vec3 sample = vadd(p, v3(x * radius, 0, z * radius));
@@ -837,6 +844,9 @@ static bool overlap_world(const World *w, Vec3 p, double radius, double height, 
                 return true;
     }
     return false;
+}
+bool world_spawn_clear(const World *w, Vec3 p, double radius, double height) {
+    return !overlap_world(w, p, radius, height, false);
 }
 bool world_spawn_supported(const World *w, Vec3 p, double height) {
     /* Encounters reconstruct identically behind phase/frontier gates. */

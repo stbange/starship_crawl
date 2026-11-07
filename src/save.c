@@ -422,7 +422,7 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 12, false);
+    number(&s, 13, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -476,6 +476,9 @@ bool game_save(const Game *g, const char *path) {
     campaign_stream(&s, &campaign, false);
     for (size_t i = 0; i < g->world.record_count; i++)
         number(&s, g->world.records[i].local, false);
+    for (int p = 0; p < SC_PLAYERS; p++)
+        for (int r = 0; r < RELICS; r++)
+            number(&s, g->frontier.ranks[p][r], false);
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -502,9 +505,9 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 12) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 13) ||
         (version == 2 && generator != 2) || (version < 11 && generator > 6) ||
-        (version < 12 && generator > 10) ||
+        (version < 12 && generator > 10) || (version < 13 && generator > 11) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
     Player players[SC_PLAYERS];
@@ -591,6 +594,13 @@ bool game_load(Game *g, const char *path) {
             ((r->local & FRONTIER_CLEARED) && (r->killed & 15) != 15))
             s.ok = false;
     }
+    FrontierProgress frontier = {0};
+    if (version >= 13)
+        for (int p = 0; p < SC_PLAYERS; p++)
+            for (int r = 0; r < RELICS; r++)
+                frontier.ranks[p][r] = number(&s, 0, true);
+    if (!frontier_valid(&frontier, generator))
+        s.ok = false;
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
@@ -667,6 +677,7 @@ bool game_load(Game *g, const char *path) {
     g->contracts = contracts;
     g->story = story;
     g->campaign = campaign;
+    g->frontier = frontier;
     memset(g->drills, 0, sizeof(g->drills));
     campaign_resume(g);
     Vec3 resumed = position_absolute(g->players[0].pos);

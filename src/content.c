@@ -74,10 +74,21 @@ const EnemyDef sc_enemies[SC_ENEMY_TYPES] = {
     {"GRAVEYARD LOADER", 150, 2.4f, 1.25f, 19, 1.7f, ARMORED | CHARGE, 2, 2, {.30f, .24f, .13f}},
     {"SUTURE CUSTODIAN", 90, 1.8f, .9f, 10, 2.8f, HEALER | WARD, 1, 3, {.26f, .28f, .24f}},
     {"COFFIN TREAD", 160, 2.1f, 1.15f, 15, 2.6f, ARMORED | BURST, 1, 4, {.24f, .19f, .16f}},
-    {"MARTYR MINE", 28, 6.5f, .52f, 18, 1.2f, CLIMB | CHARGE | DETONATE, 0, 1, {.27f, .17f, .11f}}};
+    {"MARTYR MINE", 28, 6.5f, .52f, 18, 1.2f, CLIMB | CHARGE | DETONATE, 0, 1, {.27f, .17f, .11f}},
+    {"LISTENING MEMBRANE", 55, 0, 1.1f, 8, 4, TURRET, 1, 2, {.18f, .22f, .17f}},
+    {"GAZE-BOUND SCAVENGER", 70, 6, .85f, 14, 1.8f, 0, 0, 2, {.12f, .15f, .17f}},
+    {"REVERSING WORM", 110, 3.5f, .95f, 17, 2, 0, 0, 3, {.23f, .16f, .19f}},
+    {"COLONY IN A COAT", 150, 3.2f, 1, 12, 2.8f, 0, 0, 3, {.16f, .19f, .12f}},
+    {"MOLTING SENTINEL", 180, 2, 1.2f, 19, 2.5f, 0, 0, 4, {.25f, .22f, .18f}},
+    {"WRONG-FOOT MACHINE", 140, 3.2f, 1.1f, 18, 2.5f, 0, 0, 3, {.19f, .24f, .26f}},
+    {"DOORFRAME AMBUSHER", 90, 4, .9f, 18, 2.4f, 0, 0, 2, {.19f, .15f, .13f}},
+    {"FALSE REFLECTION", 80, 3, .85f, 13, 2.5f, 0, 1, 3, {.15f, .19f, .27f}},
+    {"BRITTLE SCAVENGER", 115, 2.5f, .9f, 16, 2.4f, CHILL, 0, 3, {.22f, .33f, .36f}},
+    {"PRESSURE-FED AMBUSHER", 125, 2.8f, 1.1f, 18, 3, 0, 1, 3, {.32f, .19f, .12f}}};
 const DeathEffect sc_death_effects[SC_ENEMY_TYPES] = {
     [1] = DEATH_ACID,  [8] = DEATH_ACID,  [13] = DEATH_BLAST, [16] = DEATH_MINE,
-    [25] = DEATH_ACID, [29] = DEATH_MINE, [30] = DEATH_BLAST, [31] = DEATH_BLAST};
+    [25] = DEATH_ACID, [29] = DEATH_MINE, [30] = DEATH_BLAST, [31] = DEATH_BLAST,
+    [32] = DEATH_ACID, [37] = DEATH_MINE, [41] = DEATH_BLAST};
 const WeaponDef sc_weapons[SC_WEAPONS] = {
     {"PULSE CARBINE", 27, .19f, 110, 0, 0, 0, 1, 1, W_PROJECTILE, {.3f, .8f, .75f}},
     {"BREACH SHOTGUN", 16, .65f, 42, .065f, 0, 7, 8, 1, W_PROJECTILE, {1, .6f, .2f}},
@@ -154,7 +165,8 @@ const EnemyBody sc_enemy_bodies[SC_ENEMY_TYPES] = {
     {VOID_RAY, 2},  {WORM, 2},  {GAZER, 4},     {VOID_RAY, 0}, {CONSTRUCT, 3}, {VOID_RAY, 1},
     {CONSTRUCT, 1}, {WORM, 4},  {VOID_RAY, 3},  {VOID_RAY, 4}, {GAZER, 2},     {CONSTRUCT, 2},
     {CONSTRUCT, 4}, {GAZER, 3}, {CONSTRUCT, 4}, {ROBOT, 0},    {ROBOT, 1},     {ROBOT, 2},
-    {ROBOT, 3},     {ROBOT, 4}};
+    {ROBOT, 3},     {ROBOT, 4}, {GAZER, 3},     {HUSK, 4},     {WORM, 4},      {HUSK, 0},
+    {CONSTRUCT, 1}, {ROBOT, 1}, {WORM, 3},      {VOID_RAY, 2}, {HUSK, 2},      {GAZER, 3}};
 
 const WeaponDef sc_mech_weapons[SC_MECH_WEAPONS] = {
     {"REAVER AUTOCANNON",

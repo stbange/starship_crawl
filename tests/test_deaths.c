@@ -112,7 +112,7 @@ static void test_compatibility(void) {
         for (int r = 0; r < w->count; r++)
             for (int e = 0; e < w->rooms[r].enemy_count; e++) {
                 Enemy *enemy = &w->rooms[r].enemies[e];
-                if (enemy->kind >= 27)
+                if (enemy->kind >= 27 && enemy->kind < SC_LEGACY_ENEMIES)
                     machines |= 1u << (enemy->kind - 27);
                 CHECK(enemy->kind < SC_ENEMY_TYPES);
             }

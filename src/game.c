@@ -187,6 +187,7 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
         return;
     damage = encounter_damage(g, room, index, damage, flags);
     damage = campaign_damage(g, room, index, owner, damage);
+    damage = frontier_damage(g, room, index, owner, damage);
     if (damage <= 0)
         return;
     const EnemyDef *def = &sc_enemies[e->kind];
@@ -197,6 +198,7 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
         if (vdot(toward, e->heading) > .6 && e->windup <= 0)
             damage *= .5f;
     }
+    damage = alien_damage(e, damage);
     e->health -= damage;
     e->flash = .12f;
     e->last_player = (uint8_t)owner;
@@ -230,6 +232,15 @@ static void blast_enemies(Game *g, Vec3 pos, int owner, float damage, double rad
             Enemy *e = &g->world.rooms[r].enemies[i];
             Vec3 diff = vsub(enemy_center(e), pos);
             double distance = vlen(diff);
+            if (e->behavior == ALIEN_COLONY)
+                for (int n = 0; n < 3; n++) {
+                    Vec3 part = vsub(e->fragments[n], pos);
+                    if (vlen(part) < distance &&
+                        world_raycast(&g->world, pos, vnorm(part), vlen(part)) >= vlen(part) - .1) {
+                        diff = part;
+                        distance = vlen(part);
+                    }
+                }
             if (e->alive && distance < radius &&
                 world_raycast(&g->world, pos, vnorm(diff), distance) >= distance - .1)
                 game_damage_enemy(g, &g->world.rooms[r], i, owner,
@@ -241,8 +252,14 @@ void game_nova(Game *g, int player) {
         (g->players[player].sheltered || g->players[player].riding))
         return;
     Player *p = &g->players[player];
+    unsigned rank = g->frontier.ranks[player][RELIC_CHAOS], before = g->hits;
     blast_enemies(g, player_eye(p), player,
-                  14 * (1 + .2f * p->power) * campaign_attack_bonus(g, player), 7, 0);
+                  14 * (1 + .2f * p->power) * campaign_attack_bonus(g, player), rank >= 2 ? 9 : 7,
+                  rank ? W_CHILL : 0);
+    if (rank >= 3 && g->hits > before && p->relic_cooldown <= 0) {
+        p->energy = fminf(player_max_energy(p), p->energy + 5);
+        p->relic_cooldown = 1;
+    }
 }
 static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin);
 static void shoot(Game *g, Player *p) {
@@ -251,6 +268,7 @@ static void shoot(Game *g, Player *p) {
         p->weapon = g->campaign.profiles[player].guns[0];
     WeaponDef shot = *game_gun(p);
     shot.damage *= campaign_attack_bonus(g, player);
+    frontier_shot(g, player, &shot);
     const WeaponDef *w = &shot;
     if (p->energy < w->cost) {
         p->cooldown = .2f;
@@ -270,6 +288,7 @@ static void shoot(Game *g, Player *p) {
     p->cloaked = false;
     g->shots++;
     p->shots_fired++;
+    p->noise = 2;
     int owner = (int)(p - g->players), slot = 0;
     Vec3 origin = vadd(player_eye(p), v3(cos(p->yaw) * .16, -.13, -sin(p->yaw) * .16));
     if (w->flags & W_BEAM) {
@@ -354,6 +373,8 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
         wish = v3(0, 0, 0);
     if (!riding && !outside && !flying && p->leap > 0 && !p->grounded)
         speed *= 1.65;
+    if (flying)
+        speed *= 1 + .12 * g->frontier.ranks[p - g->players][RELIC_ALIEN];
     speed *= (1 + .025 * p->mods[2]) * (p->slow > 0 ? .55 : 1);
     if (outside || flying)
         p->velocity = vmul(wish, speed);
@@ -453,6 +474,16 @@ static double ray_sphere(Vec3 origin, Vec3 dir, Vec3 center, double radius, doub
     double t = -b - sqrt(disc);
     return t >= 0 && t < limit ? t : limit;
 }
+static double enemy_intercept(const Enemy *e, Vec3 origin, Vec3 dir, double limit) {
+    double best =
+        ray_sphere(origin, dir, enemy_center(e), fmax(.45, sc_enemies[e->kind].size * .92), limit);
+    if (e->behavior == ALIEN_COLONY)
+        for (int i = 0; i < 3; i++)
+            best = ray_sphere(origin, dir, e->fragments[i], .65, best);
+    if (e->behavior == ALIEN_REVERSER)
+        best = ray_sphere(origin, dir, vadd(enemy_center(e), vmul(e->body_heading, -2)), .7, best);
+    return best;
+}
 static double player_intercept(const Player *p, Vec3 origin, Vec3 dir, double limit) {
     Vec3 feet = position_absolute(p->pos);
     double radius = p->riding ? game_body_radius(p) : .53;
@@ -499,8 +530,7 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin) {
                 if (!enemy->alive || enemy->allegiance == 2 ||
                     already_hit(&history, g->world.rooms[r].cell, e))
                     continue;
-                double hit = ray_sphere(ray, dir, enemy_center(enemy),
-                                        fmax(.45, sc_enemies[enemy->kind].size * .92), nearest);
+                double hit = enemy_intercept(enemy, ray, dir, nearest);
                 if (hit < nearest) {
                     nearest = hit;
                     target = e;
@@ -553,9 +583,7 @@ static void projectiles_step(Game *g, double dt) {
                         if (!enemy->alive || enemy->allegiance == 2 ||
                             already_hit(shot, g->world.rooms[r].cell, e))
                             continue;
-                        double t =
-                            ray_sphere(origin, dir, enemy_center(enemy),
-                                       fmax(.45, sc_enemies[enemy->kind].size * .92), nearest);
+                        double t = enemy_intercept(enemy, origin, dir, nearest);
                         if (t < nearest) {
                             nearest = t;
                             target = e;
@@ -698,10 +726,12 @@ static void enemies_step(Game *g, double dt) {
         game_story_safe(g, position_absolute(g->players[p].pos)) || matrix_protected(g, p);
     for (int r = 0; r < g->world.count; r++) {
         Room *room = &g->world.rooms[r];
+        room->alarm_time = fmaxf(0, room->alarm_time - (float)dt);
         for (int i = 0; i < room->enemy_count; i++) {
             Enemy *e = &room->enemies[i];
             if (!e->alive)
                 continue;
+            e->warning_sound = fmaxf(0, e->warning_sound - (float)dt);
             if (encounter_passive(room, i))
                 continue;
             if (campaign_enemy_step(g, room, i, dt))
@@ -723,11 +753,12 @@ static void enemies_step(Game *g, double dt) {
                     continue;
             }
             Player *target = NULL;
-            double best = 55;
+            bool ceiling = g->world.generator >= 12 && e->behavior == ALIEN_SEAM;
+            double best = ceiling ? 145 : room->alarm_time > 0 ? 95 : 55;
             for (int p = 0; p < g->player_count; p++) {
                 Player *t = &g->players[p];
                 if (!vulnerable(t) || t->cloaked || protected[p] ||
-                    fabs(position_delta(t->pos, e->pos).y) > 9)
+                    fabs(position_delta(t->pos, e->pos).y) > (ceiling ? 140 : 9))
                     continue;
                 double distance = vlen(position_delta(t->pos, e->pos));
                 if (distance < best) {
@@ -787,8 +818,8 @@ static void enemies_step(Game *g, double dt) {
                 e->special = 5;
                 e->flash = .3f;
             }
-            if (game_alien_step(g, room, i, (int)(target - g->players),
-                                encounter_attack(room, i), dt))
+            if (game_alien_step(g, room, i, (int)(target - g->players), encounter_attack(room, i),
+                                dt))
                 continue;
             if (def->flags & HOVER) {
                 double floor = room->cell.y * SC_DECK;
@@ -890,6 +921,14 @@ void game_step(Game *g, const Actions *actions, double dt) {
             continue;
         }
         game_story_recovery(g, p, dt);
+        p->noise = fmaxf(0, p->noise - (float)dt * 2);
+        if (fabs(actions[i].forward) + fabs(actions[i].strafe) > .1f) {
+            float noise = actions[i].crouch || p->crouched ? .06f : actions[i].sprint ? 1.0f : .38f;
+            if (g->frontier.ranks[i][RELIC_ALIEN] >= 3)
+                noise *= .4f;
+            p->noise = fmaxf(p->noise, noise);
+        }
+        frontier_player_step(g, i, dt);
         move_player(g, p, &actions[i], dt);
         if (p->riding) {
             g->rigs[i][p->riding - 1].pos = p->pos;
