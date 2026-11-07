@@ -1,0 +1,9 @@
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 1 players, 15 rooms, 212772 vertices
+PASS court0 2764816
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 2 players, 15 rooms, 238428 vertices
+PASS court1 2764816
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 1 players, 21 rooms, 363468 vertices
+PASS court2 2764816

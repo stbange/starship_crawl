@@ -1,0 +1,15 @@
+FRONTIER tool=0 gun=0 cell=-6,-1,2 seconds=55.72 kills=6 deaths=0 shots=20 damage=0.00 min_energy=100.00 disrupted_frames=59 recoveries=0
+  kind=1 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+FRONTIER tool=0 gun=0 cell=-9,-1,1 seconds=3.25 kills=4 deaths=0 shots=8 damage=0.00 min_energy=100.00 disrupted_frames=57 recoveries=0
+  kind=1 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+COURTS outcome=1 country=VESPER CROWN stage=3 relation=PEACE sequence=4 PASS
+FRONTIER tool=0 gun=0 cell=6,1,3 seconds=71.23 kills=8 deaths=0 shots=36 damage=0.00 min_energy=100.00 disrupted_frames=0 recoveries=0
+  kind=2 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+FRONTIER tool=0 gun=10 cell=9,1,1 seconds=2.57 kills=4 deaths=0 shots=2 damage=0.00 min_energy=82.60 disrupted_frames=0 recoveries=0
+  kind=2 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+COURTS outcome=2 country=CHITIN COURT stage=3 relation=TRIBUTE sequence=4 PASS
+FRONTIER tool=0 gun=0 cell=-1,0,9 seconds=63.72 kills=9 deaths=0 shots=35 damage=0.00 min_energy=100.00 disrupted_frames=54 recoveries=0
+  kind=5 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+FRONTIER tool=0 gun=0 cell=-3,0,12 seconds=5.05 kills=4 deaths=0 shots=18 damage=0.00 min_energy=100.00 disrupted_frames=53 recoveries=0
+  kind=5 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+COURTS outcome=3 country=DEAD CONCORD stage=3 relation=WAR sequence=4 PASS

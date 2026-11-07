@@ -236,6 +236,7 @@ void story_reserve(Game *g, unsigned scene, Cell from) {
     s->assigned |= BIT(scene);
 }
 void game_story_track(Game *g) {
+    g->politics.tracked = 0;
     if (!g->story.version)
         return;
     for (unsigned n = 1; n <= SC_STORY_SCENES; n++) {
@@ -338,7 +339,7 @@ bool story_clear(Game *g, unsigned scene) {
             Vec3 delta = vsub(enemy_center(e), eye);
             double distance = vlen(delta);
             /* A creature behind a sealed partition cannot contest this console. */
-            if (e->alive && e->allegiance != 2 && distance < 12 &&
+            if (e->alive && e->allegiance != 2 && politics_threat(g, e) && distance < 12 &&
                 world_raycast(&g->world, eye, vnorm(delta), distance) >= distance - .1) {
                 game_message(g, "SITE CONTESTED / CLEAR NEARBY INFESTATION");
                 return false;

@@ -406,6 +406,36 @@ static void campaign_stream(Stream *s, Campaign *c, bool read) {
         p->module = number(s, p->module, read);
     }
 }
+static void politics_stream(Stream *s, Politics *p, Director *d, bool read) {
+    p->version = number(s, p->version, read);
+    p->tracked = number(s, p->tracked, read);
+    for (int i = 0; i < SC_COUNTRIES; i++) {
+        CountryState *c = &p->countries[i];
+        c->met = number(s, c->met, read);
+        c->pledge = number(s, c->pledge, read);
+        c->stage = number(s, c->stage, read);
+        c->claimed = number(s, c->claimed, read);
+        c->offended = number(s, c->offended, read);
+    }
+    d->version = number(s, d->version, read);
+    d->sequence = number(s, d->sequence, read);
+    d->cooldown = number(s, d->cooldown, read);
+    d->budget = number(s, d->budget, read);
+    d->recharge = number(s, d->recharge, read);
+    d->quiet = number(s, d->quiet, read);
+    d->kind = number(s, d->kind, read);
+    d->remaining = number(s, d->remaining, read);
+    d->claimed = number(s, d->claimed, read);
+    d->site = matrix_cell(s, d->site, read);
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        d->last_room[i] = matrix_cell(s, d->last_room[i], read);
+        d->seen[i] = number(s, d->seen[i], read);
+    }
+    for (int i = 0; i < SC_DIRECTOR_LOG; i++) {
+        d->history[i] = number(s, d->history[i], read);
+        d->reasons[i] = number(s, d->reasons[i], read);
+    }
+}
 bool game_save(const Game *g, const char *path) {
     if (!path || g->world.record_count > 1000000 || g->matrix.count > SC_MATRIX_RECORDS)
         return false;
@@ -422,7 +452,7 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 13, false);
+    number(&s, 14, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -479,6 +509,9 @@ bool game_save(const Game *g, const char *path) {
     for (int p = 0; p < SC_PLAYERS; p++)
         for (int r = 0; r < RELICS; r++)
             number(&s, g->frontier.ranks[p][r], false);
+    Politics politics = g->world.generator >= 13 ? g->politics : (Politics){0};
+    Director director = g->world.generator >= 13 ? g->director : (Director){0};
+    politics_stream(&s, &politics, &director, false);
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -505,9 +538,10 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 13) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 14) ||
         (version == 2 && generator != 2) || (version < 11 && generator > 6) ||
         (version < 12 && generator > 10) || (version < 13 && generator > 11) ||
+        (version < 14 && generator > 12) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
     Player players[SC_PLAYERS];
@@ -601,6 +635,12 @@ bool game_load(Game *g, const char *path) {
                 frontier.ranks[p][r] = number(&s, 0, true);
     if (!frontier_valid(&frontier, generator))
         s.ok = false;
+    Politics politics = {0};
+    Director director = {0};
+    if (version >= 14)
+        politics_stream(&s, &politics, &director, true);
+    if (!politics_valid(&politics, generator) || !director_valid(&director, generator))
+        s.ok = false;
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
@@ -642,7 +682,8 @@ bool game_load(Game *g, const char *path) {
     replacement->record_count = count;
     replacement->record_cap = count;
     Vec3 start = position_absolute(players[0].pos);
-    if (!campaign_valid(&campaign, players, replacement) || !matrix_index(matrix) ||
+    if (!campaign_valid(&campaign, players, replacement) ||
+        !politics_world_valid(&politics, &director, replacement) || !matrix_index(matrix) ||
         !matrix_rehydrate(matrix, seed, replacement->generator) ||
         !matrix_valid(matrix, seed, replacement->generator, players, &shelter) ||
         !world_index_records(replacement) || !world_refresh(replacement, &start, 1)) {
@@ -678,6 +719,8 @@ bool game_load(Game *g, const char *path) {
     g->story = story;
     g->campaign = campaign;
     g->frontier = frontier;
+    g->politics = politics;
+    g->director = director;
     memset(g->drills, 0, sizeof(g->drills));
     campaign_resume(g);
     Vec3 resumed = position_absolute(g->players[0].pos);

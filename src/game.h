@@ -6,6 +6,7 @@
 #include "campaign.h"
 #include "encounters.h"
 #include "frontier.h"
+#include "politics.h"
 #define SC_PLAYERS 2
 #define SC_MAX_PROJECTILES 192
 #define SC_MAP_SIDE 9
@@ -147,6 +148,8 @@ typedef struct Game {
     Campaign campaign;
     RewardDrill drills[SC_PLAYERS];
     FrontierProgress frontier;
+    Politics politics;
+    Director director;
     bool dirty;
 } Game;
 typedef struct {

@@ -276,11 +276,11 @@ static void brood_ecology(void) {
         settle(&g->world, (Cell){x, 2, 8});
         for (int n = 0; n < g->world.count && !born; n++) {
             Room *r = &g->world.rooms[n];
-            if (!r->ready || !r->habitat.form)
+            if (!r->ready || !r->habitat.form || r->habitat.pace == PACE_FRONTIER)
                 continue;
             for (int i = 0; i < r->enemy_count && !born; i++) {
                 Enemy *parent = &r->enemies[i];
-                if (!(sc_enemies[parent->kind].flags & BROOD))
+                if (parent->country || !(sc_enemies[parent->kind].flags & BROOD))
                     continue;
                 Vec3 at = position_absolute(parent->pos), child = vadd(at, v3(1.5, 0, 1.5));
                 if (world_overlap(&g->world, child, .42, 1.25))
@@ -288,6 +288,15 @@ static void brood_ecology(void) {
                 Vec3 observer = vadd(at, v3(4, 0, 0));
                 if (!world_spawn_supported(&g->world, observer, 1.8))
                     continue;
+                /* Moving the stream focus may compact the room cache. Reacquire
+                   component pointers before setting up this reproduction check. */
+                Cell owner = r->cell;
+                unsigned parent_id = parent->id;
+                CHECK(world_refresh(&g->world, &observer, 1));
+                while (g->world.pending && !g->world.failed) world_stream(&g->world,2);
+                r = world_find(&g->world, owner);
+                CHECK(r && r->ready);
+                parent = &r->enemies[parent_id];
                 CHECK(r->enemy_count < SC_MAX_ENEMIES);
                 int before = r->enemy_count;
                 unsigned colony = parent->ecology;

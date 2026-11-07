@@ -1,0 +1,11 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+    Start 1: political_expeditions
+1/1 Test #1: political_expeditions ............   Passed    0.39 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+unit    =   0.39 sec*proc (1 test)
+
+Total Test time (real) =   0.39 sec

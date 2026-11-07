@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 12u
+#define SC_GENERATOR_VERSION 13u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -94,6 +94,7 @@ typedef struct {
     uint8_t atmosphere, tale, ecology;
     uint8_t pace;                        /* Generator 11: density and optional encounter grammar. */
     uint8_t challenge, reveal, contract; /* Generator 12; zero retains older behavior. */
+    uint8_t country, court; /* Generator 13; political ownership never changes geometry. */
 } Habitat;
 typedef struct {
     Cell cell;
@@ -161,6 +162,7 @@ typedef struct {
     float windup, climb_time, vertical_speed, special, slow, burn;
     Vec3 aim, normal, heading;
     uint8_t kind, id, last_player, allegiance, ally_owner, ecology;
+    uint8_t country;
     bool alive, climbing;
     uint8_t behavior, motion;
     float motion_time, stride, travel_speed, link_strain;

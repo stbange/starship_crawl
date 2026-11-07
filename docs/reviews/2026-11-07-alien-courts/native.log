@@ -1,0 +1,83 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+      Start  1: political_expeditions
+      Start  2: political_journeys
+ 1/36 Test  #1: political_expeditions ............   Passed    0.92 sec
+      Start  3: frontier_journeys
+ 2/36 Test  #2: political_journeys ...............   Passed   84.92 sec
+      Start 31: imperfect_expeditions
+ 3/36 Test  #3: frontier_journeys ................   Passed   90.03 sec
+      Start 30: phase_journeys
+ 4/36 Test #30: phase_journeys ...................   Passed   59.14 sec
+      Start 22: continuing_expeditions
+ 5/36 Test #22: continuing_expeditions ...........   Passed   52.62 sec
+      Start 21: history_expeditions
+ 6/36 Test #31: imperfect_expeditions ............   Passed  125.19 sec
+      Start 20: generated_expeditions
+ 7/36 Test #21: history_expeditions ..............   Passed   12.08 sec
+      Start  4: deep_frontiers
+ 8/36 Test #20: generated_expeditions ............   Passed    5.05 sec
+      Start 33: traversal_journeys
+ 9/36 Test  #4: deep_frontiers ...................   Passed    0.89 sec
+      Start  8: living_ship
+10/36 Test  #8: living_ship ......................   Passed    1.96 sec
+      Start 29: phased_expeditions
+11/36 Test #33: traversal_journeys ...............   Passed    2.57 sec
+      Start 23: reactive_aftermath
+12/36 Test #29: phased_expeditions ...............   Passed    2.09 sec
+      Start 24: narrative
+13/36 Test #23: reactive_aftermath ...............   Passed    3.37 sec
+      Start  6: regional_encounters
+14/36 Test  #6: regional_encounters ..............   Passed    1.12 sec
+      Start  7: core
+15/36 Test #24: narrative ........................   Passed    3.07 sec
+      Start 12: exploration_guidance
+16/36 Test #12: exploration_guidance .............   Passed    0.88 sec
+      Start 19: solo_campaign
+17/36 Test #19: solo_campaign ....................   Passed    3.25 sec
+      Start 13: navigation_recovery
+18/36 Test  #7: core .............................   Passed    5.00 sec
+      Start 10: generated_interiors
+19/36 Test #13: navigation_recovery ..............   Passed    0.42 sec
+      Start  5: regional_journey
+20/36 Test  #5: regional_journey .................   Passed    0.17 sec
+      Start 32: vertical_traversal
+21/36 Test #32: vertical_traversal ...............   Passed    0.39 sec
+      Start 25: enemy_deaths
+22/36 Test #25: enemy_deaths .....................   Passed    0.48 sec
+      Start 28: matrix_journeys
+23/36 Test #28: matrix_journeys ..................   Passed    0.41 sec
+      Start 34: space_exterior
+24/36 Test #10: generated_interiors ..............   Passed    1.77 sec
+      Start  9: living_ship_journey
+25/36 Test #34: space_exterior ...................   Passed    0.26 sec
+      Start 26: ship_matrix
+26/36 Test  #9: living_ship_journey ..............   Passed    0.11 sec
+      Start 14: navigation_psionics
+27/36 Test #14: navigation_psionics ..............   Passed    0.09 sec
+      Start 35: arrival_journey
+28/36 Test #35: arrival_journey ..................   Passed    0.03 sec
+      Start 27: matrix_faults
+29/36 Test #26: ship_matrix ......................   Passed    0.18 sec
+      Start 11: edge_cases
+30/36 Test #27: matrix_faults ....................   Passed    0.03 sec
+      Start 36: platform_input
+31/36 Test #36: platform_input ...................   Passed    0.00 sec
+      Start 15: shelter
+32/36 Test #15: shelter ..........................   Passed    0.04 sec
+      Start 17: equipment
+33/36 Test #17: equipment ........................   Passed    0.03 sec
+      Start 16: shelter_journey
+34/36 Test #16: shelter_journey ..................   Passed    0.02 sec
+      Start 18: equipment_journey
+35/36 Test #11: edge_cases .......................   Passed    0.10 sec
+36/36 Test #18: equipment_journey ................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 36
+
+Label Time Summary:
+gameplay    = 436.00 sec*proc (16 tests)
+platform    =   0.00 sec*proc (1 test)
+unit        =  22.68 sec*proc (19 tests)
+
+Total Test time (real) = 229.35 sec

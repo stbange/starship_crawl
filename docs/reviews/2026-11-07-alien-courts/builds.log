@@ -1,0 +1,29 @@
+Linux native
+[ 32%] Linking C executable sc_exterior_tests
+[ 32%] Built target sc_exterior_tests
+[ 38%] Built target SDL_uclibc
+[ 97%] Built target SDL3-static
+[ 98%] Built target sc_platform
+[ 99%] Linking C executable starship_crawl
+[100%] Built target starship_crawl
+[100%] Built target sc_platform_tests
+
+Windows x86-64 cross-build
+[ 30%] Linking C executable sc_exterior_tests.exe
+[ 31%] Built target sc_exterior_tests
+[ 38%] Built target SDL_uclibc
+[ 97%] Built target SDL3-static
+[ 98%] Built target sc_platform
+[ 99%] Linking C executable starship_crawl.exe
+[100%] Built target starship_crawl
+[100%] Built target sc_platform_tests
+
+Emscripten release
+[  1%] Building C object CMakeFiles/sc_core.dir/src/director.c.o
+[  1%] Linking C static library libsc_core.a
+[ 13%] Built target sc_core
+[ 24%] Built target SDL_uclibc
+[ 97%] Built target SDL3-static
+[ 98%] Built target sc_platform
+[ 99%] Linking C executable starship_crawl.html
+[100%] Built target starship_crawl

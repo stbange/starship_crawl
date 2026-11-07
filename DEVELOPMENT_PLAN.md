@@ -2,6 +2,28 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+## Alien courts and director — 2026-11-07
+
+The four-milestone proposal is implemented in generator 13 / save 14. See
+[Courts and director](POLITICS.md) for controls, rules and limits.
+
+1. **Political geography:** three seeded government templates, multi-sector
+   catchments and wilderness, rulers, bilateral relationships, banners, court
+   projections, marked patrols and political map guidance.
+2. **Playable politics:** royal audiences, three competing commissions, conduit
+   challenges, per-player offenses, shared co-op decisions and durable rewards.
+3. **Bounded encounter director:** physical supply/courier/survey/conflict
+   dispatches, both players' pressure, budgets/cooldowns/repetition limits, saved
+   clocks and diagnostic reason history. It preserves world geometry and enemy stats.
+4. **Succession and escalation:** royal-guard finales, treaties and powered wards,
+   successor workshops, local annexations and hostile rival patrols.
+
+This first library has three powers and one dispute per power per ship. The Hungry
+Commonwealth, Vacant Throne, broader population movement, additional events and
+larger territorial wars remain extensions. Political finales supplement the
+existing phase guardians. Human playtesting should compare the three outcomes,
+neutral-patrol readability, fight difficulty and whether dispatches improve pacing.
+
 ## Gameplay-review follow-up — 2026-11-07
 
 Review items **2, 4, 5 and 6** are implemented for generator 12: five additional

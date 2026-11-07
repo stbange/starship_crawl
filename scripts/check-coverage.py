@@ -29,7 +29,7 @@ def validate_report(data):
         if covered * 100 < THRESHOLD * len(lines):
             failed.append(source["file"])
     # Do not accidentally pass with an empty, stale, or incorrectly filtered report.
-    required = {"src/frontier.c", "src/reveals.c", "src/alien_special.c", "src/game.c", "src/encounters.c", "src/alien.c", "src/generation.c", "src/history.c", "src/interior.c", "src/habitat.c", "src/world.c", "src/traversal.c", "src/exterior.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/death.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/matrix.c", "src/matrix_gen.c", "src/matrix_state.c", "src/matrix_effects.c", "src/campaign.c", "src/campaign_gen.c", "src/campaign_combat.c", "src/math3d.h"}
+    required = {"src/politics_gen.c", "src/politics.c", "src/director.c", "src/frontier.c", "src/reveals.c", "src/alien_special.c", "src/game.c", "src/encounters.c", "src/alien.c", "src/generation.c", "src/history.c", "src/interior.c", "src/habitat.c", "src/world.c", "src/traversal.c", "src/exterior.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/death.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/matrix.c", "src/matrix_gen.c", "src/matrix_state.c", "src/matrix_effects.c", "src/campaign.c", "src/campaign_gen.c", "src/campaign_combat.c", "src/math3d.h"}
     missing = required - names
     if missing or failed:
         raise SystemExit(f"Coverage gate failed. Below {THRESHOLD}%: {failed}; missing sources: {sorted(missing)}")

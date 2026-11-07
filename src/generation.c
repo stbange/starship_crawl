@@ -3,6 +3,7 @@
 #include "frontier.h"
 #include "encounters.h"
 #include "campaign.h"
+#include "politics.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -389,6 +390,8 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
     if (generator >= 12)
         for (int i = 0; i < p->count; i++)
             frontier_plan(seed, &p->rooms[i]);
+    if (generator >= 13)
+        politics_plan(seed, p);
 }
 RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell c) {
     RegionPlan p;

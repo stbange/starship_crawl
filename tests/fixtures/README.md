@@ -170,3 +170,24 @@ starter carbine and optionally use flight, Nova, mech, wagon or terminal/matrix
 Veil/SECURITY. No position, health, inventory, enemy or damage injection creates
 these checkpoints. Ordinary tests read them; explicit regeneration is separate
 from immutable old-generator evidence and saving-disabled inspection scenes.
+
+
+`courts-expedition.sav` is a generator-13 / format-14 checkpoint from the ordinary
+phase journey, captured before extraction after earning all four phase victories:
+`./build/sc_phase_journey --fixtures /tmp/courts-phase`, then the generated
+`phase-unbound.sav` was retained under this descriptive name. Seed 713 reaches
+phase 4 at 390.1 simulated seconds, rank 9 and 47 kills; the full provenance run
+extracts at 622.4 seconds, 77 kills and zero deaths. No inventory, health, position
+or encounter state is granted by the journey driver.
+
+`courts-finale-1.sav`, `courts-finale-2.sav` and `courts-finale-3.sav` were then
+written by `./build/sc_politics_journey --prepare`. Each starts from that earned
+checkpoint, walks to its physical audience, accepts respectively the supply,
+succession or annexation commission, wins and claims the disputed conduit, then
+walks to the royal guard. The finale is still unclaimed. Browser tests import
+these saves and fight the guards with actual mouse/fire input, including shared
+co-op eligibility, exactly-once settlement rewards and IndexedDB resume.
+The reusable movement/combat driver is `tests/encounter_driver.h`; all state
+changes use production actions. These are strong late-game characters and do
+not establish human difficulty. Logs and captures are retained in
+[the political-expedition evidence](../../docs/reviews/2026-11-07-alien-courts/README.md).

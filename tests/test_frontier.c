@@ -245,7 +245,7 @@ static void claims(void) {
     FrontierProgress saved = g->frontier;
     Player saved_player = g->players[0];
     RoomRecord *saved_records = g->world.records;
-    wire[length - 4 - SC_PLAYERS * RELICS * 4] = 4;
+    wire[length - 4 - SC_POLITICS_SAVE_BYTES - SC_PLAYERS * RELICS * 4] = 4;
     unsigned hash = 2166136261u;
     for (long i = 0; i < length - 4; i++)
         hash = (hash ^ wire[i]) * 16777619u;

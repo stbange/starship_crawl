@@ -77,6 +77,7 @@ static void set_pause(bool paused) {
         for (int i = 0; i < SC_PLAYERS; i++) {
             app.game.players[i].journal = false;
             app.game.players[i].decision_open = false;
+            app.game.politics.audience[i] = 0;
             app.game.matrix.divers[i].choice = false;
         }
         /* Discard menu motion and the browser's initial pointer-lock warp. */
@@ -229,6 +230,8 @@ static void interact_player(int player) {
         set_pause(false);
 }
 static bool choose_player(int player, unsigned choice) {
+    if (app.game.players[player].journal_page == 6)
+        return politics_choose(&app.game, player, choice);
     return app.game.matrix.divers[player].choice ? matrix_choose(&app.game, player, choice)
                                                  : game_story_choose(&app.game, player, choice);
 }
@@ -244,6 +247,17 @@ static void matrix_journal(int player) {
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     MatrixDiver *d = &app.game.matrix.divers[0];
+    if (action >= 230 && action <= 232) {
+        if (action == 230) {
+            politics_journal(&app.game, 0);
+            set_pause(true);
+        }
+        if (action == 231)
+            politics_read(&app.game, 0);
+        if (action == 232)
+            politics_track(&app.game, 0);
+        return;
+    }
     if (action >= 220 && action <= 228) {
         Campaign *c = &app.game.campaign;
         if (action == 220)
@@ -543,7 +557,9 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         story_motivation_version(app.game.world.seed, app.game.story.version),
         app.game.story.assigned, app.game.story.seen, app.game.story.done, app.game.story.choice,
         app.game.story.tracked, p->story_reading, p->journal ? "true" : "false", p->journal_page,
-        (p->decision_open || app.game.matrix.divers[0].choice) ? "true" : "false",
+        (p->decision_open || app.game.matrix.divers[0].choice || app.game.politics.audience[0])
+            ? "true"
+            : "false",
         has_goal ? "true" : "false", objective.x, objective.y, objective.z, p->victories,
         game_story_choice(&app.game, 1), game_story_choice(&app.game, 2),
         game_story_choice(&app.game, 3), game_story_choice_ready(&app.game, 0) ? "true" : "false",
@@ -702,6 +718,26 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         }
     used = strlen(result);
     snprintf(result + used, sizeof(result) - used, "]}");
+    used = strlen(result) - 1;
+    Politics *pol = &app.game.politics;
+    Director *dir = &app.game.director;
+    unsigned pn = pol->reading[0] % SC_COUNTRIES;
+    snprintf(result + used, sizeof(result) - used,
+             ",\"politics\":%u,\"country\":%u,\"court\":%u,\"court_reading\":%u,\"audience\":%u,"
+             "\"pledge\":%u,\"court_stage\":%u,\"political_goal\":%u,\"director_kind\":%u,"
+             "\"director_sequence\":%u,\"director_cooldown\":%u,\"director_remaining\":%u}",
+             pol->version, politics_owner(&app.game, world_cell(feet)),
+             local ? local->habitat.court : 0, pn, pol->audience[0], pol->countries[pn].pledge,
+             pol->countries[pn].stage, pol->tracked, dir->kind, dir->sequence, dir->cooldown,
+             dir->remaining);
+    used = strlen(result) - 1;
+    snprintf(result + used, sizeof(result) - used,
+             ",\"court_stages\":[%u,%u,%u],\"court_pledges\":[%u,%u,%u],\"court_claims\":[%u,%u,%u]"
+             ",\"director_reason\":%u}",
+             pol->countries[0].stage, pol->countries[1].stage, pol->countries[2].stage,
+             pol->countries[0].pledge, pol->countries[1].pledge, pol->countries[2].pledge,
+             pol->countries[0].claimed, pol->countries[1].claimed, pol->countries[2].claimed,
+             dir->reasons[(dir->sequence + SC_DIRECTOR_LOG - 1) % SC_DIRECTOR_LOG]);
     return result;
 }
 static void audio_frame(void) {
@@ -1056,18 +1092,24 @@ static void events(void) {
                                           : b == SDL_GAMEPAD_BUTTON_DPAD_UP    ? 2
                                           : b == SDL_GAMEPAD_BUTTON_DPAD_RIGHT ? 3
                                                                                : 0;
-                        if (p->journal_page == 1 && choice &&
-                            game_story_choose(&app.game, player, choice))
+                        if ((p->journal_page == 1 || p->journal_page == 6) && choice &&
+                            choose_player(player, choice))
                             set_pause(false);
                         if (b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
-                            p->journal_page = p->journal_page == 3 ? 1 : p->journal_page + 1;
+                            p->journal_page = p->journal_page == 6   ? 1
+                                              : p->journal_page == 3 ? 6
+                                                                     : p->journal_page + 1;
                         if (b == SDL_GAMEPAD_BUTTON_WEST) {
-                            if (p->journal_page == 3)
+                            if (p->journal_page == 6)
+                                politics_read(&app.game, player);
+                            else if (p->journal_page == 3)
                                 game_story_event_read(&app.game, player);
                             else
                                 game_story_read(&app.game, player);
                         }
-                        if (b == SDL_GAMEPAD_BUTTON_NORTH) {
+                        if (b == SDL_GAMEPAD_BUTTON_NORTH && p->journal_page == 6)
+                            politics_track(&app.game, player);
+                        else if (b == SDL_GAMEPAD_BUTTON_NORTH) {
                             game_story_track(&app.game);
                             if (app.game.campaign.version)
                                 app.game.campaign.tracked = SC_GUARDIANS;
@@ -1191,6 +1233,12 @@ static void events(void) {
                 Player *p = &app.game.players[0];
                 MatrixDiver *d = &app.game.matrix.divers[0];
                 SDL_Keycode key = e.key.key;
+                if (p->journal && p->journal_page == 6) {
+                    if (key == SDLK_L || key == SDLK_U) {
+                        sc_web_action(key == SDLK_L ? 231 : 232);
+                        break;
+                    }
+                }
                 if (key == SDLK_F10) {
                     phase_journal(0);
                     break;
@@ -1381,7 +1429,9 @@ static void events(void) {
                 sc_web_action(86);
                 break;
             case SDLK_F6:
-                sc_web_action(85);
+                sc_web_action(app.game.players[0].journal && app.game.players[0].journal_page == 2
+                                  ? 230
+                                  : 85);
                 break;
             case SDLK_F4:
                 sc_web_action(app.game.players[0].journal_page ? 84 : 80);
@@ -1426,8 +1476,10 @@ static void events(void) {
             case SDLK_8:
             case SDLK_9:
                 if (app.game.players[0].journal && app.game.players[0].journal_page) {
-                    if (app.game.players[0].journal_page == 1 &&
-                        app.game.players[0].decision_open && e.key.key <= SDLK_3)
+                    if (((app.game.players[0].journal_page == 1 &&
+                          app.game.players[0].decision_open) ||
+                         app.game.players[0].journal_page == 6) &&
+                        e.key.key <= SDLK_3)
                         sc_web_action(90 + (int)(e.key.key - SDLK_1));
                 } else
                     game_upgrade(&app.game, 0, (int)(e.key.key - SDLK_1));
@@ -1680,7 +1732,9 @@ static void frame(void *unused) {
         renderer_options(&app.renderer, w, h, app.option_player, app.option_row);
     GLenum error = gl.GetError();
     if (error != GL_NO_ERROR || app.renderer.failed || app.game.world.failed) {
-        SDL_Log("Frame failed: GL error 0x%x", error);
+        SDL_Log("Frame failed: GL error 0x%x / renderer %d / mesh %d / world %d / vertices %u",
+                error, app.renderer.failed, app.renderer.mesh.failed, app.game.world.failed,
+                (unsigned)app.renderer.mesh.count);
         app.failed = true;
         app.running = false;
     }
@@ -1821,6 +1875,8 @@ int main(int argc, char **argv) {
     }
     SDL_free(pref);
     if (scene) {
+        bool court_scene = !strncmp(scene, "court", 5) || !strncmp(scene, "conduit", 7) ||
+                           !strncmp(scene, "crown", 5);
         bool frontier_scene = !strncmp(scene, "front", 5) || !strncmp(scene, "deep", 4) ||
                               !strncmp(scene, "reveal", 6) || !strncmp(scene, "alien", 5);
         bool encounter_scene =
@@ -1835,7 +1891,7 @@ int main(int argc, char **argv) {
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
         if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene && !habitat_scene &&
-            !encounter_scene && !frontier_scene) {
+            !encounter_scene && !frontier_scene && !court_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -1844,8 +1900,19 @@ int main(int argc, char **argv) {
             for (int i = 0; i < SC_PLAYERS; i++)
                 app.game.players[i].weapons = SC_START_WEAPONS;
         }
+        politics_init(&app.game);
         app.game.message_time = 0;
         Cell c = {0, 0, 0};
+        if (court_scene) {
+            unsigned role = !strncmp(scene, "court", 5)     ? COURT_AUDIENCE
+                            : !strncmp(scene, "conduit", 7) ? COURT_CONDUIT
+                                                            : COURT_FINALE;
+            unsigned nation = (unsigned)(scene[strlen(scene) - 1] - '0') % SC_COUNTRIES;
+            c = politics_site(seed, nation, (CourtRole)role);
+            app.game.campaign = (Campaign){0};
+            app.game.world.open_layer = 0;
+            app.no_save = true;
+        }
         if (!strcmp(scene, "guardian")) {
             c = campaign_site(0);
             app.no_save = true;
@@ -1919,7 +1986,8 @@ int main(int argc, char **argv) {
                         found = true;
                     }
                 }
-        app.game.players[0].pos = position_from(vadd(world_center(c), v3(0, .02, -25)));
+        app.game.players[0].pos =
+            position_from(vadd(world_center(c), v3(0, .02, court_scene ? 0 : -25)));
         if (!strncmp(scene, "form", 4) && scene[4] >= '0' && scene[4] < '0' + SC_BODY_FORMS &&
             !scene[5]) {
             app.game.players[0].pos = position_from(v3(0, .02, 14));
@@ -2032,6 +2100,9 @@ int main(int argc, char **argv) {
             app.no_save = true;
         }
         if (frontier_scene) {
+            world_destroy(&app.game.world);
+            world_init(&app.game.world, seed);
+            app.game.world.generator = 12;
             bool found = false;
             RoomSpec chosen = {0};
             unsigned desired = (unsigned)atoi(scene + (!strncmp(scene, "reveal", 6) ? 6
@@ -2041,7 +2112,7 @@ int main(int argc, char **argv) {
                 for (int z = 1; z <= 7 && !found; z++)
                     for (int x = -7; x <= 7 && !found; x++) {
                         RegionPlan plan;
-                        world_plan(seed, (Cell){x, y, z}, &plan);
+                        world_plan_version(seed, 12, (Cell){x, y, z}, &plan);
                         for (int i = 0; i < plan.count && !found; i++) {
                             RoomSpec a = plan.rooms[i];
                             bool match = !strncmp(scene, "reveal", 6)
@@ -2105,6 +2176,7 @@ int main(int argc, char **argv) {
             }
             app.no_save = true;
         }
+        politics_init(&app.game);
         Vec3 p = position_absolute(app.game.players[0].pos);
         world_refresh(&app.game.world, &p, 1);
     }

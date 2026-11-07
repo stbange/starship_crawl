@@ -72,6 +72,8 @@ static const char *missions[] = {"ANSWER THE DISTRESS CONSOLE",
                                  "RETURN AND IGNITE THE BEACON",
                                  "THE SLEEPERS HAVE A SKY / EXPEDITION COMPLETE"};
 bool game_objective(const Game *g, Cell *cell) {
+    if (politics_objective(g, cell))
+        return true;
     if (campaign_objective(g, cell))
         return true;
     if (g->story.version) {
@@ -87,6 +89,8 @@ bool game_objective(const Game *g, Cell *cell) {
 }
 const char *game_mission(const Game *g) {
     Cell target;
+    if (politics_objective(g, &target))
+        return politics_goal(g);
     if (campaign_objective(g, &target))
         return campaign_guardian_name(g->world.seed, (unsigned)campaign_guardian(target));
     if (g->story.version)
@@ -113,6 +117,8 @@ void game_interact(Game *g, int player) {
     if (game_shelter_interact(g, player))
         return;
     if (campaign_interact(g, player))
+        return;
+    if (politics_interact(g, player) || director_interact(g, player))
         return;
     if (game_encounter_interact(g, player))
         return;
@@ -144,7 +150,8 @@ void game_interact(Game *g, int player) {
         for (int r = 0; r < g->world.count; r++)
             for (int i = 0; i < g->world.rooms[r].enemy_count; i++) {
                 Enemy *e = &g->world.rooms[r].enemies[i];
-                if (e->alive && vlen(vsub(enemy_center(e), game_terminal(target))) < 12) {
+                if (e->alive && politics_threat(g, e) &&
+                    vlen(vsub(enemy_center(e), game_terminal(target))) < 12) {
                     game_message(g, "TERMINAL LOCKED / CLEAR NEARBY INFESTATION");
                     return;
                 }

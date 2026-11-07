@@ -14,6 +14,7 @@ option(SC_COVERAGE "Instrument native GCC unit-test coverage" OFF)
 set(SC_CORE_SOURCES src/content.c src/generation.c src/history.c src/interior.c src/habitat.c src/world.c src/traversal.c src/exterior.c src/progression.c src/story.c src/expedition.c src/death.c src/game.c src/save.c src/shelter.c src/navigation.c src/psionics.c src/equipment.c src/matrix.c src/matrix_gen.c src/matrix_state.c src/matrix_effects.c src/campaign.c src/campaign_gen.c src/campaign_combat.c)
 list(APPEND SC_CORE_SOURCES src/encounters.c src/alien.c)
 list(APPEND SC_CORE_SOURCES src/frontier.c src/reveals.c src/alien_special.c)
+list(APPEND SC_CORE_SOURCES src/politics_gen.c src/politics.c src/director.c)
 add_library(sc_core ${SC_CORE_SOURCES})
 set_target_properties(sc_core PROPERTIES C_EXTENSIONS OFF)
 target_include_directories(sc_core PUBLIC src)
@@ -35,6 +36,16 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING AND NOT EMSCRIPTEN)
+  add_executable(sc_politics_tests tests/test_politics.c)
+  target_link_libraries(sc_politics_tests PRIVATE sc_core)
+  target_compile_definitions(sc_politics_tests PRIVATE SC_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
+  add_test(NAME political_expeditions COMMAND sc_politics_tests)
+  set_tests_properties(political_expeditions PROPERTIES LABELS "unit" TIMEOUT 180)
+  add_executable(sc_politics_journey tests/test_politics_journey.c)
+  target_link_libraries(sc_politics_journey PRIVATE sc_core)
+  target_compile_definitions(sc_politics_journey PRIVATE SC_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
+  add_test(NAME political_journeys COMMAND sc_politics_journey)
+  set_tests_properties(political_journeys PROPERTIES LABELS "gameplay" TIMEOUT 600)
   add_executable(sc_frontier_journey tests/test_frontier_journey.c)
   target_link_libraries(sc_frontier_journey PRIVATE sc_core)
   target_compile_definitions(sc_frontier_journey PRIVATE SC_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
@@ -229,6 +240,9 @@ if(SC_BUILD_GAME)
     target_link_options(starship_crawl PRIVATE
       "-sMIN_WEBGL_VERSION=2" "-sMAX_WEBGL_VERSION=2"
       "-sALLOW_MEMORY_GROWTH=1" "-sINITIAL_MEMORY=67108864" "-sMAXIMUM_MEMORY=268435456"
+      # Optimized HUD/map calls retain several bounded region plans. The default
+      # 64 KiB stack is insufficient; keep guards enabled in the shipped build.
+      "-sSTACK_SIZE=1048576" "-sSTACK_OVERFLOW_CHECK=2"
       "-sMINIFY_HTML=0"
       "-sEXPORTED_FUNCTIONS=['_main','_sc_web_start','_sc_web_capture','_sc_web_look','_sc_web_save','_sc_web_state','_sc_web_action','_sc_web_import','_sc_web_fingerprint','_sc_web_preferences','_sc_web_setting','_sc_web_reset_input']"
       "-sEXPORTED_RUNTIME_METHODS=['ccall','FS']" "-sFORCE_FILESYSTEM=1"

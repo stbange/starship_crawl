@@ -1,0 +1,11 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-p0-sanitize
+Test project /workspace/starship_crawl/build-p0-sanitize
+    Start 1: political_expeditions
+1/1 Test #1: political_expeditions ............   Passed    2.10 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+unit    =   2.10 sec*proc (1 test)
+
+Total Test time (real) =   2.10 sec

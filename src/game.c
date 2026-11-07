@@ -52,6 +52,7 @@ void game_init(Game *g, uint32_t seed) {
         player_init(&g->players[i]);
     game_equipment_reset(g);
     campaign_init(g);
+    politics_init(g);
     Vec3 p = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &p, 1);
     game_message(g, story_commission(seed));
@@ -190,6 +191,7 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
     damage = frontier_damage(g, room, index, owner, damage);
     if (damage <= 0)
         return;
+    politics_attack(g, e, owner);
     const EnemyDef *def = &sc_enemies[e->kind];
     if (def->flags & ARMORED)
         damage *= .72f;
@@ -738,6 +740,8 @@ static void enemies_step(Game *g, double dt) {
                 continue;
             if (matrix_control_enemy(g, room, e, dt))
                 continue;
+            if (politics_enemy_step(g, room, e, dt))
+                continue;
             if (game_story_inert(g, e)) {
                 e->windup = 0;
                 continue;
@@ -757,6 +761,8 @@ static void enemies_step(Game *g, double dt) {
             double best = ceiling ? 145 : room->alarm_time > 0 ? 95 : 55;
             for (int p = 0; p < g->player_count; p++) {
                 Player *t = &g->players[p];
+                if (e->country && politics_reputation(g, e->country, p) >= 0)
+                    continue;
                 if (!vulnerable(t) || t->cloaked || protected[p] ||
                     fabs(position_delta(t->pos, e->pos).y) > (ceiling ? 140 : 9))
                     continue;
@@ -941,6 +947,8 @@ void game_step(Game *g, const Actions *actions, double dt) {
     game_story_step(g);
     campaign_step(g, dt);
     game_encounters_step(g, dt);
+    politics_step(g, dt);
+    director_step(g, dt);
     enemies_step(g, dt);
     projectiles_step(g, dt);
     game_deaths_step(g, dt);

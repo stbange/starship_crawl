@@ -95,6 +95,7 @@ bool campaign_refit(Game *g, int player, unsigned slot, int delta) {
     return false;
 }
 void campaign_track(Game *g) {
+    g->politics.tracked = 0;
     if (!g->campaign.version)
         return;
     unsigned phase = campaign_phase(&g->campaign);

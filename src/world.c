@@ -4,6 +4,7 @@
 #include "campaign.h"
 #include "encounters.h"
 #include "frontier.h"
+#include "politics.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -705,6 +706,8 @@ static void populate(World *w, Room *r) {
         encounter_populate(w, r);
     if (w->generator >= 12)
         frontier_populate(w, r);
+    if (w->generator >= 13)
+        politics_populate(w, r);
 }
 unsigned world_stream(World *w, unsigned budget) {
     w->last_work = 0;

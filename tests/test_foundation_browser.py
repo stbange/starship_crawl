@@ -164,7 +164,7 @@ def run():
                 page.goto(base + '?seed=713&scene=' + scene)
                 wait_ready(page)
                 start_play(page)
-                assert state(page)['generator'] == 12
+                assert state(page)['generator'] == 13
                 page.screenshot(path=str(ARTIFACTS / ('foundation-' + scene + '.png')))
                 page.keyboard.down('w')
                 wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).y>4", timeout=20000)

@@ -123,6 +123,11 @@ bool game_navigation_to(const Game *g, int player, Cell goal, Navigation *nav) {
     if (cell_equal(from, nav->goal)) {
         nav->kind = NAV_GOAL;
         nav->point = game_terminal(goal);
+        if (g->politics.version && g->politics.tracked) {
+            Cell political;
+            if (politics_objective(g, &political) && cell_equal(goal, political))
+                nav->point = vadd(world_center(goal), v3(0, .02, 2));
+        }
         return true;
     }
     enum { SIDE = 16, N = SIDE * SIDE };

@@ -1451,6 +1451,7 @@ static void frame(Renderer *r, float x, float y, float w, float h, Color c) {
 
 #include "render_navigation.inc"
 #include "render_encounters.inc"
+#include "render_politics.inc"
 
 static void map_marker(Renderer *r, const MapView *map, Vec3 point, float x, float y, float tile,
                        Color color, bool edge) {
@@ -1513,6 +1514,13 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
                     text_at(r, left + tile * .42f, top + tile * .39f, .8f * text_scale, "!",
                             discovery);
             }
+            unsigned nation = politics_owner(g, map.rooms[at].cell);
+            if (nation) {
+                Color banner = politics_color(g->world.seed, nation - 1);
+                rect(r, left + tile * .25f, top + tile * .12f, tile * .5f, 2, banner);
+                if (map.rooms[at].habitat.court)
+                    text_at(r, left + tile * .4f, top + tile * .4f, .8f * text_scale, "C", banner);
+            }
             unsigned doors = map.doors[at];
             const int dx[4] = {-1, 1, 0, 0}, dz[4] = {0, 0, -1, 1};
             if (map.systems[at] & SYSTEM_BEACON)
@@ -1538,6 +1546,8 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
                 }
             }
         }
+    if (g->director.kind && g->director.site.y == map.origin.y)
+        map_marker(r, &map, director_point(&g->director), x, y, tile, rgb(.3f, .85f, .95f), false);
     if (map.has_shelter && map.shelter.y == map.origin.y)
         map_marker(r, &map, position_absolute(g->shelter.door), x, y, tile, rgb(.65f, .4f, 1),
                    false);
@@ -1649,7 +1659,7 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
                 "G AT A CLEARED SITE TO INVESTIGATE OR REVIEW ITS CHOICES", dim);
     }
     text_at(r, x, y + 491 * s, .85f * s,
-            "F6 DOSSIER / F7 DEBRIEF / F4 CHARACTER / ENTER CLOSE / PAD RB PAGES", gold);
+            "F6 DOSSIER / F6 AGAIN COURTS / F7 DEBRIEF / ENTER CLOSE / PAD RB PAGES", gold);
 }
 static void history_journal(Renderer *r, const Game *g, int player, float w, float h) {
     float s = fminf((w - 24) / 800, (h - 24) / 510), x = (w - 800 * s) * .5f,
@@ -1845,7 +1855,13 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         }
     if (aimed && !paused) {
         EnemyBody body = sc_enemy_bodies[aimed->kind];
-        if (aimed_guardian >= 0)
+        if (aimed->country)
+            snprintf(label, sizeof(label), "%s / %s / %.0f",
+                     politics_name(g->world.seed, aimed->country - 1),
+                     politics_reputation(g, aimed->country, player) < 0 ? "HOSTILE PATROL"
+                                                                        : "NEUTRAL PATROL",
+                     aimed->health);
+        else if (aimed_guardian >= 0)
             snprintf(label, sizeof(label), "%s / %.0f",
                      campaign_guardian_name(g->world.seed, (unsigned)aimed_guardian),
                      aimed->health);
@@ -2082,7 +2098,11 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     if (!paused)
         campaign_hud(r, g, player, w, h, s);
-    if (p->journal && p->journal_page == 5)
+    if (!paused)
+        politics_hud(r, g, player, w, h, s);
+    if (p->journal && p->journal_page == 6)
+        politics_journal_draw(r, g, player, w, h);
+    else if (p->journal && p->journal_page == 5)
         campaign_journal_draw(r, g, player, w, h);
     else if (p->journal && p->journal_page == 4)
         matrix_journal_draw(r, g, player, w, h);
@@ -2292,6 +2312,8 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
                 navigation_scene(r, g, p);
             if (!outside)
                 encounter_scene(r, g, p);
+            if (!outside)
+                politics_scene(r, g, p);
         }
         flush(r);
         r->sprite_drawn[p] = 0;

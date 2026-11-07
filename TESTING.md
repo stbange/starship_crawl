@@ -1,5 +1,53 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
+
+**Alien courts and the director (generator 13 / format 14).** The suite contains
+36 native CTests: 19 unit, 16 gameplay and one SDL platform test. All 36 pass;
+all 16 gameplay-labelled tests also pass separately.
+`political_expeditions` checks 48 seeded territories, nine sites per ship,
+pure map queries, all nine government/settlement combinations, neutral patrols,
+personal hostility, shared co-op claims, workshops and annexation. A dedicated check verifies that
+neutral patrols leave story terminals accessible while hostile patrols contest
+them, including co-op and matrix allegiance. It tests all
+four director cards, pressure from hostile patrols, budgets, repetition limits,
+paused clocks, expiry, pending-dispatch save/resume and transactional corruption
+rejection. Existing generators and format-13 expedition fixtures remain supported.
+
+Unit-only core line coverage is **98.41% (8483/8620)**; every executable core file
+exceeds 95%. Political logic measures 98.68%, political generation 97.67%, and
+the director reaches 100%. All three new sources are required by the same
+coverage gate. Six gate self-tests
+pass. Renderer, platform and browser adapters remain outside this unit percentage.
+
+`political_journeys` loads a fresh-character, gameplay-earned phase checkpoint,
+walks to three courts, accepts commissions, fights and claims each conduit and
+royal guard, then saves/resumes each settlement. Its shared movement/aim/fire
+helper never grants equipment, teleports or injects damage. Strong late-game
+builds finish these finales quickly; this is functional evidence, not human
+balance validation. See [POLITICS.md](POLITICS.md),
+[fixture provenance](tests/fixtures/README.md) and
+[retained evidence](docs/reviews/2026-11-07-alien-courts/README.md).
+
+The new packaged browser suite passes with real audience keys, deliberate choices,
+co-op combat, earned fixtures, IndexedDB resume, and CDP touch USE. An optimized
+checked build exposed a WebAssembly stack overflow while building the HUD map;
+the release now reserves 1 MiB and enables stack-overflow guards. Court inspection
+captures use saving-disabled scenes; settlement captures follow actual combat.
+All seventeen packaged browser suites pass across the implementation. The main
+suite's initial concurrent-rendering timeout passes when rerun alone with the
+same assertions and deadlines. Final core refinements also pass fresh unit
+coverage, focused sanitizer checks, portable builds and the relevant gameplay
+and browser checks; details and logs are linked in the retained evidence.
+Physical Windows/mobile graphics, physical controllers and human difficulty
+remain playtest work.
+
+```sh
+ctest --test-dir build -R 'political_expeditions|political_journeys' --output-on-failure
+ctest --test-dir build -L gameplay --output-on-failure
+python3 scripts/check-coverage.py
+python3 tests/test_politics_browser.py --site-dir build-pages-courts --url-path /starship_crawl/
+```
+
 **Deep frontiers (review items 2, 4, 5 and 6).** All **34 native CTests** pass:
 18 unit, 15 gameplay and one SDL platform test. All 15 gameplay-labelled tests
 also pass separately. `deep_frontiers` retains 24 immutable generator-11

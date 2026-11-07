@@ -129,7 +129,7 @@ static void plans(void) {
                         cold_ecology |= 1u << r->habitat.ecology;
                     }
                     CHECK(r->habitat.atmosphere < ATMOSPHERES && r->habitat.ecology < ECOLOGIES);
-                    if (r->habitat.pace == PACE_FRONTIER)
+                    if (r->habitat.pace == PACE_FRONTIER && !r->habitat.court)
                         CHECK(campaign_layer(r->cell) >= 2 && !r->history_role);
                 }
             }

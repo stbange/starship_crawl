@@ -1,0 +1,24 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-p0-sanitize
+Test project /workspace/starship_crawl/build-p0-sanitize
+    Start  1: political_expeditions
+1/7 Test  #1: political_expeditions ............   Passed    2.07 sec
+    Start  2: political_journeys
+2/7 Test  #2: political_journeys ...............   Passed  330.31 sec
+    Start  4: deep_frontiers
+3/7 Test  #4: deep_frontiers ...................   Passed    3.61 sec
+    Start  8: living_ship
+4/7 Test  #8: living_ship ......................   Passed    7.37 sec
+    Start  9: living_ship_journey
+5/7 Test  #9: living_ship_journey ..............   Passed    0.32 sec
+    Start 27: matrix_faults
+6/7 Test #27: matrix_faults ....................   Passed    0.12 sec
+    Start 29: phased_expeditions
+7/7 Test #29: phased_expeditions ...............   Passed    6.84 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+gameplay    = 330.64 sec*proc (2 tests)
+unit        =  20.00 sec*proc (5 tests)
+
+Total Test time (real) = 350.64 sec
