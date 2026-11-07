@@ -185,6 +185,7 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
     Enemy *e = &room->enemies[index];
     if (!e->alive || e->allegiance == 2)
         return;
+    damage = encounter_damage(g, room, index, damage, flags);
     damage = campaign_damage(g, room, index, owner, damage);
     if (damage <= 0)
         return;
@@ -268,6 +269,7 @@ static void shoot(Game *g, Player *p) {
     p->muzzle = .075f;
     p->cloaked = false;
     g->shots++;
+    p->shots_fired++;
     int owner = (int)(p - g->players), slot = 0;
     Vec3 origin = vadd(player_eye(p), v3(cos(p->yaw) * .16, -.13, -sin(p->yaw) * .16));
     if (w->flags & W_BEAM) {
@@ -597,7 +599,7 @@ static void projectiles_step(Game *g, double dt) {
         }
     }
 }
-static void spit(Game *g, const Room *room, Enemy *e) {
+void game_enemy_shot(Game *g, const Room *room, Enemy *e) {
     const EnemyDef *def = &sc_enemies[e->kind];
     Vec3 center = enemy_center(e), direction = vnorm(vsub(e->aim, center));
     int count = (def->flags & BURST) ? 5 : 1;
@@ -700,6 +702,8 @@ static void enemies_step(Game *g, double dt) {
             Enemy *e = &room->enemies[i];
             if (!e->alive)
                 continue;
+            if (encounter_passive(room, i))
+                continue;
             if (campaign_enemy_step(g, room, i, dt))
                 continue;
             if (matrix_control_enemy(g, room, e, dt))
@@ -738,7 +742,7 @@ static void enemies_step(Game *g, double dt) {
             double growth = g->campaign.version ? 10 * fmin(campaign_layer(room->cell), 8)
                                                 : world_difficulty(room->cell) * 5;
             double maxhealth = def->health + growth;
-            if ((def->flags & REGENERATE) && e->flash <= 0)
+            if (e->behavior != ALIEN_CONDUCTOR && (def->flags & REGENERATE) && e->flash <= 0)
                 e->health = fminf((float)maxhealth, e->health + (float)dt * 5);
             e->special -= (float)dt;
             Vec3 diff = position_delta(target->pos, e->pos);
@@ -752,7 +756,7 @@ static void enemies_step(Game *g, double dt) {
             bool sight =
                 world_raycast(&g->world, enemy_center(e), vnorm(to), vlen(to)) >= vlen(to) - .1;
             double speed = def->speed * (e->slow > 0 ? .4 : 1);
-            if ((def->flags & HEALER) && e->special <= 0) {
+            if (e->behavior != ALIEN_CONDUCTOR && (def->flags & HEALER) && e->special <= 0) {
                 for (int j = 0; j < room->enemy_count; j++) {
                     Enemy *ally = &room->enemies[j];
                     if (ally->alive && j != i && vlen(position_delta(ally->pos, e->pos)) < 14)
@@ -762,7 +766,8 @@ static void enemies_step(Game *g, double dt) {
                 e->special = 3;
                 e->flash = .3f;
             }
-            if ((def->flags & BROOD) && e->special <= 0 && room->enemy_count < SC_MAX_ENEMIES) {
+            if (e->behavior != ALIEN_CONDUCTOR && (def->flags & BROOD) && e->special <= 0 &&
+                room->enemy_count < SC_MAX_ENEMIES) {
                 int id = room->enemy_count;
                 Position spawn = e->pos;
                 position_move(&spawn, v3(1.5, 0, 1.5));
@@ -782,6 +787,9 @@ static void enemies_step(Game *g, double dt) {
                 e->special = 5;
                 e->flash = .3f;
             }
+            if (game_alien_step(g, room, i, (int)(target - g->players),
+                                encounter_attack(room, i), dt))
+                continue;
             if (def->flags & HOVER) {
                 double floor = room->cell.y * SC_DECK;
                 double wanted = floor + 1.5 + sin(g->time * 2 + e->id) * .5;
@@ -793,7 +801,7 @@ static void enemies_step(Game *g, double dt) {
                 if (e->windup > 0) {
                     e->windup = fmaxf(0, e->windup - (float)dt);
                     if (e->windup <= 0) {
-                        spit(g, room, e);
+                        game_enemy_shot(g, room, e);
                         e->cooldown = def->interval;
                     }
                 } else if (best < (e->kind == 7 ? 48 : 30) && best > 3 && e->cooldown <= 0 &&
@@ -893,6 +901,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     game_progression_step(g, dt);
     game_story_step(g);
     campaign_step(g, dt);
+    game_encounters_step(g, dt);
     enemies_step(g, dt);
     projectiles_step(g, dt);
     game_deaths_step(g, dt);

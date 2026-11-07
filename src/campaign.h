@@ -64,6 +64,8 @@ CampaignReward campaign_reward(uint32_t seed, unsigned guardian, unsigned choice
 void campaign_reward_name(const struct Game *game, int player, unsigned guardian, unsigned choice,
                           char *text, size_t size);
 bool campaign_choose(struct Game *game, int player, unsigned choice);
+bool campaign_owns(const struct Game *game, int player, CampaignReward reward);
+void campaign_grant(struct Game *game, int player, CampaignReward reward);
 void campaign_defeat(struct Game *game, unsigned guardian);
 void campaign_step(struct Game *game, double dt);
 bool campaign_enemy_step(struct Game *game, Room *room, int index, double dt);

@@ -1,5 +1,7 @@
 # Expedition design review — 6 November 2026
 
+P1 follow-up (7 November): [implemented regional variety, alien prototypes, optional encounters and local consequences](../../../REGIONAL_ENCOUNTERS.md).
+
 P0 follow-up (7 November): [implemented navigation/HUD improvements, seed-3 diagnosis and imperfect-input journeys](../../../NAVIGATION.md). The observations below describe the original reviewed build.
 
 Follow-up: [ten one-hour directional expeditions and revised proposals](../2026-11-06-deep-expeditions/README.md). The original observations below are preserved.

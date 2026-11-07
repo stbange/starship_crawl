@@ -1,5 +1,7 @@
 # Ten deep directional expeditions — revised design review
 
+P1 follow-up (7 November): [implemented regional variety, alien prototypes, optional encounters and local consequences](../../../REGIONAL_ENCOUNTERS.md).
+
 P0 follow-up (7 November): [implemented navigation/HUD improvements, seed-3 diagnosis and imperfect-input journeys](../../../NAVIGATION.md). The observations below describe the original reviewed build.
 
 This extends [the first review](../2026-11-06-expeditions/README.md). It records ten additional **60-minute simulated expeditions: ten simulated hours**, accelerated rather than ten hours of human or real-time rendered play. Game code is still `537f785`; the intervening commit only added the first review. No balance, generator or enemy changes were made for this investigation.

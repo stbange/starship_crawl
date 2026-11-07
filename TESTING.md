@@ -1,5 +1,51 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
+**Regional encounters (P1).** There are **32 native CTests: 17 unit, 14 gameplay
+and one SDL platform test**. All 32 passed, followed by all 14 gameplay-labelled
+tests separately. `regional_encounters` verifies immutable generator-10 plans,
+geometry, populations/sprites and format-11 migration; functional weather and
+pacing; supported squads across generated rooms; all eight saved local actions;
+locked alien commitments, evasion and planted wall contacts; support coordination,
+beam pressure/collapse; early/late co-op participation and durable claims;
+per-player earned-tool practice; malformed format-12 claims and fresh-ship reset.
+The fault library also checks record-allocation failure without awarding progress.
+
+Unit-only core line coverage is **98.51% (7340/7451)**; every source exceeds 95%.
+The new `alien.c` measures 98.39% and `encounters.c` 98.16%. Both are explicitly
+required by the gate. All six coverage-gate self-tests pass. The metric includes
+all core sources with no uncovered-line exclusions; renderer/input/browser code
+is covered by execution checks, not this percentage.
+
+`regional_journey` loads played generator-11 checkpoints, earns a beam through
+ordinary combat, and compares the starter carbine with that earned beam on the
+same next encounter under two limited reaction/aim profiles. It never grants
+inventory or health, teleports, deletes enemies or injects damage. The strong
+rank-15 build wins all four comparisons without damage; this validates mechanics
+and resource observations, not human difficulty. [Results, provenance, images
+and pending human checks](REGIONAL_ENCOUNTERS.md).
+
+The packaged `test_regional_browser.py` exercises keyboard activation, dormant
+safety, visible warnings, paused animation, shared co-op state, local repair,
+beam disruption, claim, the actual earned Veil practice, IndexedDB resume and CDP
+touch USE. The habitat tour now checks all fourteen weather conditions. All fifteen packaged
+browser suites passed. Its view-isolation driver now uses ordinary Veil and turns
+away from the inspected growth before deploying shelter on clear floor; the full
+suite passed after that correction. The final P1 package also passed the regional
+suite and focused desktop/portrait HUD checks. Linux,
+Windows x86-64 cross-build and Emscripten builds pass. All 31 core ASan/UBSan/LeakSanitizer tests passed; the final conductor-health and
+reward refinements also passed the five focused regional/living-ship/fault checks.
+Native Mesa smoke checks
+cover relay, nest, local repair, boiling reservoirs, ice crystals and frozen runoff,
+including split-screen. These are software OpenGL/WebGL and emulated-touch checks;
+physical Windows/mobile devices and human play remain pending.
+
+```sh
+ctest --test-dir build -R 'regional_encounters|regional_journey' --output-on-failure
+python3 tests/test_regional_browser.py --site-dir build-pages-p1-final --url-path /starship_crawl/
+python3 tests/test_habitat_browser.py --site-dir build-pages-p1-final --url-path /starship_crawl/
+```
+
+
 
 **Reliable exploration (P0).** There are now **30 native CTests: 16 unit, 13
 gameplay and one SDL platform test**. `exploration_guidance` covers bounded

@@ -422,7 +422,7 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 11, false);
+    number(&s, 12, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -474,6 +474,8 @@ bool game_save(const Game *g, const char *path) {
     }
     Campaign campaign = g->campaign;
     campaign_stream(&s, &campaign, false);
+    for (size_t i = 0; i < g->world.record_count; i++)
+        number(&s, g->world.records[i].local, false);
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -500,8 +502,9 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 11) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 12) ||
         (version == 2 && generator != 2) || (version < 11 && generator > 6) ||
+        (version < 12 && generator > 10) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
     Player players[SC_PLAYERS];
@@ -579,6 +582,15 @@ bool game_load(Game *g, const char *path) {
     Campaign campaign = {0};
     if (version >= 11)
         campaign_stream(&s, &campaign, true);
+    for (uint32_t i = 0; s.ok && version >= 12 && i < count; i++) {
+        RoomRecord *r = &records[i];
+        r->local = number(&s, 0, true);
+        uint32_t claims = (r->local >> 4) & 3, eligible = (r->local >> 2) & 3;
+        if (r->local >= 64 || (r->local && generator < 11) || (claims & ~eligible) ||
+            (claims && !(r->local & FRONTIER_CLEARED)) ||
+            ((r->local & FRONTIER_CLEARED) && (r->killed & 15) != 15))
+            s.ok = false;
+    }
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
@@ -655,6 +667,7 @@ bool game_load(Game *g, const char *path) {
     g->contracts = contracts;
     g->story = story;
     g->campaign = campaign;
+    memset(g->drills, 0, sizeof(g->drills));
     campaign_resume(g);
     Vec3 resumed = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &resumed, 1);

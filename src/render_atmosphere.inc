@@ -97,6 +97,17 @@ static bool atmosphere_init(Renderer *r) {
                 case SPR_SPARK:
                     alpha = (x == 8 || y == 8) && rad < .7 ? 1 : rad < .08 ? 1 : 0;
                     break;
+                case SPR_ASH:
+                    alpha = fabs(px) < .5 && fabs(py) < .45 && hash % 4 ? .8 : 0;
+                    gray = .35 + (hash % 20) * .015;
+                    break;
+                case SPR_CRYSTAL:
+                    alpha = fabs(px) * 2.5 + fabs(py) < .95 ? .85 : 0;
+                    gray = x < 8 ? .55 : 1;
+                    break;
+                case SPR_BUBBLE:
+                    alpha = rad > .38 && rad < .65 ? .8 : 0;
+                    break;
                 }
                 size_t i = ((tile / 4 * 16 + (unsigned)y) * 64 + tile % 4 * 16 + (unsigned)x) * 4;
                 atlas[i] = atlas[i + 1] = atlas[i + 2] = (unsigned char)(fmin(1, gray) * 255);
@@ -147,6 +158,8 @@ static void atmosphere_draw(Renderer *r, const Game *g, int player, const float 
                 !world_ready(&g->world, chunk->cell))
                 continue;
             Vec3 origin = vsub(world_center(chunk->cell), r->origin);
+            const Room *source = world_find((World *)&g->world, chunk->cell);
+            bool calmed = (world_local_state(&g->world, source) & LOCAL_RESOLVED) != 0;
             for (int s = 0; s < chunk->sprite_count && count < SC_VIEW_SPRITES; s++) {
                 const EnvSprite *a = &chunk->sprites[s];
                 Vec3 anchor = vadd(origin, a->pos), delta = vsub(anchor, eye);
@@ -158,6 +171,7 @@ static void atmosphere_draw(Renderer *r, const Game *g, int player, const float 
                                   : a->kind == SPR_MOTE  ? 12
                                   : a->kind == SPR_MIST  ? 3
                                   : a->kind == SPR_SPARK ? 5
+                                  : a->kind >= SPR_ASH && vlen(a->normal) < .5 ? 18
                                                          : 1;
                 for (unsigned i = 0; i < copies && count < SC_VIEW_SPRITES; i++) {
                     uint32_t h = world_hash(a->hash, (Cell){(int32_t)i, 0, 0}, 17);
@@ -185,6 +199,19 @@ static void atmosphere_draw(Renderer *r, const Game *g, int player, const float 
                         draw.up = vmul(up, a->width * (.4 + life));
                         draw.alpha = (float)(sin(life * SC_PI) * .24);
                         draw.glow = .25f;
+                        if (a->atmosphere == PRESSURE_AIR)
+                            draw.alpha *= (float)(.2 + .8 * fmax(0, sin(t * 1.3 + phase)));
+                    } else if (a->kind >= SPR_ASH && vlen(a->normal) < .5) {
+                        double life = fmod(t * (a->kind == SPR_BUBBLE ? .6 : .11) + phase, 1);
+                        draw.center = vadd(anchor, v3((((h >> 8) % 1000) / 999.0 - .5) * a->width +
+                                                      sin(t * .3 + phase * 20),
+                                                      (a->kind == SPR_BUBBLE ? life : -life) * a->height,
+                                                      (((h >> 18) % 1000) / 999.0 - .5) * 4));
+                        double size = a->kind == SPR_CRYSTAL ? .35 : .18;
+                        draw.right = vmul(right, size);
+                        draw.up = vmul(up, size * (a->kind == SPR_CRYSTAL ? 2 : 1));
+                        draw.glow = a->kind == SPR_CRYSTAL ? .4f : .1f;
+                        draw.alpha = (float)(sin(life * SC_PI) * .6);
                     } else if (a->kind == SPR_RAIN) {
                         double x = ((h >> 8) % 1000) / 999.0 - .5,
                                z = ((h >> 18) % 1000) / 999.0 - .5;
@@ -213,13 +240,16 @@ static void atmosphere_draw(Renderer *r, const Game *g, int player, const float 
                         draw.alpha = .07f;
                         draw.glow = .15f;
                     } else if (a->kind == SPR_WATER) {
-                        draw.alpha = .42f;
-                        draw.glow = -.29f;
-                        draw.center.y += .006 * sin(t + phase * 10);
+                        draw.alpha = a->atmosphere == FROZEN_RUNOFF ? .7f : .42f;
+                        draw.glow = a->atmosphere == FROZEN_RUNOFF ? .12f : -.29f;
+                        if (a->atmosphere != FROZEN_RUNOFF)
+                            draw.center.y += .006 * sin(t + phase * 10);
                     } else if (a->kind == SPR_GLYPH)
                         draw.glow = .25f;
                     else if (a->kind == SPR_BONES || a->kind == SPR_PAPERS)
                         draw.color = rgb(.64f, .57f, .42f);
+                    if (calmed && vlen(a->normal) < .5)
+                        draw.alpha *= .18f;
                     Vec3 from_eye = vsub(draw.center, eye);
                     draw.distance = vdot(from_eye, from_eye);
                     if (draw.distance < .12)

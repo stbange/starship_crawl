@@ -9,7 +9,14 @@ const AtmosphereDef sc_atmospheres[ATMOSPHERES] = {
     {{.45f, .62f, .19f}, {.013f, .021f, .007f}, .015f, "SPORE FALL"},
     {{.37f, .65f, .93f}, {.012f, .023f, .038f}, .014f, "CRYOGENIC MIST"},
     {{.94f, .35f, .10f}, {.028f, .010f, .005f}, .012f, "EMBER RAIN"},
-    {{.67f, .26f, .86f}, {.019f, .006f, .028f}, .012f, "LUMINOUS CONDENSATE"}};
+    {{.67f, .26f, .86f}, {.019f, .006f, .028f}, .012f, "LUMINOUS CONDENSATE"},
+    {{.65f, .52f, .28f}, {.019f, .017f, .009f}, .010f, "BOILING RESERVOIRS"},
+    {{.83f, .54f, .31f}, {.021f, .014f, .009f}, .009f, "PULSING PRESSURE VENTS"},
+    {{.62f, .46f, .36f}, {.019f, .010f, .007f}, .009f, "DRIFTING ASH"},
+    {{.79f, .46f, .18f}, {.018f, .009f, .004f}, .006f, "BAKED SILENCE"},
+    {{.53f, .76f, .88f}, {.008f, .015f, .025f}, .008f, "DRIFTING ICE CRYSTALS"},
+    {{.35f, .64f, .79f}, {.007f, .016f, .025f}, .010f, "FROZEN RUNOFF"},
+    {{.58f, .69f, .80f}, {.005f, .009f, .016f}, .005f, "BRITTLE STILLNESS"}};
 const char *sc_habitat_forms[9] = {"CHAMBER",           "PROCESSIONAL VAULT", "LONG GALLERY",
                                    "TURBINE CANYON",    "BENT ARCADE",        "BRANCHING CONCOURSE",
                                    "HORSESHOE GALLERY", "RESERVOIR HALL",     "HANGING GARDEN"};
@@ -293,12 +300,17 @@ void habitat_build(Builder *b, const Room *r) {
                v3(x, .035, z), v3(0, 1, 0), 2, 2, r, (unsigned)i);
     }
     unsigned climate = r->habitat.atmosphere;
-    if (climate == FLOODED || climate == RIME_AIR || climate == VOID_GLOW) {
+    if (climate == FLOODED || climate == RIME_AIR || climate == VOID_GLOW ||
+        climate == BOILING_AIR || climate == FROZEN_RUNOFF) {
         sprite(b, SPR_WATER, v3(-20, .035, 3), v3(0, 1, 0), 26, 5, r, 40);
-        sprite(b, SPR_RAIN, v3(-20, fmin(height - 1, 25), 3), v3(0, 0, 0), 24,
-               (float)fmin(height - 1, 25), r, 41);
+        if (climate == BOILING_AIR)
+            sprite(b, SPR_BUBBLE, v3(-20, .1, 3), v3(0, 0, 0), 24, 2, r, 41);
+        else if (climate != FROZEN_RUNOFF)
+            sprite(b, SPR_RAIN, v3(-20, fmin(height - 1, 25), 3), v3(0, 0, 0), 24,
+                   (float)fmin(height - 1, 25), r, 41);
     }
-    if (climate == STEAM_LEAK || climate == RIME_AIR) {
+    if (climate == STEAM_LEAK || climate == RIME_AIR || climate == PRESSURE_AIR ||
+        climate == BOILING_AIR) {
         box(b, v3(7, .4, 18), v3(1, .8, 1), metal, 0, true);
         sprite(b, SPR_STEAM, v3(7, 1, 18), v3(0, 0, 0), 3, 7, r, 42);
     }
@@ -306,10 +318,15 @@ void habitat_build(Builder *b, const Room *r) {
         for (int i = 0; i < 4; i++)
             sprite(b, SPR_FUNGUS, v3(-28 + i * 3, 1, 7), v3(0, 0, -1), 2, 2, r, 43 + i);
     }
-    if (climate != STILL_AIR) {
+    if (climate == HEAT_HAZE || climate == COLD_CLEAR || climate == FROZEN_RUNOFF) {
+        for (int i = 0; i < 4; i++)
+            sprite(b, climate == HEAT_HAZE ? SPR_ASH : SPR_CRYSTAL,
+                   v3(-28 + i * 3, .045, 3), v3(0, 1, 0), 1.6f, 2.4f, r, 80 + i);
+    } else if (climate != STILL_AIR) {
         sprite(b, SPR_MIST, v3(0, .7, 16), v3(0, 0, 0), 18, 2, r, 48);
-        sprite(b, climate == EMBER_AIR ? SPR_RAIN : SPR_MOTE, v3(0, 9, 12), v3(0, 0, 0), 25, 8, r,
-               49);
+        sprite(b, climate == EMBER_AIR ? SPR_RAIN : climate == ASH_AIR ? SPR_ASH
+                   : climate == ICE_SHARDS ? SPR_CRYSTAL : SPR_MOTE,
+               v3(0, 9, 12), v3(0, 0, 0), 25, 8, r, 49);
     }
     double banner_top = fmin(height - 2, 10.5);
     box(b, v3(6, (banner_top + height) * .5, 15), v3(.08, height - banner_top, .08), metal, 0,

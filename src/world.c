@@ -2,6 +2,7 @@
 #include "habitat.h"
 #include "exterior.h"
 #include "campaign.h"
+#include "encounters.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -697,6 +698,8 @@ static void populate(World *w, Room *r) {
     }
     if (w->generator >= 7)
         campaign_populate(w, r);
+    if (w->generator >= 11)
+        encounter_populate(w, r);
 }
 unsigned world_stream(World *w, unsigned budget) {
     w->last_work = 0;
@@ -922,6 +925,20 @@ void world_kill(World *w, Room *r, int i) {
         return;
     r->enemies[i].alive = false;
     w->records[r->record].killed |= UINT32_C(1) << i;
+}
+
+uint32_t world_local_state(const World *w, const Room *r) {
+    return r && r->record != SIZE_MAX ? w->records[r->record].local : 0;
+}
+bool world_mark_local(World *w, Room *r, uint32_t bits) {
+    if (!r || w->generator < 11 || bits >= 64)
+        return false;
+    size_t index = record_for(w, r->cell, true);
+    if (index == SIZE_MAX || w->failed)
+        return false;
+    r->record = index;
+    w->records[index].local |= bits;
+    return true;
 }
 
 void world_collect(World *w, Room *r, int pickup) {

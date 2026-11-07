@@ -126,7 +126,7 @@ static void lift(Game *g) {
     CHECK(!p->lift_active && p->pos.sector.y == 0 && p->arrival_time > 5);
     CHECK(p->yaw == yaw && p->pitch == pitch);
     CHECK(game_save(g, "guidance.sav") && game_load(g, "guidance.sav"));
-    CHECK(g->world.generator == 10 && !p->lift_latched && !p->navigation.kind);
+    CHECK(g->world.generator == SC_GENERATOR_VERSION && !p->lift_latched && !p->navigation.kind);
     remove("guidance.sav");
     puts("PASS held lift input cannot chain rides; release, return, camera and save compatibility");
 }

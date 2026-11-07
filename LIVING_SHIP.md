@@ -1,4 +1,4 @@
-New ships use generator 10. Press **N**, then **Enter**, to begin one with fresh characters. Existing generator 3–9 expeditions keep their layouts, encounters and progress; save format remains 11.
+New ships use generator 11. Press **N**, then **Enter**, to begin one with fresh characters. Existing generator 3–10 expeditions keep their layouts, encounters and progress; save format is 12. [P1](REGIONAL_ENCOUNTERS.md) extends the generator-10 architecture described below with regional weather, encounter pacing, alien behavior and local actions.
 
 The expanded milestone 3 links architecture, environmental evidence and inhabitants. It adds eight large footprints alongside the ordinary rooms: processional vaults, long galleries, turbine canyons, bent arcades, branching concourses, horseshoe galleries, reservoir halls and hanging gardens. Footprints use three to six occupied tiles, with some spanning 276 metres horizontally. Bent and branching forms contain real neighboring rooms in their missing tiles.
 

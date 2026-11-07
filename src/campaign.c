@@ -166,7 +166,7 @@ CampaignReward campaign_reward(uint32_t seed, unsigned id, unsigned choice) {
                                                 : family == 4 ? 3
                                                               : 0)};
 }
-static bool owns(const Game *g, int player, CampaignReward reward) {
+bool campaign_owns(const Game *g, int player, CampaignReward reward) {
     const CampaignProfile *c = &g->campaign.profiles[player];
     unsigned mask = reward.kind == REWARD_GUN     ? g->players[player].weapons
                     : reward.kind == REWARD_POWER ? c->powers
@@ -182,20 +182,12 @@ void campaign_reward_name(const Game *g, int player, unsigned id, unsigned choic
                        : r.kind == REWARD_RIG   ? (r.item == MECH ? "FOLD MECH" : "FOLD WAGON")
                                                 : campaign_module_name(r.item);
     snprintf(text, size, "%s%s", name,
-             owns(g, player, r) ? " / OWNED: +2 POINTS +100 SALVAGE" : "");
+             campaign_owns(g, player, r) ? " / OWNED: +2 POINTS +100 SALVAGE" : "");
 }
-bool campaign_choose(Game *g, int player, unsigned choice) {
-    if (!g->campaign.version || player < 0 || player >= g->player_count || choice < 1 || choice > 3)
-        return false;
-    Campaign *c = &g->campaign;
-    unsigned id = c->choice[player] - 1;
-    CampaignProfile *build = &c->profiles[player];
-    if (id >= SC_GUARDIANS || !(c->defeated & (1u << id)) || !(c->eligible[id] & (1u << player)) ||
-        (build->claimed & (1u << id)))
-        return false;
+void campaign_grant(Game *g, int player, CampaignReward r) {
+    CampaignProfile *build = &g->campaign.profiles[player];
     Player *p = &g->players[player];
-    CampaignReward r = campaign_reward(g->world.seed, id, choice - 1);
-    if (owns(g, player, r)) {
+    if (campaign_owns(g, player, r)) {
         p->points = (uint32_t)fmin(1000, p->points + 2);
         p->credits += 100;
     } else if (r.kind == REWARD_GUN) {
@@ -218,6 +210,20 @@ bool campaign_choose(Game *g, int player, unsigned choice) {
         build->modules |= 1u << (r.item - 1);
         build->module = r.item;
     }
+    g->dirty = true;
+}
+bool campaign_choose(Game *g, int player, unsigned choice) {
+    if (!g->campaign.version || player < 0 || player >= g->player_count || choice < 1 || choice > 3)
+        return false;
+    Campaign *c = &g->campaign;
+    unsigned id = c->choice[player] - 1;
+    CampaignProfile *build = &c->profiles[player];
+    if (id >= SC_GUARDIANS || !(c->defeated & (1u << id)) || !(c->eligible[id] & (1u << player)) ||
+        (build->claimed & (1u << id)))
+        return false;
+    CampaignReward reward = campaign_reward(g->world.seed, id, choice - 1);
+    campaign_grant(g, player, reward);
+    game_reward_drill(g, player, reward, campaign_site(id));
     build->claimed |= 1u << id;
     c->choice[player] = 0;
     g->dirty = true;

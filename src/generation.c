@@ -1,5 +1,6 @@
 #include "world.h"
 #include "habitat.h"
+#include "encounters.h"
 #include "campaign.h"
 #include <string.h>
 #include <stdlib.h>
@@ -381,6 +382,9 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
     if (generator >= 10)
         for (int i = 0; i < p->count; i++)
             habitat_plan(seed, &p->rooms[i]);
+    if (generator >= 11)
+        for (int i = 0; i < p->count; i++)
+            encounter_plan(seed, &p->rooms[i]);
 }
 RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell c) {
     RegionPlan p;
@@ -443,10 +447,12 @@ uint32_t world_fingerprint_version(uint32_t seed, uint32_t generator, Cell regio
                              r->habitat.volume,
                              r->habitat.atmosphere,
                              r->habitat.tale,
-                             r->habitat.ecology};
+                             r->habitat.ecology,
+                             r->habitat.pace};
         for (size_t j = 0; j < (generator == 3   ? 13
                                 : generator == 4 ? 17
                                 : generator < 10 ? 18
+                                : generator == 10 ? 24
                                                  : sizeof(values) / sizeof(values[0]));
              j++)
             for (int byte = 0; byte < 4; byte++) {

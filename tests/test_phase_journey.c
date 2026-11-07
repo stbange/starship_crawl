@@ -201,7 +201,8 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
                 Room *room = &g->world.rooms[r];
                 Enemy *enemy = &room->enemies[e];
                 int guardian = campaign_guardian(room->cell);
-                if (!enemy->alive || (guardian >= 0 && !g->campaign.attempts[guardian].active))
+                if (!enemy->alive || encounter_passive(room, e) ||
+                    (guardian >= 0 && !g->campaign.attempts[guardian].active))
                     continue;
                 Vec3 delta = vsub(enemy_center(enemy), player_eye(p));
                 double range = vlen(delta);

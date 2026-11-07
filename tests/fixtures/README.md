@@ -128,3 +128,23 @@ unmodified `ef568f5` core before generator 10. The save has seed 713, XP 17 and
 29 salvage. Twenty rows contain seed/cell, semantic geometry hash and population
 kind/position hash. `living_ship` verifies them exactly; never regenerate them
 from the new generator.
+
+
+`generator-v10-format11.sav` and `generator-v10-geometry.txt` were captured from
+unmodified main `b2323b3e` before P1 code changes. The save has seed 713, XP 17 and
+29 salvage. Twenty rows contain seed/cell, plan, geometry, enemy kind/position and
+sprite kind/position fingerprints. These immutable references verify generator-10
+retention and format-11 to format-12 migration.
+
+`regional-expedition.sav` was produced by the generator-11
+`sc_phase_journey --fixtures /tmp/p1-earned` run (its `phase-unbound.sav`), with
+ordinary movement, combat, upgrades and guardian reward claims. The full run
+completed extraction after 578.6 simulated seconds, 38 kills and zero deaths;
+this checkpoint precedes extraction. It is rank 7 with damage attribute 10 and
+all four boundaries open. `sc_regional_journey --prepare` loads it and walks to
+relay `(13,-3,5)`, saving `regional-relay.sav` before activation. It fights with
+the starter carbine, claims the earned Prism Lance, then walks to `(12,-3,8)` and
+saves `regional-comparison.sav`. These format-12 checkpoints use no position,
+health, inventory, damage or enemy injection. Unit fixtures and saving-disabled
+inspection scenes are separate. Normal tests read these played checkpoints;
+regeneration requires the explicit `--prepare` command.

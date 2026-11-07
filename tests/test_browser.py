@@ -85,7 +85,7 @@ def run():
             page.goto(base + "?seed=713")
             wait_ready(page)
             assert state(page)["players"] == 1
-            assert state(page)["generator"] == 10
+            assert state(page)["generator"] == 11
             native = Path(os.environ.get("SC_CORE_TEST", str(ROOT / "build" / "sc_tests")))
             assert native.is_file(), "Build sc_tests or set SC_CORE_TEST for native/WASM generation parity"
             probes = json.loads(subprocess.check_output([str(native), "--fingerprints"]))
@@ -272,7 +272,7 @@ def run():
             assert not errors, errors
             mobile.close()
             browser.close()
-            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, eleven interiors, first mission and rewarded armor upgrade, weapon cycling, journal, v10 reload, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
+            print("PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, eleven interiors, first mission and rewarded armor upgrade, weapon cycling, journal, v11 reload, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize")
     finally:
         server.shutdown()
         server.server_close()

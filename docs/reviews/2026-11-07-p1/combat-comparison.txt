@@ -1,0 +1,6 @@
+REGIONAL profile=1 gun=0 cell=13,-3,5 seconds=2.25 kills=4 deaths=0 shots=5 damage=0.00 min_energy=100.00 disrupted_frames=27 recoveries=0
+REGIONAL profile=1 gun=0 cell=12,-3,8 seconds=2.10 kills=4 deaths=0 shots=5 damage=0.00 min_energy=100.00 disrupted_frames=28 recoveries=0
+REGIONAL profile=1 gun=17 cell=12,-3,8 seconds=2.00 kills=4 deaths=0 shots=6 damage=0.00 min_energy=82.00 disrupted_frames=89 recoveries=0
+REGIONAL profile=2 gun=0 cell=12,-3,8 seconds=3.27 kills=4 deaths=0 shots=6 damage=0.00 min_energy=100.00 disrupted_frames=41 recoveries=0
+REGIONAL profile=2 gun=17 cell=12,-3,8 seconds=4.03 kills=4 deaths=0 shots=9 damage=0.00 min_energy=81.00 disrupted_frames=183 recoveries=0
+PASS regional earned-tool journeys

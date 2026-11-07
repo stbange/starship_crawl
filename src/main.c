@@ -636,6 +636,48 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              nav->kind, nav->next.x, nav->next.y, nav->next.z, nav->point.x, nav->point.y,
              nav->point.z, nav->searched, p->lift_latched ? "true" : "false", p->arrival_time,
              app.game.players[1].navigation.kind);
+    used = strlen(result) - 1;
+    Room *local = world_find(&app.game.world, world_cell(feet));
+    unsigned living = 0, behaviors = 0, motions = 0;
+    if (local)
+        for (int i = 0; i < local->enemy_count; i++) {
+            const Enemy *e = &local->enemies[i];
+            living += e->alive;
+            if (e->alive) {
+                behaviors |= 1u << e->behavior;
+                motions |= 1u << e->motion;
+            }
+        }
+    char offer[120] = "";
+    if (local && local->habitat.pace == PACE_FRONTIER)
+        encounter_reward_name(&app.game, 0, local, offer, sizeof(offer));
+    snprintf(result + used, sizeof(result) - used,
+             ",\"pace\":%u,\"local_state\":%u,\"frontier_active\":%s,\"frontier_living\":%u,"
+             "\"frontier_core\":%.2f,\"frontier_attacker\":%u,\"frontier_disrupt\":%.3f,"
+             "\"alien_behaviors\":%u,\"alien_motions\":%u,\"frontier_offer\":\"%s\","
+             "\"drill_time\":%.2f,\"drill_complete\":%s}",
+             local ? local->habitat.pace : 0, world_local_state(&app.game.world, local),
+             local && local->frontier_active ? "true" : "false", living,
+             local && local->enemy_count ? local->enemies[0].health : 0,
+             local ? local->frontier_attacker : 0, local ? local->frontier_disrupt : 0,
+             behaviors, motions, offer, app.game.drills[0].time,
+             app.game.drills[0].complete ? "true" : "false");
+    used = strlen(result) - 1;
+    Vec3 console = local ? encounter_console(local) : v3(0, 0, 0);
+    snprintf(result + used, sizeof(result) - used,
+             ",\"encounter_console\":[%.3f,%.3f,%.3f],\"regional_enemies\":[",
+             console.x, console.y, console.z);
+    if (local && local->habitat.pace == PACE_FRONTIER)
+        for (int i = 0; i < 4; i++) {
+            const Enemy *e = &local->enemies[i];
+            Vec3 at = enemy_center(e);
+            used = strlen(result);
+            snprintf(result + used, sizeof(result) - used,
+                     "%s{\"at\":[%.3f,%.3f,%.3f],\"alive\":%s,\"motion\":%u,\"health\":%.2f}",
+                     i ? "," : "", at.x, at.y, at.z, e->alive ? "true" : "false", e->motion, e->health);
+        }
+    used = strlen(result);
+    snprintf(result + used, sizeof(result) - used, "]}");
     return result;
 }
 static void audio_frame(void) {
@@ -1642,7 +1684,7 @@ int main(int argc, char **argv) {
                  "encounter|shelter|mech|wagon|luxury|"
                  "bridge|lab|"
                  "cargo|"
-                 "cryonics|botany|tentacles\nSolo by default. F2 "
+                 "cryonics|botany|tentacles|relay|nest|local0..7|biome0..13\nSolo by default. F2 "
                  "explicitly "
                  "toggles local "
                  "split-screen.");
@@ -1711,6 +1753,8 @@ int main(int argc, char **argv) {
     }
     SDL_free(pref);
     if (scene) {
+        bool encounter_scene = !strcmp(scene, "nest") || !strcmp(scene, "relay") ||
+                               !strncmp(scene, "local", 5);
         bool habitat_scene = !strncmp(scene, "biome", 5) || !strncmp(scene, "volume", 6) ||
                              !strncmp(scene, "shape", 5) || !strcmp(scene, "tentacles");
         bool traversal_scene =
@@ -1720,7 +1764,7 @@ int main(int argc, char **argv) {
                               !strcmp(scene, "hull");
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
-        if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene && !habitat_scene) {
+        if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene && !habitat_scene && !encounter_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -1878,6 +1922,39 @@ int main(int argc, char **argv) {
             app.game.world.open_layer = 0;
             app.no_save = true;
             app.inspect_tentacles = !strcmp(scene, "tentacles");
+        }
+        if (encounter_scene) {
+            bool found = false;
+            RoomSpec selected_room = {0};
+            bool local_scene = !strncmp(scene, "local", 5);
+            for (int y = -3; y <= 3 && !found; y++)
+                for (int z = 1; z <= 5 && !found; z++)
+                    for (int x = -5; x <= 5 && !found; x++) {
+                        RegionPlan plan;
+                        world_plan(seed, (Cell){x, y, z}, &plan);
+                        for (int i = 0; i < plan.count && !found; i++) {
+                            RoomSpec a = plan.rooms[i];
+                            bool match = local_scene
+                                ? (a.habitat.pace == PACE_QUIET || a.habitat.pace == PACE_TRACE) &&
+                                      a.habitat.tale == (unsigned)atoi(scene + 5)
+                                : a.habitat.pace == PACE_FRONTIER &&
+                                  (a.habitat.ecology == MECHANICAL) == !strcmp(scene, "relay");
+                            if (match && a.height >= 5 && a.width >= 40 && !a.habitat.volume) {
+                                selected_room = a;
+                                c = a.cell;
+                                found = true;
+                            }
+                        }
+                    }
+            Player *p = &app.game.players[0];
+            p->pos = position_from(vadd(world_center(c),
+                local_scene ? v3(selected_room.hash & 1 ? 18 : -18, .02, 2) : v3(0, .02, 0)));
+            p->checkpoint = p->pos;
+            p->yaw = 0;
+            p->pitch = -.03;
+            app.game.campaign = (Campaign){0};
+            app.game.world.open_layer = 0;
+            app.no_save = true;
         }
         if (traversal_scene) {
             Player *p = &app.game.players[0];

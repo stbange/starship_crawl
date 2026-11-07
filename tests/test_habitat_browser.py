@@ -4,6 +4,7 @@ import base64
 from functools import partial
 from http.server import ThreadingHTTPServer
 import os
+import math
 from pathlib import Path
 import threading
 import traceback
@@ -14,6 +15,23 @@ S = "JSON.parse(Module.ccall('sc_web_state','string',[],[]))"
 
 def expect(page, condition, **kwargs):
     wait_for(page, f"(() => {{ const s={S}; return {condition}; }})()", **kwargs)
+
+def turn_from_growth(page):
+    # Inspection places the camera looking into a real growth cluster. Fold
+    # equipment needs clear floor; turn toward the room using actual mouse input.
+    target = state(page)['yaw'] + math.pi
+    cursor = [640, 360]
+    page.mouse.move(*cursor)
+    for _ in range(8):
+        current = state(page)
+        delta = target - current['yaw']
+        delta = math.atan2(math.sin(delta), math.cos(delta))
+        if abs(delta) < .01:
+            return
+        cursor[0] += delta / .0023
+        page.mouse.move(*cursor)
+        expect(page, f"s.time > {current['time'] + .05}")
+    raise AssertionError(f"Cannot face clear floor: {state(page)}")
 
 def capture(page, name):
     path = ARTIFACTS / f'habitat-{name}.png'
@@ -54,13 +72,13 @@ def run():
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
             hashes = set()
-            tour = [(f'biome{i}', 'atmosphere', i) for i in range(7)] + [
+            tour = [(f'biome{i}', 'atmosphere', i) for i in range(14)] + [
                     ('volume1', 'volume', 1), ('volume2', 'volume', 2), ('shape4', 'form', 4), ('shape6', 'form', 6)]
             for scene, field, value in ([] if args.tentacles_only else tour):
                 page.goto(base + f'?seed=713&scene={scene}')
                 wait_ready(page)
                 s = state(page)
-                assert s['generator'] == 10 and s[field] == value and s['ready'] and not s['failed'], s
+                assert s['generator'] == 11 and s[field] == value and s['ready'] and not s['failed'], s
                 assert 0 < s['sprites'] <= 1536, s
                 start_play(page)
                 expect(page, f"s.time > {s['time'] + .4}")
@@ -96,6 +114,10 @@ def run():
             wait_ready(page)
             expect(page, 's.tentacles > 0 && s.tentacles <= 96 && s.tentacles2 === 0')
             start_play(page)
+            # This renderer-focused sandbox exposes ordinary Veil; keep the
+            # growing population from interrupting pause/view-isolation checks.
+            page.keyboard.press('v')
+            expect(page, 's.veil')
             before = state(page)
             still = capture(page, 'tentacles')
             expect(page, f"s.time > {before['time'] + 1.2}")
@@ -116,6 +138,7 @@ def run():
             assert state(page)['sprites2'] <= 1536
             assert state(page)['tentacles'] <= 96 and state(page)['tentacles2'] <= 96
             capture(page, 'split')
+            turn_from_growth(page)
             page.keyboard.press('r')
             expect(page, 's.shelter_deployed')
             page.keyboard.press('g')

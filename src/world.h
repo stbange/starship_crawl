@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 10u
+#define SC_GENERATOR_VERSION 11u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -66,6 +66,13 @@ typedef enum {
     RIME_AIR,
     EMBER_AIR,
     VOID_GLOW,
+    BOILING_AIR,
+    PRESSURE_AIR,
+    ASH_AIR,
+    HEAT_HAZE,
+    ICE_SHARDS,
+    FROZEN_RUNOFF,
+    COLD_CLEAR,
     ATMOSPHERES
 } AtmosphereKind;
 typedef enum {
@@ -80,10 +87,12 @@ typedef enum {
     LOCAL_TALES
 } LocalTale;
 typedef enum { FERAL, MECHANICAL, BROOD_NEST, CRYOPHILE, PHANTOM, SCAVENGER, ECOLOGIES } Ecology;
+typedef enum { PACE_SWARM, PACE_QUIET, PACE_TRACE, PACE_FRONTIER } RoomPace;
 typedef struct {
     uint16_t mask;        /* Four-bit rows relative to the owner; zero means a legacy rectangle. */
     uint8_t form, volume; /* 0 ordinary, 1 lower vault, 2 upper gallery. */
     uint8_t atmosphere, tale, ecology;
+    uint8_t pace; /* Generator 11: density and optional encounter grammar. */
 } Habitat;
 typedef struct {
     Cell cell;
@@ -110,9 +119,16 @@ typedef struct {
 } Box;
 typedef struct {
     Cell cell;
-    uint32_t killed, collected, systems;
+    uint32_t killed, collected, systems, local;
 } RoomRecord;
 enum { SYSTEM_POWER = 1, SYSTEM_BEACON = 2, SYSTEM_SILENCED = 4, SYSTEM_BLACKOUT = 8 };
+enum {
+    LOCAL_RESOLVED = 1, FRONTIER_CLEARED = 2,
+    FRONTIER_ELIGIBLE = 4, FRONTIER_CLAIMED = 16
+}; /* Eligible and claimed are two-bit player masks; format 12 appends this word. */
+typedef enum { ALIEN_NONE, ALIEN_PILGRIM, ALIEN_GAZER, ALIEN_SEAM, ALIEN_CONDUCTOR } AlienBehavior;
+typedef enum { MOTION_DORMANT, MOTION_ALERT, MOTION_APPROACH, MOTION_WARN,
+               MOTION_COMMIT, MOTION_RECOVER } AlienMotion;
 typedef struct {
     Position pos;
     float health, cooldown, flash;
@@ -120,6 +136,10 @@ typedef struct {
     Vec3 aim, normal, heading;
     uint8_t kind, id, last_player, allegiance, ally_owner, ecology;
     bool alive, climbing;
+    uint8_t behavior, motion;
+    float motion_time, stride, travel_speed, link_strain;
+    Vec3 body_heading, contacts[4];
+    bool attack_done;
 } Enemy;
 typedef struct {
     Vec3 pos;
@@ -146,6 +166,9 @@ typedef enum {
     SPR_PAPERS,
     SPR_GLYPH,
     SPR_SPARK,
+    SPR_ASH,
+    SPR_CRYSTAL,
+    SPR_BUBBLE,
     SPR_SPRITES
 } SpriteKind;
 typedef struct {
@@ -175,6 +198,9 @@ typedef struct {
     bool ready;
     int enemy_count;
     Enemy enemies[SC_MAX_ENEMIES];
+    bool frontier_active;
+    uint8_t frontier_attacker;
+    float frontier_timer, frontier_disrupt;
 } Room;
 /* Geometry is relative to its integer chunk coordinate, never a distant camera. */
 /* A thin sloped slab, optionally quantized into 32 physical stair treads. */
@@ -275,6 +301,8 @@ double world_raycast(const World *w, Vec3 origin, Vec3 direction, double limit);
 void world_kill(World *w, Room *room, int enemy);
 uint32_t world_systems(const World *w, Cell cell);
 bool world_set_systems(World *w, Cell cell, uint32_t systems);
+uint32_t world_local_state(const World *w, const Room *room);
+bool world_mark_local(World *w, Room *room, uint32_t bits);
 void world_collect(World *w, Room *room, int pickup);
 bool world_index_records(World *w);
 float world_lamp_power(uint32_t phase, double time);

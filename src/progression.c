@@ -114,6 +114,8 @@ void game_interact(Game *g, int player) {
         return;
     if (campaign_interact(g, player))
         return;
+    if (game_encounter_interact(g, player))
+        return;
     if (g->story.version) {
         game_story_interact(g, player);
         return;

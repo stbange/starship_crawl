@@ -518,10 +518,18 @@ static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double tim
                       Color flesh, float glow) {
     EnemyBody body = sc_enemy_bodies[e->kind];
     int v = body.variant;
-    double gait = sin(time * 7 + e->id) * .13;
+    double gait = sin((e->behavior && e->alive ? e->stride * 4 : time * 7) + e->id) * .13;
     if (body.form == HUSK) {
         organ(r, p, v3(0, .15, 0), v3(.45, .65, .3), shell, glow);
-        organ(r, p, v3(0, .95, .04), v3(.28, .3, .26), flesh, glow);
+        BodyPose head = *p;
+        if (e->behavior == ALIEN_PILGRIM && e->alive) {
+            head.forward = vnorm(e->heading);
+            head.right = vnorm(vcross(head.up, head.forward));
+            organ(r, &head, v3(0, .32, .12), v3(.28, .25, .26), flesh, glow);
+            for (int side = -1; side <= 1; side += 2)
+                organ(r, &head, v3(side * .1, 1, .29), v3(.045, .055, .04), rgb(.7f, .5f, .28f), .8f);
+        }
+        organ(r, &head, v3(0, .95, .04), v3(.28, .3, .26), flesh, glow);
         for (int side = -1; side <= 1; side += 2) {
             bone(r, p, v3(side * .22, -.2, 0), v3(side * .26, -.6, gait * side), .14, shell, glow);
             bone(r, p, v3(side * .38, .5, 0), v3(side * .65, -.25, -gait * side), .11, flesh, glow);
@@ -537,15 +545,24 @@ static void body_form(Renderer *r, const Enemy *e, const BodyPose *p, double tim
         if (v == 4)
             organ(r, p, v3(0, .65, -.4), v3(.5, .9, .2), rgb(.25f, .19f, .12f), glow);
     } else if (body.form == GAZER) {
-        organ(r, p, v3(0, .25, 0), v3(.68, .68, .6), shell, glow);
-        organ(r, p, v3(0, .3, .55), v3(.36, .36, .1), rgb(.5f, .65f, .35f), .65f);
-        organ(r, p, v3(0, .3, .66), v3(.09, .24, .05), rgb(.05f, .07f, .03f), .1f);
+        BodyPose swing = *p, eye = *p;
+        if (e->behavior == ALIEN_GAZER && e->alive) {
+            double angle = sin(time * 1.3 + e->id) * .34;
+            swing.up = vadd(vmul(p->up, cos(angle)), vmul(p->right, sin(angle)));
+            swing.right = vadd(vmul(p->right, cos(angle)), vmul(p->up, -sin(angle)));
+            eye.up = v3(0, 1, 0);
+            eye.forward = vnorm(e->heading);
+            eye.right = vnorm(vcross(eye.up, eye.forward));
+        }
+        organ(r, &swing, v3(0, .25, 0), v3(.68, .68, .6), shell, glow);
+        organ(r, &eye, v3(0, .3, .55), v3(.36, .36, .1), rgb(.5f, .65f, .35f), .65f);
+        organ(r, &eye, v3(0, .3, .66), v3(e->windup > 0 ? .035 : .09, .24, .05), rgb(.05f, .07f, .03f), .1f);
         int arms = v == 4 ? 8 : 3 + v;
         for (int i = 0; i < arms; i++) {
             double a = i * SC_PI * 2 / arms;
-            Vec3 root = anatomical(p, v3(cos(a) * .4, 0, sin(a) * .4));
-            Vec3 bend = vadd(vmul(p->right, cos(a)), vmul(p->forward, sin(a)));
-            tentacle_mesh(r, root, vmul(p->up, -1), bend, (1.25 + v * .13) * p->size,
+            Vec3 root = anatomical(&swing, v3(cos(a) * .4, 0, sin(a) * .4));
+            Vec3 bend = vadd(vmul(swing.right, cos(a)), vmul(swing.forward, sin(a)));
+            tentacle_mesh(r, root, vmul(swing.up, -1), bend, (1.25 + v * .13) * p->size,
                           .105 * p->size, i * 1.7 + e->id, time * 1.5, shell, flesh,
                           rgb(.38f, .55f, .23f), glow, 8, true);
             if (v == 1)
@@ -730,7 +747,8 @@ static void hazard_mesh(Renderer *r, const DeathHazard *h) {
 }
 static void creature(Renderer *r, const Enemy *e, double time, double distance) {
     Vec3 center = enemy_center(e), up = e->climbing ? e->normal : v3(0, 1, 0);
-    Vec3 forward = vsub(e->heading, vmul(up, vdot(e->heading, up)));
+    Vec3 heading = e->behavior ? e->body_heading : e->heading;
+    Vec3 forward = vsub(heading, vmul(up, vdot(heading, up)));
     if (vlen(forward) < .1)
         forward = fabs(up.z) < .9 ? v3(0, 0, 1) : v3(1, 0, 0);
     forward = vnorm(forward);
@@ -748,6 +766,16 @@ static void creature(Renderer *r, const Enemy *e, double time, double distance) 
     float glow = e->flash > 0 ? .25f : -1;
     BodyPose pose = {center, right, up, forward, size};
     body_form(r, e, &pose, time, shell, flesh, glow);
+    if (e->behavior == ALIEN_SEAM && e->climbing && distance < 50)
+        for (int i = 0; i < 4; i++) {
+            Vec3 contact = e->contacts[i];
+            if (vlen(contact) < .01 || vlen(vsub(contact, center)) > 3)
+                continue;
+            Vec3 root = vadd(center, vmul(right, i & 1 ? .3 : -.3));
+            Vec3 joint = vadd(vmul(vadd(root, contact), .5), vmul(up, .5));
+            tube(r, root, joint, .09, .045, shell, glow);
+            tube(r, joint, contact, .045, .018, flesh, glow);
+        }
     if ((def->flags & ARMORED) && sc_enemy_bodies[e->kind].form != ROBOT)
         blob(r, vadd(center, vmul(up, size * .35)), vmul(right, size * .86), vmul(up, size * .4),
              vmul(forward, size * .95), rgb(.25f, .24f, .21f), glow);
@@ -781,7 +809,7 @@ static void creature(Renderer *r, const Enemy *e, double time, double distance) 
              .9f);
     }
     if (e->windup > 0) {
-        double charge = 1 - e->windup / .8, radius = .09 + .25 * charge;
+        double charge = clampd(1 - e->windup / 1.05, 0, 1), radius = .09 + .25 * charge;
         octahedron(r, vadd(face, vmul(forward, .26)), radius, rgb(.32f, .82f, .36f), 2.4f);
     }
 }
@@ -1417,6 +1445,7 @@ static void frame(Renderer *r, float x, float y, float w, float h, Color c) {
 }
 
 #include "render_navigation.inc"
+#include "render_encounters.inc"
 
 static void map_marker(Renderer *r, const MapView *map, Vec3 point, float x, float y, float tile,
                        Color color, bool edge) {
@@ -1462,6 +1491,13 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
                 int id = campaign_guardian(map.rooms[at].cell);
                 frame(r, left + tile * .3f, top + tile * .3f, tile * .4f, tile * .4f,
                       g->campaign.defeated & (1u << id) ? mint : gold);
+            }
+            if (!locked && map.rooms[at].habitat.pace == PACE_FRONTIER &&
+                cell_equal(mapped, map.rooms[at].cell)) {
+                frame(r, left + tile * .38f, top + tile * .38f, tile * .24f, tile * .24f,
+                      rgb(.9f, .9f, .8f));
+                if (large)
+                    text_at(r, left + tile * .42f, top + tile * .25f, .7f * text_scale, "+", mint);
             }
             if (map.rooms[at].landmark) {
                 /* Pink corner brackets distinguish discoveries from gold goals. */
@@ -1542,6 +1578,8 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
         text_at(r, x, y + size + 49, .85f * text_scale,
                 "GREEN YOU / CYAN NEXT / GOLD GOAL / VIOLET SHELTER / PINK DISCOVERY / TEAL WARD",
                 wall);
+        if (g->world.generator >= 11)
+            text_at(r, x, y + size + 65, .85f * text_scale, "WHITE BEACON / OPTIONAL CHALLENGE", wall);
     }
 }
 static void story_journal(Renderer *r, const Game *g, int player, float w, float h) {
@@ -1805,6 +1843,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
             snprintf(label, sizeof(label), "%s / %.0f",
                      campaign_guardian_name(g->world.seed, (unsigned)aimed_guardian),
                      aimed->health);
+        else if (aimed->behavior == ALIEN_CONDUCTOR)
+            snprintf(label, sizeof(label), "SUPPORT / BREAK THE LINKS / %.0f", aimed->health);
         else
             snprintf(label, sizeof(label), "%s / %s %s / %.0f", sc_enemies[aimed->kind].name,
                      sc_body_names[body.form], sc_body_variants[body.form][body.variant],
@@ -1833,6 +1873,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     if (!debug)
         navigation_hud(r, g, player, w, h, s, touch);
+    encounter_hud(r, g, player, w, h, s, touch);
     Vec3 lift = world_lift(cell), d = vsub(position_absolute(p->pos), lift);
     d.y = 0;
     if (g->world.generator >= 9 && !p->sheltered && !p->lift_active &&
@@ -1947,7 +1988,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         centered(r, w * .5f, h - 181 * s, .85f * s, label, gold);
     }
     if (g->message_time > 0 && !paused)
-        centered(r, w * .5f, g->campaign.version ? fmaxf(174 * s, h * .33f) : h * .19f, 1.2f * s,
+        centered(r, w * .5f, g->campaign.version ? fmaxf(174 * s, h * .33f) : h * .19f,
+                 fminf(1.2f * s, (w - 24 * s) / (6 * fmaxf(1, (float)strlen(g->message)))),
                  g->message, gold);
     if (!p->sheltered && position_absolute(p->pos).z < 0 && !paused)
         centered(r, w * .5f, h * .72f, 1.2f * s,
@@ -2234,6 +2276,8 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
             campaign_scene(r, g, p);
             if (!outside)
                 navigation_scene(r, g, p);
+            if (!outside)
+                encounter_scene(r, g, p);
         }
         flush(r);
         r->sprite_drawn[p] = 0;

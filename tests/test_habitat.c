@@ -106,7 +106,7 @@ static void plans(void) {
             for (int i = 0; i < 16; i++)
                 CHECK(seen[i] == 1);
         }
-    CHECK(forms == 511 && climates == 127 && tales == 255 && ecologies == 63 && volumes == 7);
+    CHECK(forms == 511 && climates == (1u << ATMOSPHERES) - 1 && tales == 255 && ecologies == 63 && volumes == 7);
     CHECK(!habitat_owns((Cell){0}, 2, 2, 0x13, (Cell){1, 0, 1}));
     CHECK(habitat_owns((Cell){0}, 2, 2, 0, (Cell){1, 0, 1}));
     CHECK(!habitat_owns((Cell){0}, 2, 2, 0, (Cell){0, 1, 0}));
@@ -235,7 +235,7 @@ static void geometry(void) {
         world_destroy(a);
         world_destroy(b);
     }
-    CHECK(forms == 511 && climates == 127 && tales == 255 && sprites == (1u << SPR_SPRITES) - 1);
+    CHECK(forms == 511 && climates == (1u << ATMOSPHERES) - 1 && tales == 255 && sprites == (1u << SPR_SPRITES) - 1);
     free(a);
     free(b);
     printf("PASS surface support, open vaults/guard rails, reproducible detail, spawn fit; maximum "
@@ -376,7 +376,7 @@ static void journey(void) {
         CHECK(campaign_valid(&g->campaign, g->players, &g->world));
         CHECK(game_save(g, "habitat-journey.sav"));
         CHECK(game_load(g, "habitat-journey.sav"));
-        CHECK(g->world.generator == 10);
+        CHECK(g->world.generator == SC_GENERATOR_VERSION);
         remove("habitat-journey.sav");
     }
     destroy(g);

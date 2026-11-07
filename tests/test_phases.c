@@ -502,7 +502,7 @@ static void malformed_appendix(void) {
     CHECK(original && data);
     CHECK(fread(original, 1, (size_t)length, f) == (size_t)length);
     fclose(f);
-    /* The appendix follows the unchanged version-10 data and precedes FNV32. */
+    /* Format 12 appends one local-state word per room after the campaign. */
     const unsigned offsets[] = {
         0, 4, 8, 12 + 8 * 12, 12 + 8 * 12 + 4, 120, 124, 128, 132, 136, 140, 144, 148, 152, 156};
     const uint32_t values[] = {2, 0, 10, 4, 2, 16, 4, 16, 511, 20, 5, 0, 5, 3, 5};
@@ -510,7 +510,7 @@ static void malformed_appendix(void) {
     CHECK(before); /* A world snapshot exceeds the default Windows stack. */
     for (unsigned n = 0; n < sizeof(offsets) / sizeof(offsets[0]); n++) {
         memcpy(data, original, (size_t)length);
-        size_t at = (size_t)length - 204 + offsets[n];
+        size_t at = (size_t)length - 204 - g->world.record_count * 4 + offsets[n];
         for (int b = 0; b < 4; b++)
             data[at + b] = (unsigned char)(values[n] >> (b * 8));
         uint32_t hash = 2166136261u;
@@ -541,12 +541,24 @@ static void phase_boundaries(void) {
     Game *g = fresh(713);
     Game *open = fresh(713);
     /* Streaming before a boundary opens must preserve encounter spawn positions. */
-    g->players[0].pos = open->players[0].pos = position_from(world_center((Cell){4, 0, 0}));
+    Cell population_cell = {4, 0, 0};
+    for (int z = 0; z < 12; z++) {
+        RegionPlan plan;
+        world_plan(g->world.seed, world_region((Cell){4, 0, z}), &plan);
+        for (int i = 0; i < plan.count; i++)
+            if (plan.rooms[i].habitat.pace == PACE_SWARM &&
+                campaign_guardian(plan.rooms[i].cell) < 0) {
+                population_cell = plan.rooms[i].cell;
+                goto found_population;
+            }
+    }
+found_population:
+    g->players[0].pos = open->players[0].pos = position_from(world_center(population_cell));
     open->world.open_layer = 0;
     settle(g);
     settle(open);
-    Room *sealed_room = world_find(&g->world, (Cell){4, 0, 0});
-    Room *open_room = world_find(&open->world, (Cell){4, 0, 0});
+    Room *sealed_room = world_find(&g->world, population_cell);
+    Room *open_room = world_find(&open->world, population_cell);
     CHECK(sealed_room && open_room && sealed_room->enemy_count > 0 &&
           sealed_room->enemy_count == open_room->enemy_count);
     for (int i = 0; i < sealed_room->enemy_count; i++)

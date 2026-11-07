@@ -543,7 +543,21 @@ static void test_save_failure_safety(void) {
     remove(bad);
     destroy(g);
 }
+static void local_record_fault(void) {
+    Game *g = malloc(sizeof(*g));
+    CHECK(g);
+    game_init(g, 713);
+    g->players[0].pos = position_from(v3(0, .02, 24));
+    settle(g);
+    Room *r = world_find(&g->world, (Cell){0, 0, 0});
+    CHECK(r && r->record == SIZE_MAX);
+    sc_fail_allocation = 0;
+    CHECK(!world_mark_local(&g->world, r, LOCAL_RESOLVED));
+    CHECK(!world_local_state(&g->world, r) && g->world.record_count == 0);
+    destroy(g);
+}
 int main(void) {
+    local_record_fault();
     test_controls_and_resources();
     test_combat_and_movement();
     test_allocation_and_cache_failures();
