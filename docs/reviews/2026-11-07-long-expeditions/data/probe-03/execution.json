@@ -1,0 +1,10 @@
+{
+  "purpose": "diagnostic prefix replay, excluded from the 12 long-run totals",
+  "modification": "save_at at the first recovery; no changes to actions or simulation",
+  "driver_sha256": "878c7a2ac01d6cca73809bd48a89b0edf1151458925ee6fd7ce73a9773c699ed",
+  "instrumented_sha256": "14d7771927a362131352b0f57162bde0db23907920a53345155b8bda159ce8c7",
+  "run": 3,
+  "seconds": 1500,
+  "returncode": 0,
+  "wall_seconds": 42.62426243400114
+}

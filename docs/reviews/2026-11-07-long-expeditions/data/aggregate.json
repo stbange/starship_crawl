@@ -1,0 +1,38 @@
+{
+  "completed": 12,
+  "simulated_hours": 12.0,
+  "kills": 10910,
+  "deaths": 0,
+  "court_finale_seconds": [
+    2.117,
+    7.05,
+    5.367,
+    2.833,
+    7.0,
+    4.85,
+    2.733,
+    11.283,
+    3.733,
+    2.417,
+    5.3,
+    5.5
+  ],
+  "court_finale_damage": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    40.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "guardian_median_seconds": 13.392,
+  "optional_median_seconds": 2.966,
+  "all_checkpoints_valid": true,
+  "checkpoint_count": 268
+}

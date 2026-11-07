@@ -1,0 +1,18 @@
+{
+  "game_commit": "2bcba27396768744b3ffafcc4f4c86a404f091e1",
+  "binary_sha256": "af2d789b5decc4a55d90b54c27dce7cbe48381442dfdb963b63d1609f5e2da3a",
+  "driver_sha256": "878c7a2ac01d6cca73809bd48a89b0edf1151458925ee6fd7ce73a9773c699ed",
+  "library_sha256": "4816e62b71887f89eefc4e5d0466493f34e5d3ad58dd663d7083dd97d80d28fa",
+  "simulation_hz": 60,
+  "requested_simulated_seconds": 3600,
+  "parallel_processes": 2,
+  "command": [
+    "/tmp/sc-long-review",
+    "6",
+    "/workspace/starship_crawl/docs/reviews/2026-11-07-long-expeditions/data/run-06",
+    "3600"
+  ],
+  "started_utc": "2026-11-07T21:12:06.302823+00:00",
+  "returncode": 0,
+  "wall_seconds": 186.518
+}

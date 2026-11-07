@@ -1,0 +1,14 @@
+{
+  "purpose": "13th hour; paired recovery-controller comparison, retained separately from primary 12",
+  "modification": "two seconds of recovery: first back away, then strafe; normal controls only",
+  "game_commit": "2bcba27396768744b3ffafcc4f4c86a404f091e1",
+  "original_sha256": "878c7a2ac01d6cca73809bd48a89b0edf1151458925ee6fd7ce73a9773c699ed",
+  "variant_sha256": "2021858674b7bcb02177f462b95eecce0443a8619538d646563df69d78e2c101",
+  "binary_sha256": "9bf1b839b501b3798f10bb612b5344cc4ed9257b1ed48bf6a9f048f87eecb103",
+  "run": 9,
+  "requested_simulated_seconds": 3600,
+  "returncode": 0,
+  "wall_seconds": 159.132,
+  "identical_prefix_observations": 201,
+  "first_changed_input_seconds": 1776.283
+}

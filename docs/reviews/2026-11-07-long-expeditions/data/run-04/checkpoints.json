@@ -1,0 +1,1892 @@
+{
+  "changed-court.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 16,
+      "kills": 159,
+      "phase": 4,
+      "position": [
+        1.19317,
+        -63.99999,
+        145.95017
+      ],
+      "yaw": -1.52906,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": 0,
+      "order": 0,
+      "alien": 0,
+      "theme": 2,
+      "height": 36.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 4,
+      "country": 2,
+      "court": 1,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 172.0,
+      "armor": 172.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 55,
+      "points": 0,
+      "pickups": 30,
+      "owned_weapons": 259,
+      "guns": [
+        0,
+        8
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        11,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 8,
+      "focus": [
+        0.0,
+        -42.4,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "commission.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 14,
+      "kills": 121,
+      "phase": 4,
+      "position": [
+        576.27768,
+        -63.99999,
+        50.83473
+      ],
+      "yaw": -0.47103,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": 0,
+      "order": -2,
+      "alien": 0,
+      "theme": 3,
+      "height": 8.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 5,
+      "country": 3,
+      "court": 2,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 208.0,
+      "max_armor": 112.0,
+      "armor": 112.0,
+      "energy": 98.0,
+      "max_energy": 100.0,
+      "credits": 75,
+      "points": 0,
+      "pickups": 30,
+      "owned_weapons": 3,
+      "guns": [
+        0,
+        1
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        6,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 0,
+      "focus": [
+        576.0,
+        -54.0,
+        74.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 2,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "court-fight.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 15,
+      "kills": 132,
+      "phase": 4,
+      "position": [
+        1055.00599,
+        -63.99999,
+        145.95848
+      ],
+      "yaw": 1.49906,
+      "pitch": -0.03,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": 0,
+      "order": -3,
+      "alien": 0,
+      "theme": 2,
+      "height": 44.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 5,
+      "country": 2,
+      "court": 3,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 124.0,
+      "armor": 124.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 130,
+      "points": 0,
+      "pickups": 30,
+      "owned_weapons": 3,
+      "guns": [
+        0,
+        1
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        7,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 2,
+      "focus": [
+        1056.0,
+        -37.6,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 2,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "extraction.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 12,
+      "kills": 82,
+      "phase": 4,
+      "position": [
+        0.00082,
+        1e-05,
+        44.01249
+      ],
+      "yaw": -3.14078,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": 0,
+      "order": 0,
+      "alien": 0,
+      "theme": 0,
+      "height": 28.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 0,
+      "country": 0,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 170.0,
+      "shield": 170.0,
+      "max_armor": 64.0,
+      "armor": 64.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 490,
+      "points": 2,
+      "pickups": 22,
+      "owned_weapons": 3,
+      "guns": [
+        0,
+        1
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        2,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 0,
+      "focus": [
+        0.0,
+        16.8,
+        74.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "final.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 34,
+      "kills": 646,
+      "phase": 4,
+      "position": [
+        -52.55162,
+        -831.99999,
+        335.94466
+      ],
+      "yaw": 1.70407,
+      "pitch": 0.06863,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -3,
+      "order": 0,
+      "alien": 0,
+      "theme": 25,
+      "height": 56.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 4,
+      "country": 2,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 332.8,
+      "max_energy": 340.0,
+      "credits": 195,
+      "points": 0,
+      "pickups": 108,
+      "owned_weapons": 229667,
+      "guns": [
+        0,
+        5
+      ],
+      "owned_powers": 15,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        12,
+        12,
+        12,
+        8,
+        0,
+        12,
+        12,
+        0
+      ],
+      "reveal": 3,
+      "focus": [
+        -96.0,
+        -798.4,
+        362.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "form-1.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 24,
+      "kills": 338,
+      "phase": 4,
+      "position": [
+        -191.96542,
+        -319.99999,
+        383.97403
+      ],
+      "yaw": -0.16249,
+      "pitch": -0.0228,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -3,
+      "order": 0,
+      "alien": 0,
+      "theme": 19,
+      "height": 58.0,
+      "form": 1,
+      "volume": 2,
+      "weather": 11,
+      "country": 0,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 156.4,
+      "max_energy": 160.0,
+      "credits": 110,
+      "points": 1,
+      "pickups": 67,
+      "owned_weapons": 65795,
+      "guns": [
+        0,
+        16
+      ],
+      "owned_powers": 15,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        0,
+        12,
+        12,
+        0,
+        0,
+        12,
+        3,
+        0
+      ],
+      "reveal": 6,
+      "focus": [
+        -192.0,
+        -285.2,
+        266.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "form-2.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 13,
+      "kills": 109,
+      "phase": 4,
+      "position": [
+        479.98087,
+        -63.99999,
+        96.03126
+      ],
+      "yaw": 3.10219,
+      "pitch": -0.01676,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": 0,
+      "order": -1,
+      "alien": 0,
+      "theme": 3,
+      "height": 58.0,
+      "form": 2,
+      "volume": 0,
+      "weather": 5,
+      "country": 3,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 215.0,
+      "shield": 195.62,
+      "max_armor": 64.0,
+      "armor": 64.0,
+      "energy": 97.8,
+      "max_energy": 100.0,
+      "credits": 470,
+      "points": 1,
+      "pickups": 29,
+      "owned_weapons": 3,
+      "guns": [
+        0,
+        1
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        2,
+        11,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 1,
+      "focus": [
+        480.0,
+        -29.2,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 1,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "form-5.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 31,
+      "kills": 561,
+      "phase": 4,
+      "position": [
+        -144.04791,
+        -703.99999,
+        240.0
+      ],
+      "yaw": -1.5708,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -3,
+      "order": 0,
+      "alien": 0,
+      "theme": 2,
+      "height": 58.0,
+      "form": 5,
+      "volume": 0,
+      "weather": 11,
+      "country": 2,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 340.0,
+      "max_energy": 340.0,
+      "credits": 255,
+      "points": 0,
+      "pickups": 97,
+      "owned_weapons": 229635,
+      "guns": [
+        0,
+        15
+      ],
+      "owned_powers": 15,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        11,
+        12,
+        12,
+        0,
+        0,
+        12,
+        12,
+        0
+      ],
+      "reveal": 2,
+      "focus": [
+        -384.0,
+        -669.2,
+        266.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "form-6.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 24,
+      "kills": 352,
+      "phase": 4,
+      "position": [
+        48.01248,
+        -319.99999,
+        528.06704
+      ],
+      "yaw": 1.60452,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -3,
+      "order": 0,
+      "alien": 1,
+      "theme": 2,
+      "height": 58.0,
+      "form": 6,
+      "volume": 0,
+      "weather": 4,
+      "country": 0,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 200.0,
+      "max_energy": 200.0,
+      "credits": 95,
+      "points": 0,
+      "pickups": 70,
+      "owned_weapons": 196867,
+      "guns": [
+        0,
+        17
+      ],
+      "owned_powers": 15,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        0,
+        12,
+        12,
+        0,
+        0,
+        12,
+        5,
+        0
+      ],
+      "reveal": 2,
+      "focus": [
+        96.0,
+        -285.2,
+        554.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "form-7.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 17,
+      "kills": 165,
+      "phase": 4,
+      "position": [
+        -48.16573,
+        -127.99999,
+        143.91562
+      ],
+      "yaw": 1.48671,
+      "pitch": -0.02814,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -1,
+      "order": 0,
+      "alien": 0,
+      "theme": 22,
+      "height": 64.0,
+      "form": 7,
+      "volume": 1,
+      "weather": 5,
+      "country": 2,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 172.0,
+      "armor": 172.0,
+      "energy": 97.8,
+      "max_energy": 100.0,
+      "credits": 110,
+      "points": 1,
+      "pickups": 31,
+      "owned_weapons": 259,
+      "guns": [
+        0,
+        8
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        11,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 7,
+      "focus": [
+        -288.0,
+        -89.6,
+        74.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "form-8.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 9,
+      "kills": 52,
+      "phase": 4,
+      "position": [
+        1296.08655,
+        -63.99999,
+        143.92346
+      ],
+      "yaw": 1.53082,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 257,
+      "heat": 0,
+      "order": -3,
+      "alien": 0,
+      "theme": 26,
+      "height": 58.0,
+      "form": 8,
+      "volume": 2,
+      "weather": 4,
+      "country": 2,
+      "court": 0,
+      "max_health": 250.0,
+      "health": 250.0,
+      "max_shield": 140.0,
+      "shield": 140.0,
+      "max_armor": 64.0,
+      "armor": 64.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 95,
+      "points": 0,
+      "pickups": 18,
+      "owned_weapons": 3,
+      "guns": [
+        0,
+        1
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        6,
+        0,
+        2,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 8,
+      "focus": [
+        1248.0,
+        -29.2,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "guardian-fight.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 9,
+      "kills": 49,
+      "phase": 3,
+      "position": [
+        1248.0,
+        0.02,
+        139.0
+      ],
+      "yaw": 1.64483,
+      "pitch": -0.03,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 257,
+      "heat": 0,
+      "order": -3,
+      "alien": 0,
+      "theme": 6,
+      "height": 58.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 5,
+      "country": 2,
+      "court": 0,
+      "max_health": 250.0,
+      "health": 250.0,
+      "max_shield": 140.0,
+      "shield": 140.0,
+      "max_armor": 40.0,
+      "armor": 40.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 85,
+      "points": 0,
+      "pickups": 16,
+      "owned_weapons": 3,
+      "guns": [
+        0,
+        1
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        10,
+        6,
+        0,
+        0,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 0,
+      "focus": [
+        1248.0,
+        34.8,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "minute-15.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 14,
+      "kills": 117,
+      "phase": 4,
+      "position": [
+        575.98125,
+        -63.99999,
+        95.05207
+      ],
+      "yaw": -2.35534,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": 0,
+      "order": -2,
+      "alien": 0,
+      "theme": 3,
+      "height": 8.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 5,
+      "country": 3,
+      "court": 2,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 112.0,
+      "armor": 112.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 55,
+      "points": 0,
+      "pickups": 30,
+      "owned_weapons": 3,
+      "guns": [
+        0,
+        1
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        6,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 0,
+      "focus": [
+        576.0,
+        -54.0,
+        74.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 1,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "minute-30.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 22,
+      "kills": 300,
+      "phase": 4,
+      "position": [
+        -191.6334,
+        -255.99999,
+        432.96207
+      ],
+      "yaw": -2.76446,
+      "pitch": -0.21682,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -2,
+      "order": 0,
+      "alien": 1,
+      "theme": 21,
+      "height": 44.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 13,
+      "country": 0,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 230,
+      "points": 0,
+      "pickups": 56,
+      "owned_weapons": 65795,
+      "guns": [
+        0,
+        16
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        0,
+        12,
+        12,
+        0,
+        0,
+        11,
+        0,
+        0
+      ],
+      "reveal": 0,
+      "focus": [
+        -192.0,
+        -229.6,
+        458.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "minute-45.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 27,
+      "kills": 445,
+      "phase": 4,
+      "position": [
+        116.32933,
+        -447.99999,
+        196.67011
+      ],
+      "yaw": -2.75888,
+      "pitch": 0.0,
+      "enemy_spawn_supported": false,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -3,
+      "order": 0,
+      "alien": 0,
+      "theme": 2,
+      "height": 58.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 11,
+      "country": 2,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 340.0,
+      "max_energy": 340.0,
+      "credits": 95,
+      "points": 0,
+      "pickups": 83,
+      "owned_weapons": 196867,
+      "guns": [
+        0,
+        17
+      ],
+      "owned_powers": 15,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        4,
+        12,
+        12,
+        0,
+        0,
+        12,
+        12,
+        0
+      ],
+      "reveal": 9,
+      "focus": [
+        96.0,
+        -413.2,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "minute-60.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 34,
+      "kills": 646,
+      "phase": 4,
+      "position": [
+        -52.55162,
+        -831.99999,
+        335.94466
+      ],
+      "yaw": 1.70407,
+      "pitch": 0.06863,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -3,
+      "order": 0,
+      "alien": 0,
+      "theme": 25,
+      "height": 56.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 4,
+      "country": 2,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 332.8,
+      "max_energy": 340.0,
+      "credits": 195,
+      "points": 0,
+      "pickups": 108,
+      "owned_weapons": 229667,
+      "guns": [
+        0,
+        5
+      ],
+      "owned_powers": 15,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        12,
+        12,
+        12,
+        8,
+        0,
+        12,
+        12,
+        0
+      ],
+      "reveal": 3,
+      "focus": [
+        -96.0,
+        -798.4,
+        362.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "optional-fight.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 33,
+      "kills": 636,
+      "phase": 4,
+      "position": [
+        287.17404,
+        -831.99999,
+        337.96368
+      ],
+      "yaw": 1.49685,
+      "pitch": -0.03,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -3,
+      "order": -1,
+      "alien": 0,
+      "theme": 1,
+      "height": 56.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 13,
+      "country": 2,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 340.0,
+      "max_energy": 340.0,
+      "credits": 330,
+      "points": 0,
+      "pickups": 106,
+      "owned_weapons": 229635,
+      "guns": [
+        0,
+        15
+      ],
+      "owned_powers": 15,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        12,
+        12,
+        12,
+        6,
+        0,
+        12,
+        12,
+        0
+      ],
+      "reveal": 3,
+      "focus": [
+        288.0,
+        -798.4,
+        362.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "resume.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 22,
+      "kills": 300,
+      "phase": 4,
+      "position": [
+        -191.4501,
+        -255.99999,
+        432.95852
+      ],
+      "yaw": -2.73446,
+      "pitch": -0.21214,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": -2,
+      "order": 0,
+      "alien": 1,
+      "theme": 21,
+      "height": 44.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 13,
+      "country": 0,
+      "court": 0,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 184.0,
+      "armor": 184.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 230,
+      "points": 0,
+      "pickups": 56,
+      "owned_weapons": 65795,
+      "guns": [
+        0,
+        16
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 3,
+      "attributes": [
+        12,
+        12,
+        0,
+        12,
+        12,
+        0,
+        0,
+        11,
+        0,
+        0
+      ],
+      "reveal": 0,
+      "focus": [
+        -192.0,
+        -229.6,
+        458.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "settlement.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 15,
+      "kills": 136,
+      "phase": 4,
+      "position": [
+        1055.16269,
+        -63.99999,
+        145.79722
+      ],
+      "yaw": 0.83603,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": 0,
+      "order": -3,
+      "alien": 0,
+      "theme": 2,
+      "height": 44.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 5,
+      "country": 2,
+      "court": 3,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 124.0,
+      "armor": 124.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 250,
+      "points": 2,
+      "pickups": 30,
+      "owned_weapons": 259,
+      "guns": [
+        0,
+        8
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        7,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 2,
+      "focus": [
+        1056.0,
+        -37.6,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "shelter.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 16,
+      "kills": 159,
+      "phase": 4,
+      "position": [
+        1.01,
+        -63.99999,
+        145.95782
+      ],
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "enemy_spawn_supported": true,
+      "sheltered": true,
+      "ready": true,
+      "failed": false,
+      "story_done": 49409,
+      "heat": 0,
+      "order": 0,
+      "alien": 0,
+      "theme": 2,
+      "height": 36.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 4,
+      "country": 2,
+      "court": 1,
+      "max_health": 400.0,
+      "health": 400.0,
+      "max_shield": 230.0,
+      "shield": 230.0,
+      "max_armor": 172.0,
+      "armor": 172.0,
+      "energy": 100.0,
+      "max_energy": 100.0,
+      "credits": 55,
+      "points": 0,
+      "pickups": 30,
+      "owned_weapons": 259,
+      "guns": [
+        0,
+        8
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        12,
+        12,
+        0,
+        11,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 8,
+      "focus": [
+        0.0,
+        -42.4,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 3,
+          "pledge": 2,
+          "offended": 1
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 1
+        }
+      ]
+    },
+    "stderr": ""
+  },
+  "unbound.sav": {
+    "returncode": 0,
+    "state": {
+      "seed": 4,
+      "generator": 13,
+      "rank": 9,
+      "kills": 50,
+      "phase": 4,
+      "position": [
+        1240.51257,
+        1e-05,
+        137.40229
+      ],
+      "yaw": 0.41165,
+      "pitch": -0.08976,
+      "enemy_spawn_supported": true,
+      "sheltered": false,
+      "ready": true,
+      "failed": false,
+      "story_done": 257,
+      "heat": 0,
+      "order": -3,
+      "alien": 0,
+      "theme": 6,
+      "height": 58.0,
+      "form": 0,
+      "volume": 0,
+      "weather": 5,
+      "country": 2,
+      "court": 0,
+      "max_health": 250.0,
+      "health": 250.0,
+      "max_shield": 140.0,
+      "shield": 140.0,
+      "max_armor": 40.0,
+      "armor": 35.65,
+      "energy": 27.0,
+      "max_energy": 100.0,
+      "credits": 190,
+      "points": 2,
+      "pickups": 16,
+      "owned_weapons": 3,
+      "guns": [
+        0,
+        1
+      ],
+      "owned_powers": 7,
+      "owned_rigs": 2,
+      "attributes": [
+        10,
+        6,
+        0,
+        0,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reveal": 0,
+      "focus": [
+        1248.0,
+        34.8,
+        170.0
+      ],
+      "player_clear": true,
+      "countries": [
+        {
+          "government": 1,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 2,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        },
+        {
+          "government": 0,
+          "stage": 0,
+          "pledge": 0,
+          "offended": 0
+        }
+      ]
+    },
+    "stderr": ""
+  }
+}

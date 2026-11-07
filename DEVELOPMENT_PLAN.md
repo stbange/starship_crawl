@@ -2,6 +2,13 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+The latest [long-expedition design review](docs/reviews/2026-11-07-long-expeditions/README.md)
+contains thirteen hour-long automated simulations, earned-checkpoint screenshots,
+and a controlled navigation comparison. Its proposed next priorities are growth
+and recovery tuning, stronger finales, clearer patrol consequences and rewards
+that remain useful. These recommendations are not yet implemented or an approved
+new milestone.
+
 ## Alien courts and director — 2026-11-07
 
 The four-milestone proposal is implemented in generator 13 / save 14. See
