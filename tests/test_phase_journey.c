@@ -61,7 +61,7 @@ static bool capture(Game *g, const char *directory, const char *name) {
     snprintf(path, sizeof(path), "%s/phase-%s.sav", directory, name);
     return game_save(g, path);
 }
-static int journey(unsigned seed, bool port, const char *fixtures) {
+static int journey(unsigned seed, bool port, const char *fixtures, unsigned profile) {
     Game *g = malloc(sizeof(*g));
     if (!g)
         return 1;
@@ -70,6 +70,12 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
     bool have = false, resumed = false, pending = false, attempt = false;
     Cell previous = {999, 999, 999};
     unsigned previous_respawns = 0, previous_defeated = 0;
+    uint32_t aim_target = 0;
+    double reaction = 0, stalled = 0, max_stall = 0;
+    unsigned recovery = 0, recovery_ticks = 0, damage_frames = 0;
+    float min_health = 100, min_shield = 50, min_energy = 100;
+    double health_loss = 0, shield_loss = 0, armor_loss = 0;
+    Vec3 progress_at = position_absolute(g->players[0].pos);
     unsigned frames;
     for (frames = 0;
          frames < 360000 && !(g->story.done & (1u << STORY_EXTRACTION)) && !g->world.failed;
@@ -129,7 +135,11 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
                 return 1;
         }
         while (p->points || p->credits >= 60 + p->power * 25) {
-            int attr = p->power < 10 ? 0 : p->vitality < 8 ? 1 : 3;
+            int attr = profile == 2 && p->vitality < 4        ? 1
+                       : p->power < (profile == 2 ? 8u : 10u) ? 0
+                       : p->vitality < 8                      ? 1
+                       : profile == 2                         ? 4
+                                                              : 3;
             if (*player_attribute(p, attr) >= 12 || !game_upgrade(g, 0, attr))
                 break;
         }
@@ -154,7 +164,10 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
             waypoint = vadd(center, v3(sin(g->time * .65) * 10, 0, cos(g->time * .65) * 10));
             have = false;
         } else if (!have) {
-            if (cell.y != goal.y)
+            Navigation nav;
+            if (profile && game_navigation_to(g, 0, goal, &nav) && nav.kind != NAV_BLOCKED)
+                waypoint = nav.point;
+            else if (cell.y != goal.y)
                 waypoint = world_lift(cell);
             else if (cell.x == goal.x && cell.z == goal.z)
                 waypoint = game_terminal(goal);
@@ -168,8 +181,8 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
         if (active < 0 && distance < .65) {
             have = false;
             if (cell.y != goal.y) {
-                actions[0].lift_up = cell.y < goal.y;
-                actions[0].lift_down = cell.y > goal.y;
+                actions[0].lift_up = !p->lift_latched && cell.y < goal.y;
+                actions[0].lift_down = !p->lift_latched && cell.y > goal.y;
             } else if (cell.x == goal.x && cell.z == goal.z) {
                 game_interact(g, 0);
                 if (p->decision_open) {
@@ -182,6 +195,7 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
         }
         Vec3 aim = vnorm(diff);
         double nearest = 70;
+        uint32_t candidate = 0;
         for (int r = 0; r < g->world.count; r++)
             for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                 Room *room = &g->world.rooms[r];
@@ -196,9 +210,29 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
                     nearest = range;
                     aim = vnorm(delta);
                     actions[0].fire = true;
+                    candidate = world_hash(seed, room->cell, enemy->id + 1);
                 }
             }
-        game_look(p, atan2(aim.x, aim.z) - p->yaw, asin(clampd(aim.y, -1, 1)) - p->pitch);
+        double yaw_delta = atan2(aim.x, aim.z) - p->yaw;
+        yaw_delta = atan2(sin(yaw_delta), cos(yaw_delta));
+        double pitch_delta = asin(clampd(aim.y, -1, 1)) - p->pitch;
+        if (profile) {
+            if (candidate != aim_target) {
+                aim_target = candidate;
+                reaction = profile == 2 ? .55 : .3;
+            }
+            reaction = fmax(0, reaction - 1.0 / 60);
+            if (candidate) {
+                double error = profile == 2 ? .04 : .025;
+                yaw_delta += error * sin(g->time * 3.1 + candidate % 17);
+                pitch_delta += error * cos(g->time * 2.7);
+            }
+            actions[0].fire &= reaction <= 0 && fabs(yaw_delta) < .16;
+            double limit = (profile == 2 ? 1.8 : 2.8) / 60;
+            yaw_delta = clampd(yaw_delta, -limit, limit);
+            pitch_delta = clampd(pitch_delta, -limit, limit);
+        }
+        game_look(p, yaw_delta, pitch_delta);
         Vec3 move = vnorm(diff), forward = v3(sin(p->yaw), 0, cos(p->yaw)),
              right = v3(cos(p->yaw), 0, -sin(p->yaw));
         if (distance > .65) {
@@ -209,7 +243,37 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
             world_describe_version(seed, g->world.generator, cell).height < 2 ||
             (distance > 1 &&
              world_describe_version(seed, g->world.generator, world_cell(waypoint)).height < 2);
+        if (profile) {
+            if (vlen(vsub(feet, progress_at)) > 1 || p->lift_active || distance < .65) {
+                progress_at = feet;
+                stalled = 0;
+            } else if (distance > .65)
+                stalled += 1.0 / 60;
+            max_stall = fmax(max_stall, stalled);
+            if (stalled >= 5) {
+                recovery++;
+                recovery_ticks = 120;
+                stalled = 0;
+                have = false;
+            }
+            if (recovery_ticks) {
+                recovery_ticks--;
+                actions[0].strafe = recovery % 2 ? 1 : -1;
+                actions[0].forward = .3f;
+                actions[0].jump = true;
+                actions[0].crouch = false;
+                have = false;
+            }
+        }
+        float health = p->health, shield = p->shield, armor = p->armor;
         game_step(g, actions, 1.0 / 60);
+        min_health = fminf(min_health, p->health);
+        min_shield = fminf(min_shield, p->shield);
+        min_energy = fminf(min_energy, p->energy);
+        health_loss += fmaxf(0, health - p->health);
+        shield_loss += fmaxf(0, shield - p->shield);
+        armor_loss += fmaxf(0, armor - p->armor);
+        damage_frames += p->health < health || p->shield < shield || p->armor < armor;
         if (g->world.last_work > SC_STREAM_BUDGET || !isfinite(p->health) || !isfinite(p->energy) ||
             g->respawns > 12)
             break;
@@ -225,6 +289,17 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
     printf("Phase journey %u %s: %s, %.1fs, %u kills, %u deaths, %u frames\n", seed,
            port ? "port" : "starboard", ok ? "PASS" : "FAIL", g->time, g->players[0].kills,
            g->respawns, frames);
+    if (profile)
+        printf("PROFILE {\"seed\":%u,\"profile\":%u,\"passed\":%s,\"simulated_seconds\":%.2f,"
+               "\"reaction_seconds\":%.2f,\"turn_rad_s\":%.1f,\"aim_error_rad\":%.3f,"
+               "\"kills\":%u,\"deaths\":%u,\"shots\":%u,\"hits\":%u,"
+               "\"min_health\":%.2f,\"min_shield\":%.2f,\"min_energy\":%.2f,"
+               "\"health_loss\":%.2f,\"shield_loss\":%.2f,\"armor_loss\":%.2f,"
+               "\"damage_frames\":%u,\"recoveries\":%u,\"max_stall_seconds\":%.2f}\n",
+               seed, profile, ok ? "true" : "false", g->time, profile == 2 ? .55 : .3,
+               profile == 2 ? 1.8 : 2.8, profile == 2 ? .04 : .025, g->players[0].kills,
+               g->respawns, g->shots, g->hits, min_health, min_shield, min_energy, health_loss,
+               shield_loss, armor_loss, damage_frames, recovery, max_stall);
     if (ok) {
         unsigned rank = g->players[0].level, claimed = g->campaign.profiles[0].claimed;
         if (!game_save(g, "phase-journey.sav") || !game_load(g, "phase-journey.sav") ||
@@ -239,8 +314,11 @@ static int journey(unsigned seed, bool port, const char *fixtures) {
     return ok ? 0 : 1;
 }
 int main(int argc, char **argv) {
+    if (argc == 2 && !strcmp(argv[1], "--profiles"))
+        return journey(713, false, NULL, 1) || journey(713, false, NULL, 2) ||
+               journey(42, true, NULL, 1) || journey(42, true, NULL, 2);
     const char *fixtures = argc == 3 && !strcmp(argv[1], "--fixtures") ? argv[2] : NULL;
-    if (journey(713, false, fixtures))
+    if (journey(713, false, fixtures, 0))
         return 1;
-    return fixtures ? 0 : journey(42, true, NULL);
+    return fixtures ? 0 : journey(42, true, NULL, 0);
 }

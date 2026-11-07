@@ -97,14 +97,7 @@ static void campaign_hud(Renderer *r, const Game *g, int player, float w, float 
     if (!g->campaign.version || g->players[player].sheltered)
         return;
     const Player *p = &g->players[player];
-    Cell cell = world_cell(position_absolute(p->pos));
-    ShipTraits t = campaign_traits(g->world.seed, cell);
     char label[160];
-    snprintf(label, sizeof(label), "%s / LAYER %u / %s %d / %s %d / F10 BUILD",
-             campaign_phase_name(campaign_phase(&g->campaign)), campaign_layer(cell),
-             t.heat < 0 ? "COLD" : "HEAT", abs(t.heat), t.order < 0 ? "CHAOS" : "ORDER",
-             abs(t.order));
-    centered(r, w * .5f, 116 * s, .8f * s, label, rgb(.55f, .75f, .8f));
     for (unsigned id = 0; id < SC_GUARDIANS; id++) {
         const GuardianAttempt *a = &g->campaign.attempts[id];
         if (a->active && (a->participants & (1u << player))) {

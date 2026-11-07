@@ -234,6 +234,7 @@ static void lifts(void) {
     tick(g, (Actions){.lift_down = true}, 250);
     CHECK(!p->lift_active && p->pos.sector.y == 0);
     /* Independent rides: joining/leaving cancels only the departing participant. */
+    tick(g, (Actions){0}, 1); /* Release the previous held travel control. */
     g->players[1].pos = position_from(world_lift((Cell){0, 0, 0}));
     g->players[1].lift_cooldown = 0;
     Actions actions[2] = {{.lift_up = true}, {.lift_down = true}};
@@ -249,6 +250,7 @@ static void lifts(void) {
     game_lift_cancel(g, 0);
     CHECK(!p->lift_active && p->pos.sector.y == 0);
     /* A boarded rig is snapshotted with its rider, without mutating live transit. */
+    tick(g, (Actions){0}, 1);
     g->campaign.profiles[0].rigs |= 1u << (MECH - 1);
     g->campaign.profiles[0].rig = MECH;
     p->riding = MECH;

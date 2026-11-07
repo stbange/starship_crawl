@@ -211,6 +211,8 @@ jobs:
         run: python tests/test_equipment_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Preferences, controllers, touch lifecycle and vertical traversal
         run: python tests/test_foundation_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Actionable navigation and deliberate lift controls
+        run: python tests/test_guidance_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Explore generated interiors and discoveries
         run: python tests/test_interiors_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Living ship generation and atmosphere

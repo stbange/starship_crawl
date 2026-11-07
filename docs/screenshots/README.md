@@ -55,3 +55,14 @@ Actual native Mesa captures of the animated tentacle renderer, seed 713:
 - [Gazer family](tentacle-gazers.png): floating eye creatures with trailing tentacles, including the larger brood variant.
 
 Reproduce with `--scene tentacles` or `--scene form1`, `--seed 713 --smoke 100 --no-save`. The saving-disabled `tentacles` scene finds an actual botanical/infested room. Existing expeditions receive this rendering change without generating a new ship.
+
+
+## Reliable exploration (P0)
+
+Native Mesa capture of the current lift pad, readable deck sign and destination
+previews. The HUD keeps the next action separate from the final map goal.
+
+![Deck sign, destination previews and compact HUD](p0-lift-landing.png)
+
+[Navigation changes and test evidence](../../NAVIGATION.md) ·
+[Human checkpoints and device result sheet](../playtests/P0_CHECKLIST.md).

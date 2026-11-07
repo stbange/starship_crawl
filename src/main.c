@@ -628,6 +628,14 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              campaign->choice[0], build->powers, build->rigs, build->modules, build->claimed,
              build->guns[0], build->guns[1], build->power_slots[0], build->power_slots[1],
              build->rig, build->module, campaign->slot[0], offers[0], offers[1], offers[2]);
+    used = strlen(result) - 1;
+    const Navigation *nav = &p->navigation;
+    snprintf(result + used, sizeof(result) - used,
+             ",\"nav_kind\":%u,\"nav_next\":[%d,%d,%d],\"nav_point\":[%.3f,%.3f,%.3f],"
+             "\"nav_searched\":%u,\"lift_latched\":%s,\"arrival\":%.2f,\"nav2_kind\":%u}",
+             nav->kind, nav->next.x, nav->next.y, nav->next.z, nav->point.x, nav->point.y,
+             nav->point.z, nav->searched, p->lift_latched ? "true" : "false", p->arrival_time,
+             app.game.players[1].navigation.kind);
     return result;
 }
 static void audio_frame(void) {

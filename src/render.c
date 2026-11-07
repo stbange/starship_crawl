@@ -892,6 +892,14 @@ static void rig_mesh(Renderer *r, const Rig *rig, RigKind kind, double time) {
     }
     (void)time;
 }
+static Vec3 focal_anchor(const Room *room) {
+    return vadd(world_room_center(room), v3(0, fmax(5, fmin(22, room->height * .6)), 5));
+}
+static Color focal_color(const Room *room) {
+    return room->district % 3 == 0   ? rgb(.24f, .52f, .62f)
+           : room->district % 3 == 1 ? rgb(.6f, .36f, .14f)
+                                     : rgb(.36f, .52f, .31f);
+}
 static void lights(Renderer *r, const Game *g, const Player *viewer) {
     PointLight selected[SC_VIEW_LIGHTS];
     double scores[SC_VIEW_LIGHTS];
@@ -914,12 +922,13 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                 lamps[i], i == 1 ? rgb(.45f, .75f, .8f) : rgb(1, .77f, .48f), 14, 2.4f, 0};
     }
     Vec3 eye = player_eye(viewer);
-    for (int group = 0; !matrix && !viewer->sheltered && group < 7; group++) {
+    for (int group = 0; !matrix && !viewer->sheltered && group < 8; group++) {
         int total = group == 0   ? SC_MAX_CHUNKS
                     : group == 1 ? SC_MAX_PROJECTILES
                     : group == 3 ? SC_MAX_FLARES
                     : group == 5 ? SC_MAX_DEATH_HAZARDS
                     : group == 6 ? SC_SKIFF_LIGHTS + 2
+                    : group == 7 ? 1
                                  : g->player_count;
         for (int i = 0; i < total; i++) {
             const Chunk *chunk = group == 0 ? &g->world.chunks[i] : NULL;
@@ -940,6 +949,11 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                         light.phase = 0;
                     }
                     light.power *= world_lamp_power(light.phase, g->time);
+                } else if (group == 7) {
+                    const Room *room = world_find((World *)&g->world, world_cell(eye));
+                    if (!room || !room->ready || room->type == BAY || room->height < 9 || eye.z < 0)
+                        continue;
+                    light = (PointLight){focal_anchor(room), focal_color(room), 28, .65f, 0};
                 } else if (group == 1) {
                     const Projectile *p = &g->projectiles[i];
                     if (!p->active)
@@ -1402,6 +1416,8 @@ static void frame(Renderer *r, float x, float y, float w, float h, Color c) {
     rect(r, x + w - 1, y, 1, h, c);
 }
 
+#include "render_navigation.inc"
+
 static void map_marker(Renderer *r, const MapView *map, Vec3 point, float x, float y, float tile,
                        Color color, bool edge) {
     float cx = x + (float)(point.x / SC_CELL - map->origin.x + .5) * tile;
@@ -1499,6 +1515,10 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
             snprintf(label, sizeof(label), "GOAL ON DECK");
     } else
         snprintf(label, sizeof(label), "BEACON LIT");
+    if ((p->navigation.kind == NAV_DOOR || p->navigation.kind == NAV_LIFT ||
+         p->navigation.kind == NAV_LANDING) &&
+        map.origin.y == map.player.y)
+        map_marker(r, &map, p->navigation.point, x, y, tile, rgb(.25f, .8f, .95f), false);
     text_at(r, x, y + size + 6, .8f * text_scale, label, gold);
     for (int i = 0; i < g->player_count; i++) {
         const Player *other = &g->players[i];
@@ -1520,7 +1540,7 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
         text_at(r, x, y + size + 32, .85f * text_scale,
                 "ARROWS PAN / PAGE UP-DOWN DECK / HOME RECENTER / M CLOSE", mint);
         text_at(r, x, y + size + 49, .85f * text_scale,
-                "GREEN YOU / BLUE LIFT / GOLD GOAL / VIOLET SHELTER / PINK DISCOVERY / TEAL WARD",
+                "GREEN YOU / CYAN NEXT / GOLD GOAL / VIOLET SHELTER / PINK DISCOVERY / TEAL WARD",
                 wall);
     }
 }
@@ -1661,17 +1681,25 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                        : room->habitat.form ? sc_habitat_forms[room->habitat.form]
                                             : sc_themes[room->theme].name)
                     : "BETWEEN DECKS");
-    centered(r, w * .5f, pad, 1.6f * s,
-             p->sheltered         ? "THE FOLD / SANCTUARY"
-             : p->riding == MECH  ? "REAVER / MECH PILOT LINK"
-             : p->riding == WAGON ? "FOLD WAGON / ROAD LINK"
-                                  : name,
+    const char *title = p->sheltered         ? "THE FOLD / SANCTUARY"
+                        : p->riding == MECH  ? "REAVER / MECH PILOT LINK"
+                        : p->riding == WAGON ? "FOLD WAGON / ROAD LINK"
+                                             : name;
+    float header_left = w < 700 || touch ? 148 * s : 0;
+    float header_width = (touch && w >= 700 ? w * .51f - 36 * s : w - 20 * s) - header_left;
+    float header_center = header_left + header_width * .5f;
+    centered(r, header_center, pad, fminf(1.6f * s, header_width / (6 * strlen(title))), title,
              gold);
-    snprintf(label, sizeof(label), "DEPTH %03u  /  DECK %+d",
-             position_absolute(p->pos).z < 0 ? 0 : world_difficulty(cell), cell.y);
-    centered(r, w * .5f, pad + 18 * s, 1.1f * s,
-             p->sheltered ? "SAFE / THE INFESTATION CANNOT ENTER" : label, dim);
-    if (!p->sheltered && room && position_absolute(p->pos).z >= 0) {
+    snprintf(label, sizeof(label),
+             g->campaign.version ? "LAYER %u / DECK %+d / F10 BUILD" : "DEPTH %03u / DECK %+d",
+             position_absolute(p->pos).z < 0 ? 0
+             : g->campaign.version           ? campaign_layer(cell)
+                                             : world_difficulty(cell),
+             cell.y);
+    const char *subtitle = p->sheltered ? "SAFE / THE INFESTATION CANNOT ENTER" : label;
+    centered(r, header_center, pad + 18 * s, fminf(1.1f * s, header_width / (6 * strlen(subtitle))),
+             subtitle, dim);
+    if (debug && !p->sheltered && room && position_absolute(p->pos).z >= 0) {
         snprintf(label, sizeof(label), "%s / %s", world_district_name(room->district),
                  g->world.generator >= 4 ? world_incident_name(room->incident) : "UNSURVEYED");
         if (g->world.generator >= 10)
@@ -1701,7 +1729,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     if (g->world.pending)
         centered(r, w * .5f, h * .8f, 1 * s, "SURVEYING NEARBY PASSAGES", dim);
     snprintf(label, sizeof(label), "SHIP %08X", g->world.seed);
-    if (w >= 600) {
+    if (debug && w >= 600) {
         text_at(r, w - pad - 13 * 7 * s, pad, 1.1f * s, label, dim);
         const char *profile = g->world.generator >= 4
                                   ? world_profile_name(world_profile(g->world.seed))
@@ -1736,13 +1764,15 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     rect(r, pad, by + 65 * s, 230 * s * p->shield / player_max_shield(p), 4 * s,
          rgb(.25f, .5f, .9f));
     Cell objective;
-    if (g->story.version && !(g->story.done & 1u) && !p->sheltered)
+    if (debug && g->story.version && !(g->story.done & 1u) && !p->sheltered)
         centered(r, w * .5f, 77 * s, .85f * s,
                  story_commission_version(g->world.seed, g->story.version), mint);
     if (!p->sheltered && game_objective(g, &objective)) {
-        snprintf(label, sizeof(label), "%s  /  [%d,%d,%d]", game_mission(g), objective.x,
-                 objective.y, objective.z);
-        centered(r, w * .5f, 96 * s, .85f * s, label, gold);
+        if (debug) {
+            snprintf(label, sizeof(label), "%s  /  [%d,%d,%d]", game_mission(g), objective.x,
+                     objective.y, objective.z);
+            centered(r, w * .5f, 96 * s, .85f * s, label, gold);
+        }
         if (!g->story.version &&
             vlen(vsub(position_absolute(p->pos), game_terminal(objective))) < 4)
             centered(r, w * .5f, h * .58f, 1.2f * s, "G / USE MISSION TERMINAL", gold);
@@ -1783,7 +1813,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     }
     float exp = (float)p->xp / (float)player_next_level(p);
     rect(r, 0, h - 3, w * exp, 3, gold);
-    if (!touch) {
+    if (!touch && w < 620) {
+        snprintf(label, sizeof(label), "%s / ENERGY %.0f", game_gun(p)->name, p->energy);
+        text_at(r, pad, by - 44 * s, .9f * s, label, ink);
+    } else if (!touch) {
         text_at(r, w - 260 * s, by, 1.3f * s,
                 p->sheltered ? "WEAPONS HOLSTERED" : game_gun(p)->name, ink);
         snprintf(label, sizeof(label), "DMG %.0f  ENERGY %.0f  CORE %u",
@@ -1794,15 +1827,17 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                               : "F LAMP OFF / F5 SAVE / ESC PAUSE",
                 dim);
     }
-    if (p->points && !p->riding) {
-        centered(r, w * .5f, h - 115 * s, 1.4f * s, "ASCENSION AVAILABLE", gold);
-        centered(r, w * .5f, h - 97 * s, 1.1f * s,
-                 touch ? "OPEN MENU TO CHOOSE AN UPGRADE" : "I JOURNAL / 1 THROUGH 0 UPGRADE", ink);
+    if (p->points) {
+        snprintf(label, sizeof(label), "+%u UPGRADES / %s", p->points, touch ? "MENU" : "I");
+        text_at(r, pad, by - 25 * s, .9f * s, label, gold);
     }
+    if (!debug)
+        navigation_hud(r, g, player, w, h, s, touch);
     Vec3 lift = world_lift(cell), d = vsub(position_absolute(p->pos), lift);
     d.y = 0;
     if (g->world.generator >= 9 && !p->sheltered && !p->lift_active &&
-        position_absolute(p->pos).z >= 0 && world_service_column(g->world.seed, cell) &&
+        story_site >= SC_STORY_SCENES && position_absolute(p->pos).z >= 0 &&
+        world_service_column(g->world.seed, cell) &&
         fabs(position_absolute(p->pos).x - world_center(cell).x) < 16 &&
         position_absolute(p->pos).z - world_center(cell).z < -5)
         centered(r, w * .5f, h * .59f, 1.15f * s, "SERVICE SHAFT / AMBER STAIRS / BLUE RAMPS",
@@ -1811,9 +1846,24 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         snprintf(label, sizeof(label), "GRAV TRANSIT / DECK %d / %d%%", p->lift_to.sector.y,
                  (int)(100 * p->lift_progress));
         centered(r, w * .5f, h * .65f, 1.7f * s, label, mint);
-    } else if (!p->sheltered && position_absolute(p->pos).z >= 0 && vlen(d) < 3.3)
-        centered(r, w * .5f, h * .65f, 1.7f * s,
-                 touch ? "GRAV LIFT / UP OR DOWN" : "GRAV LIFT  /  E UP  /  Q DOWN", mint);
+    } else if (!p->sheltered && position_absolute(p->pos).z >= 0 && vlen(d) < 3.3 &&
+               fabs(position_absolute(p->pos).y - lift.y) < 1) {
+        centered(r, w * .5f, h * .65f, fminf(1.3f * s, (w - 32) / 240),
+                 p->lift_latched ? "RELEASE LIFT CONTROL TO TRAVEL AGAIN"
+                 : touch         ? "GRAV LIFT / UP OR DOWN"
+                                 : "GRAV LIFT  /  E UP  /  Q DOWN",
+                 mint);
+        for (int side = -1; side <= 1; side += 2) {
+            Cell to = cell;
+            to.y += side;
+            RoomSpec destination = world_describe_version(g->world.seed, g->world.generator, to);
+            bool sealed = g->world.open_layer && campaign_layer(to) > g->world.open_layer;
+            snprintf(label, sizeof(label), "%s %+d / %s", side > 0 ? "UP" : "DOWN", to.y,
+                     sealed ? "SEALED / F10" : sc_themes[destination.theme].name);
+            centered(r, w * .5f, h * .65f + (side > 0 ? 22 : 36) * s, .85f * s, label,
+                     sealed ? gold : dim);
+        }
+    }
     if (p->riding) {
         const Rig *rig = &g->rigs[player][p->riding - 1];
         Color amber = rgb(.95f, .62f, .22f);
@@ -1860,7 +1910,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                  p->resting > 0 ? p->resting : p->nourished);
         centered(r, w * .5f, h - 137 * s, s, label, mint);
     }
-    if (!touch && !p->sheltered)
+    if (!touch && w >= 620 && !p->sheltered &&
+        (debug || campaign_rig(g, player, MECH) || campaign_rig(g, player, WAGON)))
         text_at(r, w - 260 * s, by + 53 * s, .9f * s, "T MECH / Y WAGON / K FLARE", dim);
     snprintf(label, sizeof(label), "V VEIL%s / B FLY %.0f / J LEAP %.0f / H NOVA %.0f",
              p->cloaked ? " ON" : "", p->flight, p->leap, p->nova);
@@ -1876,17 +1927,19 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         snprintf(label, sizeof(label), "V %s / B %s / J %s / H %s", powers[0], powers[1], powers[2],
                  powers[3]);
     }
-    if (!touch && !p->riding)
+    if (!touch && !p->riding &&
+        (debug || p->cloaked || p->flight > 0 || p->leap > 0 || p->nova > 0))
         centered(r, w * .5f, h - 158 * s, .85f * s, label, p->cloaked ? rgb(.65f, .45f, 1) : mint);
     if (touch) {
         if (p->riding)
             snprintf(label, sizeof(label), "%s / ENERGY %.0f", game_gun(p)->name, p->energy);
         else if (!campaign_power(g, player, p->selected_power))
-            snprintf(label, sizeof(label), "PSI LOCKED / EARN AND EQUIP IN BUILD MENU");
+            snprintf(label, sizeof(label), "%s / ENERGY %.0f", game_gun(p)->name, p->energy);
         else
             snprintf(label, sizeof(label), "PSI: %s / %.0f ENERGY",
                      sc_psionic_names[p->selected_power], sc_psionic_costs[p->selected_power]);
-        centered(r, w * .5f, 56 * s, .8f * s, label, mint);
+        centered(r, header_center, 56 * s, fminf(.8f * s, header_width / (6 * strlen(label))),
+                 label, mint);
     }
     if (!touch && !p->sheltered && p->weapon == SC_FLARE_CANNON && p->riding != MECH) {
         snprintf(label, sizeof(label), "O BURN %us / P STRENGTH %u / EACH MAX 5",
@@ -2179,6 +2232,8 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
                 infestation_tentacles(r, g, p);
             actors(r, g, p);
             campaign_scene(r, g, p);
+            if (!outside)
+                navigation_scene(r, g, p);
         }
         flush(r);
         r->sprite_drawn[p] = 0;

@@ -1,5 +1,43 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
+
+**Reliable exploration (P0).** There are now **30 native CTests: 16 unit, 13
+gameplay and one SDL platform test**. `exploration_guidance` covers bounded
+reciprocal routes and detours across twelve seeds, phase gates, service landing
+approaches, remote coordinates, pure generation queries, independent views,
+held/released lift controls, unchanged camera orientation and save compatibility.
+`navigation_recovery` loads the retained seed-3 review save, reproduces its roof
+stall, and recovers through normal movement/gravity/lifts before crossing the
+affected doorway both ways at floor level. No teleport or combat bypass is used.
+
+`imperfect_expeditions` runs **two profiles on each of seeds 713 and 42** through
+all phases and extraction. Reaction delay, turn speed, aim error and earned
+upgrade policy differ; resource/stall observations are sampled each update.
+All four finish, with 0/1 deaths on seed 713 and 1/5 on seed 42. They remain
+accelerated, informed bots, not human difficulty evidence. [Results and limits](NAVIGATION.md).
+
+All 30 native tests and the 13 separately labelled gameplay tests passed.
+Unit-only core coverage is **98.53% (6897/7000 lines)**; every source exceeds 95%,
+and `navigation.c` reaches **100% (167/167)**. The four focused traversal/navigation/
+imperfect-input suites also passed ASan, UBSan and LeakSanitizer. Leak inspection
+was initially blocked by the cloud sandbox and succeeded outside that sandbox.
+Linux, Windows x86-64 cross-compilation and Emscripten builds succeeded.
+
+The packaged `test_guidance_browser.py` holds keyboard and real CDP touch lift
+controls past arrival, releases/returns, checks independent split-screen cues,
+uses real map/route-selection input, imports an earned checkpoint and captures
+narrow and mobile layouts. All fourteen packaged browser suites passed during
+this change. The final landing/HUD refinements passed the focused guidance suite
+again on the release package. Native Mesa checks cover lift/stairs/ramps, tall
+rooms, shelter and matrix. Detailed execution scope is recorded with the completed
+OpenSpec change. Physical Windows GPUs/controllers and mobile devices remain
+pending in the [human checkpoint/result sheet](docs/playtests/P0_CHECKLIST.md).
+
+```sh
+ctest --test-dir build -R 'exploration_guidance|navigation_recovery|imperfect_expeditions' --output-on-failure
+python3 tests/test_guidance_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+```
+
 **Animated tentacles.** The habitat browser suite now inspects rooted tentacles in
 an actual seeded room, checks changing rendered pixels while running and identical
 pixels/time while paused, and verifies the 96-limb per-view limit. It checks both

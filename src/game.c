@@ -74,6 +74,7 @@ void game_lift_cancel(Game *g, int player) {
     p->velocity = v3(0, 0, 0);
     p->lift_active = false;
     p->lift_progress = 0;
+    p->lift_latched = false;
     p->lift_cooldown = 1;
     if (p->riding)
         g->rigs[player][p->riding - 1].pos = p->pos;
@@ -297,6 +298,9 @@ static void shoot(Game *g, Player *p) {
     }
 }
 static void move_player(Game *g, Player *p, const Actions *a, double dt) {
+    if (!p->lift_active && !a->lift_up && !a->lift_down)
+        p->lift_latched = false;
+    p->arrival_time = fmaxf(0, p->arrival_time - (float)dt);
     if (p->lift_active) {
         Cell destination = world_cell(position_absolute(p->lift_to));
         if (!world_ready(&g->world, destination) ||
@@ -315,8 +319,13 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
             p->checkpoint = p->pos;
             p->lift_active = false;
             p->lift_cooldown = 1;
+            p->arrival_time = 6;
             p->grounded = true;
-            game_message(g, "GRAV LIFT / ARRIVED / CHECKPOINT SYNCHRONIZED");
+            RoomSpec room = world_describe_version(g->world.seed, g->world.generator, destination);
+            char arrival[128];
+            snprintf(arrival, sizeof(arrival), "DECK %+d / %s / CHECKPOINT SYNCHRONIZED",
+                     destination.y, sc_themes[room.theme].name);
+            game_message(g, arrival);
         }
         g->dirty = true;
         return;
@@ -383,7 +392,7 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
     bool on_pad = g->world.generator < 9 || fabs(diff.y) < 1;
     diff.y = 0;
     if (on_pad && !outside && vlen(diff) < 3.3 && p->lift_cooldown <= 0 &&
-        (a->lift_up || a->lift_down)) {
+        (g->world.generator < 9 || !p->lift_latched) && (a->lift_up || a->lift_down)) {
         cell.y += a->lift_up ? 1 : -1;
         if (g->world.open_layer && campaign_layer(cell) > g->world.open_layer) {
             game_message(g, "LAYER SEALED / DEFEAT A PHASE GUARDIAN / F10 ROUTES");
@@ -412,6 +421,7 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
             p->velocity = v3(0, 0, 0);
             p->lift_progress = 0;
             p->lift_active = true;
+            p->lift_latched = true;
             p->grounded = false;
             game_message(g, "GRAV LIFT / IN TRANSIT / LOOK AROUND");
             g->dirty = true;
@@ -888,6 +898,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     game_deaths_step(g, dt);
     matrix_step(g, dt);
     campaign_step(g, dt);
+    game_navigation_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         if (p->health <= 0 || position_absolute(p->pos).z < -400) {

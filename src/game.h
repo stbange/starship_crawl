@@ -14,11 +14,29 @@
 #define SC_DEATH_LIFE 2.8f
 typedef enum { ON_FOOT, MECH, WAGON } RigKind;
 typedef enum { PSI_VEIL, PSI_FLIGHT, PSI_LEAP, PSI_NOVA } Psionic;
+typedef enum {
+    NAV_NONE,
+    NAV_BOARD,
+    NAV_DOOR,
+    NAV_LIFT,
+    NAV_GOAL,
+    NAV_LANDING,
+    NAV_BLOCKED
+} NavKind;
+typedef struct {
+    Cell from, goal, next;
+    Vec3 point;
+    NavKind kind;
+    unsigned searched;
+} Navigation;
 typedef struct Player {
     Position pos, checkpoint;
     Position lift_from, lift_to;
     float lift_progress;
-    bool lift_active; /* Transient: saves snapshot the departure pad. */
+    bool lift_active;  /* Transient: saves snapshot the departure pad. */
+    bool lift_latched; /* Release at the landing before requesting another ride. */
+    float arrival_time, navigation_time;
+    Navigation navigation; /* Derived, per-view, never serialized. */
     Vec3 velocity;
     double yaw, pitch;
     float health, cooldown, hurt, muzzle, lift_cooldown;
@@ -137,6 +155,8 @@ void game_lift_cancel(Game *g, int player);
 void game_map_toggle(Game *g, int player);
 void game_map_pan(Game *g, int player, int x, int y, int z);
 bool game_map_build(const Game *g, int player, Cell center, int radius, MapView *view);
+bool game_navigation_to(const Game *g, int player, Cell goal, Navigation *nav);
+void game_navigation_step(Game *g, double dt);
 void game_psionic(Game *g, int player, Psionic power);
 void game_psionics_step(Game *g, Player *p, double dt);
 void game_nova(Game *g, int player);

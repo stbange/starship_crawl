@@ -1,6 +1,6 @@
 # Controls and vertical exploration
 
-New ships use generator 9. Previously saved ships retain their geometry and lift
+Current ships use generator 10, retaining the generator-9 traversal foundations. Previously saved ships retain their geometry and lift
 behavior. Choose **N, Enter** (or **Begin a new ship**) to explore the new shafts;
 this starts fresh characters. Saving and resuming the current ship retains them.
 
@@ -49,10 +49,10 @@ ceilings remain solid. Ramp slabs and stair treads also block weapon rays.
 
 ## Grav lifts
 
-Stand on a **cyan pad**, then hold **E** to go up or **Q** to go down (controller
+Stand on a **cyan pad**, then press **E** to go up or **Q** to go down (controller
 X/Y; mobile up/down controls). An available lift carries that player to the adjacent
 deck over three seconds. The moving cradle, shaft lights, destination and progress
-indicator show the journey. Looking remains available. Walking, firing, deploying,
+indicator show the journey. Release after arriving before requesting another trip. Destination room/deck previews, landing signs and exit cues are described in [P0 navigation](NAVIGATION.md). Looking remains available. Walking, firing, deploying,
 refitting and entering other spaces wait until arrival.
 
 The destination must be loaded, open for the current phase and clear for the rider

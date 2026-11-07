@@ -111,3 +111,10 @@ Environmental tentacles SHALL use a bounded per-camera detail budget, favor near
 #### Scenario: Separate local players
 - **WHEN** one player enters the shelter while the other observes an infestation
 - **THEN** the first view contains no ship tentacles and the second continues to animate them within its own budget.
+
+### Requirement: Exploration HUD hierarchy
+The persistent HUD SHALL prioritize survival, weapon, map and one actionable navigation cue. Unspent upgrades SHALL use a compact indicator instead of a permanent central banner. Detailed expedition and room context SHALL remain accessible through the existing journals. Nearby important rooms SHALL have restrained focal accents without raising global ambient brightness or changing collision.
+
+#### Scenario: Explore with unspent points
+- **WHEN** a player traverses a room with upgrades available
+- **THEN** the view remains clear of persistent central upgrade instructions while the point count and journal access remain visible.

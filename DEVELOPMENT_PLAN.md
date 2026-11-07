@@ -2,6 +2,20 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+## P0 exploration improvements — 2026-11-07
+
+Implemented next-connection guidance, readable service landings, deliberate lift
+departures and destination previews, contextual room focal accents and a quieter
+HUD. The retained seed-3 roof stall now has an ordinary-movement recovery
+regression. Two imperfect-input/build profiles run both seeds through extraction,
+with per-update resource and navigation observations. See [P0 details](NAVIGATION.md).
+
+The [human/physical checklist](docs/playtests/P0_CHECKLIST.md) supplies repeatable
+checkpoints and a results sheet; actual human, Windows GPU/controller and mobile
+device sessions remain pending. P1/P2 gameplay/content proposals remain future
+work. Multi-stop express lift routing is a later extension; this milestone makes
+adjacent-deck selection deliberate and readable.
+
 ## Remaining work reviewed on 2026-11-06
 
 The original six milestones now have a playable foundation. The remaining work
