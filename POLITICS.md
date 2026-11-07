@@ -1,5 +1,10 @@
 # Courts and the encounter director
 
+This guide describes the shipped generator-13 implementation. The
+[planned rework](DEVELOPMENT_PLAN.md#hidden-factions-and-invisible-director--planned-2026-11-08)
+moves politics and direction behind the scenes for new ships, with autonomous
+armies and environmental consequences. That rework is not yet implemented.
+
 Start a **new ship** for generator 13. Existing expeditions retain their original
 geography and populations. Each new ship has three major alien countries, each
 with an audience chamber, disputed conduit and royal-guard finale. Their names,

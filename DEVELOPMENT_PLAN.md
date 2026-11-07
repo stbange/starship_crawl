@@ -7,9 +7,50 @@ contains thirteen hour-long automated simulations, earned-checkpoint screenshots
 and a controlled navigation comparison. Its proposed next priorities are growth
 and recovery tuning, stronger finales, clearer patrol consequences and rewards
 that remain useful. These recommendations are not yet implemented or an approved
-new milestone.
+new milestone. The faction/director correction below now supplies its own
+implementation sequence; general character-growth tuning remains separate.
 
-## Alien courts and director — 2026-11-07
+## Hidden factions and invisible director — planned 2026-11-08
+
+The player should discover alien politics through behaviour and consequences:
+marching armies, contested supplies, retreats and changed inhabitants. The
+director works behind the scenes to create a rhythm of anticipation, combat,
+discovery and recovery. This replaces the explicit court-quest and dispatch
+direction for **new ships**. It is planned work; generator 13 remains shipped.
+
+The complete [OpenSpec proposal](openspec/changes/hidden-factions-and-director/proposal.md),
+[design and acceptance criteria](openspec/changes/hidden-factions-and-director/design.md)
+and [implementation checklist](openspec/changes/hidden-factions-and-director/tasks.md)
+define six milestones, in this order:
+
+| Milestone | Work | Playable result |
+| --- | --- | --- |
+| 1. Hidden foundations | Versioned state, strategic sites, shared clock, private diagnostics; remove new-system court/dispatch UI | Recognisable alien groups tolerate or fight each other without a player commission |
+| 2. Mobile forces | Persistent squads, connected travel, escort/raid/reinforcement/retreat orders, distant-to-local combat | Follow an army across rooms and decks, intervene, leave and return without duplicated troops |
+| 3. Autonomous politics | Resource shortages, convoys, recruitment, distinct government doctrines, wars/truces/succession and graded hostility | Conflicts develop independently; attacking supply lines changes what happens next |
+| 4. Invisible director | Pressure/repetition memory, recovery/discovery states, bounded add/change/remove/defer interventions | Encounters and quiet periods vary without dispatch markers or arbitrary changes in view |
+| 5. Consequences and rewards | Occupation evidence, lighting/infestation, body/audio cues, story/hacking links and earned rewards | Returning to a station reveals the aftermath of events; player actions matter |
+| 6. Integration and tuning | Long expeditions, paired director comparisons, co-op/save/streaming stress and platform measurements | Coherent variation and pacing with tested resource limits and honest playtest evidence |
+
+Milestone 2 is the first major gameplay checkpoint: an unprompted battle involving
+forces travelling through the ship. Milestone 3 gives these movements independent
+political causes, and milestone 4 adjusts upcoming opportunities to improve pacing.
+
+Start with the three existing alien governments. Simulate nearby troops physically
+and distant campaigns coarsely; keep stable identities, casualties and occupation.
+The director may add an unseen patrol or discovery, reroute/delay reinforcements,
+or cancel an upcoming ambush/hazard. It must respect both players' observations,
+known architecture, required routes, enemy statistics and earned victories.
+
+Retain ordinary mission guidance, four-phase progression and the safe shelter.
+NPC-only battles grant no player kills, experience or equipment unlocks. Strategic
+time stops during pause, suspension and all-player shelter; exposed matrix bodies
+remain in the active world. Existing generator-13 ships retain their current
+quests and dispatches. Each implementation milestone includes its own tests,
+save compatibility and documentation; the final milestone adds twelve hour-long
+simulations and four paired director-disabled reruns, plus rendered evidence.
+
+## Alien courts and director — current implementation, 2026-11-07
 
 The four-milestone proposal is implemented in generator 13 / save 14. See
 [Courts and director](POLITICS.md) for controls, rules and limits.
