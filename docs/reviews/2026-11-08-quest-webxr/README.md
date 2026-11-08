@@ -39,7 +39,7 @@ IDBFS, avoiding a race between deletion and asynchronous persistence.
 | Ordinary Windows cross-build | Passed with MinGW-w64; VR options remain off |
 | Clean Quest test dependencies | Pinned requirements installed and imports verified with Python site packages disabled |
 | Quest CI job, pinned Emscripten 4.0.23 | Passed: build, packaging, full stereo/browser suite and downloadable artifact |
-| Windows-hosted execution and complete Pages publication | Required CI verification pending |
+| Windows-hosted execution and complete Pages publication | Passed in the complete repaired workflow, including both Pages targets |
 
 The [coverage record](core-coverage.json) lists every measured file. Renderer,
 platform and browser bridges use integration tests, as in the existing project;
@@ -69,9 +69,14 @@ The correction pins it in `tests/requirements-quest.txt`, used only by the Quest
 job; a clean temporary Python installation verified those imports. The
 [corrected Quest job](https://github.com/stbange/starship_crawl/actions/runs/42474447478/job/128712513180)
 passed every step and uploaded `quest-webxr`; its [step results](ci-quest-job.json)
-are retained here. The complete workflow is still running at this record's update.
-Publication and Windows-hosted execution are not yet claimed. The release task
-remains open until the full workflow and Pages deployment are confirmed.
+are retained here. Subsequent publication was blocked by an ordinary court-test
+timing race, documented in the [CI repair review](../2026-11-08-ci-reliability/README.md).
+The [complete repaired workflow](https://github.com/stbange/starship_crawl/actions/runs/42520975264)
+passed at `f7ece01` and deployed the ordinary root and `/quest/` on 2026-11-08
+at 21:54 Europe/Warsaw. Both Linux and Windows executed their native checks;
+all ordinary browser suites, Quest checks, coverage and sanitizers passed.
+The [publication evidence](../2026-11-08-ci-reliability/after-timings.json)
+closes the automated release task. Hardware validation remains separate below.
 
 ## Stereo captures
 

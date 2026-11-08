@@ -10,8 +10,10 @@ calibration, wrist navigation, floating progression/story panels, session-loss
 recovery and isolated browser saves. Ordinary Linux, Windows and web builds
 retain their existing paths. See [QUEST.md](QUEST.md) for build and launch
 instructions and [the physical checklist](docs/playtests/QUEST3_CHECKLIST.md).
-Implementation and release checks are tracked in the `quest3-webxr-target`
-OpenSpec change. Physical Quest performance/comfort validation remains pending;
+Implementation and automated release checks are complete in the archived
+[Quest checklist](openspec/changes/archive/2026-11-08-quest3-webxr-target/tasks.md).
+The [full CI run](https://github.com/stbange/starship_crawl/actions/runs/42520975264)
+passed and published both web targets. Physical Quest performance/comfort validation remains pending;
 native Android/OpenXR, hand tracking and teleport locomotion are future work.
 
 The preceding [long-expedition design review](docs/reviews/2026-11-07-long-expeditions/README.md)

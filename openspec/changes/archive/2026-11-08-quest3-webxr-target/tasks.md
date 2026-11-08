@@ -23,7 +23,7 @@
 
 - [x] 4.1 Run strict specs, native unit/gameplay and unit-only >=95% overall/per-file coverage gates, focused Quest sanitizers/tests and Linux/Windows/ordinary-web builds; retain results without coverage exclusions.
 - [x] 4.2 Run the packaged ordinary browser suites and Quest WebXR/device-emulation journeys, retain screenshots and storage/target-isolation evidence, and record unperformed hardware checks explicitly.
-- [ ] 4.3 Update the roadmap and release record, push validated work to main and verify the complete CI/Pages publication with both the ordinary game and Quest entry point.
+- [x] 4.3 Update the roadmap and release record, push validated work to main and verify the complete CI/Pages publication with both the ordinary game and Quest entry point. Verified by successful run 42520975264 at f7ece01, published 2026-11-08 21:54 Europe/Warsaw.
 
 ## Workflow follow-up
 

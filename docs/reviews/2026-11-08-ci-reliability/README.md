@@ -43,8 +43,19 @@ cache. All three affected browser suites passed, along with the additional
 CPU-throttled court run. All six independently selected phase expeditions passed.
 Unit-only coverage remains 10,259/10,471 lines (98.0%), with every core file at
 least 95%; all 29 unit tests and seven coverage-gate self-tests passed.
-[The local results](local-checks.json) retain the exact case names. Complete
-GitHub workflow and Pages publication verification remains pending.
+[The local results](local-checks.json) retain the exact case names.
+
+The [complete repaired workflow](https://github.com/stbange/starship_crawl/actions/runs/42520975264)
+passed at commit `f7ece01` and deployed both Pages targets on 2026-11-08 at
+21:54 Europe/Warsaw. It took **18 minutes 8 seconds**, compared with the preceding
+failed run's **85 minutes 31 seconds**: 78.8% less elapsed time in this comparison.
+Web compilation and packaging took 36 seconds. All six browser groups (18 suites),
+both native platforms, all twelve instrumented groups, specifications, unit
+coverage and the separate Quest job passed. The
+[recorded results and step timings](after-timings.json) include the successful
+Pages deployment. This verifies the actual tested artifacts through GitHub's
+deployment result; direct live-site HTTP access is unavailable under this
+environment's network policy. Timings will vary with hosted runner performance.
 
 The shipped game sources, save format and generation versions are unchanged.
 Physical-device play is outside this CI-only repair.

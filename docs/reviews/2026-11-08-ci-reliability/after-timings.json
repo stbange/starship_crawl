@@ -1,0 +1,298 @@
+{
+  "run": "https://github.com/stbange/starship_crawl/actions/runs/42520975264",
+  "commit": "f7ece0122018a29fffcaffdfc798ab896a78690f",
+  "conclusion": "success",
+  "duration": "18m 8s",
+  "duration_seconds": 1088,
+  "previous_failed_duration_seconds": 5131,
+  "jobs": {
+    "quality": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42520975264/job/128854141119"
+    },
+    "sanitizer-build": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42520975264/job/128854141050"
+    },
+    "quest": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42520975264/job/128854140838"
+    },
+    "web": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42520975264/job/128854140979"
+    },
+    "pages": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42520975264/job/128857139010"
+    },
+    "deploy": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42520975264/job/128858694021"
+    }
+  },
+  "matrices": [
+    {
+      "group": "group-_-native-_deploy",
+      "status": "completed successfully:",
+      "completed_jobs": 2
+    },
+    {
+      "group": "group-quality_sanitizer-build_-instrumented-_deploy",
+      "status": "completed successfully:",
+      "completed_jobs": 12
+    },
+    {
+      "group": "group-web_-web-browser-_pages",
+      "status": "completed successfully:",
+      "completed_jobs": 6
+    }
+  ],
+  "steps": {
+    "web": [
+      {
+        "name": "Set up job",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:19Z",
+        "completed-at": "2026-11-08T20:36:19Z",
+        "seconds": 0.0
+      },
+      {
+        "name": "Run actions/checkout@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:19Z",
+        "completed-at": "2026-11-08T20:36:22Z",
+        "seconds": 3.0
+      },
+      {
+        "name": "Require every ordinary browser suite in the matrix",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:22Z",
+        "completed-at": "2026-11-08T20:36:22Z",
+        "seconds": 0.0
+      },
+      {
+        "name": "Explain Pages publishing target",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:22Z",
+        "completed-at": "2026-11-08T20:36:22Z",
+        "seconds": 0.0
+      },
+      {
+        "name": "Pinned Emscripten SDK",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:22Z",
+        "completed-at": "2026-11-08T20:36:44Z",
+        "seconds": 22.0
+      },
+      {
+        "name": "Build and package the ordinary application once",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:44Z",
+        "completed-at": "2026-11-08T20:37:20Z",
+        "seconds": 36.0
+      },
+      {
+        "name": "Run actions/upload-artifact@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:20Z",
+        "completed-at": "2026-11-08T20:37:22Z",
+        "seconds": 2.0
+      },
+      {
+        "name": "Retain the exact site for browser tests and Pages",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:22Z",
+        "completed-at": "2026-11-08T20:37:23Z",
+        "seconds": 1.0
+      },
+      {
+        "name": "Post Run actions/checkout@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:23Z",
+        "completed-at": "2026-11-08T20:37:23Z",
+        "seconds": 0.0
+      },
+      {
+        "name": "Complete job",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:23Z",
+        "completed-at": "2026-11-08T20:37:23Z",
+        "seconds": 0.0
+      }
+    ],
+    "quality": [
+      {
+        "name": "Set up job",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:19Z",
+        "completed-at": "2026-11-08T20:36:20Z",
+        "seconds": 1.0
+      },
+      {
+        "name": "Run actions/checkout@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:20Z",
+        "completed-at": "2026-11-08T20:36:22Z",
+        "seconds": 2.0
+      },
+      {
+        "name": "Run actions/setup-node@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:22Z",
+        "completed-at": "2026-11-08T20:36:25Z",
+        "seconds": 3.0
+      },
+      {
+        "name": "Run npm ci --ignore-scripts --no-audit --no-fund",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:25Z",
+        "completed-at": "2026-11-08T20:36:27Z",
+        "seconds": 2.0
+      },
+      {
+        "name": "Validate specifications",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:27Z",
+        "completed-at": "2026-11-08T20:36:28Z",
+        "seconds": 1.0
+      },
+      {
+        "name": "Run python -m pip install -r tests/requirements.txt",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:28Z",
+        "completed-at": "2026-11-08T20:36:32Z",
+        "seconds": 4.0
+      },
+      {
+        "name": "Coverage and CI gate self-tests",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:32Z",
+        "completed-at": "2026-11-08T20:36:32Z",
+        "seconds": 0.0
+      },
+      {
+        "name": "Unit-only coverage gate",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:36:32Z",
+        "completed-at": "2026-11-08T20:37:39Z",
+        "seconds": 67.0
+      },
+      {
+        "name": "Retain unit-only coverage reports",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:39Z",
+        "completed-at": "2026-11-08T20:37:40Z",
+        "seconds": 1.0
+      },
+      {
+        "name": "Package instrumented campaign executables",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:40Z",
+        "completed-at": "2026-11-08T20:37:44Z",
+        "seconds": 4.0
+      },
+      {
+        "name": "Run actions/upload-artifact@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:44Z",
+        "completed-at": "2026-11-08T20:37:46Z",
+        "seconds": 2.0
+      },
+      {
+        "name": "Post Run actions/setup-node@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:46Z",
+        "completed-at": "2026-11-08T20:37:46Z",
+        "seconds": 0.0
+      },
+      {
+        "name": "Post Run actions/checkout@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:46Z",
+        "completed-at": "2026-11-08T20:37:46Z",
+        "seconds": 0.0
+      },
+      {
+        "name": "Complete job",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:37:46Z",
+        "completed-at": "2026-11-08T20:37:46Z",
+        "seconds": 0.0
+      }
+    ],
+    "pages": [
+      {
+        "name": "Set up job",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:48:01Z",
+        "completed-at": "2026-11-08T20:48:02Z",
+        "seconds": 1.0
+      },
+      {
+        "name": "Run actions/download-artifact@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:48:02Z",
+        "completed-at": "2026-11-08T20:48:03Z",
+        "seconds": 1.0
+      },
+      {
+        "name": "Run actions/download-artifact@v4",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:48:03Z",
+        "completed-at": "2026-11-08T20:48:05Z",
+        "seconds": 2.0
+      },
+      {
+        "name": "Run actions/upload-pages-artifact@v3",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:48:05Z",
+        "completed-at": "2026-11-08T20:48:07Z",
+        "seconds": 2.0
+      },
+      {
+        "name": "Complete job",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:48:07Z",
+        "completed-at": "2026-11-08T20:48:07Z",
+        "seconds": 0.0
+      }
+    ],
+    "deploy": [
+      {
+        "name": "Set up job",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:54:11Z",
+        "completed-at": "2026-11-08T20:54:13Z",
+        "seconds": 2.0
+      },
+      {
+        "name": "Configure GitHub Pages",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:54:13Z",
+        "completed-at": "2026-11-08T20:54:14Z",
+        "seconds": 1.0
+      },
+      {
+        "name": "Deploy the tested game",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:54:14Z",
+        "completed-at": "2026-11-08T20:54:21Z",
+        "seconds": 7.0
+      },
+      {
+        "name": "Complete job",
+        "conclusion": "success",
+        "started-at": "2026-11-08T20:54:21Z",
+        "completed-at": "2026-11-08T20:54:21Z",
+        "seconds": 0.0
+      }
+    ]
+  },
+  "pages_urls": [
+    "https://stbange.github.io/starship_crawl/",
+    "https://stbange.github.io/starship_crawl/quest/"
+  ],
+  "verification": "Successful Actions deployment of the exact packages used by the ordinary and Quest browser jobs. Direct live HTTP requests are unavailable under this environment network policy.",
+  "physical_quest_tested": false
+}
