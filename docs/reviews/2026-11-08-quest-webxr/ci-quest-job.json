@@ -1,0 +1,92 @@
+{
+  "commit": "8bff083a95cca1d6346b79bd9793c919fe635a12",
+  "job_url": "https://github.com/stbange/starship_crawl/actions/runs/42474447478/job/128712513180",
+  "conclusion": "success",
+  "steps": [
+    {
+      "name": "Set up job",
+      "number": "1",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:08:55Z",
+      "completed-at": "2026-11-08T11:08:56Z"
+    },
+    {
+      "name": "Run actions/checkout@v4",
+      "number": "2",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:08:56Z",
+      "completed-at": "2026-11-08T11:08:58Z"
+    },
+    {
+      "name": "Pinned Emscripten SDK",
+      "number": "3",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:08:58Z",
+      "completed-at": "2026-11-08T11:09:21Z"
+    },
+    {
+      "name": "Build separate Quest and ordinary browser artifacts",
+      "number": "4",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:09:21Z",
+      "completed-at": "2026-11-08T11:10:05Z"
+    },
+    {
+      "name": "Packaging isolation checks",
+      "number": "5",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:10:05Z",
+      "completed-at": "2026-11-08T11:10:05Z"
+    },
+    {
+      "name": "Browser tooling",
+      "number": "6",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:10:05Z",
+      "completed-at": "2026-11-08T11:10:28Z"
+    },
+    {
+      "name": "Stereo WebGL, controller gameplay, lifecycle and save isolation",
+      "number": "7",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:10:28Z",
+      "completed-at": "2026-11-08T11:16:46Z"
+    },
+    {
+      "name": "Retain Quest captures and test results",
+      "number": "8",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:16:46Z",
+      "completed-at": "2026-11-08T11:16:47Z"
+    },
+    {
+      "name": "Downloadable Quest build",
+      "number": "9",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:16:47Z",
+      "completed-at": "2026-11-08T11:16:48Z"
+    },
+    {
+      "name": "Retain Quest Pages subdirectory",
+      "number": "10",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:16:48Z",
+      "completed-at": "2026-11-08T11:16:49Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v4",
+      "number": "20",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:16:49Z",
+      "completed-at": "2026-11-08T11:16:49Z"
+    },
+    {
+      "name": "Complete job",
+      "number": "21",
+      "conclusion": "success",
+      "started-at": "2026-11-08T11:16:49Z",
+      "completed-at": "2026-11-08T11:16:49Z"
+    }
+  ],
+  "physical_headset_tested": false
+}

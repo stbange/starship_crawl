@@ -16,13 +16,13 @@
 ## 3. Storage and distribution
 
 - [x] 3.1 Add separate Quest persistence/settings and compatible import/export; verify same-origin isolation, reload, supported legacy/current saves and transactional rejection without touching ordinary storage.
-- [ ] 3.2 Package the Quest application independently and add its own CI artifact/test job and Pages subdirectory; verify missing/invalid artifacts fail clearly and the ordinary root package is preserved.
+- [x] 3.2 Package the Quest application independently and add its own CI artifact/test job and Pages subdirectory; verify missing/invalid artifacts fail clearly and the ordinary root package is preserved.
 - [x] 3.3 Document controller bindings, launch/build instructions, actual limitations and a physical Quest 3 checklist; verify every documented control has a production implementation and distinguish emulation from hardware testing.
 
 ## 4. Integration and release
 
-- [ ] 4.1 Run strict specs, native unit/gameplay and unit-only >=95% overall/per-file coverage gates, focused Quest sanitizers/tests and Linux/Windows/ordinary-web builds; retain results without coverage exclusions.
-- [ ] 4.2 Run the packaged ordinary browser suites and Quest WebXR/device-emulation journeys, retain screenshots and storage/target-isolation evidence, and record unperformed hardware checks explicitly.
+- [x] 4.1 Run strict specs, native unit/gameplay and unit-only >=95% overall/per-file coverage gates, focused Quest sanitizers/tests and Linux/Windows/ordinary-web builds; retain results without coverage exclusions.
+- [x] 4.2 Run the packaged ordinary browser suites and Quest WebXR/device-emulation journeys, retain screenshots and storage/target-isolation evidence, and record unperformed hardware checks explicitly.
 - [ ] 4.3 Update the roadmap and release record, push validated work to main and verify the complete CI/Pages publication with both the ordinary game and Quest entry point.
 
 ## Workflow follow-up

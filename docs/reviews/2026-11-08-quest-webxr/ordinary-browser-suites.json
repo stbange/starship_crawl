@@ -1,0 +1,24 @@
+{
+  "passed": [
+    "tests/test_aftermath_browser.py",
+    "tests/test_browser.py",
+    "tests/test_deaths_browser.py",
+    "tests/test_equipment_browser.py",
+    "tests/test_exterior_browser.py",
+    "tests/test_features_browser.py",
+    "tests/test_foundation_browser.py",
+    "tests/test_frontier_browser.py",
+    "tests/test_guidance_browser.py",
+    "tests/test_habitat_browser.py",
+    "tests/test_hidden_browser.py",
+    "tests/test_interiors_browser.py",
+    "tests/test_matrix_browser.py",
+    "tests/test_phases_browser.py",
+    "tests/test_politics_browser.py",
+    "tests/test_regional_browser.py",
+    "tests/test_shelter_browser.py",
+    "tests/test_story_browser.py"
+  ],
+  "count": 18,
+  "physical_device_tested": false
+}

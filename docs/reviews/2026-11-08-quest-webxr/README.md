@@ -34,8 +34,12 @@ IDBFS, avoiding a race between deletion and asynchronous persistence.
 | Tracking adapter coverage | 103/103 executable lines, 100% |
 | Strict specifications, coverage-gate and packaging checks | Passed |
 | Full WebXR emulation suite | Passed: entry failures, stereo output, aiming, controls, lifecycle, progression, facilities and save isolation |
-| Ordinary packaged browser suites | Release verification in progress; required by CI |
-| Windows build and complete Pages publication | Required CI verification pending |
+| Ordinary packaged browser suites | All 18 passed |
+| Native OpenGL render checks | Eight scenes passed, including six split-screen scenes |
+| Ordinary Windows cross-build | Passed with MinGW-w64; VR options remain off |
+| Clean Quest test dependencies | Pinned requirements installed and imports verified with Python site packages disabled |
+| Quest CI job, pinned Emscripten 4.0.23 | Passed: build, packaging, full stereo/browser suite and downloadable artifact |
+| Windows-hosted execution and complete Pages publication | Required CI verification pending |
 
 The [coverage record](core-coverage.json) lists every measured file. Renderer,
 platform and browser bridges use integration tests, as in the existing project;
@@ -53,8 +57,21 @@ snap-turn release latches; paused head tracking; floating and wrist maps;
 controller, visibility and head-tracking loss; release-plus-A recovery; session
 end/re-entry; separate same-origin storage; compatible imports; earned guardian
 rewards and upgrades; shelter, matrix, mech and wagon transitions; actual
-WebGL context loss and a reload path. Final release checks also exercise story
-decisions and the expanded loadout/decision text in the floating panels.
+WebGL context loss and a reload path. The final release run also passed an actual
+story decision and exercised the expanded loadout/decision text in the floating
+panels. Retained results list the [nine VR check groups](quest-browser-results.json),
+[eighteen ordinary suites](ordinary-browser-suites.json) and
+[native render scenes](native-render-checks.txt).
+
+The implementation is in commits `3c7f9d0` and `8bff083`. The first CI attempt
+identified an undeclared Pillow dependency in the new image-comparison test.
+The correction pins it in `tests/requirements-quest.txt`, used only by the Quest
+job; a clean temporary Python installation verified those imports. The
+[corrected Quest job](https://github.com/stbange/starship_crawl/actions/runs/42474447478/job/128712513180)
+passed every step and uploaded `quest-webxr`; its [step results](ci-quest-job.json)
+are retained here. The complete workflow is still running at this record's update.
+Publication and Windows-hosted execution are not yet claimed. The release task
+remains open until the full workflow and Pages deployment are confirmed.
 
 ## Stereo captures
 

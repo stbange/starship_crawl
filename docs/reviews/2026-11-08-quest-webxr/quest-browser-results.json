@@ -1,0 +1,15 @@
+{
+  "scope": "full",
+  "checks": [
+    "session permission/setup failure, local reference fallback, stereo views and single XR frame loop",
+    "independent controller aim, held-stick snap latch and neutral release",
+    "paused head tracking, controller menus, objective map, wrist map, persisted comfort option",
+    "controller loss, held-fire rejection, visibility/head tracking loss, bounded leaning, deliberate recovery with no time catch-up",
+    "fresh-character approach and boarding using controller locomotion",
+    "session end/re-entry, saved position reload, export and invalid-import rollback",
+    "earned reward claim, upgrade and story decision; shelter, matrix aiming/return, mech and wagon transitions through controller actions",
+    "same-origin ordinary/Quest storage isolation and earned-current/legacy save imports",
+    "graphics-loss reload path and usable unsupported-browser launch page"
+  ],
+  "physical_headset_tested": false
+}

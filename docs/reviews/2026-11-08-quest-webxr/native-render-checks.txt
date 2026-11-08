@@ -1,0 +1,35 @@
+RUN final Quest artifact and story/storage regression checks
+PASS final Quest suite
+RUN native render hull single
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 1 players, 18 rooms, 267120 vertices
+PASS native render hull
+RUN native render volume2 split
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 2 players, 21 rooms, 313764 vertices
+PASS native render volume2
+RUN native render biome1 split
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 2 players, 27 rooms, 382080 vertices
+PASS native render biome1
+RUN native render tentacles split
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 2 players, 25 rooms, 313692 vertices
+PASS native render tentacles
+RUN native render shelter split
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 2 players, 17 rooms, 246972 vertices
+PASS native render shelter
+RUN native render matrix split
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 2 players, 17 rooms, 246972 vertices
+PASS native render matrix
+RUN native render mech split
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 2 players, 17 rooms, 246972 vertices
+PASS native render mech
+RUN native render wagon single
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 30 frames, 1 players, 17 rooms, 246972 vertices
+PASS native render wagon
+PASS final release browser and native-render checks
