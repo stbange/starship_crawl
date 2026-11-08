@@ -275,8 +275,32 @@ void game_nova(Game *g, int player) {
         p->relic_cooldown = 1;
     }
 }
-static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin);
-static void shoot(Game *g, Player *p) {
+static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
+#ifdef SC_WEBXR
+                      , Vec3 aim, bool tracked
+#endif
+);
+static void shoot(Game *g, Player *p
+#ifdef SC_WEBXR
+                  , const Actions *action
+#endif
+) {
+#ifdef SC_WEBXR
+    double shot_yaw = p->yaw, shot_pitch = p->pitch;
+    Vec3 tracked_origin = player_eye(p);
+    if (action->aimed) {
+        Vec3 offset = action->aim_offset, direction = action->aim_direction;
+        double reach = vlen(offset), length = vlen(direction);
+        if (!isfinite(reach) || !isfinite(length) || reach > 3 || length < .01 || length > 100)
+            return;
+        if (reach > .001 && world_raycast(&g->world, tracked_origin, vmul(offset, 1 / reach),
+                                          reach) < reach - .015)
+            return;
+        tracked_origin = vadd(tracked_origin, offset);
+        shot_yaw = atan2(direction.x, direction.z);
+        shot_pitch = atan2(direction.y, hypot(direction.x, direction.z));
+    }
+#endif
     int player = (int)(p - g->players);
     if (!p->riding && !campaign_weapon(g, player, p->weapon))
         p->weapon = g->campaign.profiles[player].guns[0];
@@ -305,15 +329,28 @@ static void shoot(Game *g, Player *p) {
     p->noise = 2;
     int owner = (int)(p - g->players), slot = 0;
     Vec3 origin = vadd(player_eye(p), v3(cos(p->yaw) * .16, -.13, -sin(p->yaw) * .16));
+#ifdef SC_WEBXR
+    if (action->aimed)
+        origin = tracked_origin;
+#endif
     if (w->flags & W_BEAM) {
+#ifdef SC_WEBXR
+        beam_shot(g, p, w, origin, facing(shot_yaw, shot_pitch), action->aimed);
+#else
         beam_shot(g, p, w, origin);
+#endif
         return;
     }
     for (int pellet = 0; pellet < w->pellets; pellet++) {
         uint32_t hash = world_hash(g->shots, p->pos.sector, (uint32_t)pellet * 31 + owner);
         double spread = w->spread / (1 + .12 * p->mods[3]);
+#ifdef SC_WEBXR
+        Vec3 dir = facing(shot_yaw + ((int)(hash % 2001) - 1000) * spread / 1000,
+                          shot_pitch + ((int)((hash >> 12) % 2001) - 1000) * spread / 1000);
+#else
         Vec3 dir = facing(p->yaw + ((int)(hash % 2001) - 1000) * spread / 1000,
                           p->pitch + ((int)((hash >> 12) % 2001) - 1000) * spread / 1000);
+#endif
         float damage = w->damage * (1 + .35f * p->power);
         if (hash % 100 < 3 + p->mods[3] * 2)
             damage *= 1.75f;
@@ -532,8 +569,16 @@ static bool already_hit(const Projectile *shot, Cell room, const Enemy *enemy) {
             return true;
     return false;
 }
-static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin) {
+static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
+#ifdef SC_WEBXR
+                      , Vec3 aim, bool tracked
+#endif
+) {
+#ifdef SC_WEBXR
+    Vec3 dir = aim, ray = origin, end = origin;
+#else
     Vec3 dir = facing(p->yaw, p->pitch), ray = origin, end = origin;
+#endif
     double left = w->range;
     int owner = (int)(p - g->players);
     Projectile history = {0};
@@ -571,6 +616,10 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin) {
     Vec3 muzzle =
         vadd(origin, v3(cos(p->yaw) * (p->riding == MECH ? .65 : .3), p->riding == MECH ? -.5 : -.2,
                         -sin(p->yaw) * (p->riding == MECH ? .65 : .3)));
+#ifdef SC_WEBXR
+    if (tracked)
+        muzzle = origin;
+#endif
     g->beams[owner] = (Beam){position_from(muzzle), position_from(end), w->color, .14f};
 }
 static void projectiles_step(Game *g, double dt) {
@@ -982,7 +1031,11 @@ void game_step(Game *g, const Actions *actions, double dt) {
             g->rigs[i][p->riding - 1].yaw = p->yaw;
         }
         if (!p->lift_active && actions[i].fire && p->cooldown <= 0)
+#ifdef SC_WEBXR
+            shoot(g, p, &actions[i]);
+#else
             shoot(g, p);
+#endif
     }
     game_progression_step(g, dt);
     game_story_step(g);

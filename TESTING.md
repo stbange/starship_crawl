@@ -1,6 +1,33 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
 
+**Quest 3 target.** `SC_QUEST_TESTS=ON` adds isolated tracking/combat tests and a
+byte-for-byte saved-expedition comparison between ordinary and Quest cores.
+`python3 scripts/check-coverage.py --quest` measures both variants and explicitly
+requires `quest.c` in the unchanged 95% overall/per-file unit-only gate. The
+ordinary coverage command and target defaults are unchanged. CI also runs the
+Quest tests under address/undefined-behavior/leak sanitizers.
+
+Package both pages at their production-relative paths before testing:
+
+```sh
+python3 scripts/package-web.py --output build-pages-preview/starship_crawl
+python3 scripts/package-quest.py --output build-pages-preview/starship_crawl/quest
+python3 -m unittest discover -s tests -p 'test_quest_packaging.py'
+python3 tests/test_quest_browser.py --site-dir build-pages-preview --url-path /starship_crawl/quest/
+```
+
+The test-only `tests/quest_device.js` supplies standard WebXR APIs, valid poses,
+controllers and a real WebGL framebuffer. The browser test exercises the shipped
+WASM, distinct eye captures, one simulation update per XR frame, head/controller
+independence, menu navigation, progression, ordinary-control boarding, saved
+legacy facilities, session permission/tracking/visibility/context loss,
+re-entry, and same-origin save isolation. No emulated device or gameplay grants
+are shipped in the application. Results and stereo captures are retained in
+`build-quest/test-artifacts/` and CI's `quest-test-captures` artifact. The normal
+browser suites remain separate required gates. Physical Quest 3 frame rate,
+comfort, input and audio checks remain [explicitly pending](docs/playtests/QUEST3_CHECKLIST.md).
+
 **Hidden factions (generator 14 / simulation 1 / format 15).** Five focused unit
 suites cover the shared clock and geography, persistent forces and capacity,
 autonomous orders/resources/hostility, invisible intervention effects and memory,

@@ -22,6 +22,9 @@ static const char *fragment_source =
     "uFogDensity;uniform vec3 uFogColor;\n"
     "uniform vec4 uTorch;uniform int uLampCount;uniform vec4 uLampPos[12];uniform vec4 "
     "uLampColor[12];out vec4 result;\n"
+#ifdef SC_WEBXR
+    "uniform vec3 uTorchOrigin;\n"
+#endif
     "float lamp(float phase){if(mod(phase,4.0)<0.5)return 0.0;float "
     "t=mod(uTime+phase*.37,7.0+phase*.13);if(t<.3)return .06;if(t<.55)return .4;if(t<1.1)return "
     ".02;return .75+.25*sin(t*2.0+phase);}\n"
@@ -34,9 +37,18 @@ static const char *fragment_source =
     "  if(d2<radius*radius){float d=sqrt(d2);float falloff=pow(1.0-d/radius,2.0);float "
     "diffuse=max(dot(n,delta/max(d,.001)),0.0);\n"
     "   illumination+=uLampColor[i].rgb*uLampColor[i].w*falloff*(.12+diffuse);}}\n"
+#ifdef SC_WEBXR
+    " vec3 fromTorch=vPosition-uTorchOrigin;float torchDistance=length(fromTorch);\n"
+    " float cone=smoothstep(.79,.95,dot(fromTorch/max(torchDistance,.001),uTorch.xyz));\n"
+    " float beam=uTorch.w*cone/(1.0+.0025*torchDistance*torchDistance)*"
+    "max(0.0,1.0-torchDistance/70.0);\n"
+    " illumination+=vec3(1.5,1.35,1.05)*beam*(.15+.95*"
+    "max(dot(n,-fromTorch/max(torchDistance,.001)),0.0));\n"
+#else
     " float cone=smoothstep(.79,.95,dot(fromEye/max(distance,.001),uTorch.xyz));\n"
     " float beam=uTorch.w*cone/(1.0+.0025*distance*distance)*max(0.0,1.0-distance/70.0);\n"
     " illumination+=vec3(1.5,1.35,1.05)*beam*(.15+.95*max(dot(n,view),0.0));\n"
+#endif
     " vec2 tile=abs(n.y)>.5?p.xz:(abs(n.x)>.5?p.zy:p.xy);vec2 panel=fract(tile/3.0);\n"
     " float seam=step(panel.x,.018)+step(panel.y,.018);\n"
     " float grain=fract(sin(dot(floor(p*9.0),vec3(12.9898,78.233,39.425)))*43758.5453);\n"
@@ -123,6 +135,9 @@ bool renderer_init(Renderer *r) {
     r->ui = gl.GetUniformLocation(r->program, "uUI");
     r->offset = gl.GetUniformLocation(r->program, "uOffset");
     r->torch = gl.GetUniformLocation(r->program, "uTorch");
+#ifdef SC_WEBXR
+    r->torch_origin = gl.GetUniformLocation(r->program, "uTorchOrigin");
+#endif
     r->time = gl.GetUniformLocation(r->program, "uTime");
     r->fog_density = gl.GetUniformLocation(r->program, "uFogDensity");
     r->fog_color = gl.GetUniformLocation(r->program, "uFogColor");
@@ -157,6 +172,10 @@ bool renderer_init(Renderer *r) {
     return true;
 }
 void renderer_destroy(Renderer *r) {
+#ifdef SC_WEBXR
+    if (r->quest_fade)
+        gl.DeleteProgram(r->quest_fade);
+#endif
     if (r->sprite_program)
         gl.DeleteProgram(r->sprite_program);
     if (r->sprite_vao)
@@ -1069,6 +1088,11 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
     GLfloat torch[] = {(float)dir.x, (float)dir.y, (float)dir.z,
                        !matrix && viewer->flashlight ? 1.0f : 0.0f};
     gl.Uniform4fv(r->torch, 1, torch);
+#ifdef SC_WEBXR
+    Vec3 torch_origin = vsub(player_eye(viewer), r->origin);
+    gl.Uniform3f(r->torch_origin, (float)torch_origin.x, (float)torch_origin.y,
+                (float)torch_origin.z);
+#endif
     gl.Uniform1f(r->time, (float)fmod(g->time, 4096));
     gl.Uniform1i(r->lamp_count, count);
     gl.Uniform4fv(r->lamp_pos, count, positions);
@@ -2242,6 +2266,9 @@ void renderer_options(Renderer *r, int width, int height, int player, int select
 }
 void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, bool touch, bool debug,
                    double fps, const char *save_status) {
+#ifdef SC_WEBXR
+    r->quest_active=false;
+#endif
     if (width <= 0 || height <= 0)
         return;
     gl.UseProgram(r->program);
@@ -2370,3 +2397,6 @@ bool renderer_capture(int width, int height, const char *path) {
     free(pixels);
     return ok;
 }
+#ifdef SC_WEBXR
+#include "render_quest.inc"
+#endif

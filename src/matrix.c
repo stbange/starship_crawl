@@ -210,16 +210,38 @@ static void move_avatar(MatrixNetwork *w, const MatrixRecord *r, MatrixDiver *d,
         }
     }
 }
-static void pulse(Game *g, int p) {
+static void pulse(Game *g, int p
+#ifdef SC_WEBXR
+                  , const Actions *action
+#endif
+) {
     MatrixDiver *d = &g->matrix.divers[p];
     MatrixNetwork *w = &g->matrix.networks[d->network];
     if (d->bandwidth < 2 || d->cooldown > 0)
         return;
+#ifdef SC_WEBXR
+    Vec3 origin=matrix_eye(g,p), direction=facing(g->players[p].yaw,g->players[p].pitch);
+    if (action->aimed) {
+        double reach=vlen(action->aim_offset), length=vlen(action->aim_direction);
+        if (!isfinite(reach) || !isfinite(length) || reach>3 || length<.01 || length>100)
+            return;
+        if (reach>.001 && matrix_raycast(w,&g->matrix.records[w->record],origin,
+                            vmul(action->aim_offset,1/reach),reach)<reach-.015)
+            return;
+        origin=vadd(origin,action->aim_offset);
+        direction=vmul(action->aim_direction,1/length);
+    }
+#endif
     for (int i = 0; i < SC_MATRIX_SHOTS; i++)
         if (!w->shots[i].active) {
             w->shots[i] =
-                (MatrixShot){.pos = matrix_eye(g, p),
+                (MatrixShot){
+#ifdef SC_WEBXR
+                             .pos = origin, .velocity=vmul(direction,38),
+#else
+                             .pos = matrix_eye(g, p),
                              .velocity = vmul(facing(g->players[p].yaw, g->players[p].pitch), 38),
+#endif
                              .life = 1.6f,
                              .damage = 20 + g->players[p].power * 2,
                              .owner = p,
@@ -264,7 +286,11 @@ void matrix_player_step(Game *g, int p, const Actions *a, double dt) {
     if (node >= 0 && d->pos.y < 2)
         r->seen |= 1u << node;
     if (a->fire)
+#ifdef SC_WEBXR
+        pulse(g, p, a);
+#else
         pulse(g, p);
+#endif
 }
 static double sphere(Vec3 from, Vec3 dir, Vec3 center, double radius, double limit) {
     Vec3 delta = vsub(from, center);

@@ -2,6 +2,8 @@ Starship Crawl is a playable first-person prototype in C17, SDL3, and OpenGL / W
 
 **Play begins with one player.** Split-screen is optional: press F2, or use the browser menu, to explicitly add a second player. Loading a save always starts in solo mode and retains the second character's progression.
 
+**Quest 3 VR is a separate opt-in build.** Open [the Quest page](https://stbange.github.io/starship_crawl/quest/) in Meta Quest Browser after its successful deployment. It has tracked stereo views, Touch-controller aiming and movement, a wrist map and floating menus, and separate saves. Linux, Windows and the regular web page keep their existing targets. See [Quest build, controls and hardware-testing limits](QUEST.md).
+
 The prototype includes:
 
 - A star-filled space approach, sparse lights receding along an enormous dark hull, and a small returnable boarding craft behind the player. The safe level-0 loading bay has left, right, inward, upper, and lower routes.
@@ -67,7 +69,7 @@ python3 -m http.server --directory build-web 8000
 
 Open `starship_crawl.html` through the HTTP server. Keep the HTML, JavaScript, and WASM files together. WebGL 2 is required; the build uses a single browser thread and does not require COOP/COEP headers. A click or tap starts play and unlocks audio. Mobile controls are intended primarily for landscape orientation.
 
-**GitHub Pages deployment.** Work directly on `main`. Every push to `main`, including documentation and configuration changes, starts the `Build, test, and publish` workflow. It builds the web game, stages `index.html` with its JavaScript and WASM files, and exercises the complete browser suite under `/starship_crawl/`. Once the quality, native, and web checks pass, the tested artifact publishes automatically through the official GitHub Pages actions. Pull requests build and test without deploying. In repository Settings → Pages, set the publishing source to **GitHub Actions** once. The expected project address is `https://stbange.github.io/starship_crawl/`; the Actions deployment result confirms when it is live.
+**GitHub Pages deployment.** Work directly on `main`. Every push to `main`, including documentation and configuration changes, starts the `Build, test, and publish` workflow. It builds the web game, stages `index.html` with its JavaScript and WASM files, and exercises the complete browser suite under `/starship_crawl/`. A separate job builds and tests Quest VR under `/starship_crawl/quest/`; the Pages assembly preserves the ordinary root package and adds that subdirectory. Once the quality, native, ordinary-web and Quest checks pass, the tested site publishes automatically through the official GitHub Pages actions. Pull requests build and test without deploying. In repository Settings → Pages, set the publishing source to **GitHub Actions** once. The expected project address is `https://stbange.github.io/starship_crawl/`; the Actions deployment result confirms when it is live.
 
 For a manual publication, open **Actions → Build, test, and publish → Run workflow**
 and select **main**. Other branches can pass every test while their Pages job is

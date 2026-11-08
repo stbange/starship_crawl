@@ -2,6 +2,18 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+## Optional Quest 3 target — 2026-11-08
+
+The authorized VR work adds a separate WebXR/Emscripten target with tracked
+stereo eyes, independently aimed controllers, stick/snap-turn locomotion,
+calibration, wrist navigation, floating progression/story panels, session-loss
+recovery and isolated browser saves. Ordinary Linux, Windows and web builds
+retain their existing paths. See [QUEST.md](QUEST.md) for build and launch
+instructions and [the physical checklist](docs/playtests/QUEST3_CHECKLIST.md).
+Implementation and release checks are tracked in the `quest3-webxr-target`
+OpenSpec change. Physical Quest performance/comfort validation remains pending;
+native Android/OpenXR, hand tracking and teleport locomotion are future work.
+
 The preceding [long-expedition design review](docs/reviews/2026-11-07-long-expeditions/README.md)
 contains thirteen hour-long automated simulations, earned-checkpoint screenshots,
 and a controlled navigation comparison. Its proposed next priorities are growth

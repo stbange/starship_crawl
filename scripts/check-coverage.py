@@ -15,7 +15,7 @@ def run(args):
     return subprocess.run([str(arg) for arg in args], cwd=ROOT, check=True)
 
 
-def validate_report(data):
+def validate_report(data, require_quest=False):
     failed = []
     names = set()
     for source in data["files"]:
@@ -31,6 +31,8 @@ def validate_report(data):
     # Do not accidentally pass with an empty, stale, or incorrectly filtered report.
     required = {"src/politics_gen.c", "src/politics.c", "src/director.c", "src/frontier.c", "src/reveals.c", "src/alien_special.c", "src/game.c", "src/encounters.c", "src/alien.c", "src/generation.c", "src/history.c", "src/interior.c", "src/habitat.c", "src/world.c", "src/traversal.c", "src/exterior.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/death.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/matrix.c", "src/matrix_gen.c", "src/matrix_state.c", "src/matrix_effects.c", "src/campaign.c", "src/campaign_gen.c", "src/campaign_combat.c", "src/math3d.h"}
     required.update({"src/faction_sim.c", "src/faction_forces.c", "src/faction_orders.c", "src/hidden_director.c", "src/save_factions.inc"})
+    if require_quest:
+        required.add("src/quest.c")
     missing = required - names
     if missing or failed:
         raise SystemExit(f"Coverage gate failed. Below {THRESHOLD}%: {failed}; missing sources: {sorted(missing)}")
@@ -39,9 +41,11 @@ def validate_report(data):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build-dir", type=Path, default=ROOT / "build-coverage")
+    parser.add_argument("--quest", action="store_true", help="Also instrument and require the isolated Quest adapter/core tests")
     args = parser.parse_args()
     build = args.build_dir.resolve()
-    run(["cmake", "-S", ROOT, "-B", build, "-DSC_BUILD_GAME=OFF", "-DSC_COVERAGE=ON", "-DCMAKE_BUILD_TYPE=Debug"])
+    run(["cmake", "-S", ROOT, "-B", build, "-DSC_BUILD_GAME=OFF", "-DSC_COVERAGE=ON", "-DCMAKE_BUILD_TYPE=Debug"] +
+        (["-DSC_QUEST_TESTS=ON"] if args.quest else []))
     run(["cmake", "--build", build, "--parallel", "4"])
     # Reports describe this unit run alone, not accumulated campaign/browser work.
     for counter in build.rglob("*.gcda"):
@@ -54,7 +58,7 @@ def main():
          "--json", report / "coverage.json", "--json-summary", report / "summary.json",
          "--cobertura", report / "coverage.xml", "--print-summary", "--fail-under-line", str(THRESHOLD), build])
     data = json.loads((report / "coverage.json").read_text())
-    validate_report(data)
+    validate_report(data, require_quest=args.quest)
     print(f"PASS: >= {THRESHOLD}% unit line coverage overall and in each measured source. Report: {report / 'index.html'}")
 
 

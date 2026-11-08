@@ -30,12 +30,12 @@ jobs:
       - name: Coverage gate self-tests
         run: python -m unittest discover -s tests -p 'test_quality_tools.py'
       - name: Unit coverage gate
-        run: python scripts/check-coverage.py
+        run: python scripts/check-coverage.py --quest
       - name: Complete expeditions and sanctuary journey
         run: ctest --test-dir build-coverage -L gameplay --output-on-failure --output-junit gameplay-tests.xml
       - name: Core sanitizers
         run: |
-          cmake -S . -B build-sanitize -DSC_BUILD_GAME=OFF -DSC_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug '-DCMAKE_C_FLAGS_DEBUG=-O1 -g'
+          cmake -S . -B build-sanitize -DSC_BUILD_GAME=OFF -DSC_QUEST_TESTS=ON -DSC_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug '-DCMAKE_C_FLAGS_DEBUG=-O1 -g'
           cmake --build build-sanitize --parallel 4
           ctest --test-dir build-sanitize --output-on-failure --output-junit sanitizer-tests.xml
       - name: Report quality test failures
@@ -254,15 +254,79 @@ jobs:
             build-web/starship_crawl.html
             build-web/starship_crawl.js
             build-web/starship_crawl.wasm
-      - name: Upload GitHub Pages artifact
+      - name: Retain the ordinary Pages root
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: pages-ordinary
           path: build-pages-preview/starship_crawl
+          include-hidden-files: true
+  quest:
+    name: Standalone Quest WebXR target
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pinned Emscripten SDK
+        run: |
+          git clone --depth 1 --branch 4.0.23 https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install 4.0.23
+          "$RUNNER_TEMP/emsdk/emsdk" activate 4.0.23
+      - name: Build separate Quest and ordinary browser artifacts
+        run: |
+          source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
+          emcmake cmake -S . -B build-quest -DSC_BUILD_QUEST=ON -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-quest --parallel 4
+          python scripts/package-web.py --build-dir build-quest --output build-quest-preview/starship_crawl
+          python scripts/package-quest.py --output build-quest-preview/starship_crawl/quest
+      - name: Packaging isolation checks
+        run: python -m unittest discover -s tests -p 'test_quest_packaging.py'
+      - name: Browser tooling
+        run: |
+          python -m pip install -r tests/requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Stereo WebGL, controller gameplay, lifecycle and save isolation
+        run: python scripts/run-browser-test.py tests/test_quest_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/
+      - name: Retain Quest captures and test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quest-test-captures
+          path: build-quest/test-artifacts
+          if-no-files-found: ignore
+      - name: Downloadable Quest build
+        uses: actions/upload-artifact@v4
+        with:
+          name: quest-webxr
+          path: build-quest-preview/starship_crawl/quest
+          include-hidden-files: true
+      - name: Retain Quest Pages subdirectory
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-quest
+          path: build-quest-preview/starship_crawl/quest
+          include-hidden-files: true
+  pages:
+    name: Assemble both tested web targets
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [web, quest]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pages-ordinary
+          path: site
+      - uses: actions/download-artifact@v4
+        with:
+          name: pages-quest
+          path: site/quest
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
   deploy:
     name: Publish GitHub Pages
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: [web, native, quality]
+    needs: [pages, native, quality]
     runs-on: ubuntu-latest
     permissions:
       contents: read

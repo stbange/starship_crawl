@@ -9,9 +9,17 @@ static const char *sprite_vertex_source =
 static const char *sprite_fragment_source =
     "in vec2 vUV;in vec4 vColor;in vec3 vPosition;in float vGlow;uniform sampler2D uAtlas;"
     "uniform vec3 uEye;uniform vec4 uTorch;uniform vec4 uFog;uniform float uTime;out vec4 result;"
+#ifdef SC_WEBXR
+    "uniform vec3 uTorchOrigin;"
+#endif
     "void main(){vec4 texel=texture(uAtlas,vUV);float alpha=texel.a*vColor.a;"
     "if(alpha<.015)discard;vec3 delta=vPosition-uEye;float d=length(delta);"
+#ifdef SC_WEBXR
+    "vec3 lampDelta=vPosition-uTorchOrigin;float ld=length(lampDelta);"
+    "float beam=uTorch.w*smoothstep(.79,.95,dot(lampDelta/max(ld,.001),uTorch.xyz))/(1.0+.005*ld*ld);"
+#else
     "float beam=uTorch.w*smoothstep(.79,.95,dot(delta/max(d,.001),uTorch.xyz))/(1.0+.005*d*d);"
+#endif
     "vec3 c=texel.rgb*vColor.rgb*(.15+abs(vGlow)+beam*.95);"
     "if(vGlow<0.0){float "
     "wave=sin(floor(vUV.x*64.0)*.7+floor(vUV.y*64.0)*.45-uTime*2.0);c*=.65+.35*step(.35,"
@@ -326,6 +334,16 @@ static void atmosphere_draw(Renderer *r, const Game *g, int player, const float 
     GLfloat torch[4] = {(float)forward.x, (float)forward.y, (float)forward.z,
                         p->flashlight ? 1.f : 0.f};
     GLfloat fog[4] = {atmosphere.fog.r, atmosphere.fog.g, atmosphere.fog.b, atmosphere.density};
+#ifdef SC_WEBXR
+    Vec3 lamp=r->quest_active?r->quest_lamp_origin:eye;
+    if (r->quest_active) {
+        torch[0]=(float)r->quest_lamp_direction.x;
+        torch[1]=(float)r->quest_lamp_direction.y;
+        torch[2]=(float)r->quest_lamp_direction.z;
+    }
+    gl.Uniform3f(gl.GetUniformLocation(r->sprite_program,"uTorchOrigin"),
+                (float)lamp.x,(float)lamp.y,(float)lamp.z);
+#endif
     gl.Uniform4fv(gl.GetUniformLocation(r->sprite_program, "uTorch"), 1, torch);
     gl.Uniform4fv(gl.GetUniformLocation(r->sprite_program, "uFog"), 1, fog);
     gl.BindTexture(GL_TEXTURE_2D, r->sprite_atlas);

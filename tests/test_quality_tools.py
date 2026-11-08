@@ -42,6 +42,16 @@ class CoverageGateTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             gate.validate_report(report)
 
+    def test_quest_gate_requires_adapter_and_measures_it(self):
+        report = self.report()
+        with self.assertRaises(SystemExit):
+            gate.validate_report(report, require_quest=True)
+        report["files"].append({"file": "src/quest.c", "lines": [{"count": 1}] * 20})
+        gate.validate_report(report, require_quest=True)
+        report["files"][-1]["lines"][-2:] = [{"count": 0}, {"count": 0}]
+        with self.assertRaises(SystemExit):
+            gate.validate_report(report, require_quest=True)
+
     def test_rounding_does_not_hide_a_failure(self):
         report = self.report()
         report["files"][0]["lines"] = [{"count": 1}] * 1899 + [{"count": 0}] * 101

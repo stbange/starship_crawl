@@ -2,6 +2,7 @@ schema: spec-driven
 context: |
   Starship Crawl is a C17 game using SDL3 and OpenGL 3.3 / WebGL 2, built with CMake.
   Native targets are Linux and Windows; web uses Emscripten and mobile touch controls.
+  Quest 3 uses a separate opt-in WebXR browser target, sc_quest_core and /quest-persist storage; ordinary targets never compile SC_WEBXR.
   Read README.md, EXPANSION.md, WORLD_GENERATION.md, SHELTER.md, FIELD_GUIDE.md, FOUNDATIONS.md, LIVING_SHIP.md, REGIONAL_ENCOUNTERS.md, DEEP_FRONTIERS.md, HIDDEN_FACTIONS.md, POLITICS.md (legacy generator 13), and TESTING.md for current behavior.
   The shipped generator is version 14, hidden faction simulation is 1, narrative version is 3 and save format is version 15 (matrix generator 1). Generator-13 courts retain their format-14 path. Quality-only changes must not reset expeditions.
   Gameplay is solo by default with optional local split-screen and ship-local character profiles, fresh on every new ship.

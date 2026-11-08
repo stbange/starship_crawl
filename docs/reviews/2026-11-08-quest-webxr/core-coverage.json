@@ -1,0 +1,241 @@
+{
+  "line_total": 10471,
+  "line_covered": 10259,
+  "line_percent": 98.0,
+  "files": [
+    {
+      "file": "src/alien.c",
+      "lines": 138,
+      "covered": 135,
+      "percent": 97.8
+    },
+    {
+      "file": "src/alien_special.c",
+      "lines": 185,
+      "covered": 180,
+      "percent": 97.3
+    },
+    {
+      "file": "src/campaign.c",
+      "lines": 382,
+      "covered": 378,
+      "percent": 99.0
+    },
+    {
+      "file": "src/campaign_combat.c",
+      "lines": 108,
+      "covered": 106,
+      "percent": 98.1
+    },
+    {
+      "file": "src/campaign_gen.c",
+      "lines": 94,
+      "covered": 94,
+      "percent": 100.0
+    },
+    {
+      "file": "src/death.c",
+      "lines": 91,
+      "covered": 90,
+      "percent": 98.9
+    },
+    {
+      "file": "src/director.c",
+      "lines": 156,
+      "covered": 156,
+      "percent": 100.0
+    },
+    {
+      "file": "src/encounters.c",
+      "lines": 288,
+      "covered": 282,
+      "percent": 97.9
+    },
+    {
+      "file": "src/equipment.c",
+      "lines": 208,
+      "covered": 206,
+      "percent": 99.0
+    },
+    {
+      "file": "src/expedition.c",
+      "lines": 519,
+      "covered": 508,
+      "percent": 97.9
+    },
+    {
+      "file": "src/exterior.c",
+      "lines": 11,
+      "covered": 11,
+      "percent": 100.0
+    },
+    {
+      "file": "src/faction_forces.c",
+      "lines": 590,
+      "covered": 566,
+      "percent": 95.9
+    },
+    {
+      "file": "src/faction_orders.c",
+      "lines": 203,
+      "covered": 199,
+      "percent": 98.0
+    },
+    {
+      "file": "src/faction_sim.c",
+      "lines": 350,
+      "covered": 334,
+      "percent": 95.4
+    },
+    {
+      "file": "src/frontier.c",
+      "lines": 203,
+      "covered": 200,
+      "percent": 98.5
+    },
+    {
+      "file": "src/game.c",
+      "lines": 906,
+      "covered": 884,
+      "percent": 97.6
+    },
+    {
+      "file": "src/generation.c",
+      "lines": 380,
+      "covered": 380,
+      "percent": 100.0
+    },
+    {
+      "file": "src/habitat.c",
+      "lines": 278,
+      "covered": 278,
+      "percent": 100.0
+    },
+    {
+      "file": "src/hidden_director.c",
+      "lines": 343,
+      "covered": 328,
+      "percent": 95.6
+    },
+    {
+      "file": "src/history.c",
+      "lines": 35,
+      "covered": 35,
+      "percent": 100.0
+    },
+    {
+      "file": "src/interior.c",
+      "lines": 356,
+      "covered": 355,
+      "percent": 99.7
+    },
+    {
+      "file": "src/math3d.h",
+      "lines": 25,
+      "covered": 25,
+      "percent": 100.0
+    },
+    {
+      "file": "src/matrix.c",
+      "lines": 435,
+      "covered": 418,
+      "percent": 96.1
+    },
+    {
+      "file": "src/matrix_effects.c",
+      "lines": 392,
+      "covered": 381,
+      "percent": 97.2
+    },
+    {
+      "file": "src/matrix_gen.c",
+      "lines": 155,
+      "covered": 154,
+      "percent": 99.4
+    },
+    {
+      "file": "src/matrix_state.c",
+      "lines": 188,
+      "covered": 188,
+      "percent": 100.0
+    },
+    {
+      "file": "src/navigation.c",
+      "lines": 173,
+      "covered": 171,
+      "percent": 98.8
+    },
+    {
+      "file": "src/politics.c",
+      "lines": 320,
+      "covered": 304,
+      "percent": 95.0
+    },
+    {
+      "file": "src/politics_gen.c",
+      "lines": 86,
+      "covered": 84,
+      "percent": 97.7
+    },
+    {
+      "file": "src/progression.c",
+      "lines": 207,
+      "covered": 201,
+      "percent": 97.1
+    },
+    {
+      "file": "src/psionics.c",
+      "lines": 54,
+      "covered": 54,
+      "percent": 100.0
+    },
+    {
+      "file": "src/quest.c",
+      "lines": 103,
+      "covered": 103,
+      "percent": 100.0
+    },
+    {
+      "file": "src/reveals.c",
+      "lines": 83,
+      "covered": 83,
+      "percent": 100.0
+    },
+    {
+      "file": "src/save.c",
+      "lines": 667,
+      "covered": 659,
+      "percent": 98.8
+    },
+    {
+      "file": "src/save_factions.inc",
+      "lines": 135,
+      "covered": 134,
+      "percent": 99.3
+    },
+    {
+      "file": "src/shelter.c",
+      "lines": 136,
+      "covered": 135,
+      "percent": 99.3
+    },
+    {
+      "file": "src/story.c",
+      "lines": 540,
+      "covered": 539,
+      "percent": 99.8
+    },
+    {
+      "file": "src/traversal.c",
+      "lines": 165,
+      "covered": 165,
+      "percent": 100.0
+    },
+    {
+      "file": "src/world.c",
+      "lines": 783,
+      "covered": 756,
+      "percent": 96.6
+    }
+  ]
+}

@@ -3,6 +3,9 @@
 #include "game.h"
 #include "gl_api.h"
 #include "platform_input.h"
+#ifdef SC_WEBXR
+#include "quest.h"
+#endif
 #define SC_VIEW_LIGHTS 12
 #define SC_SPACE_STARS 1800
 #define SC_VIEW_SPRITES 1536
@@ -35,6 +38,12 @@ typedef struct {
     GLuint framebuffer[SC_PLAYERS], texture[SC_PLAYERS], depth[SC_PLAYERS];
     GLint mvp, eye, grid, ui, offset;
     GLint torch, time, lamp_count, lamp_pos, lamp_color, fog_density, fog_color;
+#ifdef SC_WEBXR
+    GLint torch_origin;
+    GLuint quest_fade;
+    bool quest_active;
+    Vec3 quest_lamp_origin, quest_lamp_direction;
+#endif
     GLuint sprite_program, sprite_vao, sprite_vbo, sprite_atlas;
     SpriteDraw sprite_draws[SC_VIEW_SPRITES];
     SpriteVertex sprite_vertices[SC_VIEW_SPRITES * 6];
@@ -61,4 +70,10 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
                    double fps, const char *save_status);
 bool renderer_capture(int width, int height, const char *path);
 void renderer_options(Renderer *r, int width, int height, int player, int selected);
+#ifdef SC_WEBXR
+void renderer_quest_prepare(Renderer *r, Game *g);
+bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, GLuint framebuffer,
+                        int x, int y, int width, int height, const float *projection,
+                        const float *tracking_view);
+#endif
 #endif

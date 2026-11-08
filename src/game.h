@@ -81,6 +81,11 @@ typedef enum {
 typedef struct Actions {
     float forward, strafe, vertical;
     bool fire, jump, crouch, lift_up, lift_down, sprint;
+#ifdef SC_WEBXR
+    /* Transient controller ray, compiled only into the separate Quest core. */
+    bool aimed;
+    Vec3 aim_offset, aim_direction;
+#endif
 } Actions;
 typedef struct {
     Position pos;

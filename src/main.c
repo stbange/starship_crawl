@@ -57,6 +57,11 @@ typedef struct {
     const char *capture;
 } App;
 static App app;
+#ifdef SC_WEBXR
+static bool quest_running, quest_graphics_lost;
+static double quest_dt;
+static Actions quest_actions;
+#endif
 
 static void set_pause(bool paused) {
     app.paused = paused;
@@ -1559,6 +1564,12 @@ static void events(void) {
 }
 static void read_actions(Actions actions[2], double dt) {
     memset(actions, 0, 2 * sizeof(*actions));
+#ifdef SC_WEBXR
+    if (quest_running) {
+        actions[0] = quest_actions;
+        return;
+    }
+#endif
     input_devices_players(&app.devices, app.game.player_count);
     const bool *k = SDL_GetKeyboardState(NULL);
     Actions *a = &actions[0];
@@ -1640,13 +1651,29 @@ static void shutdown_app(void) {
 }
 static void frame(void *unused) {
     (void)unused;
+#ifdef SC_WEBXR
+    if (quest_graphics_lost)
+        return;
+#endif
     double now = (double)SDL_GetPerformanceCounter() / SDL_GetPerformanceFrequency();
     double dt = clampd(now - app.last, 0, .1);
     app.last = now;
     if (app.smoke_frames)
         dt = 1.0 / 60;
+#ifdef SC_WEBXR
+    if (quest_running)
+        dt = quest_dt;
+#endif
     app.fps = app.fps * .96 + (dt > 0 ? 1 / dt : 60) * .04;
+#ifdef SC_WEBXR
+    /* The Quest launch canvas is a paused preview. SDL sees the same physical
+       controllers as WebXR on some browsers; never replay its queued inputs. */
+    (void)events;
+    SDL_PumpEvents();
+    SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
+#else
     events();
+#endif
     Vec3 stream_positions[2] = {position_absolute(app.game.players[0].pos),
                                 position_absolute(app.game.players[1].pos)};
     world_refresh(&app.game.world, stream_positions, app.game.player_count);
@@ -1781,6 +1808,12 @@ static void frame(void *unused) {
     if (status == 0)
         snprintf(app.save_status, sizeof(app.save_status), "BROWSER STORAGE UNAVAILABLE");
 #endif
+#ifdef SC_WEBXR
+    if (quest_running) {
+        app.frame++;
+        return;
+    }
+#endif
     int w, h;
     SDL_GetWindowSizeInPixels(app.window, &w, &h);
     bool draw_pause = app.paused;
@@ -1818,6 +1851,9 @@ static void frame(void *unused) {
     }
 #endif
 }
+#ifdef SC_WEBXR
+#include "quest_app.inc"
+#endif
 int main(int argc, char **argv) {
     memset(&app, 0, sizeof(app));
     app.running = true;
@@ -1889,6 +1925,10 @@ int main(int argc, char **argv) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
     save_dir = "/persist";
+#ifdef SC_WEBXR
+    save_dir = "/quest-persist";
+    app.touch = true; /* The preview never competes for browser pointer lock. */
+#endif
     app.touch = app.touch || browser_touch();
 #else
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
