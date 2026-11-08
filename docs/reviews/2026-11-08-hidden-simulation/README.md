@@ -7,8 +7,8 @@ save 15. Generator-13 courts retain their format-14 path. The
 [player guide](../../../HIDDEN_FACTIONS.md) describes the resulting behaviour.
 
 All six milestones' mechanics and the long-run tuning are implemented. Native
-release, separate gameplay, coverage and packaged browser/render checks pass;
-the final full sanitizer run and CI/Pages publication are still in progress.
+release, separate gameplay, coverage, all 43 sanitizer tests and packaged
+browser/render checks pass; CI/Pages publication is still in progress.
 The [verification record](verification/README.md) separates the performed gates
 from pending checks and retains unsuccessful attempts.
 
@@ -157,6 +157,13 @@ include renderer/SDL allocations or imply a mobile-device frame-rate guarantee.
   Original failures and final reruns are retained.
 - The cloud workspace restart interrupted the browser batch during its phase
   suite. Completed suites were retained; unfinished suites were restarted.
+- The preceding main-branch Pages run failed in the phase browser test when
+  opening the menu during an unfinished pointer-capture request after closing a
+  journal. The shared import helper now waits for the queued frame and capture
+  promise, pauses through Escape, and waits for pointer release. It retains the
+  ordinary menu/file flow and all assertions. The affected phase suite passes;
+  the [public failure annotation](verification/prior-pages-failure.txt) and
+  [corrected run](verification/pointer-phase-browser.log) are retained.
 - Initial sanitizer runs exceeded the solo/phase campaign deadlines. The legacy
   fixture retained a new-ship simulation flag after changing its generator;
   correcting that setup reduced the measured three-campaign sanitizer run to
@@ -165,6 +172,13 @@ include renderer/SDL allocations or imply a mobile-device frame-rate guarantee.
   first campaigns before the old deadline; their two/four-campaign wall limits
   are now 1,200/2,400 seconds, with all simulated-frame and gameplay assertions
   unchanged. Final reruns are reported separately.
+- The first implementation CI run reached the four-profile gameplay deadline in
+  the unoptimized gcov build after three complete campaigns. The same ten-minute
+  timeout reproduced locally. Coverage builds now allow twenty minutes for that
+  test; ordinary release deadlines, profile count, frame limits and assertions
+  remain unchanged. Unit-only coverage is still collected before gameplay and
+  does not incorporate these campaign runs. The [CI annotation](verification/ci-first-attempt.json)
+  and [local timeout](verification/coverage-profiles-timeout.log) are retained.
 
 ## Measurement and human follow-up
 

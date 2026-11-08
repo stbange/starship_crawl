@@ -66,7 +66,7 @@ experiences and the final comparison protocol.
 - [x] 6.4 Measure strategic/tactical update percentiles, actor/work limits, memory and save growth in native and packaged web builds; tune the proposed caps and publish measurements without claiming untested mobile performance.
 - [x] 6.5 Tune encounter cadence, government priorities, hostility grace periods and evidence density from the recorded comparisons; rerun affected checks and document changes without altering the separate character-growth plan.
 - [x] 6.6 Prepare repeatable human solo/split-screen and physical-device checkpoints for neutrality, surprise, recovery and readability; record performed sessions and explicitly list unavailable/pending checks.
-- [ ] 6.7 Run the full strict-spec, native unit/gameplay, >=95% unit-only coverage, sanitizer, packaged browser, render and Linux/Windows/web build gates; retain captures of a convoy, battle, retreat, changed site and quiet recovery.
+- [x] 6.7 Run the full strict-spec, native unit/gameplay, >=95% unit-only coverage, sanitizer, packaged browser, render and Linux/Windows/web build gates; retain captures of a convoy, battle, retreat, changed site and quiet recovery.
 - [ ] 6.8 Update the roadmap, player docs, compatibility notes and review with final implemented versions and limitations; push to main and verify the complete CI/Pages deployment before marking publication complete.
 
 ## Workflow follow-up

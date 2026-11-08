@@ -14,8 +14,10 @@ platform); all 19 gameplay-labelled tests also pass separately. Unit-only core
 coverage is **97.92% (10,119/10,334)**, with every source at least 95%. All 18
 packaged browser suites pass across the retained batches/reruns. The final
 nonlethal-warning capture adds a normal co-op join, emulated controller shot,
-separate incident attribution, actual signal bars and stereo output. Full
-sanitizer/CI publication status is recorded in the linked review.
+separate incident attribution, actual signal bars and stereo output. All 43
+core ASan/UBSan tests pass with leak detection off in the sandbox; the five new
+unit suites also pass leak detection outside it. CI publication status is
+recorded in the linked review.
 
 `faction_revisit_journey` follows an earned cross-sector raid, shoots a real
 member, leaves and revisits, sees occupation and returns to the bay.

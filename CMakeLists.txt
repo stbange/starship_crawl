@@ -225,6 +225,10 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     # to finish; simulated frame limits and gameplay assertions stay unchanged.
     set_tests_properties(phase_journeys PROPERTIES TIMEOUT 1200)
     set_tests_properties(imperfect_expeditions PROPERTIES TIMEOUT 2400)
+  elseif(SC_COVERAGE)
+    # The unoptimized gcov CI run finished three campaigns before the old
+    # ten-minute deadline. Keep all four profiles and their frame assertions.
+    set_tests_properties(imperfect_expeditions PROPERTIES TIMEOUT 1200)
   endif()
   add_executable(sc_traversal_tests tests/test_traversal.c)
   target_link_libraries(sc_traversal_tests PRIVATE sc_core)

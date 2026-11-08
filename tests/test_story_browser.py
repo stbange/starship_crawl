@@ -17,9 +17,16 @@ def save(page):
 
 
 def import_fixture(page, name):
-    if page.evaluate('!!document.pointerLockElement'):
+    # A preceding Enter can still be queued in SDL, with pointer capture not yet
+    # requested. Let that frame and its capture promise settle before pausing;
+    # testing only pointerLockElement races an in-flight journal close in CI.
+    before = state(page)
+    expect(page, f's.frames > {before["frames"] + 1}')
+    wait_for(page, '!window.scPointer?.pending')
+    if not state(page)['paused']:
         page.keyboard.press('Escape')
         expect(page, 's.paused')
+    wait_for(page, '!document.pointerLockElement && !window.scPointer?.pending')
     page.locator('#menu').click()
     # File.arrayBuffer() and pointer capture finish after set_input_files returns.
     # Observe this import's UI confirmation, including when its text matches the previous import.

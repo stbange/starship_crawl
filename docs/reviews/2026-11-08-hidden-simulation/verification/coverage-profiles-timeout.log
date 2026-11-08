@@ -1,0 +1,54 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-coverage
+Test project /workspace/starship_crawl/build-coverage
+    Start 39: imperfect_expeditions
+1/1 Test #39: imperfect_expeditions ............***Timeout 600.01 sec
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.6s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 59.9s
+Seed 713: phase 2, guardians 105, rank 7, 38 kills, 0 respawns at 247.6s
+Seed 713: phase 3, guardians 115, rank 7, 39 kills, 0 respawns at 339.6s
+Tick 24000: 1116.1 0.0 336.0 -> [13,0,1], RECENT BOOTPRINTS / NEW EVIDENCE IN I JOURNAL / U TRACK LEADS
+Seed 713: phase 4, guardians 155, rank 12, 84 kills, 0 respawns at 472.6s
+Tick 48000: 133.9 0.0 144.0 -> [0,0,0], HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+Phase journey 713 starboard: PASS, 830.5s, 121 kills, 0 deaths, 49831 frames
+PROFILE {"seed":713,"profile":1,"passed":true,"simulated_seconds":830.52,"reaction_seconds":0.30,"turn_rad_s":2.8,"aim_error_rad":0.025,"kills":121,"deaths":0,"shots":779,"hits":467,"min_health":100.00,"min_shield":0.00,"min_energy":100.00,"health_loss":46.20,"shield_loss":237.00,"armor_loss":9.90,"damage_frames":11,"recoveries":0,"max_stall_seconds":0.20}
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 19.6s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 74.4s
+Seed 713: phase 2, guardians 105, rank 8, 53 kills, 2 respawns at 378.9s
+Tick 24000: 576.0 0.0 197.5 -> [9,0,1], SHIELD
+Seed 713: phase 3, guardians 115, rank 8, 54 kills, 2 respawns at 478.7s
+Seed 713: phase 4, guardians 155, rank 11, 79 kills, 2 respawns at 623.3s
+Tick 48000: 864.0 0.0 167.3 -> [0,0,0], ASCENSION / OPEN JOURNAL WITH I / CHOOSE AN UPGRADE
+Phase journey 713 starboard: PASS, 981.9s, 116 kills, 2 deaths, 58914 frames
+PROFILE {"seed":713,"profile":2,"passed":true,"simulated_seconds":981.90,"reaction_seconds":0.55,"turn_rad_s":1.8,"aim_error_rad":0.040,"kills":116,"deaths":2,"shots":1065,"hits":547,"min_health":1.60,"min_shield":0.00,"min_energy":100.00,"health_loss":923.29,"shield_loss":663.00,"armor_loss":193.36,"damage_frames":207,"recoveries":0,"max_stall_seconds":0.23}
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], SALVAGE / RECOVER AN ALIEN DRIVE
+Seed 42: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.2s
+Seed 42: phase 1, guardians 102, rank 3, 10 kills, 0 respawns at 83.8s
+Tick 24000: -620.7 0.0 144.0 -> [-7,0,1], SALVAGE CACHE / UPGRADE CURRENCY
+Seed 42: phase 2, guardians 10a, rank 13, 126 kills, 0 respawns at 416.6s
+Seed 42: phase 3, guardians 12a, rank 14, 140 kills, 0 respawns at 508.5s
+Seed 42: phase 4, guardians 1aa, rank 15, 154 kills, 0 respawns at 630.6s
+Tick 48000: -779.0 0.0 240.0 -> [0,0,0], SALVAGE CACHE / UPGRADE CURRENCY
+Phase journey 42 port: PASS, 978.9s, 205 kills, 0 deaths, 58732 frames
+PROFILE {"seed":42,"profile":1,"passed":true,"simulated_seconds":978.87,"reaction_seconds":0.30,"turn_rad_s":2.8,"aim_error_rad":0.025,"kills":205,"deaths":0,"shots":1147,"hits":537,"min_health":90.20,"min_shield":0.00,"min_energy":100.00,"health_loss":40.00,"shield_loss":154.00,"armor_loss":12.00,"damage_frames":6,"recoveries":0,"max_stall_seconds":0.30}
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], SALVAGE / RECOVER AN ALIEN DRIVE
+Seed 42: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 21.8s
+Seed 42: phase 1, guardians 102, rank 3, 9 kills, 0 respawns at 101.7s
+Tick 24000: -495.2 0.0 144.4 -> [-7,0,1], SHIELD
+Seed 42: phase 2, guardians 10a, rank 12, 104 kills, 0 respawns at 437.4s
+Seed 42: phase 3, guardians 12a, rank 13, 116 kills, 0 respawns at 534.9s
+Seed 42: phase 4, guardians 1aa, rank 14, 132 kills, 0 respawns at 663.8s
+Tick 48000: -1021.6 0.0 240.0 -> [0,0,0], SALVAGE CACHE / UPGRADE CURRENCY
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+gameplay    = 600.01 sec*proc (1 test)
+
+Total Test time (real) = 600.01 sec
+
+The following tests FAILED:
+	 39 - imperfect_expeditions (Timeout)                   gameplay
+Errors while running CTest

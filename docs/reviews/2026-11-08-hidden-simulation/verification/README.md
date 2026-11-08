@@ -14,13 +14,14 @@ or listening to the sound mix.
 | Separately run gameplay label | 19/19, [JUnit](hidden-final-gameplay.xml), 695.69 seconds |
 | Unit-only core coverage | 10,119/10,334 lines, 97.92%; every source >=95%, [gate](warning-coverage.log), [per-file summary](unit-coverage-summary.txt), [XML](unit-coverage-coverage.xml) |
 | Five new suites with ASan/UBSan and leak detection | 5/5 outside the ptrace sandbox, [results](leaks-results.json) |
-| Full ASan/UBSan campaign suite | Final run in progress; leak detection disabled for this sandboxed run |
+| Full ASan/UBSan campaign suite | 43/43, 3,804.33 seconds, [JUnit](sanitizer-final.xml), [log](sanitizer-final.log); leak detection disabled for this sandboxed run |
+| Coverage-build gameplay profiles | Ten-minute timeout reproduced locally and in the first CI attempt; the four profiles are rerunning with a twenty-minute allowance. Unit-only coverage above is unaffected. |
 | Packaged browser suites | All 18 pass across the initial batch and final reruns, [batch](browser-results.json), [reruns](browser-final-results.json) |
 | Linux OpenGL smoke captures | 5/5, [commands/results](../native-render/results.json); inspection scenes, separate from the earned WebGL encounters |
 | Windows x86-64 cross-build | Passed, [log](release-windows.log); no Windows graphics/device session |
 | Emscripten release build/package | Passed, [build](warning-web-build.log), [package](warning-package.log) |
 | Long-run save validation | All 428 completed-run checkpoints load, [record](../data/checkpoint-validation.json) |
-| Complete main-branch CI and Pages publication | Pending push and verification |
+| Complete main-branch CI and Pages publication | First implementation run blocked by the coverage-profile deadline; corrected run pending verification |
 
 The first fourteen successful browser suites use the stable package preceding
 the final director tuning/stereo changes. Foundation, guidance, main and hidden
