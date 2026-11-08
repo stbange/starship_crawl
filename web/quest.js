@@ -7,7 +7,38 @@
   let ready = false, supported = false, starting = false, session = null;
   let space = null, layer = null, framebufferID = 0, contextLost = false, begun = false;
   let lastError = '';
-  const message = text => { el('status').textContent = text; };
+  let watchdog = 0, lastFrameAt = 0, startedAt = 0, trackingReady = false, stopping = false;
+  const health = {phase: 'Loading', frames: 0, eyes: 0, poses: 0, controllers: [],
+    visibility: 'none', frameMs: 0, framebuffer: '', error: '', failurePhase: '', logs: []};
+  function report() {
+    el('xr-report').textContent = JSON.stringify({build: 'quest-startup-recovery-1',
+      browser: navigator.userAgent, ...health}, null, 2);
+  }
+  const message = text => { el('status').textContent = text; report(); };
+  function phase(text) { health.phase = text; message(text); }
+  function stopWithError(reason) {
+    if (stopping) return;
+    stopping = true;
+    health.failurePhase = health.phase;
+    lastError = reason; health.error = reason; phase(reason);
+    el('diagnostics').open = true;
+    try { suspend(); } catch (error) { health.logs.push(String(error).slice(0, 1000)); }
+    const current = session;
+    if (current) current.end().catch(() => cleanSession(current));
+  }
+  function watchSession() {
+    if (!session || trackingReady || stopping || contextLost) return;
+    const now = performance.now();
+    if (session.visibilityState !== 'visible') {
+      lastFrameAt = startedAt = now;
+      return;
+    }
+    if (now - lastFrameAt > 12000) {
+      stopWithError('VR stopped receiving frames. Return to the page and try Enter VR again. The troubleshooting report below records where it stopped.');
+    } else if (!trackingReady && now - startedAt > 20000) {
+      stopWithError('VR could not finish tracking setup. Hold both Touch controllers in view, face forward and try Enter VR again.');
+    }
+  }
   try {
     const saved = JSON.parse(localStorage.getItem(prefKey) || '{}');
     if (typeof saved.vignette === 'boolean') el('vignette').checked = saved.vignette;
@@ -37,10 +68,15 @@
   };
   function cleanSession(ended) {
     if (session !== ended) return;
-    if (begun) { begun = false; _sc_xr_end(); }
+    clearInterval(watchdog); watchdog = 0;
+    if (begun) {
+      begun = false;
+      try { _sc_xr_end(); } catch (error) { health.logs.push(String(error).slice(0, 1000)); }
+    }
     // The XR runtime owns this framebuffer. Remove its Emscripten name only.
     if (framebufferID) GL.framebuffers[framebufferID] = null;
     framebufferID = 0; session = space = layer = null; starting = false;
+    health.phase = lastError ? 'Stopped with an error' : 'Session ended';
     buttons();
     message(contextLost ? 'Graphics context lost. Reload to recover the last saved expedition.' :
       (lastError || 'VR ended. Your expedition is paused and saved. Enter VR to continue.'));
@@ -65,12 +101,18 @@
   }
   function xrFrame(time, frame) {
     const current = session;
-    if (!current || frame.session !== current || contextLost) return;
-    current.requestAnimationFrame(xrFrame);
+    if (!current || frame.session !== current || contextLost || stopping) return;
+    const frameStart = performance.now();
+    lastFrameAt = frameStart;
+    health.visibility = current.visibilityState;
     try {
+      current.requestAnimationFrame(xrFrame);
       const pose = frame.getViewerPose(space);
-      if (!pose || pose.emulatedPosition || current.visibilityState !== 'visible') {
-        suspend(); return;
+      if (!pose || pose.emulatedPosition || !pose.views.length || current.visibilityState !== 'visible') {
+        suspend();
+        phase(current.visibilityState !== 'visible' ? 'VR paused by the headset. Return to the game, release controls and press A.' :
+          'Waiting for headset tracking. Look around in your play area.');
+        return;
       }
       const offset = _sc_xr_buffer() >>> 2;
       HEAPF32.set(pose.transform.matrix, offset);
@@ -80,6 +122,9 @@
         if (input.handedness === 'left') left = input;
         if (input.handedness === 'right') right = input;
       }
+      health.controllers = Array.from(current.inputSources, input => ({hand: input.handedness,
+        ray: input.targetRayMode, mapping: input.gamepad ? input.gamepad.mapping : 'no gamepad',
+        profiles: Array.from(input.profiles || [])}));
       valid |= copyPose(frame, left && left.gripSpace, 1, offset);
       valid |= copyPose(frame, right && right.gripSpace, 2, offset);
       valid |= copyPose(frame, right && right.targetRaySpace, 3, offset);
@@ -91,8 +136,10 @@
         (pressed(left, 0) ? 64 : 0) | (pressed(left, 1) ? 128 : 0) |
         (pressed(left, 3) ? 256 : 0) | (pressed(right, 3) ? 512 : 0);
       const drawable = _sc_xr_frame(time, valid, mask, lx, ly, rx, ry);
+      health.poses = valid;
       GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, layer.framebuffer);
       if (!drawable) {
+        phase('Waiting for a usable headset pose. Face forward to calibrate.');
         GLctx.disable(GLctx.SCISSOR_TEST); GLctx.clearColor(0,0,0,1);
         GLctx.clear(GLctx.COLOR_BUFFER_BIT | GLctx.DEPTH_BUFFER_BIT); return;
       }
@@ -102,30 +149,48 @@
         HEAPF32.set(view.transform.inverse.matrix, offset + 96);
         if (!_sc_xr_eye(framebufferID, viewport.x, viewport.y, viewport.width, viewport.height))
           throw new Error('The stereo renderer could not draw a valid eye view.');
+        health.eyes++;
+      }
+      health.frames++;
+      health.frameMs = Math.round((performance.now() - frameStart) * 10) / 10;
+      if (drawable === 2 && !trackingReady) {
+        trackingReady = true;
+        // This bounds initial entry, not later deliberate pauses or recovery.
+        clearInterval(watchdog); watchdog = 0;
+      }
+      if (health.frames === 1 || health.frames % 72 === 0 || drawable !== 2) {
+        phase(drawable === 2 ? 'VR active. If paused, release controls and press A. Y opens the menu.' :
+          'Waiting for both Touch controllers. Hold them in view, release controls, then press A.');
       }
     } catch (error) {
-      lastError = 'VR stopped: ' + error.message; suspend();
-      current.end().catch(() => cleanSession(current));
+      stopWithError('VR stopped: ' + error.message);
     }
   }
   async function enter() {
     if (!ready || !supported || starting || session || contextLost) return;
-    starting = true; lastError = ''; buttons();
+    starting = true; lastError = ''; stopping = false; trackingReady = false;
+    Object.assign(health, {frames: 0, eyes: 0, poses: 0, controllers: [], frameMs: 0, error: '', failurePhase: '', logs: []});
+    phase('Requesting VR permission…'); buttons();
     let requested = null;
     try {
       // Request permission directly in the click gesture, before any await.
       requested = await navigator.xr.requestSession('immersive-vr', {optionalFeatures: ['local-floor']});
       session = requested;
+      startedAt = lastFrameAt = performance.now();
+      watchdog = setInterval(watchSession, 1000);
       requested.addEventListener('end', () => cleanSession(requested));
       requested.addEventListener('visibilitychange', () => {
         if (requested.visibilityState !== 'visible') suspend();
       });
       requested.addEventListener('inputsourceschange', suspend);
+      phase('Preparing headset graphics…');
       await GLctx.makeXRCompatible();
       if (session !== requested || contextLost) throw new Error('VR session ended during setup.');
       layer = new XRWebGLLayer(requested, GLctx, {alpha: false, antialias: false, depth: true,
         framebufferScaleFactor: preferences().scale});
+      health.framebuffer = layer.framebufferWidth + ' × ' + layer.framebufferHeight;
       requested.updateRenderState({baseLayer: layer, depthNear: 0.05, depthFar: 12000});
+      phase('Preparing headset tracking…');
       try { space = await requested.requestReferenceSpace('local-floor'); }
       catch (_) { space = await requested.requestReferenceSpace('local'); }
       space.addEventListener('reset', suspend);
@@ -140,9 +205,12 @@
       const audio = Module['SDL3'] && Module['SDL3'].audioContext;
       if (audio) audio.resume().catch(() => {});
       requested.requestAnimationFrame(xrFrame);
-      starting = false; buttons(); message('VR active. Y opens the in-headset menu.');
+      starting = false; buttons(); phase('Waiting for the first headset view…');
     } catch (error) {
+      if (!stopping) health.failurePhase = health.phase;
       lastError = 'Could not enter VR: ' + error.message + ' You can try again.';
+      health.error = lastError; health.phase = 'Startup failed';
+      el('diagnostics').open = true;
       if (requested && session === requested) {
         try { await requested.end(); } catch (_) {}
         cleanSession(requested);
@@ -152,8 +220,15 @@
   }
   window.scQuest = {
     end: () => session ? session.end().catch(error => { message(error.message); }) : Promise.resolve(),
-    comfort: enabled => { el('vignette').checked = enabled; preferences(); }
+    comfort: enabled => { el('vignette').checked = enabled; preferences(); },
+    log: text => { health.logs.push(String(text).slice(0, 1000)); health.logs = health.logs.slice(-8); report(); },
+    abort: reason => { if (session) stopWithError('The VR game stopped: ' + reason); }
   };
+  el('copy-report').addEventListener('click', async () => {
+    report();
+    try { await navigator.clipboard.writeText(el('xr-report').textContent); message('VR troubleshooting report copied.'); }
+    catch (_) { el('diagnostics').open = true; message('Copy the troubleshooting text below.'); }
+  });
   el('enter').addEventListener('click', enter);
   el('exit').addEventListener('click', () => window.scQuest.end());
   el('vignette').addEventListener('change', preferences);

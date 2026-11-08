@@ -43,7 +43,7 @@ bool quest_projection_valid(const float *projection);
 typedef struct {
     QuestTracking tracking;
     Vec3 base, head, menu_center, menu_right, menu_up;
-    bool active, menu, wrist, unsafe, vignette;
+    bool active, menu, wrist, unsafe, vignette, recovery, controllers;
     float fade, movement;
     char title[64], lines[14][128], items[12][80], footer[128];
     int line_count, item_count, selected;

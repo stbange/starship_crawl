@@ -89,13 +89,18 @@ static void tracking(void) {
     CHECK(quest_tracking_update(&q, poses[0], 31) && !quest_lean_safe(&q));
     CHECK(!quest_tracking_update(&q, poses[0], 3));
     CHECK(!quest_lean_safe(&q) && !quest_snap(&q, 1));
-    CHECK(!quest_view(&q, eye, base, base, view));
+    CHECK(q.valid == 3 && quest_view(&q, eye, base, base, view));
+    CHECK(!quest_tracking_update(&q, poses[0], 30));
+    CHECK(!quest_view(&q, eye, base, base, view) && !quest_calibrate(&q, 0));
     CHECK(!quest_tracking_update(&q, NULL, 31));
+    CHECK(q.valid == 0);
+    CHECK(!quest_tracking_update(&q, poses[0], 63) && q.valid == 0);
     poses[0][13] = 1.7f;
     for (int i = 0; i < 16; i++) {
         float saved = poses[0][i];
         poses[0][i] = NAN;
         CHECK(!quest_tracking_update(&q, poses[0], 31));
+        CHECK(!(q.valid & 1) && (q.valid & 30) == 30);
         poses[0][i] = saved;
     }
     float broken[16];
@@ -132,14 +137,24 @@ static void tracking(void) {
     identity(broken);
     broken[0] = -1;
     CHECK(!quest_pose_valid(broken));
-    /* An upright calibration needs a horizontal forward component. */
+    /* Head-only tracking must draw recovery before either controller arrives. */
+    quest_tracking_init(&q);
+    CHECK(!quest_tracking_update(&q, poses[0], 1));
+    CHECK(quest_calibrate(&q, 0) && quest_lean_safe(&q));
+    CHECK(quest_view(&q, eye, base, base, view));
+    CHECK(!quest_snap(&q, 0) && !quest_snap(&q, 1));
+    poses[QUEST_RIGHT][0] = NAN;
+    CHECK(!quest_tracking_update(&q, poses[0], 31) && q.valid == (31u & ~(1u << QUEST_RIGHT)));
+    CHECK(quest_view(&q, eye, base, base, view));
+    poses[QUEST_RIGHT][0] = 1;
+    /* Looking vertically at entry uses the horizontal right axis for yaw. */
     identity(poses[0]);
     poses[0][5] = 0;
     poses[0][6] = 1;
     poses[0][9] = -1;
     poses[0][10] = 0;
     CHECK(quest_tracking_update(&q, poses[0], 31));
-    CHECK(!quest_calibrate(&q, 0));
+    CHECK(quest_calibrate(&q, 0) && quest_lean_safe(&q));
     quest_tracking_init(&q);
     CHECK(near(quest_position(&q, 0, base), base));
     float projection[16] = {0};

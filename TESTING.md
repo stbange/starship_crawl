@@ -64,6 +64,14 @@ are shipped in the application. Results and stereo captures are retained in
 browser suites remain separate required gates. Physical Quest 3 frame rate,
 comfort, input and audio checks remain [explicitly pending](docs/playtests/QUEST3_CHECKLIST.md).
 
+The Quest suite also starts with a missing controller, null or emulated hand
+poses, a vertical head pose and an unsupported controller mapping. It requires
+nonblank stereo recovery images, frozen gameplay, deliberate release-plus-A
+recovery, visible lean/recenter guidance, and usable return/reporting when startup
+stalls. Timeout cases advance the external browser clock without changing game
+state. `--startup-only` runs these focused cases during development; CI always
+runs them as part of the complete Quest suite.
+
 **Hidden factions (generator 14 / simulation 1 / format 15).** Five focused unit
 suites cover the shared clock and geography, persistent forces and capacity,
 autonomous orders/resources/hostility, invisible intervention effects and memory,

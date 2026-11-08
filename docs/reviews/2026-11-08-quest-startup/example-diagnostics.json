@@ -1,0 +1,28 @@
+{
+  "build": "quest-startup-recovery-1",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "phase": "Stopped with an error",
+  "frames": 3,
+  "eyes": 6,
+  "poses": 19,
+  "controllers": [
+    {
+      "hand": "left",
+      "ray": "tracked-pointer",
+      "mapping": "xr-standard",
+      "profiles": []
+    },
+    {
+      "hand": "right",
+      "ray": "tracked-pointer",
+      "mapping": "",
+      "profiles": []
+    }
+  ],
+  "visibility": "visible",
+  "frameMs": 74,
+  "framebuffer": "1280 \u00d7 640",
+  "error": "VR could not finish tracking setup. Hold both Touch controllers in view, face forward and try Enter VR again.",
+  "failurePhase": "Waiting for both Touch controllers. Hold them in view, release controls, then press A.",
+  "logs": []
+}

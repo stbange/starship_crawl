@@ -1,0 +1,58 @@
+{
+  "baseline_commit": "b515194",
+  "before": {
+    "scenario": "valid head pose, missing right controller at entry",
+    "xr_callbacks": 40,
+    "rendered_frames": 0,
+    "eye_views": 0,
+    "mean_rgb": [
+      0,
+      0,
+      0
+    ],
+    "page_status": "VR active. Y opens the in-headset menu."
+  },
+  "native_ctest": "44/44 passed",
+  "quest_sanitizers": "5/5 passed, address/undefined behavior/leaks enabled",
+  "quest_native": "5/5 passed",
+  "quest_browser": {
+    "scope": "full",
+    "checks": [
+      "head-only startup/recovery images, delayed/null/emulated controller poses, vertical entry, deliberate input recovery, stalled-session timeouts and diagnostic report",
+      "session permission/setup failure, local reference fallback, stereo views and single XR frame loop",
+      "independent controller aim, held-stick snap latch and neutral release",
+      "paused head tracking, controller menus, objective map, wrist map, persisted comfort option",
+      "controller loss, held-fire rejection, visibility/head tracking loss, bounded leaning, deliberate recovery with no time catch-up",
+      "fresh-character approach and boarding using controller locomotion",
+      "session end/re-entry, saved position reload, export and invalid-import rollback",
+      "earned reward claim, upgrade and story decision; shelter, matrix aiming/return, mech and wagon transitions through controller actions",
+      "same-origin ordinary/Quest storage isolation and earned-current/legacy save imports",
+      "graphics-loss reload path and usable unsupported-browser launch page"
+    ],
+    "physical_headset_tested": false
+  },
+  "coverage": {
+    "covered": 10258,
+    "total": 10470,
+    "percent": 98.0,
+    "every_source_at_least_95": true,
+    "tracking_adapter": {
+      "filename": "src/quest.c",
+      "line_total": 102,
+      "line_covered": 102,
+      "line_percent": 100.0,
+      "function_total": 14,
+      "function_covered": 14,
+      "function_percent": 100.0,
+      "branch_total": 120,
+      "branch_covered": 107,
+      "branch_percent": 89.2
+    }
+  },
+  "ordinary_artifacts_unchanged_sha256": {
+    "index.html": "eeee7099c069fe6912dcc6da1c5c1a0064439cd0612b03619ee0936a0f636e82",
+    "starship_crawl.js": "c85aab8f268ffc51c5472c356fea153a149e1954ff0680997d9a74cf99c0d356",
+    "starship_crawl.wasm": "b0d9436f89643734cf823338302b86c3fed3d74e296d59f63d7948ab16b9710c"
+  },
+  "physical_quest_retest": false
+}

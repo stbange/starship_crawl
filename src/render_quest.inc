@@ -85,6 +85,38 @@ static void quest_panels(Renderer *r, Game *g, const QuestView *q, const float *
     Color ink = rgb(.8f, .9f, .87f), mint = rgb(.35f, 1, .8f), gold = rgb(1, .74f, .36f);
     Player *p = &g->players[0];
     char text[160];
+    if (q->recovery || q->unsafe) {
+        /* Large, head-following recovery text works before either hand is
+           tracked and remains visible when the user turns to find them. */
+        Vec3 right = quest_axis(&q->tracking, QUEST_HEAD, 0);
+        Vec3 up = quest_axis(&q->tracking, QUEST_HEAD, 1);
+        Vec3 center = vadd(q->head, vmul(quest_forward(&q->tracking, QUEST_HEAD), 1.5));
+        quest_panel(r, mvp, center, right, up, 640, 360, 1.8);
+        rect(r, 0, 0, 640, 360, rgb(.018f, .04f, .055f));
+        frame(r, 0, 0, 640, 360, gold);
+        if (q->unsafe && !q->recovery) {
+            text_at(r, 26, 26, 3, "RETURN TO YOUR STARTING POINT", gold);
+            text_at(r, 26, 100, 2.5f, "YOUR VIEW IS OUTSIDE THE PLAY AREA", ink);
+            text_at(r, 26, 145, 2.5f, "OR TOO CLOSE TO A WALL.", ink);
+            text_at(r, 26, 220, 2.5f, "LEAN BACK, OR CLICK THE RIGHT", mint);
+            text_at(r, 26, 265, 2.5f, "STICK TO RECENTER YOUR VIEW.", mint);
+            flush(r);
+            return;
+        }
+        text_at(r, 26, 26, 3, q->controllers ? "TRACKING READY" : "WAITING FOR CONTROLLERS", gold);
+        unsigned left = (1u << QUEST_LEFT) | (1u << QUEST_AIM_LEFT);
+        unsigned right_mask = (1u << QUEST_RIGHT) | (1u << QUEST_AIM_RIGHT);
+        snprintf(text, sizeof(text), "LEFT: %s / RIGHT: %s",
+                 (q->tracking.valid & left) == left ? "READY" : "WAITING",
+                 (q->tracking.valid & right_mask) == right_mask ? "READY" : "WAITING");
+        text_at(r, 26, 85, 2.5f, text, mint);
+        text_at(r, 26, 145, 2.5f, "HOLD BOTH CONTROLLERS IN VIEW.", ink);
+        text_at(r, 26, 190, 2.5f, "RELEASE BUTTONS AND STICKS.", ink);
+        text_at(r, 26, 235, 2.5f, "PRESS A WHEN TRACKING IS READY.", gold);
+        text_at(r, 26, 300, 2, "RIGHT STICK CLICK: RECENTER", mint);
+        flush(r);
+        return;
+    }
     if (q->menu) {
         quest_panel(r, mvp, q->menu_center, q->menu_right, q->menu_up, 960, 650, 2.0);
         rect(r, 0, 0, 960, 650, rgb(.012f, .025f, .034f));
@@ -204,7 +236,7 @@ bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, GLuint framebu
                        p->flashlight && !matrix ? 1.f : 0.f};
     gl.Uniform4fv(r->torch, 1, torch);
     gl.Uniform3f(r->torch_origin, (float)lamp.x, (float)lamp.y, (float)lamp.z);
-    if (!q->unsafe) {
+    if (!q->unsafe && !q->recovery) {
         if (matrix)
             matrix_scene(r, g, 0);
         else if (p->sheltered)
@@ -227,7 +259,7 @@ bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, GLuint framebu
         flush(r);
         if (!outside && !p->sheltered && !matrix && g->world.generator >= 10)
             atmosphere_draw(r, g, 0, mvp, eye, atmosphere);
-        if (!q->menu)
+        if (!q->menu && q->controllers)
             quest_hands(r, g, q);
     }
     gl.Disable(GL_DEPTH_TEST);
@@ -247,5 +279,9 @@ bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, GLuint framebu
     gl.Enable(GL_DEPTH_TEST);
     if (r->mesh.failed)
         r->failed = true;
-    return !r->failed && gl.GetError() == GL_NO_ERROR;
+    GLenum error = gl.GetError();
+    if (r->failed || error != GL_NO_ERROR)
+        SDL_Log("Quest eye failed: GL 0x%x / renderer %d / mesh %d", error, r->failed,
+                r->mesh.failed);
+    return !r->failed && error == GL_NO_ERROR;
 }

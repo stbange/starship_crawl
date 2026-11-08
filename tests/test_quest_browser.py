@@ -87,12 +87,90 @@ def import_save(page, name):
     page.wait_for_function("document.getElementById('status').textContent.includes('Save imported')")
 
 
+def startup_checks(page, url):
+    def fresh():
+        page.goto(url+'?seed=713');ready(page)
+
+    def launch():
+        page.locator('#enter').click()
+        page.wait_for_function('!!(xrTest.session && xrTest.session.callback)')
+
+    def end():
+        page.evaluate('scQuest.end()')
+        page.wait_for_function("!document.getElementById('export').disabled")
+
+    fresh()
+    page.evaluate("xrTest.rightAvailable=false;xrTest.button('right',0,true);xrTest.stick('left',0,-1)")
+    before=state(page)
+    launch();step(page,20)
+    q=xr_state(page)
+    assert q['active'] and q['suspended'] and not q['tracking'] and q['valid']&1,q
+    assert q['frames']>0 and q['eyes']==2*q['frames'],q
+    assert state(page)['time']==before['time'] and state(page)['shots']==before['shots']
+    capture(page,'quest-startup-missing-controller')
+    page.evaluate('xrTest.head.yaw=1.5');step(page,4)
+    capture(page,'quest-startup-recovery-looking-around')
+    page.evaluate('xrTest.rightAvailable=true');step(page,4)
+    assert state(page)['paused'] and state(page)['shots']==before['shots']
+    page.evaluate('xrTest.neutral()');step(page,2)
+    assert state(page)['paused']
+    press(page,'right',4)
+    assert not state(page)['paused'] and state(page)['time']-before['time']<.1
+    press(page,'right',0)
+    assert state(page)['shots']>before['shots']
+    end()
+
+    fresh();page.evaluate("xrTest.missingPoses=['right','leftAim']")
+    launch();step(page,12)
+    assert xr_state(page)['suspended'] and not xr_state(page)['tracking']
+    capture(page,'quest-startup-missing-pose')
+    page.evaluate("xrTest.missingPoses=[];xrTest.emulatedPoses=['right']");step(page,3)
+    assert xr_state(page)['suspended'] and not xr_state(page)['tracking']
+    page.evaluate('xrTest.emulatedPoses=[]');step(page,2)
+    press(page,'right',4)
+    assert not state(page)['paused']
+    end()
+
+    fresh();page.evaluate('xrTest.head.pitch=Math.PI/2')
+    enter(page)
+    q=xr_state(page)
+    assert q['tracking'] and not q['unsafe'] and q['eyes']==2*q['frames'],q
+    end()
+
+    # Advance the browser's monotonic clock, not game state. One real timer tick
+    # must return a stalled XR session to the usable launch page.
+    fresh();launch()
+    page.evaluate('''() => { const now=performance.now.bind(performance);
+        performance.now=()=>now()+13000; }''')
+    page.wait_for_function("!document.getElementById('enter').disabled",timeout=10000)
+    assert 'stopped receiving frames' in page.locator('#status').inner_text()
+    report=json.loads(page.locator('#xr-report').inner_text())
+    assert report['error'] and report['eyes']==0 and page.locator('#diagnostics').get_attribute('open') is not None
+    assert state(page)['paused'] and not xr_state(page)['active']
+    assert not page.locator('#export').is_disabled()
+
+    fresh();page.evaluate("xrTest.rightPad.gamepad.mapping=''")
+    launch();step(page,2)
+    assert state(page)['paused'] and xr_state(page)['eyes']>0
+    page.evaluate('''() => { const now=performance.now.bind(performance);
+        performance.now=()=>now()+21000; xrTest.step(); }''')
+    page.wait_for_function("!document.getElementById('enter').disabled",timeout=10000)
+    assert 'could not finish tracking' in page.locator('#status').inner_text()
+    report=json.loads(page.locator('#xr-report').inner_text())
+    assert any(c['hand']=='right' and c['mapping']=='' for c in report['controllers'])
+    assert report['eyes']>0 and state(page)['paused'] and not xr_state(page)['active']
+    (ARTIFACTS/'startup-diagnostics.json').write_text(json.dumps(report,indent=2)+'\n')
+    fresh()
+    return 'head-only startup/recovery images, delayed/null/emulated controller poses, vertical entry, deliberate input recovery, stalled-session timeouts and diagnostic report'
+
+
 def run():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--site-dir', type=Path, default=ROOT/'build-pages-preview')
     parser.add_argument('--url-path', default='/starship_crawl/quest/')
     parser.add_argument('--ordinary-path', default='/starship_crawl/')
     parser.add_argument('--journeys-only', action='store_true', help='Focus on imported progression/facility journeys during development')
+    parser.add_argument('--startup-only', action='store_true', help='Focus on headset startup and recovery regressions')
     args = parser.parse_args()
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(args.site_dir.resolve())))
@@ -115,6 +193,13 @@ def run():
         page.add_init_script(path=str(ROOT/'tests/quest_device.js'))
         page.goto(url+'?seed=713');ready(page)
         if not args.journeys_only:
+            results.append(startup_checks(page,url))
+            print('PASS:',results[-1],flush=True)
+            if args.startup_only:
+                assert not errors,errors
+                (ARTIFACTS/'startup-results.json').write_text(json.dumps({'checks':results,'physical_headset_tested':False},indent=2)+'\n')
+                browser.close()
+                return
             assert state(page)['paused']
             page.evaluate('xrTest.denied=true')
             page.locator('#enter').click()
@@ -190,6 +275,7 @@ def run():
             page.evaluate('xrTest.headAvailable=true');step(page);press(page,'right',4)
             page.evaluate('xrTest.head.x=2');step(page)
             assert xr_state(page)['unsafe']
+            capture(page,'quest-lean-recovery')
             page.evaluate('xrTest.head.x=0');step(page)
             assert not xr_state(page)['unsafe']
             results.append('controller loss, held-fire rejection, visibility/head tracking loss, bounded leaning, deliberate recovery with no time catch-up')

@@ -57,6 +57,36 @@ the session pauses gameplay and clears held inputs. When tracking returns,
 release all buttons/sticks and press A to resume. A graphics-context failure
 requires the launch page's **Reload and recover saved expedition** button.
 
+## If entry is black or controls seem unresponsive
+
+The headset can arrive before either controller supplies a usable pose. The
+game now draws a head-tracked recovery panel in that situation, identifying
+which controller is still waiting. Hold both controllers in view, release all
+buttons and sticks, then press **A** once both are ready. The panel follows your
+view while waiting. Looking straight up or down at entry also permits calibration.
+
+If your tracked head leaves the allowed area or enters a wall, a separate panel
+explains the obscured view. Return toward your calibrated position or click the
+right stick to recenter. These actions do not move the character through walls.
+
+Startup returns to the launch page if no XR frames arrive for 12 seconds, or if
+tracking cannot become ready within 20 seconds while the session is visible.
+Those entry timeouts stop after successful tracking/rendering; later pauses and
+controller recovery still require deliberate resume. Graphics errors also return
+an explanation or the existing reload control.
+
+If a retry fails, open **VR troubleshooting** on the launch page and use
+**Copy report**. The report records the browser, startup stage, detected controller
+profiles, pose mask, frame/eye counts, framebuffer size, frame work time and recent
+errors. It stays on the page and is not uploaded automatically. Report the text
+along with whether the Meta system menu remained usable. Reload the Quest page
+after a deployment to receive the updated application.
+
+The first physical headset report was a black view with unresponsive controls.
+The [startup repair review](docs/reviews/2026-11-08-quest-startup/README.md)
+records the reproduced software failure and regression checks; confirmation on
+the user's Quest 3 remains necessary.
+
 ## Saves
 
 Quest uses `/quest-persist` in IDBFS; ordinary web continues using `/persist`.

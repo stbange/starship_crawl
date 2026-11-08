@@ -18,6 +18,7 @@
   const mock = window.xrTest = {
     supported: true, denied: false, localFloor: true, headAvailable: true,
     leftAvailable: true, rightAvailable: true, failLayer: false,
+    missingPoses: [], emulatedPoses: [],
     head: {x:0,y:1.65,z:0}, left:{x:-.28,y:1.25,z:-.32}, right:{x:.28,y:1.25,z:-.32},
     leftAim:{x:-.28,y:1.25,z:-.32}, rightAim:{x:.28,y:1.25,z:-.32},
     leftPad:controls('left'), rightPad:controls('right'), time:1000,
@@ -39,7 +40,8 @@
             });
             return {transform:transform(this.head),views,emulatedPosition:false};
           },
-          getPose: space => ({transform:transform(this[space.kind]),emulatedPosition:false})
+          getPose: space => this.missingPoses.includes(space.kind) ? null :
+            ({transform:transform(this[space.kind]),emulatedPosition:this.emulatedPoses.includes(space.kind)})
         });
       }
     },

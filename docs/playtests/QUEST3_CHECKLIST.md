@@ -3,12 +3,22 @@
 Status: **not executed on hardware**. Software WebXR emulation is a separate
 check and cannot establish comfort or a sustained headset frame rate.
 
+User feedback on the initial deployment: black view and unresponsive controls
+on Quest 3. The [startup repair](../reviews/2026-11-08-quest-startup/README.md)
+reproduces missing-controller entry in software and adds recovery/reporting.
+Physical confirmation of that repair is still pending; the initial report does
+not establish which browser/device condition caused the failure.
+
 Record the commit, Quest OS/browser versions, headset refresh rate, chosen render
 scale, seated/standing mode, run duration and any thermal throttling. Use the
 Quest page `/starship_crawl/quest/` after its successful Actions deployment.
 
 - [ ] Open in Quest Browser over HTTPS; permission denial leaves a working launch
       page; a second attempt enters VR with both Touch controllers.
+- [ ] Enter with one controller temporarily unavailable. A readable panel follows
+      the head and identifies the waiting controller; bring it into view, release
+      controls and press A. Record whether the Meta system menu remains usable.
+      If entry still fails, copy the launch page's VR troubleshooting report.
 - [ ] Stars surround the hull, ship lights recede into the distance, and eye
       separation/scale feels natural. Turn, roll and lean without a mirrored
       scene, eye swap, camera roll correction or doubled simulation speed.

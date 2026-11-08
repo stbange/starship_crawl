@@ -22,34 +22,35 @@ bool quest_pose_valid(const float *m) {
            fabs(vdot(axes[1], axes[2])) < .02 && vdot(vcross(axes[0], axes[1]), axes[2]) > .98;
 }
 bool quest_tracking_update(QuestTracking *q, const float *poses, unsigned valid) {
-    if (!poses || valid != (1u << SC_QUEST_POSES) - 1) {
-        q->valid = 0;
-        q->turn_latched = true;
-        return false;
-    }
-    for (int i = 0; i < SC_QUEST_POSES; i++)
-        if (!quest_pose_valid(poses + i * 16)) {
-            q->valid = 0;
-            q->turn_latched = true;
-            return false;
+    q->valid = 0;
+    if (poses && !(valid & ~((1u << SC_QUEST_POSES) - 1))) {
+        for (int i = 0; i < SC_QUEST_POSES; i++) {
+            if ((valid & (1u << i)) && quest_pose_valid(poses + i * 16)) {
+                memcpy(q->poses[i], poses + i * 16, 16 * sizeof(float));
+                q->valid |= 1u << i;
+            }
         }
-    memcpy(q->poses, poses, sizeof(q->poses));
-    q->valid = valid;
-    return true;
+    }
+    bool complete = q->valid == (1u << SC_QUEST_POSES) - 1;
+    if (!complete)
+        q->turn_latched = true;
+    return complete;
 }
 static Vec3 pose_position(const float *m) {
     return v3(m[12], m[13], m[14]);
 }
 bool quest_calibrate(QuestTracking *q, double world_yaw) {
-    if (!q->valid || !isfinite(world_yaw))
+    if (!(q->valid & (1u << QUEST_HEAD)) || !isfinite(world_yaw))
         return false;
     const float *head = q->poses[QUEST_HEAD];
     /* The existing game camera uses +Z forward and +X screen-right. Reflect
        tracking Z before applying its yaw; a 180-degree rotation mirrors eyes. */
     Vec3 forward = v3(-head[8], -head[9], head[10]);
-    if (hypot(forward.x, forward.z) < .1)
-        return false;
-    q->yaw = remainder(world_yaw - atan2(forward.x, forward.z), 2 * SC_PI);
+    /* Looking straight up/down at entry still has a usable horizontal right
+       axis. Do not leave calibration, and therefore both eyes, black. */
+    double yaw =
+        hypot(forward.x, forward.z) < .1 ? atan2(head[2], head[0]) : atan2(forward.x, forward.z);
+    q->yaw = remainder(world_yaw - yaw, 2 * SC_PI);
     q->reference = pose_position(head);
     q->calibrated = true;
     q->turn_latched = true;
@@ -77,13 +78,13 @@ Vec3 quest_head_delta(const QuestTracking *q) {
     return vsub(pose_position(q->poses[QUEST_HEAD]), q->reference);
 }
 bool quest_lean_safe(const QuestTracking *q) {
-    if (!q->valid || !q->calibrated)
+    if (!(q->valid & (1u << QUEST_HEAD)) || !q->calibrated)
         return false;
     Vec3 d = quest_head_delta(q);
     return hypot(d.x, d.z) <= 1.5 && fabs(d.y) <= 1.8;
 }
 int quest_snap(QuestTracking *q, double axis) {
-    if (!isfinite(axis) || !q->valid || !q->calibrated) {
+    if (!isfinite(axis) || q->valid != (1u << SC_QUEST_POSES) - 1 || !q->calibrated) {
         q->turn_latched = true;
         return 0;
     }
@@ -98,7 +99,8 @@ int quest_snap(QuestTracking *q, double axis) {
 }
 bool quest_view(const QuestTracking *q, const float *tracking_view, Vec3 base, Vec3 render_origin,
                 float *view) {
-    if (!q->valid || !q->calibrated || !view || !quest_pose_valid(tracking_view))
+    if (!(q->valid & (1u << QUEST_HEAD)) || !q->calibrated || !view ||
+        !quest_pose_valid(tracking_view))
         return false;
     Vec3 delta = vsub(render_origin, base);
     if (!isfinite(delta.x) || !isfinite(delta.y) || !isfinite(delta.z))

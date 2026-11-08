@@ -98,10 +98,10 @@ EMSCRIPTEN_KEEPALIVE void sc_xr_suspend(void) {
         return;
     if (!xr.suspended) {
         xr.suspended = true;
-        xr.confirm = true;
-        xr.neutral = false;
         quest_open(XR_HOME);
     }
+    xr.confirm = true;
+    xr.neutral = false;
     quest_actions = (Actions){0};
     app.accumulator = 0;
     app.last = (double)SDL_GetPerformanceCounter() / SDL_GetPerformanceFrequency();
@@ -472,13 +472,11 @@ EMSCRIPTEN_KEEPALIVE int sc_xr_frame(double time_ms, unsigned valid, unsigned bu
     xr.timestamp = time_ms;
     xr.tracking = quest_tracking_update(&q->tracking, xr.packet, valid);
     if (!xr.tracking || !isfinite(lx) || !isfinite(ly) || !isfinite(rx) || !isfinite(ry)) {
+        xr.tracking = false;
         sc_xr_suspend();
-        /* Keep head tracking while displaying the recovery panel. Hands are
-           hidden and cannot fire until both tracked controllers return. */
-        if (q->tracking.calibrated && (valid & 1) && quest_pose_valid(xr.packet)) {
-            memcpy(q->tracking.poses[QUEST_HEAD], xr.packet, 16 * sizeof(float));
-            q->tracking.valid = (1u << SC_QUEST_POSES) - 1;
-        } else {
+        /* Calibrate/draw from the head alone, including the very first frame.
+           Missing controllers must never prevent a visible recovery panel. */
+        if (!(q->tracking.valid & (1u << QUEST_HEAD))) {
             xr.buttons = buttons;
             return 0;
         }
@@ -492,6 +490,10 @@ EMSCRIPTEN_KEEPALIVE int sc_xr_frame(double time_ms, unsigned valid, unsigned bu
     unsigned pressed = buttons & ~xr.buttons;
     bool neutral = buttons == 0 && fabs(lx) < .2 && fabs(ly) < .2 && fabs(rx) < .2 && fabs(ry) < .2;
     quest_actions = (Actions){0};
+    if (xr.suspended && (pressed & QUEST_CENTER)) {
+        quest_calibrate(&q->tracking, p->yaw);
+        xr.anchor = false;
+    }
     if (xr.suspended && xr.tracking) {
         if (neutral)
             xr.neutral = true;
@@ -608,7 +610,9 @@ EMSCRIPTEN_KEEPALIVE int sc_xr_frame(double time_ms, unsigned valid, unsigned bu
         quest_anchor();
     q->active = true;
     q->menu = app.paused;
-    q->wrist = (buttons & QUEST_WRIST) != 0;
+    q->recovery = xr.suspended;
+    q->controllers = xr.tracking;
+    q->wrist = xr.tracking && (buttons & QUEST_WRIST) != 0;
     q->vignette = xr.vignette;
     q->movement = (float)fmin(1, hypot(quest_actions.forward, quest_actions.strafe));
     if (p->lift_active || p->riding)
@@ -617,9 +621,11 @@ EMSCRIPTEN_KEEPALIVE int sc_xr_frame(double time_ms, unsigned valid, unsigned bu
     xr.transition = fmaxf(0, xr.transition - (float)quest_dt * 5);
     if (q->menu)
         quest_menu();
-    renderer_quest_prepare(&app.renderer, &app.game);
+    if (!q->recovery)
+        renderer_quest_prepare(&app.renderer, &app.game);
     xr.frames++;
-    return app.running ? 1 : 0;
+    /* 1: head-tracked recovery panel, 2: all required poses usable. */
+    return app.running ? (xr.tracking ? 2 : 1) : 0;
 }
 EMSCRIPTEN_KEEPALIVE int sc_xr_eye(unsigned framebuffer, int x, int y, int width, int height) {
     if (!quest_running || !xr.view.active)
@@ -636,13 +642,13 @@ EMSCRIPTEN_KEEPALIVE const char *sc_xr_state(void) {
     Vec3 aim = quest_forward(&xr.view.tracking, QUEST_AIM_RIGHT);
     snprintf(text, sizeof(text),
              "{\"active\":%s,\"tracking\":%s,\"suspended\":%s,"
-             "\"neutral\":%s,\"frames\":%u,\"eyes\":%u,\"menu\":%d,\"selected\":%d,"
+             "\"neutral\":%s,\"valid\":%u,\"frames\":%u,\"eyes\":%u,\"menu\":%d,\"selected\":%d,"
              "\"label\":\"%s\",\"unsafe\":%s,\"vignette\":%s,\"fade\":%.3f,"
              "\"aim\":[%.5f,%.5f,%.5f]}",
              quest_running ? "true" : "false", xr.tracking ? "true" : "false",
-             xr.suspended ? "true" : "false", xr.neutral ? "true" : "false", xr.frames, xr.eyes,
-             app.paused ? xr.page : -1, xr.selection, xr.count ? xr.labels[xr.selection] : "",
-             xr.view.unsafe ? "true" : "false", xr.vignette ? "true" : "false", xr.view.fade, aim.x,
-             aim.y, aim.z);
+             xr.suspended ? "true" : "false", xr.neutral ? "true" : "false", xr.view.tracking.valid,
+             xr.frames, xr.eyes, app.paused ? xr.page : -1, xr.selection,
+             xr.count ? xr.labels[xr.selection] : "", xr.view.unsafe ? "true" : "false",
+             xr.vignette ? "true" : "false", xr.view.fade, aim.x, aim.y, aim.z);
     return text;
 }
