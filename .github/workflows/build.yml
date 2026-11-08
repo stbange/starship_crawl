@@ -282,7 +282,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_quest_packaging.py'
       - name: Browser tooling
         run: |
-          python -m pip install -r tests/requirements.txt
+          python -m pip install -r tests/requirements-quest.txt
           python -m playwright install --with-deps chromium
       - name: Stereo WebGL, controller gameplay, lifecycle and save isolation
         run: python scripts/run-browser-test.py tests/test_quest_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/

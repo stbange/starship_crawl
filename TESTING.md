@@ -11,6 +11,7 @@ Quest tests under address/undefined-behavior/leak sanitizers.
 Package both pages at their production-relative paths before testing:
 
 ```sh
+python3 -m pip install -r tests/requirements-quest.txt
 python3 scripts/package-web.py --output build-pages-preview/starship_crawl
 python3 scripts/package-quest.py --output build-pages-preview/starship_crawl/quest
 python3 -m unittest discover -s tests -p 'test_quest_packaging.py'
