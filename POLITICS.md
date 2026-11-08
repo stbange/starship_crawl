@@ -1,12 +1,12 @@
 # Courts and the encounter director
 
-This guide describes the shipped generator-13 implementation. The
-[planned rework](DEVELOPMENT_PLAN.md#hidden-factions-and-invisible-director--planned-2026-11-08)
-moves politics and direction behind the scenes for new ships, with autonomous
-armies and environmental consequences. That rework is not yet implemented.
+This guide describes **legacy generator-13 expeditions**. New generator-14 ships
+use [hidden factions and an invisible director](HIDDEN_FACTIONS.md), with travelling
+forces and environmental consequences. The courts and controls below remain
+available when resuming a generator-13 save.
 
-Start a **new ship** for generator 13. Existing expeditions retain their original
-geography and populations. Each new ship has three major alien countries, each
+Existing generator-13 expeditions retain their original geography and populations.
+Each of those ships has three major alien countries, each
 with an audience chamber, disputed conduit and royal-guard finale. Their names,
 rulers, government assignment, initial relationships and physical setting derive
 from the seed. Territories span sectors and decks, with wilderness between them.

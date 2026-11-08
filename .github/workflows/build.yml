@@ -228,6 +228,8 @@ jobs:
         run: python scripts/run-browser-test.py tests/test_regional_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Alien courts, royal-guard settlements, saved director and touch
         run: python scripts/run-browser-test.py tests/test_politics_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Hidden factions, travelling convoys and invisible director
+        run: python scripts/run-browser-test.py tests/test_hidden_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Deep contracts, alien specialists and architectural reveals
         run: python scripts/run-browser-test.py tests/test_frontier_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
       - name: Living ship generation and atmosphere

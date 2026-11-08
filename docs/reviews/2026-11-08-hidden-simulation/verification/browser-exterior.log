@@ -1,0 +1,7 @@
+PASS exterior keyboard: cabin collision, save/resume, split views, bay and return
+PASS exterior render arrival
+PASS exterior render hull
+PASS exterior render space
+PASS exterior render skiff
+PASS exterior render cabin
+PASS exterior browser: surrounding stars, opaque hull, lamps without flashlight, lit cabin, touch entry and exit

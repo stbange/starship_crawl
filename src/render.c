@@ -975,6 +975,12 @@ static void lights(Renderer *r, const Game *g, const Player *viewer) {
                     light = chunk->lights[j];
                     light.pos = vadd(world_center(chunk->cell), light.pos);
                     uint32_t systems = world_systems(&g->world, chunk->cell);
+                    const FactionRegion *region =
+                        g->factions.version ? factions_at(&g->factions, chunk->cell) : NULL;
+                    if (region && (region->flags & FS_DARK) && !(systems & SYSTEM_POWER))
+                        light.power *= .35f;
+                    if (region && (region->flags & FS_REPAIRED))
+                        light.power = fmaxf(light.power, .6f);
                     if (systems & SYSTEM_BLACKOUT)
                         light.power *= .08f;
                     else if (systems & SYSTEM_POWER) {
@@ -1514,7 +1520,7 @@ static void deck_map(Renderer *r, Game *g, int player, float x, float y, float s
                     text_at(r, left + tile * .42f, top + tile * .39f, .8f * text_scale, "!",
                             discovery);
             }
-            unsigned nation = politics_owner(g, map.rooms[at].cell);
+            unsigned nation = g->politics.version ? politics_owner(g, map.rooms[at].cell) : 0;
             if (nation) {
                 Color banner = politics_color(g->world.seed, nation - 1);
                 rect(r, left + tile * .25f, top + tile * .12f, tile * .5f, 2, banner);
@@ -1855,7 +1861,7 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         }
     if (aimed && !paused) {
         EnemyBody body = sc_enemy_bodies[aimed->kind];
-        if (aimed->country)
+        if (aimed->country && g->politics.version)
             snprintf(label, sizeof(label), "%s / %s / %.0f",
                      politics_name(g->world.seed, aimed->country - 1),
                      politics_reputation(g, aimed->country, player) < 0 ? "HOSTILE PATROL"
@@ -2288,6 +2294,13 @@ void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, boo
             RoomSpec room = world_describe_version(g->world.seed, g->world.generator,
                                                    world_cell(position_absolute(player->pos)));
             atmosphere = sc_atmospheres[room.habitat.atmosphere];
+            const FactionRegion *region =
+                g->factions.version ? factions_at(&g->factions, room.cell) : NULL;
+            if (region && (region->flags & FS_GROWTH))
+                atmosphere = sc_atmospheres[SPORE_AIR];
+            const Room *live = world_find((World *)&g->world, room.cell);
+            if (live && live->faction_edit == EDIT_WEATHER)
+                atmosphere = sc_atmospheres[VOID_GLOW];
         }
         gl.Uniform1f(r->fog_density, outside ? 0
                                      : g->world.generator < 10 || matrix || player->sheltered

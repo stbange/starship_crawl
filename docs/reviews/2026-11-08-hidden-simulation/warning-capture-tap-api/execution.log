@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/workspace/starship_crawl/docs/reviews/2026-11-08-hidden-simulation/data/capture_warning.py", line 66, in <module>
+    page.mouse.click(delay=80)
+TypeError: Mouse.click() missing 2 required positional arguments: 'x' and 'y'

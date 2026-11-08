@@ -1,0 +1,80 @@
+[  0%] Building C object CMakeFiles/sc_core.dir/src/faction_orders.c.o
+[  7%] Built target SDL_uclibc
+[  7%] Building C object CMakeFiles/sc_core_fault.dir/src/faction_orders.c.o
+[ 62%] Built target SDL3-static
+[ 62%] Built target sc_platform
+[ 63%] Built target sc_platform_tests
+[ 64%] Linking C static library libsc_core.a
+[ 64%] Linking C static library libsc_core_fault.a
+[ 73%] Built target sc_core
+[ 82%] Built target sc_core_fault
+[ 82%] Linking C executable sc_faction_tests
+[ 82%] Linking C executable sc_faction_order_tests
+[ 82%] Linking C executable sc_force_tests
+[ 82%] Linking C executable sc_hidden_director_tests
+[ 83%] Built target sc_faction_tests
+[ 83%] Built target sc_faction_order_tests
+[ 83%] Built target sc_force_tests
+[ 83%] Linking C executable sc_faction_journey
+[ 83%] Linking C executable sc_hidden_journey
+[ 84%] Linking C executable sc_politics_tests
+[ 85%] Built target sc_hidden_director_tests
+[ 85%] Built target sc_hidden_journey
+[ 86%] Built target sc_faction_journey
+[ 86%] Linking C executable sc_politics_journey
+[ 86%] Built target sc_politics_tests
+[ 86%] Linking C executable sc_frontier_journey
+[ 86%] Linking C executable sc_frontier_tests
+[ 86%] Linking C executable sc_regional_journey
+[ 86%] Built target sc_politics_journey
+[ 86%] Built target sc_frontier_tests
+[ 87%] Built target sc_frontier_journey
+[ 88%] Linking C executable sc_regional_tests
+[ 88%] Linking C executable sc_habitat_tests
+[ 88%] Linking C executable sc_tests
+[ 88%] Built target sc_regional_journey
+[ 88%] Linking C executable sc_interior_tests
+[ 88%] Built target sc_regional_tests
+[ 88%] Built target sc_habitat_tests
+[ 88%] Built target sc_tests
+[ 88%] Linking C executable sc_edge_tests
+[ 89%] Linking C executable sc_navigation_tests
+[ 89%] Linking C executable sc_faction_fault_tests
+[ 90%] Built target sc_interior_tests
+[ 90%] Built target sc_faction_fault_tests
+[ 91%] Built target sc_edge_tests
+[ 91%] Built target sc_navigation_tests
+[ 91%] Linking C executable sc_guidance_tests
+[ 92%] Linking C executable sc_equipment_tests
+[ 92%] Linking C executable sc_shelter_tests
+[ 92%] Linking C executable sc_navigation_recovery
+[ 93%] Built target sc_guidance_tests
+[ 93%] Linking C executable sc_campaign_tests
+[ 93%] Built target sc_shelter_tests
+[ 93%] Linking C executable sc_expedition_tests
+[ 93%] Built target sc_navigation_recovery
+[ 93%] Built target sc_campaign_tests
+[ 93%] Built target sc_equipment_tests
+[ 93%] Built target sc_expedition_tests
+[ 94%] Linking C executable sc_story_tests
+[ 95%] Linking C executable sc_matrix_tests
+[ 95%] Linking C executable sc_death_tests
+[ 96%] Linking C executable sc_matrix_fault_tests
+[ 96%] Built target sc_matrix_tests
+[ 96%] Built target sc_story_tests
+[ 96%] Linking C executable sc_matrix_journey
+[ 97%] Linking C executable sc_phase_tests
+[ 97%] Built target sc_death_tests
+[ 97%] Built target sc_matrix_fault_tests
+[ 97%] Linking C executable sc_phase_journey
+[ 97%] Built target sc_matrix_journey
+[ 98%] Linking C executable sc_traversal_tests
+[ 99%] Linking C executable sc_exterior_tests
+[ 99%] Built target sc_phase_tests
+[ 99%] Building C object CMakeFiles/starship_crawl.dir/src/main.c.o
+[ 99%] Built target sc_traversal_tests
+[ 99%] Building C object CMakeFiles/starship_crawl.dir/src/render.c.o
+[ 99%] Built target sc_exterior_tests
+[ 99%] Built target sc_phase_journey
+[100%] Linking C executable starship_crawl
+[100%] Built target starship_crawl

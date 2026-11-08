@@ -1,0 +1,6 @@
+FOLLOW force=9 distance=1229
+PROGRESS phase=0 cell=13,0,2 goal=1,0,6 nav=2 t=0.00
+PROGRESS phase=0 cell=8,0,4 goal=1,0,7 nav=2 t=60.00
+PROGRESS phase=0 cell=2,0,4 goal=0,0,6 nav=2 t=120.00
+Raid ended before interception
+Raid journey incomplete phase=0 at 143.05

@@ -2,10 +2,12 @@
 
 ## Context
 
-See [proposal.md](proposal.md) for motivation and scope. This is a proposed
-replacement for the default new-ship experience, not implemented behaviour.
+See [proposal.md](proposal.md) for motivation and scope. The replacement is now
+implemented as generator 14 / simulation 1 / save 15. The decisions below record
+the original design; the [implementation review](../../../docs/reviews/2026-11-08-hidden-simulation/README.md)
+records actual limits, tuning, compatibility and verification evidence.
 
-The current `politics_gen.c` assigns three powers and reserves audience/conduit/
+The preceding `politics_gen.c` assigned three powers and reserved audience/conduit/
 finale rooms. `politics.c` advances their disputes through player commissions;
 its patrol combat and movement remain local to a room. `director.c` selects four
 timed, visible dispatches, and `render_politics.inc`, `render.c`, `main.c` and the
@@ -279,8 +281,8 @@ adjusts its timing and context without taking over faction ownership.
 
 ## Migration Plan
 
-1. Keep this proposal and its delta specifications separate from shipped specs
-   until implementation. Link it from the development roadmap as planned work.
+1. Synchronize the approved delta specifications after implementation, retaining
+   the earlier court requirements in their archived change and legacy fixtures.
 2. M1 reserves the next free generator/save versions (currently 14/15) and
    introduces simulation-version validation. Subsequent releases bump versions
    whenever serialized meaning or generated layouts change; never reinterpret a

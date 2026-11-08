@@ -1,0 +1,181 @@
++ cmake -S /workspace/starship_crawl -B /workspace/starship_crawl/build-coverage -DSC_BUILD_GAME=OFF -DSC_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: /workspace/starship_crawl/build-coverage
++ cmake --build /workspace/starship_crawl/build-coverage --parallel 4
+[  1%] Building C object CMakeFiles/sc_core.dir/src/faction_orders.c.o
+[  2%] Building C object CMakeFiles/sc_core_fault.dir/src/faction_orders.c.o
+[  3%] Linking C static library libsc_core.a
+[  3%] Linking C static library libsc_core_fault.a
+[ 28%] Built target sc_core_fault
+[ 52%] Built target sc_core
+[ 53%] Linking C executable sc_edge_tests
+[ 53%] Linking C executable sc_matrix_fault_tests
+[ 54%] Linking C executable sc_faction_fault_tests
+[ 55%] Linking C executable sc_faction_tests
+[ 56%] Built target sc_edge_tests
+[ 57%] Built target sc_faction_fault_tests
+[ 57%] Linking C executable sc_force_tests
+[ 59%] Built target sc_matrix_fault_tests
+[ 60%] Linking C executable sc_faction_order_tests
+[ 60%] Linking C executable sc_hidden_director_tests
+[ 61%] Built target sc_faction_order_tests
+[ 62%] Built target sc_force_tests
+[ 62%] Built target sc_faction_tests
+[ 63%] Built target sc_hidden_director_tests
+[ 63%] Linking C executable sc_faction_journey
+[ 64%] Building C object CMakeFiles/sc_hidden_journey.dir/tests/test_hidden_journey.c.o
+[ 64%] Linking C executable sc_politics_tests
+[ 65%] Linking C executable sc_politics_journey
+[ 66%] Built target sc_faction_journey
+[ 67%] Built target sc_politics_tests
+[ 68%] Built target sc_politics_journey
+[ 69%] Linking C executable sc_frontier_journey
+[ 69%] Linking C executable sc_frontier_tests
+[ 70%] Linking C executable sc_regional_journey
+[ 71%] Linking C executable sc_hidden_journey
+[ 72%] Built target sc_frontier_journey
+[ 73%] Linking C executable sc_regional_tests
+[ 74%] Built target sc_regional_journey
+[ 75%] Linking C executable sc_tests
+[ 75%] Built target sc_hidden_journey
+[ 76%] Linking C executable sc_habitat_tests
+[ 77%] Built target sc_frontier_tests
+[ 78%] Linking C executable sc_interior_tests
+[ 78%] Built target sc_regional_tests
+[ 78%] Built target sc_tests
+[ 79%] Linking C executable sc_navigation_tests
+[ 80%] Linking C executable sc_guidance_tests
+[ 80%] Built target sc_habitat_tests
+[ 80%] Linking C executable sc_navigation_recovery
+[ 80%] Built target sc_interior_tests
+[ 81%] Built target sc_navigation_tests
+[ 81%] Linking C executable sc_shelter_tests
+[ 82%] Linking C executable sc_equipment_tests
+[ 83%] Built target sc_navigation_recovery
+[ 84%] Built target sc_shelter_tests
+[ 85%] Linking C executable sc_campaign_tests
+[ 86%] Linking C executable sc_expedition_tests
+[ 87%] Built target sc_guidance_tests
+[ 87%] Built target sc_equipment_tests
+[ 88%] Linking C executable sc_death_tests
+[ 89%] Linking C executable sc_story_tests
+[ 90%] Built target sc_expedition_tests
+[ 89%] Built target sc_campaign_tests
+[ 91%] Linking C executable sc_matrix_tests
+[ 92%] Built target sc_story_tests
+[ 93%] Linking C executable sc_matrix_journey
+[ 94%] Linking C executable sc_phase_tests
+[ 94%] Built target sc_death_tests
+[ 95%] Linking C executable sc_phase_journey
+[ 96%] Built target sc_matrix_journey
+[ 97%] Built target sc_phase_tests
+[ 97%] Built target sc_matrix_tests
+[ 98%] Linking C executable sc_traversal_tests
+[ 99%] Linking C executable sc_exterior_tests
+[ 99%] Built target sc_phase_journey
+[ 99%] Built target sc_exterior_tests
+[100%] Built target sc_traversal_tests
++ ctest --test-dir /workspace/starship_crawl/build-coverage -L unit --output-on-failure
+Internal ctest changing into directory: /workspace/starship_crawl/build-coverage
+Test project /workspace/starship_crawl/build-coverage
+      Start  1: hidden_factions
+ 1/24 Test  #1: hidden_factions ..................   Passed    0.12 sec
+      Start  2: mobile_forces
+ 2/24 Test  #2: mobile_forces ....................   Passed    1.59 sec
+      Start  3: autonomous_politics
+ 3/24 Test  #3: autonomous_politics ..............   Passed    0.84 sec
+      Start  4: hidden_director
+ 4/24 Test  #4: hidden_director ..................   Passed    0.30 sec
+      Start  8: political_expeditions
+ 5/24 Test  #8: political_expeditions ............   Passed    0.63 sec
+      Start 11: deep_frontiers
+ 6/24 Test #11: deep_frontiers ...................   Passed    1.60 sec
+      Start 13: regional_encounters
+ 7/24 Test #13: regional_encounters ..............   Passed    1.60 sec
+      Start 14: core
+ 8/24 Test #14: core .............................   Passed    9.33 sec
+      Start 15: living_ship
+ 9/24 Test #15: living_ship ......................   Passed    4.45 sec
+      Start 17: generated_interiors
+10/24 Test #17: generated_interiors ..............   Passed    3.45 sec
+      Start 18: faction_faults
+11/24 Test #18: faction_faults ...................   Passed    0.01 sec
+      Start 19: edge_cases
+12/24 Test #19: edge_cases .......................   Passed    0.09 sec
+      Start 20: exploration_guidance
+13/24 Test #20: exploration_guidance .............   Passed    1.80 sec
+      Start 22: navigation_psionics
+14/24 Test #22: navigation_psionics ..............   Passed    0.23 sec
+      Start 23: shelter
+15/24 Test #23: shelter ..........................   Passed    0.04 sec
+      Start 25: equipment
+16/24 Test #25: equipment ........................   Passed    0.09 sec
+      Start 31: reactive_aftermath
+17/24 Test #31: reactive_aftermath ...............   Passed    6.77 sec
+      Start 32: narrative
+18/24 Test #32: narrative ........................   Passed    5.07 sec
+      Start 33: enemy_deaths
+19/24 Test #33: enemy_deaths .....................   Passed    0.36 sec
+      Start 34: ship_matrix
+20/24 Test #34: ship_matrix ......................   Passed    0.18 sec
+      Start 35: matrix_faults
+21/24 Test #35: matrix_faults ....................   Passed    0.08 sec
+      Start 37: phased_expeditions
+22/24 Test #37: phased_expeditions ...............   Passed    6.79 sec
+      Start 40: vertical_traversal
+23/24 Test #40: vertical_traversal ...............   Passed    1.09 sec
+      Start 42: space_exterior
+24/24 Test #42: space_exterior ...................   Passed    0.33 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Label Time Summary:
+unit    =  46.84 sec*proc (24 tests)
+
+Total Test time (real) =  46.85 sec
++ /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m gcovr --root /workspace/starship_crawl --filter src/ --object-directory /workspace/starship_crawl/build-coverage --txt /workspace/starship_crawl/build-coverage/coverage/summary.txt --html-details /workspace/starship_crawl/build-coverage/coverage/index.html --json /workspace/starship_crawl/build-coverage/coverage/coverage.json --json-summary /workspace/starship_crawl/build-coverage/coverage/summary.json --cobertura /workspace/starship_crawl/build-coverage/coverage/coverage.xml --print-summary --fail-under-line 95 /workspace/starship_crawl/build-coverage
+(INFO) Reading coverage data...
+(INFO) Writing coverage report...
+lines: 97.9% (10119 out of 10334)
+functions: 99.8% (573 out of 574)
+branches: 87.9% (10280 out of 11698)
+src/alien.c: 135/138 lines (97.83%)
+src/alien_special.c: 180/185 lines (97.30%)
+src/campaign.c: 378/382 lines (98.95%)
+src/campaign_combat.c: 106/108 lines (98.15%)
+src/campaign_gen.c: 94/94 lines (100.00%)
+src/death.c: 90/91 lines (98.90%)
+src/director.c: 156/156 lines (100.00%)
+src/encounters.c: 282/288 lines (97.92%)
+src/equipment.c: 206/208 lines (99.04%)
+src/expedition.c: 508/519 lines (97.88%)
+src/exterior.c: 11/11 lines (100.00%)
+src/faction_forces.c: 566/590 lines (95.93%)
+src/faction_orders.c: 197/203 lines (97.04%)
+src/faction_sim.c: 334/350 lines (95.43%)
+src/frontier.c: 200/203 lines (98.52%)
+src/game.c: 862/884 lines (97.51%)
+src/generation.c: 380/380 lines (100.00%)
+src/habitat.c: 278/278 lines (100.00%)
+src/hidden_director.c: 328/343 lines (95.63%)
+src/history.c: 35/35 lines (100.00%)
+src/interior.c: 355/356 lines (99.72%)
+src/math3d.h: 25/25 lines (100.00%)
+src/matrix.c: 405/423 lines (95.74%)
+src/matrix_effects.c: 381/392 lines (97.19%)
+src/matrix_gen.c: 154/155 lines (99.35%)
+src/matrix_state.c: 188/188 lines (100.00%)
+src/navigation.c: 171/173 lines (98.84%)
+src/politics.c: 304/320 lines (95.00%)
+src/politics_gen.c: 84/86 lines (97.67%)
+src/progression.c: 201/207 lines (97.10%)
+src/psionics.c: 54/54 lines (100.00%)
+src/reveals.c: 83/83 lines (100.00%)
+src/save.c: 659/667 lines (98.80%)
+src/save_factions.inc: 134/135 lines (99.26%)
+src/shelter.c: 135/136 lines (99.26%)
+src/story.c: 539/540 lines (99.81%)
+src/traversal.c: 165/165 lines (100.00%)
+src/world.c: 756/783 lines (96.55%)
+PASS: >= 95% unit line coverage overall and in each measured source. Report: /workspace/starship_crawl/build-coverage/coverage/index.html

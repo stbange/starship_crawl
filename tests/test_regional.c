@@ -529,6 +529,10 @@ static void malformed_local(void) {
     CHECK(f);
     fseek(f, 0, SEEK_END);
     long length = ftell(f);
+    size_t faction_bytes =
+        g->world.generator >= 14
+            ? SC_FACTIONS_SAVE_BYTES + g->factions.count * SC_FACTION_REGION_BYTES
+            : 0;
     rewind(f);
     unsigned char *bytes = malloc((size_t)length);
     CHECK(bytes);
@@ -538,7 +542,7 @@ static void malformed_local(void) {
                                 FRONTIER_CLAIMED | FRONTIER_ELIGIBLE};
     for (unsigned n = 0; n < sizeof(invalid) / sizeof(invalid[0]); n++) {
         for (int b = 0; b < 4; b++)
-            bytes[length - 8 - SC_PLAYERS * RELICS * 4 + b] =
+            bytes[length - faction_bytes - 8 - SC_PLAYERS * RELICS * 4 + b] =
                 (unsigned char)(invalid[n] >> (8 * b));
         unsigned hash = 2166136261u;
         for (long i = 0; i < length - 4; i++)

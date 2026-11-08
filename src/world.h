@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 13u
+#define SC_GENERATOR_VERSION 14u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -163,6 +163,8 @@ typedef struct {
     Vec3 aim, normal, heading;
     uint8_t kind, id, last_player, allegiance, ally_owner, ecology;
     uint8_t country;
+    uint32_t force; /* Persistent mobile identity; zero keeps the static room kill mask. */
+    uint8_t member;
     bool alive, climbing;
     uint8_t behavior, motion;
     float motion_time, stride, travel_speed, link_strain;
@@ -234,6 +236,7 @@ typedef struct {
     float frontier_timer, frontier_disrupt;
     float hazard_time, circuit_time, alarm_time;
     uint8_t circuit, hazard_stage;
+    uint8_t faction_edit; /* Applied once per streamed room; durable decision lives in Factions. */
 } Room;
 /* Geometry is relative to its integer chunk coordinate, never a distant camera. */
 /* A thin sloped slab, optionally quantized into 32 physical stair treads. */

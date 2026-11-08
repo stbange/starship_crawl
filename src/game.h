@@ -7,6 +7,7 @@
 #include "encounters.h"
 #include "frontier.h"
 #include "politics.h"
+#include "factions.h"
 #define SC_PLAYERS 2
 #define SC_MAX_PROJECTILES 192
 #define SC_MAP_SIDE 9
@@ -94,6 +95,10 @@ typedef struct {
     Cell hit_rooms[4];
     uint8_t hit_ids[4];
     uint8_t guardian;
+    uint8_t country; /* NPC faction shots can hit rivals; zero retains ordinary hostile shots. */
+    uint32_t source_force;
+    uint32_t hit_forces[4];
+    uint8_t hit_members[4];
 } Projectile;
 typedef struct {
     Position pos;
@@ -150,6 +155,7 @@ typedef struct Game {
     FrontierProgress frontier;
     Politics politics;
     Director director;
+    Factions factions;
     bool dirty;
 } Game;
 typedef struct {
@@ -165,6 +171,8 @@ void game_map_toggle(Game *g, int player);
 void game_map_pan(Game *g, int player, int x, int y, int z);
 bool game_map_build(const Game *g, int player, Cell center, int radius, MapView *view);
 bool game_navigation_to(const Game *g, int player, Cell goal, Navigation *nav);
+bool game_navigation_from(const Game *g, Position position, bool in_lift, Cell goal,
+                          Navigation *nav);
 void game_navigation_step(Game *g, double dt);
 void game_psionic(Game *g, int player, Psionic power);
 void game_psionics_step(Game *g, Player *p, double dt);

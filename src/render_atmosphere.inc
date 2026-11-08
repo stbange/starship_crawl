@@ -166,13 +166,13 @@ static void atmosphere_draw(Renderer *r, const Game *g, int player, const float 
                 double d = vlen(delta);
                 if (d > 165 || (d > 20 && vdot(delta, forward) < -10))
                     continue;
-                unsigned copies = a->kind == SPR_RAIN    ? 28
-                                  : a->kind == SPR_STEAM ? 10
-                                  : a->kind == SPR_MOTE  ? 12
-                                  : a->kind == SPR_MIST  ? 3
-                                  : a->kind == SPR_SPARK ? 5
+                unsigned copies = a->kind == SPR_RAIN                          ? 28
+                                  : a->kind == SPR_STEAM                       ? 10
+                                  : a->kind == SPR_MOTE                        ? 12
+                                  : a->kind == SPR_MIST                        ? 3
+                                  : a->kind == SPR_SPARK                       ? 5
                                   : a->kind >= SPR_ASH && vlen(a->normal) < .5 ? 18
-                                                         : 1;
+                                                                               : 1;
                 for (unsigned i = 0; i < copies && count < SC_VIEW_SPRITES; i++) {
                     uint32_t h = world_hash(a->hash, (Cell){(int32_t)i, 0, 0}, 17);
                     double phase = (h % 10000) / 10000.0, t = g->time;
@@ -203,10 +203,11 @@ static void atmosphere_draw(Renderer *r, const Game *g, int player, const float 
                             draw.alpha *= (float)(.2 + .8 * fmax(0, sin(t * 1.3 + phase)));
                     } else if (a->kind >= SPR_ASH && vlen(a->normal) < .5) {
                         double life = fmod(t * (a->kind == SPR_BUBBLE ? .6 : .11) + phase, 1);
-                        draw.center = vadd(anchor, v3((((h >> 8) % 1000) / 999.0 - .5) * a->width +
-                                                      sin(t * .3 + phase * 20),
-                                                      (a->kind == SPR_BUBBLE ? life : -life) * a->height,
-                                                      (((h >> 18) % 1000) / 999.0 - .5) * 4));
+                        draw.center =
+                            vadd(anchor, v3((((h >> 8) % 1000) / 999.0 - .5) * a->width +
+                                                sin(t * .3 + phase * 20),
+                                            (a->kind == SPR_BUBBLE ? life : -life) * a->height,
+                                            (((h >> 18) % 1000) / 999.0 - .5) * 4));
                         double size = a->kind == SPR_CRYSTAL ? .35 : .18;
                         draw.right = vmul(right, size);
                         draw.up = vmul(up, size * (a->kind == SPR_CRYSTAL ? 2 : 1));
@@ -256,6 +257,45 @@ static void atmosphere_draw(Renderer *r, const Game *g, int player, const float 
                         continue;
                     r->sprite_draws[count++] = draw;
                 }
+            }
+        }
+    if (g->factions.version)
+        for (int i = 0; i < g->world.count; i++) {
+            const Room *room = &g->world.rooms[i];
+            const FactionRegion *region = factions_at(&g->factions, room->cell);
+            if (!room->ready || !region ||
+                (!cell_equal(region->site, room->cell) && !room->faction_edit))
+                continue;
+            bool growth = (region->flags & FS_GROWTH) != 0;
+            bool damaged = (region->flags & (FS_DARK | FS_RAIDED)) != 0;
+            if (!growth && !damaged && room->faction_edit != EDIT_WEATHER)
+                continue;
+            Vec3 origin = vsub(world_center(room->cell), r->origin);
+            if (vlen(vsub(origin, eye)) > 150)
+                continue;
+            for (unsigned n = 0; n < 16 && count < SC_VIEW_SPRITES; n++) {
+                double phase = n * .43, rise = fmod(g->time * .35 + phase, 3.0);
+                Vec3 at = vadd(origin, v3(7 + sin(phase * 5) * 5, growth ? 1 + rise : rise,
+                                          7 + cos(phase * 3) * 4));
+                SpriteDraw draw = {.center = at,
+                                   .right = vmul(right, growth ? .25 : 2),
+                                   .up = vmul(up, growth ? .25 : 2),
+                                   .color = growth ? rgb(.25f, .5f, .32f) : rgb(.45f, .5f, .55f),
+                                   .alpha = growth ? .5f : .12f,
+                                   .glow = growth ? .7f : .1f,
+                                   .tile = growth ? SPR_MOTE : SPR_STEAM,
+                                   .order = count};
+                if (n < 4 && damaged) {
+                    draw.center = vadd(origin, v3(8 + (n % 2) * 1.3, .04, 3 + (n / 2) * 1.5));
+                    draw.right = v3(1.5, 0, 0);
+                    draw.up = v3(0, 0, 1.5);
+                    draw.tile = SPR_BONES;
+                    draw.alpha = .8f;
+                    draw.color = rgb(.4f, .35f, .26f);
+                }
+                Vec3 delta = vsub(draw.center, eye);
+                draw.distance = vdot(delta, delta);
+                r->sprite_draws[count++] = draw;
             }
         }
     qsort(r->sprite_draws, count, sizeof(SpriteDraw), sprite_order);

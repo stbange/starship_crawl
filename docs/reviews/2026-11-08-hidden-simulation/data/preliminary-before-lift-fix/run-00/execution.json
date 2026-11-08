@@ -1,0 +1,6 @@
+{
+  "interrupted": true,
+  "reason": "Stopped to validate offscreen lift handoff; not a completed long expedition.",
+  "last_simulated_seconds": 2520.017,
+  "binary_sha256": "44f0f279ec774cc1d985e052043660183d1dafb32d5922d6f7ca42cd2c3074eb"
+}

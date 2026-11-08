@@ -13,6 +13,11 @@ static Game *fresh(unsigned seed) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
     game_init(g, seed);
+    /* These are the retained generator-13 courts and dispatch contracts. */
+    world_destroy(&g->world);
+    world_init(&g->world, seed);
+    g->world.generator = 13;
+    politics_init(g);
     g->world.open_layer = 0;
     return g;
 }
@@ -59,7 +64,7 @@ static void generation(void) {
             CHECK(politics_color(seed, n).r > 0);
             for (unsigned role = 1; role <= 3; role++) {
                 Cell c = politics_site(seed, n, (CourtRole)role);
-                RoomSpec r = world_describe(seed, c);
+                RoomSpec r = world_describe_version(seed, 13, c);
                 CHECK(r.habitat.court == role && r.habitat.country == n + 1 && r.height >= 8 &&
                       !r.habitat.volume);
                 CHECK(cell_equal(world_region(c), politics_region(seed, n, role)));
@@ -211,7 +216,7 @@ static Room *dispatch_room(Game *g, unsigned kind) {
         for (int z = 0; z < 6; z++)
             for (int x = -4; x <= 4; x++) {
                 RegionPlan p;
-                world_plan(g->world.seed, (Cell){x, y, z}, &p);
+                world_plan_version(g->world.seed, 13, (Cell){x, y, z}, &p);
                 for (int i = 0; i < p.count; i++) {
                     RoomSpec *a = &p.rooms[i];
                     if (a->type == BAY || a->habitat.court || a->height < 8 || a->habitat.volume ||
@@ -448,6 +453,11 @@ static void saves(void) {
     CHECK(!g->director.kind && g->players[0].health == 55);
     remove("politics-pending.sav");
     game_new_ship(g, 713);
+    CHECK(g->factions.version && !g->politics.version);
+    world_destroy(&g->world);
+    world_init(&g->world, 713);
+    g->world.generator = 13;
+    politics_init(g);
     Politics forged = g->politics;
     forged.countries[0] = (CountryState){.met = 1, .pledge = 1, .stage = 2};
     CHECK(politics_valid(&forged, 13) && !politics_world_valid(&forged, &g->director, &g->world));

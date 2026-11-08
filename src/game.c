@@ -58,6 +58,7 @@ void game_init(Game *g, uint32_t seed) {
     game_message(g, story_commission(seed));
 }
 void game_destroy(Game *g) {
+    factions_destroy(&g->factions);
     matrix_destroy(&g->matrix);
     world_destroy(&g->world);
 }
@@ -201,7 +202,8 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
             damage *= .5f;
     }
     damage = alien_damage(e, damage);
-    e->health -= damage;
+    if (g->factions.version)
+        factions_attack(g, e, owner, damage);
     e->flash = .12f;
     e->last_player = (uint8_t)owner;
     if (flags & W_CHILL)
@@ -213,6 +215,16 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
         p->health = fminf(player_max_health(p), p->health + damage * .12f);
     }
     g->hits++;
+    if (e->force) {
+        bool alive = e->alive;
+        FactionForce *force = factions_force(g, e->force);
+        factions_damage(g, room, index, damage, owner);
+        /* A finishing shot cannot claim a battle fought entirely by NPCs. */
+        if (alive && !e->alive && force && force->participation[owner] >= 30)
+            award(g, &g->players[owner], 20 + def->tier * 5);
+        return;
+    }
+    e->health -= damage;
     if (e->health <= 0) {
         world_kill(&g->world, room, index);
         if (e->alive)
@@ -511,9 +523,12 @@ static bool vulnerable(const Player *p) {
     Vec3 feet = position_absolute(p->pos);
     return !p->sheltered && feet.z >= 0 && world_difficulty(world_cell(feet)) != 0 && p->health > 0;
 }
-static bool already_hit(const Projectile *shot, Cell room, int id) {
+static bool already_hit(const Projectile *shot, Cell room, const Enemy *enemy) {
     for (int i = 0; i < shot->hit_count; i++)
-        if (shot->hit_ids[i] == id && cell_equal(shot->hit_rooms[i], room))
+        if (enemy->force
+                ? shot->hit_forces[i] == enemy->force && shot->hit_members[i] == enemy->member
+                : !shot->hit_forces[i] && shot->hit_ids[i] == enemy->id &&
+                      cell_equal(shot->hit_rooms[i], room))
             return true;
     return false;
 }
@@ -530,7 +545,7 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin) {
             for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                 Enemy *enemy = &g->world.rooms[r].enemies[e];
                 if (!enemy->alive || enemy->allegiance == 2 ||
-                    already_hit(&history, g->world.rooms[r].cell, e))
+                    already_hit(&history, g->world.rooms[r].cell, enemy))
                     continue;
                 double hit = enemy_intercept(enemy, ray, dir, nearest);
                 if (hit < nearest) {
@@ -546,6 +561,8 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin) {
         int at = history.hit_count++;
         history.hit_rooms[at] = room->cell;
         history.hit_ids[at] = (uint8_t)target;
+        history.hit_forces[at] = room->enemies[target].force;
+        history.hit_members[at] = room->enemies[target].member;
         left -= nearest + .01;
         ray = vadd(end, vmul(dir, .01));
         if (left <= 0)
@@ -571,23 +588,35 @@ static void projectiles_step(Game *g, double dt) {
             Room *room = NULL;
             if (shot->owner < 0) {
                 for (int p = 0; p < g->player_count; p++)
-                    if (vulnerable(&g->players[p])) {
+                    if (vulnerable(&g->players[p]) &&
+                        (shot->country == 4 || !shot->country ||
+                         factions_hostile(g, &(Enemy){.country = shot->country, .pos = shot->pos},
+                                          p))) {
                         double t = player_intercept(&g->players[p], origin, dir, nearest);
                         if (t < nearest) {
                             nearest = t;
                             player = p;
                         }
                     }
-            } else if (!(shot->flags & W_FLARE)) {
+            }
+            if ((shot->owner >= 0 || shot->country) &&
+                (shot->owner < 0 || !(shot->flags & W_FLARE))) {
                 for (int r = 0; r < g->world.count; r++)
                     for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                         Enemy *enemy = &g->world.rooms[r].enemies[e];
                         if (!enemy->alive || enemy->allegiance == 2 ||
-                            already_hit(shot, g->world.rooms[r].cell, e))
+                            already_hit(shot, g->world.rooms[r].cell, enemy) ||
+                            (shot->owner < 0 &&
+                             ((shot->source_force && enemy->force == shot->source_force) ||
+                              factions_safe(g, g->world.rooms[r].cell) ||
+                              (shot->country == 4 && !enemy->country) ||
+                              (enemy->country &&
+                               factions_relation(g, shot->country, enemy->country) != REL_WAR))))
                             continue;
                         double t = enemy_intercept(enemy, origin, dir, nearest);
                         if (t < nearest) {
                             nearest = t;
+                            player = -1;
                             target = e;
                             room = &g->world.rooms[r];
                         }
@@ -601,9 +630,12 @@ static void projectiles_step(Game *g, double dt) {
                 game_hurt(g, player, shot->damage, shot->flags);
                 g->projectile_hits++;
             }
-            if (target >= 0 && !(shot->flags & W_BLAST)) {
-                game_damage_enemy(g, room, target, shot->owner, shot->damage, shot->flags);
-                if (shot->flags & W_CHAIN)
+            if (target >= 0 && (shot->owner < 0 || !(shot->flags & W_BLAST))) {
+                if (shot->owner < 0)
+                    factions_damage(g, room, target, shot->damage, -1);
+                else
+                    game_damage_enemy(g, room, target, shot->owner, shot->damage, shot->flags);
+                if (shot->owner >= 0 && shot->flags & W_CHAIN)
                     blast_enemies(g, enemy_center(&room->enemies[target]), shot->owner,
                                   shot->damage * .55f, shot->blast, shot->flags & ~W_CHAIN);
             }
@@ -611,12 +643,14 @@ static void projectiles_step(Game *g, double dt) {
                 blast_enemies(g, vsub(position_absolute(shot->pos), vmul(dir, .05)), shot->owner,
                               shot->damage, shot->blast, shot->flags);
             Cell cell = world_cell(position_absolute(shot->pos));
-            bool pierces =
-                target >= 0 && !(shot->flags & W_BLAST) && shot->pierce > 1 && shot->hit_count < 4;
+            bool pierces = shot->owner >= 0 && target >= 0 && !(shot->flags & W_BLAST) &&
+                           shot->pierce > 1 && shot->hit_count < 4;
             if (pierces) {
                 int at = shot->hit_count++;
                 shot->hit_rooms[at] = room->cell;
                 shot->hit_ids[at] = (uint8_t)target;
+                shot->hit_forces[at] = room->enemies[target].force;
+                shot->hit_members[at] = room->enemies[target].member;
                 shot->pierce--;
                 travel -= nearest + .01;
                 position_move(&shot->pos, vmul(dir, .01));
@@ -648,6 +682,7 @@ void game_enemy_shot(Game *g, const Room *room, Enemy *e) {
                     .damage = def->damage + (float)fmin(world_difficulty(room->cell), 12),
                     .active = true,
                     .owner = -1,
+                    .country = g->factions.version ? e->country : 0,
                     .flags = def->flags,
                     .color = (def->flags & CHILL) ? rgb(.25f, .65f, 1)
                                                   : ((def->flags & DRAIN) ? rgb(.7f, .2f, .8f)
@@ -731,7 +766,7 @@ static void enemies_step(Game *g, double dt) {
         room->alarm_time = fmaxf(0, room->alarm_time - (float)dt);
         for (int i = 0; i < room->enemy_count; i++) {
             Enemy *e = &room->enemies[i];
-            if (!e->alive)
+            if (!e->alive || e->force)
                 continue;
             e->warning_sound = fmaxf(0, e->warning_sound - (float)dt);
             if (encounter_passive(room, i))
@@ -761,7 +796,9 @@ static void enemies_step(Game *g, double dt) {
             double best = ceiling ? 145 : room->alarm_time > 0 ? 95 : 55;
             for (int p = 0; p < g->player_count; p++) {
                 Player *t = &g->players[p];
-                if (e->country && politics_reputation(g, e->country, p) >= 0)
+                if (e->country &&
+                    (g->factions.version ? !factions_hostile(g, e, p)
+                                         : politics_reputation(g, e->country, p) >= 0))
                     continue;
                 if (!vulnerable(t) || t->cloaked || protected[p] ||
                     fabs(position_delta(t->pos, e->pos).y) > (ceiling ? 140 : 9))
@@ -804,7 +841,7 @@ static void enemies_step(Game *g, double dt) {
                 e->flash = .3f;
             }
             if (e->behavior != ALIEN_CONDUCTOR && (def->flags & BROOD) && e->special <= 0 &&
-                room->enemy_count < SC_MAX_ENEMIES) {
+                room->enemy_count < (g->factions.version ? 14 : SC_MAX_ENEMIES)) {
                 int id = room->enemy_count;
                 Position spawn = e->pos;
                 position_move(&spawn, v3(1.5, 0, 1.5));
@@ -898,12 +935,16 @@ void game_step(Game *g, const Actions *actions, double dt) {
     if (!isfinite(dt) || dt <= 0 || dt > .05)
         return;
     g->time += dt;
+    factions_forces_sync(g, true);
     game_equipment_step(g, dt);
     g->message_time = fmaxf(0, g->message_time - (float)dt);
     Vec3 positions[2] = {position_absolute(g->players[0].pos),
                          position_absolute(g->players[1].pos)};
     if (!world_refresh(&g->world, positions, g->player_count))
         return;
+    factions_step(g, dt);
+    factions_environment(g);
+    factions_forces_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         game_psionics_step(g, p, dt);
@@ -949,12 +990,15 @@ void game_step(Game *g, const Actions *actions, double dt) {
     game_encounters_step(g, dt);
     politics_step(g, dt);
     director_step(g, dt);
+    hidden_director_step(g, dt);
+    factions_tactics(g, dt);
     enemies_step(g, dt);
     projectiles_step(g, dt);
     game_deaths_step(g, dt);
     matrix_step(g, dt);
     campaign_step(g, dt);
     game_navigation_step(g, dt);
+    factions_forces_sync(g, false);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];
         if (p->health <= 0 || position_absolute(p->pos).z < -400) {

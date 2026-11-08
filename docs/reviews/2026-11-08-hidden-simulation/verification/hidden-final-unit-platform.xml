@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Linux-cc"
+	tests="25"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="ef4ec227e429"
+	time="21"
+	timestamp="2026-11-08T01:43:23"
+	>
+	<testcase name="hidden_factions" classname="hidden_factions" time="0.142855" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS hidden state, deterministic strategic records, clocks and portable saves
+site kinds=31 owners=15
+PASS seeded resource sites and legacy generation separation
+</system-out>
+	</testcase>
+	<testcase name="mobile_forces" classname="mobile_forces" time="1.34646" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS force ownership, casualties, real travel, capacity and convoy conservation
+</system-out>
+	</testcase>
+	<testcase name="autonomous_politics" classname="autonomous_politics" time="0.56071" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS autonomous deployments, deterministic wars, graded incidents and relay interference
+</system-out>
+	</testcase>
+	<testcase name="hidden_director" classname="hidden_director" time="0.146891" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS hidden intervention lifecycle, real content, shared cameras, recovery and claims
+</system-out>
+	</testcase>
+	<testcase name="political_expeditions" classname="political_expeditions" time="0.350647" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS stable countries, nine reachable macro sites, governments, symmetric relations and pure map queries
+PASS all nine settlements, co-op eligible rewards, ordinary damage, systems, borders, rulers and saved consequences
+PASS physical director dispatches, both players, recovery budget, repeat limits, expiry and frozen clocks
+PASS neutral patrols, local defense, individual standing and matrix control precedence
+PASS neutral patrols leave story objectives accessible; hostile and hacked states agree
+PASS format-13 migration, format-14 corruption rollback and political invariants
+</system-out>
+	</testcase>
+	<testcase name="deep_frontiers" classname="deep_frontiers" time="0.879869" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS immutable generator-11 geometry, populations, plans and format-12 migration
+PASS all six encounters, nine reveals, five contracts, ten species; peak boxes 375/512
+PASS previews, earned tools, once-only claims, both profiles, reload and fresh-ship reset
+PASS flight, circuit and matrix advantages, warned hazards and nonlinear relic effects
+PASS ten alien commitments, sound, quiet counterplay, co-op gaze, one molt and linked death
+PASS real beam/bullet fragment hits, worm tail, evolved nova and flight inputs
+PASS planted wall-to-ceiling transitions and physical collision
+PASS deep frontiers
+</system-out>
+	</testcase>
+	<testcase name="regional_encounters" classname="regional_encounters" time="0.834969" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS immutable generator-10 plans, geometry, sprites, populations and save migration
+PASS hot/cold variety, compatible ecologies, pacing, supported mixed-role squads
+PASS all eight local actions, one-time rewards and durable environmental consequences
+PASS optional activation, staggered links, beam disruption, core collapse, co-op durable claims
+PASS locked attack lines, evasion, interruption, locomotion and real-wall planted limbs
+PASS earned-tool drills require actual per-player fire, powers or rig use
+PASS conductor cues, single committed contact and late co-op participation
+PASS malformed local claims roll back transactionally and new ships reset progress
+</system-out>
+	</testcase>
+	<testcase name="core" classname="core" time="3.59318" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 384 region layouts: footprint reservation, district variety, connected backbone, loops, reciprocal seams
+PASS geometry and population independent of load order; walkable connectors and floors (12 seeds)
+PASS bounded fair streaming, atomic hall publication, shared co-op chunks, hysteresis, 100 separated-player moves, persistent kills
+PASS space approach, gravity, crouch clearance, lift, checkpoint respawn
+PASS swept projectile combat, upgrades, optional co-op, new expedition progression
+PASS save round-trip, v2 character migration, solo default, both profiles, corruption and failure safety
+PASS v1 character migration, generator compatibility, sector-local physics, distant co-op collision and save/resume
+PASS charged dodgeable shots, swept player/wall collision, co-op projectile ownership, wall climbing, fast crawlers, flashlight controls, bounded dressing and broken lamps
+PASS 28 themes, 27 species, 16 functional weapons, 10 attributes, shield/armor, shared persistent loot, six-stage story, contracts, v3 ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="living_ship" classname="living_ship" time="2.68164" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS immutable generator-9 save, geometry and encounter fixtures
+PASS paired vault reservations, eight macro forms, all weather/tales/ecologies and complete masked ownership
+PASS matching mixed silhouettes, tier/ceiling limits and coherent palette variation
+PASS surface support, open vaults/guard rails, reproducible detail, spawn fit; maximum 331 boxes
+PASS separated co-op at region corners within the proven 174-desired/192-resident budget
+PASS macro-room brood spawning retains capacity and colony coloration
+</system-out>
+	</testcase>
+	<testcase name="generated_interiors" classname="generated_interiors" time="1.9462" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 640 plans: ship profiles, floor plans, connected incidents and rare discoveries
+PASS furnishings, two entrances, caches, walking/mech clearance, load order; max 282 boxes
+PASS original generator-3 plans, geometry, map, save round-trip and opt-in new ship
+PASS side-space cache identity survives streaming and save/resume
+</system-out>
+	</testcase>
+	<testcase name="faction_faults" classname="faction_faults" time="0.0160864" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS malformed references, portable appendix and transactional allocation failures
+</system-out>
+	</testcase>
+	<testcase name="edge_cases" classname="edge_cases" time="0.13918" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 1522 edge-case assertions: resource rules, combat, invalid input, allocation/I/O failures, save validation and rollback
+</system-out>
+	</testcase>
+	<testcase name="exploration_guidance" classname="exploration_guidance" time="0.464212" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS reciprocal bounded guidance, detours, floors, phase limits, distant coordinates and independent views
+PASS held lift input cannot chain rides; release, return, camera and save compatibility
+PASS upper stair/ramp exit guidance follows supported landings around railings on both sides and negative decks
+</system-out>
+	</testcase>
+	<testcase name="navigation_psionics" classname="navigation_psionics" time="0.0644459" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 5521 navigation, body, projectile and psionic assertions
+</system-out>
+	</testcase>
+	<testcase name="shelter" classname="shelter" time="0.0161394" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 102 sanctuary assertions
+</system-out>
+	</testcase>
+	<testcase name="equipment" classname="equipment" time="0.0188346" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 149 equipment assertions: beams, owned rigs, driving, plating, attached flares and format-6 migration
+</system-out>
+	</testcase>
+	<testcase name="reactive_aftermath" classname="reactive_aftermath" time="3.54451" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS reactive aftermath: councils, power, wards, controllers, all chapter kinds/outcomes, Warden gate, careers, events and persistence
+</system-out>
+	</testcase>
+	<testcase name="narrative" classname="narrative" time="1.88031" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS narrative: motivations, all outcomes, discoveries, stable reservations, co-op, persistence and validation
+</system-out>
+	</testcase>
+	<testcase name="enemy_deaths" classname="enemy_deaths" time="0.140237" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS deaths: 32 species, five machines, legacy encounters, warning/dodge/cover, acid/mines, chains, isolation, bounded pools, streaming and saves
+</system-out>
+	</testcase>
+	<testcase name="ship_matrix" classname="ship_matrix" time="0.0861766" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS matrix generation, programs, encounters, consequences, co-op and persistence
+</system-out>
+	</testcase>
+	<testcase name="matrix_faults" classname="matrix_faults" time="0.0219927" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>Matrix load fault sites: 6 failures, 42 successes
+PASS matrix validation, legacy migration and transactional allocation/I/O faults
+</system-out>
+	</testcase>
+	<testcase name="phased_expeditions" classname="phased_expeditions" time="1.84794" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS fresh ships, directional plans, guardian rewards, loadouts, combat, retry and versioned saves
+</system-out>
+	</testcase>
+	<testcase name="vertical_traversal" classname="vertical_traversal" time="0.26267" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS immutable generator-8 save, 20 geometry fixtures and legacy lift behavior
+PASS tread/slab top, underside, side, parallel, starting-inside and limited rays
+PASS aligned region columns, landing/terminal clearance and rays; max 325 boxes
+PASS step limit, descent snap, head clearance, crouch and flight without free stepping
+PASS real stair support stops at phase barriers and pending decks, then resumes safely
+PASS animated rides, checkpoints, input guards, save/failure safety, rigs, co-op, death and barriers
+</system-out>
+	</testcase>
+	<testcase name="space_exterior" classname="space_exterior" time="0.0966449" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS surrounding sky, bay aperture, grazing angles and distant hull occlusion
+PASS shared solid shell, open hatch, furnishings, weapon rays and legacy empty space
+PASS generator-7/8 interior, enemy and collision parity across eight seeds
+PASS cabin save/resume, co-op and immutable phased generator-7 save
+</system-out>
+	</testcase>
+	<testcase name="platform_input" classname="platform_input" time="0.0380663" status="run">
+		<properties>
+			<property name="cmake_labels" value="platform"/>
+		</properties>
+		<system-out>PASS: preferences and actual SDL virtual-controller input/ownership
+</system-out>
+	</testcase>
+</testsuite>

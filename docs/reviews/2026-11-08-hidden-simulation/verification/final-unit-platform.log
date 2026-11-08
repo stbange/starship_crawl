@@ -1,0 +1,60 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+      Start  1: hidden_factions
+ 1/25 Test  #1: hidden_factions ..................   Passed    0.14 sec
+      Start  2: mobile_forces
+ 2/25 Test  #2: mobile_forces ....................   Passed    1.35 sec
+      Start  3: autonomous_politics
+ 3/25 Test  #3: autonomous_politics ..............   Passed    0.56 sec
+      Start  4: hidden_director
+ 4/25 Test  #4: hidden_director ..................   Passed    0.15 sec
+      Start  8: political_expeditions
+ 5/25 Test  #8: political_expeditions ............   Passed    0.35 sec
+      Start 11: deep_frontiers
+ 6/25 Test #11: deep_frontiers ...................   Passed    0.88 sec
+      Start 13: regional_encounters
+ 7/25 Test #13: regional_encounters ..............   Passed    0.83 sec
+      Start 14: core
+ 8/25 Test #14: core .............................   Passed    3.59 sec
+      Start 15: living_ship
+ 9/25 Test #15: living_ship ......................   Passed    2.68 sec
+      Start 17: generated_interiors
+10/25 Test #17: generated_interiors ..............   Passed    1.95 sec
+      Start 18: faction_faults
+11/25 Test #18: faction_faults ...................   Passed    0.02 sec
+      Start 19: edge_cases
+12/25 Test #19: edge_cases .......................   Passed    0.14 sec
+      Start 20: exploration_guidance
+13/25 Test #20: exploration_guidance .............   Passed    0.46 sec
+      Start 22: navigation_psionics
+14/25 Test #22: navigation_psionics ..............   Passed    0.06 sec
+      Start 23: shelter
+15/25 Test #23: shelter ..........................   Passed    0.02 sec
+      Start 25: equipment
+16/25 Test #25: equipment ........................   Passed    0.02 sec
+      Start 31: reactive_aftermath
+17/25 Test #31: reactive_aftermath ...............   Passed    3.54 sec
+      Start 32: narrative
+18/25 Test #32: narrative ........................   Passed    1.88 sec
+      Start 33: enemy_deaths
+19/25 Test #33: enemy_deaths .....................   Passed    0.14 sec
+      Start 34: ship_matrix
+20/25 Test #34: ship_matrix ......................   Passed    0.09 sec
+      Start 35: matrix_faults
+21/25 Test #35: matrix_faults ....................   Passed    0.02 sec
+      Start 37: phased_expeditions
+22/25 Test #37: phased_expeditions ...............   Passed    1.85 sec
+      Start 40: vertical_traversal
+23/25 Test #40: vertical_traversal ...............   Passed    0.26 sec
+      Start 42: space_exterior
+24/25 Test #42: space_exterior ...................   Passed    0.10 sec
+      Start 44: platform_input
+25/25 Test #44: platform_input ...................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 25
+
+Label Time Summary:
+platform    =   0.04 sec*proc (1 test)
+unit        =  21.08 sec*proc (24 tests)
+
+Total Test time (real) =  21.13 sec

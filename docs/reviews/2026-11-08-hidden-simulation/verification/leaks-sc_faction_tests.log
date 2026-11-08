@@ -1,0 +1,3 @@
+PASS hidden state, deterministic strategic records, clocks and portable saves
+site kinds=31 owners=15
+PASS seeded resource sites and legacy generation separation

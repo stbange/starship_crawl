@@ -15,6 +15,12 @@ static Game *fresh(void) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
     game_init(g, 713);
+    /* Retain the released deep-frontier encounter fixtures. New campaigns are covered separately.
+     */
+    world_destroy(&g->world);
+    world_init(&g->world, 713);
+    g->world.generator = 13;
+    politics_init(g);
     return g;
 }
 static void destroy(Game *g) {
@@ -34,7 +40,7 @@ static Room *find(Game *g, int challenge, int contract, unsigned layer) {
         for (int z = 1; z < 15; z++)
             for (int x = -14; x <= 14; x++) {
                 RegionPlan plan;
-                world_plan(g->world.seed, (Cell){x, y, z}, &plan);
+                world_plan_version(g->world.seed, g->world.generator, (Cell){x, y, z}, &plan);
                 for (int n = 0; n < plan.count; n++) {
                     RoomSpec *r = &plan.rooms[n];
                     if (r->habitat.pace != PACE_FRONTIER || r->habitat.volume || r->height < 10 ||
@@ -238,6 +244,10 @@ static void claims(void) {
     CHECK(f);
     fseek(f, 0, SEEK_END);
     long length = ftell(f);
+    size_t faction_bytes =
+        g->world.generator >= 14
+            ? SC_FACTIONS_SAVE_BYTES + g->factions.count * SC_FACTION_REGION_BYTES
+            : 0;
     rewind(f);
     unsigned char *wire = malloc((size_t)length);
     CHECK(wire && fread(wire, 1, (size_t)length, f) == (size_t)length);
@@ -245,7 +255,7 @@ static void claims(void) {
     FrontierProgress saved = g->frontier;
     Player saved_player = g->players[0];
     RoomRecord *saved_records = g->world.records;
-    wire[length - 4 - SC_POLITICS_SAVE_BYTES - SC_PLAYERS * RELICS * 4] = 4;
+    wire[length - faction_bytes - 4 - SC_POLITICS_SAVE_BYTES - SC_PLAYERS * RELICS * 4] = 4;
     unsigned hash = 2166136261u;
     for (long i = 0; i < length - 4; i++)
         hash = (hash ^ wire[i]) * 16777619u;

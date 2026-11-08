@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/starship_crawl/docs/reviews/2026-11-08-hidden-simulation/data/capture_warning.py", line 72, in <module>
+    assert warning['kills'] == before['kills'] and warning['force_losses'] == before['force_losses']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

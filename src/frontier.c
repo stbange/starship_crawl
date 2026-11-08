@@ -134,8 +134,8 @@ Vec3 frontier_hazard(const Room *r) {
     return vadd(world_center(r->cell), points[r->hazard_stage % 3]);
 }
 bool frontier_hazard_live(const Room *r) {
-    return r->frontier_active && r->habitat.contract && r->hazard_time > 1.4f &&
-           r->hazard_time < 2.6f;
+    return r->faction_edit != EDIT_CANCEL && r->frontier_active && r->habitat.contract &&
+           r->hazard_time > 1.4f && r->hazard_time < 2.6f;
 }
 void frontier_step(Game *g, Room *r, double dt) {
     if (!r->frontier_active)
@@ -160,7 +160,7 @@ void frontier_step(Game *g, Room *r, double dt) {
             game_message(g, "COURIER CIRCUIT COMPLETE / WARD DOWN / SIX SECONDS OF RECOVERY");
         }
     }
-    if (!r->habitat.contract)
+    if (!r->habitat.contract || r->faction_edit == EDIT_CANCEL)
         return;
     r->hazard_time += (float)dt;
     if (r->hazard_time >= 5.5f) {

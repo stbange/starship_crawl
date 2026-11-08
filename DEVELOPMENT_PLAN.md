@@ -10,18 +10,21 @@ that remain useful. These recommendations are not yet implemented or an approved
 new milestone. The faction/director correction below now supplies its own
 implementation sequence; general character-growth tuning remains separate.
 
-## Hidden factions and invisible director — planned 2026-11-08
+## Hidden factions and invisible director — implementation 2026-11-08
 
 The player should discover alien politics through behaviour and consequences:
 marching armies, contested supplies, retreats and changed inhabitants. The
 director works behind the scenes to create a rhythm of anticipation, combat,
 discovery and recovery. This replaces the explicit court-quest and dispatch
-direction for **new ships**. It is planned work; generator 13 remains shipped.
+direction for **new ships**. The implementation uses generator 14 / simulation 1 /
+save 15; generator-13 expeditions retain their original court rules. See
+[Hidden factions](HIDDEN_FACTIONS.md) for the playable behaviour.
 
 The complete [OpenSpec proposal](openspec/changes/hidden-factions-and-director/proposal.md),
 [design and acceptance criteria](openspec/changes/hidden-factions-and-director/design.md)
 and [implementation checklist](openspec/changes/hidden-factions-and-director/tasks.md)
-define six milestones, in this order:
+define six milestones. M1–M5 are implemented; M6 integration and publication
+verification is in progress:
 
 | Milestone | Work | Playable result |
 | --- | --- | --- |
@@ -50,9 +53,9 @@ quests and dispatches. Each implementation milestone includes its own tests,
 save compatibility and documentation; the final milestone adds twelve hour-long
 simulations and four paired director-disabled reruns, plus rendered evidence.
 
-## Alien courts and director — current implementation, 2026-11-07
+## Alien courts and director — legacy generator 13, 2026-11-07
 
-The four-milestone proposal is implemented in generator 13 / save 14. See
+The earlier four-milestone proposal remains available in generator-13 / save-14 expeditions. See
 [Courts and director](POLITICS.md) for controls, rules and limits.
 
 1. **Political geography:** three seeded government templates, multi-sector

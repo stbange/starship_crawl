@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Linux-cc"
+	tests="44"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="ef4ec227e429"
+	time="575"
+	timestamp="2026-11-08T02:14:10"
+	>
+	<testcase name="hidden_factions" classname="hidden_factions" time="0.0654378" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS hidden state, deterministic strategic records, clocks and portable saves
+site kinds=31 owners=15
+PASS seeded resource sites and legacy generation separation
+</system-out>
+	</testcase>
+	<testcase name="mobile_forces" classname="mobile_forces" time="0.918134" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS force ownership, casualties, real travel, capacity and convoy conservation
+</system-out>
+	</testcase>
+	<testcase name="autonomous_politics" classname="autonomous_politics" time="0.409067" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS autonomous deployments, deterministic wars, graded incidents and relay interference
+</system-out>
+	</testcase>
+	<testcase name="hidden_director" classname="hidden_director" time="0.122479" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS hidden intervention lifecycle, real content, shared cameras, recovery and claims
+</system-out>
+	</testcase>
+	<testcase name="faction_revisit_journey" classname="faction_revisit_journey" time="46.9953" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>FOLLOW force=5 distance=1159
+PROGRESS phase=0 cell=13,0,2 goal=1,-1,3 nav=3 t=0.00
+PROGRESS phase=0 cell=8,0,4 goal=1,0,5 nav=2 t=60.00
+PROGRESS phase=0 cell=2,0,4 goal=1,0,7 nav=2 t=120.00
+OBSERVED force=5 traversed_cells=6 order=6 t=158.92
+INTERRUPTED force=5 dead_mask=2 t=159.15
+PROGRESS phase=2 cell=0,0,8 goal=4,0,9 nav=2 t=180.00
+PROGRESS phase=3 cell=0,0,7 goal=1,0,7 nav=2 t=240.00
+REVISITED retained_casualties=12 t=250.72
+PROGRESS phase=5 cell=1,0,1 goal=0,0,0 nav=2 t=300.00
+RETURNED observed_frames=614 force_cells=6 changed_station=1 valid=1 t=320.47
+</system-out>
+	</testcase>
+	<testcase name="faction_convoy_journey" classname="faction_convoy_journey" time="0.162723" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>FOLLOW force=15 distance=60
+PROGRESS phase=0 cell=13,0,2 goal=13,0,1 nav=2 t=0.00
+CONVOY force=15 cargo=12 distance=9.44 observed=60 t=3.77
+</system-out>
+	</testcase>
+	<testcase name="hidden_simulation_journey" classname="hidden_simulation_journey" time="32.2194" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>{"event":"start","seed":713,"run":0,"route":"inward","profile":"offense","reaction":0.30,"turn":2.80,"aim_error":0.025,"ship":1,"history":0,"motivation":1,"seconds":420}
+{"event":"cell","t":0.000,"cell":[0,0,0],"owner":[0,0,0],"layer":1,"theme":0,"district":2,"form":0,"volume":0,"weather":0,"ecology":0,"pace":1,"challenge":0,"reveal":0,"country":0,"court":0,"height":28.0}
+{"event":"sample","t":0.017,"cell":[0,0,0],"mode":0,"stage":4,"kills":0,"deaths":0,"rank":1,"phase":0,"health":100.00,"shield":50.00,"armor":25.00,"energy":100.00,"health_loss":0.00,"shield_loss":0.00,"armor_loss":0.00,"shots":0,"hits":0,"weapon":0,"credits":0,"points":0}
+{"event":"simulation","t":8.017,"tick":1,"kind":0,"country":2,"force":0,"site":[0,0,1],"detail":2}
+{"event":"simulation","t":8.017,"tick":1,"kind":0,"country":1,"force":0,"site":[-2,0,0],"detail":2}
+{"event":"simulation","t":8.017,"tick":1,"kind":0,"country":1,"force":0,"site":[1,-1,3],"detail":4}
+{"event":"simulation","t":8.017,"tick":1,"kind":0,"country":2,"force":0,"site...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="political_expeditions" classname="political_expeditions" time="0.253599" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS stable countries, nine reachable macro sites, governments, symmetric relations and pure map queries
+PASS all nine settlements, co-op eligible rewards, ordinary damage, systems, borders, rulers and saved consequences
+PASS physical director dispatches, both players, recovery budget, repeat limits, expiry and frozen clocks
+PASS neutral patrols, local defense, individual standing and matrix control precedence
+PASS neutral patrols leave story objectives accessible; hostile and hacked states agree
+PASS format-13 migration, format-14 corruption rollback and political invariants
+</system-out>
+	</testcase>
+	<testcase name="political_journeys" classname="political_journeys" time="36.195" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>FRONTIER tool=0 gun=0 cell=-6,-1,2 seconds=55.72 kills=6 deaths=0 shots=20 damage=0.00 min_energy=100.00 disrupted_frames=59 recoveries=0
+  kind=1 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+FRONTIER tool=0 gun=0 cell=-9,-1,1 seconds=3.25 kills=4 deaths=0 shots=8 damage=0.00 min_energy=100.00 disrupted_frames=57 recoveries=0
+  kind=1 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+COURTS outcome=1 country=VESPER CROWN stage=3 relation=PEACE sequence=4 PASS
+FRONTIER tool=0 gun=0 cell=6,1,3 seconds=71.23 kills=8 deaths=0 shots=36 damage=0.00 min_energy=100.00 disrupted_frames=0 recoveries=0
+  kind=2 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+FRONTIER tool=0 gun=10 cell=9,1,1 seconds=2.57 kills=4 deaths=0 shots=2 damage=0.00 min_energy=82.60 disrupted_frames=0 recoveries=0
+  kind=2 contract=0 circuit_at=0.00 relics=0,0,0,0,0
+COURTS outcome=2 country=CHITIN COURT stage=3 relation=TRIBUTE sequence=4 PASS
+FRONTIER tool=0 gun=0 cell=-1,0,9 seconds=63.72 kills=9 deaths=0 shots=35 damage=0.00 min_energy=100.00 disrupted_...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="frontier_journeys" classname="frontier_journeys" time="35.2148" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>APPROACH kind=1 first=19,0,2
+FRONTIER tool=0 gun=0 cell=19,0,2 seconds=63.92 kills=11 deaths=0 shots=42 damage=5.00 min_energy=100.00 disrupted_frames=57 recoveries=0
+  kind=1 contract=1 circuit_at=0.00 relics=1,0,0,0,0
+FRONTIER tool=0 gun=0 cell=30,0,3 seconds=2.80 kills=4 deaths=0 shots=7 damage=0.00 min_energy=100.00 disrupted_frames=72 recoveries=0
+  kind=1 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+FRONTIER tool=1 gun=0 cell=30,0,3 seconds=3.33 kills=4 deaths=0 shots=5 damage=0.00 min_energy=80.20 disrupted_frames=59 recoveries=0
+  kind=1 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+APPROACH kind=2 first=22,0,0
+FRONTIER tool=0 gun=10 cell=22,0,0 seconds=113.38 kills=38 deaths=0 shots=61 damage=24.00 min_energy=51.80 disrupted_frames=0 recoveries=0
+  kind=2 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+FRONTIER tool=0 gun=0 cell=16,0,2 seconds=2.72 kills=4 deaths=0 shots=7 damage=0.00 min_energy=100.00 disrupted_frames=91 recoveries=0
+  kind=2 contract=1 circuit_at=0.00 relics=2,0,0,0,0
+FRONTIER tool=1 gun=...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="deep_frontiers" classname="deep_frontiers" time="0.531422" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS immutable generator-11 geometry, populations, plans and format-12 migration
+PASS all six encounters, nine reveals, five contracts, ten species; peak boxes 375/512
+PASS previews, earned tools, once-only claims, both profiles, reload and fresh-ship reset
+PASS flight, circuit and matrix advantages, warned hazards and nonlinear relic effects
+PASS ten alien commitments, sound, quiet counterplay, co-op gaze, one molt and linked death
+PASS real beam/bullet fragment hits, worm tail, evolved nova and flight inputs
+PASS planted wall-to-ceiling transitions and physical collision
+PASS deep frontiers
+</system-out>
+	</testcase>
+	<testcase name="regional_journey" classname="regional_journey" time="0.102178" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>REGIONAL profile=1 gun=0 cell=13,-3,5 seconds=2.25 kills=4 deaths=0 shots=5 damage=0.00 min_energy=100.00 disrupted_frames=27 recoveries=0
+REGIONAL profile=1 gun=0 cell=12,-3,8 seconds=2.10 kills=4 deaths=0 shots=5 damage=0.00 min_energy=100.00 disrupted_frames=28 recoveries=0
+REGIONAL profile=1 gun=17 cell=12,-3,8 seconds=2.00 kills=4 deaths=0 shots=6 damage=0.00 min_energy=82.00 disrupted_frames=89 recoveries=0
+REGIONAL profile=2 gun=0 cell=12,-3,8 seconds=3.27 kills=4 deaths=0 shots=6 damage=0.00 min_energy=100.00 disrupted_frames=41 recoveries=0
+REGIONAL profile=2 gun=17 cell=12,-3,8 seconds=4.03 kills=4 deaths=0 shots=9 damage=0.00 min_energy=81.00 disrupted_frames=183 recoveries=0
+PASS regional earned-tool journeys
+</system-out>
+	</testcase>
+	<testcase name="regional_encounters" classname="regional_encounters" time="0.610214" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS immutable generator-10 plans, geometry, sprites, populations and save migration
+PASS hot/cold variety, compatible ecologies, pacing, supported mixed-role squads
+PASS all eight local actions, one-time rewards and durable environmental consequences
+PASS optional activation, staggered links, beam disruption, core collapse, co-op durable claims
+PASS locked attack lines, evasion, interruption, locomotion and real-wall planted limbs
+PASS earned-tool drills require actual per-player fire, powers or rig use
+PASS conductor cues, single committed contact and late co-op participation
+PASS malformed local claims roll back transactionally and new ships reset progress
+</system-out>
+	</testcase>
+	<testcase name="core" classname="core" time="2.66201" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 384 region layouts: footprint reservation, district variety, connected backbone, loops, reciprocal seams
+PASS geometry and population independent of load order; walkable connectors and floors (12 seeds)
+PASS bounded fair streaming, atomic hall publication, shared co-op chunks, hysteresis, 100 separated-player moves, persistent kills
+PASS space approach, gravity, crouch clearance, lift, checkpoint respawn
+PASS swept projectile combat, upgrades, optional co-op, new expedition progression
+PASS save round-trip, v2 character migration, solo default, both profiles, corruption and failure safety
+PASS v1 character migration, generator compatibility, sector-local physics, distant co-op collision and save/resume
+PASS charged dodgeable shots, swept player/wall collision, co-op projectile ownership, wall climbing, fast crawlers, flashlight controls, bounded dressing and broken lamps
+PASS 28 themes, 27 species, 16 functional weapons, 10 attributes, shield/armor, shared persistent loot, six-stage story, contracts, v3 ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="living_ship" classname="living_ship" time="1.09445" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS immutable generator-9 save, geometry and encounter fixtures
+PASS paired vault reservations, eight macro forms, all weather/tales/ecologies and complete masked ownership
+PASS matching mixed silhouettes, tier/ceiling limits and coherent palette variation
+PASS surface support, open vaults/guard rails, reproducible detail, spawn fit; maximum 331 boxes
+PASS separated co-op at region corners within the proven 174-desired/192-resident budget
+PASS macro-room brood spawning retains capacity and colony coloration
+</system-out>
+	</testcase>
+	<testcase name="living_ship_journey" classname="living_ship_journey" time="0.121389" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>PASS normal movement across vault/gallery seams and save/resume
+</system-out>
+	</testcase>
+	<testcase name="generated_interiors" classname="generated_interiors" time="0.840194" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 640 plans: ship profiles, floor plans, connected incidents and rare discoveries
+PASS furnishings, two entrances, caches, walking/mech clearance, load order; max 282 boxes
+PASS original generator-3 plans, geometry, map, save round-trip and opt-in new ship
+PASS side-space cache identity survives streaming and save/resume
+</system-out>
+	</testcase>
+	<testcase name="faction_faults" classname="faction_faults" time="0.00723008" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS malformed references, portable appendix and transactional allocation failures
+</system-out>
+	</testcase>
+	<testcase name="edge_cases" classname="edge_cases" time="0.0367288" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 1522 edge-case assertions: resource rules, combat, invalid input, allocation/I/O failures, save validation and rollback
+</system-out>
+	</testcase>
+	<testcase name="exploration_guidance" classname="exploration_guidance" time="0.396156" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS reciprocal bounded guidance, detours, floors, phase limits, distant coordinates and independent views
+PASS held lift input cannot chain rides; release, return, camera and save compatibility
+PASS upper stair/ramp exit guidance follows supported landings around railings on both sides and negative decks
+</system-out>
+	</testcase>
+	<testcase name="navigation_recovery" classname="navigation_recovery" time="0.220427" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>Seed 3 roof -66.09 -186.30 48.00 -&gt; gravity descent -66.15 -211.20 55.35
+PASS archived seed-3 roof stall reproduced, ordinary recovery and doorway crossed both ways at floor level
+</system-out>
+	</testcase>
+	<testcase name="navigation_psionics" classname="navigation_psionics" time="0.0540456" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 5521 navigation, body, projectile and psionic assertions
+</system-out>
+	</testcase>
+	<testcase name="shelter" classname="shelter" time="0.0186723" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 102 sanctuary assertions
+</system-out>
+	</testcase>
+	<testcase name="shelter_journey" classname="shelter_journey" time="0.0171496" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>PASS 645 sanctuary assertions
+</system-out>
+	</testcase>
+	<testcase name="equipment" classname="equipment" time="0.0188604" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS 149 equipment assertions: beams, owned rigs, driving, plating, attached flares and format-6 migration
+</system-out>
+	</testcase>
+	<testcase name="equipment_journey" classname="equipment_journey" time="0.0101145" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>PASS 14 equipment assertions: beams, owned rigs, driving, plating, attached flares and format-6 migration
+</system-out>
+	</testcase>
+	<testcase name="solo_campaign" classname="solo_campaign" time="1.54279" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 21.6s / 6 kills / 0 respawns
+System 3 restored at 36.9s / 12 kills / 0 respawns
+System 4 restored at 62.4s / 17 kills / 0 respawns
+System 5 restored at 113.9s / 20 kills / 0 respawns
+System 6 restored at 197.1s / 57 kills / 0 respawns
+Campaign seed 713: stage 6, 197.1s, 57 kills, rank 9, 0 respawns, 11827 frames, failed=0
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 21.6s / 6 kills / 0 respawns
+System 3 restored at 36.9s / 12 kills / 0 respawns
+System 4 restored at 63.1s / 24 kills / 0 respawns
+System 5 restored at 114.5s / 31 kills / 0 respawns
+System 6 restored at 165.6s / 58 kills / 0 respawns
+Campaign seed 1: stage 6, 165.6s, 58 kills, rank 8, 0 respawns, 9937 frames, failed=0
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 21.6s / 6 kills / 0 respawns
+System 3 restored at 36.9s / 13 kills / 0 respawns
+System 4 restored at 62.4s / 19 kills / 0 respawns
+System 5 restored at 113.9s / 24 kills...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="generated_expeditions" classname="generated_expeditions" time="2.95105" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>Legacy generated expedition: motivation 0, choice 1, seed 1
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 65.7s / 22 kills / 0 respawns
+System 3 restored at 130.2s / 43 kills / 0 respawns
+System 6 restored at 197.5s / 80 kills / 0 respawns
+Campaign seed 1: stage 6, 197.5s, 80 kills, rank 10, 0 respawns, 11848 frames, failed=0
+Legacy generated expedition: motivation 0, choice 2, seed 1
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 65.7s / 22 kills / 0 respawns
+System 3 restored at 130.2s / 43 kills / 0 respawns
+System 6 restored at 197.5s / 80 kills / 0 respawns
+Campaign seed 1: stage 6, 197.5s, 80 kills, rank 10, 0 respawns, 11848 frames, failed=0
+Legacy generated expedition: motivation 0, choice 3, seed 1
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 65.7s / 22 kills / 0 respawns
+System 3 restored at 91.9s / 22 kills / 0 respawns
+System 4 restored at 130.7s / 40 kills / 0 respawns
+System 6 restored at 198.0s / 77 kills / 0 respawns
+Campa...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="history_expeditions" classname="history_expeditions" time="7.46064" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>History expedition: motivation 0, arc 0, choice 1, seed 11
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 27.8s / 9 kills / 0 respawns
+System 3 restored at 30.1s / 13 kills / 0 respawns
+System 6 restored at 51.5s / 18 kills / 0 respawns
+Campaign seed 11: stage 6, 51.5s, 18 kills, rank 4, 0 respawns, 3090 frames, failed=0
+History expedition: motivation 0, arc 0, choice 2, seed 11
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 27.8s / 9 kills / 0 respawns
+System 3 restored at 30.1s / 13 kills / 0 respawns
+System 6 restored at 51.5s / 18 kills / 0 respawns
+Campaign seed 11: stage 6, 51.5s, 18 kills, rank 4, 0 respawns, 3090 frames, failed=0
+History expedition: motivation 0, arc 0, choice 3, seed 11
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 27.8s / 9 kills / 0 respawns
+System 3 restored at 41.7s / 10 kills / 0 respawns
+System 4 restored at 82.2s / 28 kills / 0 respawns
+System 6 restored at 103.8s / 32 kills / 0 respawns
+Campaign seed 11: st...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="continuing_expeditions" classname="continuing_expeditions" time="26.6123" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>Reactive saga seed 1 / three extracted arcs
+Saga tick 0 / chapter 0 kind 0 / scene 0 / position 0.0 4.0 -34.0 / RESCUE / BRING THE LOST HOME
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 89.0s / 29 kills / 0 respawns
+Saga tick 6000 / chapter 0 kind 0 / scene 22 / position 206.6 -64.0 47.3 / VITALITY
+System 3 restored at 128.0s / 31 kills / 0 respawns
+System 4 restored at 140.8s / 31 kills / 0 respawns
+Saga tick 12000 / chapter 0 kind 0 / scene 23 / position 99.7 0.0 239.4 / HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+System 5 restored at 212.9s / 47 kills / 0 respawns
+Saga tick 18000 / chapter 0 kind 0 / scene 12 / position 160.3 -64.0 144.0 / VITALITY
+Saga tick 24000 / chapter 0 kind 0 / scene 15 / position 0.0 0.0 68.1 / GRAV LIFT / CHECKPOINT SYNCHRONIZED
+System 6 restored at 403.3s / 82 kills / 0 respawns
+Saga tick 30000 / chapter 1 kind 4 / scene 27 / position 96.0 64.0 435.9 / SALVAGE CACHE / UPGRADE CURRENCY
+Saga tick 36000 / chapter 1 kind 4 / scene 30 / position 96.5 0.0 32...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="reactive_aftermath" classname="reactive_aftermath" time="2.0261" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS reactive aftermath: councils, power, wards, controllers, all chapter kinds/outcomes, Warden gate, careers, events and persistence
+</system-out>
+	</testcase>
+	<testcase name="narrative" classname="narrative" time="2.12316" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS narrative: motivations, all outcomes, discoveries, stable reservations, co-op, persistence and validation
+</system-out>
+	</testcase>
+	<testcase name="enemy_deaths" classname="enemy_deaths" time="0.158472" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS deaths: 32 species, five machines, legacy encounters, warning/dodge/cover, acid/mines, chains, isolation, bounded pools, streaming and saves
+</system-out>
+	</testcase>
+	<testcase name="ship_matrix" classname="ship_matrix" time="0.0744172" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS matrix generation, programs, encounters, consequences, co-op and persistence
+</system-out>
+	</testcase>
+	<testcase name="matrix_faults" classname="matrix_faults" time="0.0379633" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>Matrix load fault sites: 6 failures, 42 successes
+PASS matrix validation, legacy migration and transactional allocation/I/O faults
+</system-out>
+	</testcase>
+	<testcase name="matrix_journeys" classname="matrix_journeys" time="0.247385" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>PASS matrix journey seed 713 / choice 1 / shots 30 / integrity 100 / data 14
+PASS matrix journey seed 42 / choice 2 / shots 26 / integrity 100 / data 13
+PASS matrix journey seed 1 / choice 3 / shots 28 / integrity 100 / data 17
+</system-out>
+	</testcase>
+	<testcase name="phased_expeditions" classname="phased_expeditions" time="2.57237" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS fresh ships, directional plans, guardian rewards, loadouts, combat, retry and versioned saves
+</system-out>
+	</testcase>
+	<testcase name="phase_journeys" classname="phase_journeys" time="114.333" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>Tick 0: 0.0 4.0 -84.0 -&gt; [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.5s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 62.5s
+Seed 713: phase 2, guardians 105, rank 7, 38 kills, 0 respawns at 247.8s
+Seed 713: phase 3, guardians 115, rank 8, 39 kills, 0 respawns at 339.4s
+Tick 24000: 1132.7 0.0 336.0 -&gt; [13,0,1], ARMOR
+Seed 713: phase 4, guardians 155, rank 12, 84 kills, 0 respawns at 463.6s
+Tick 48000: 0.5 0.0 46.6 -&gt; [0,0,0], SALVAGE CACHE / UPGRADE CURRENCY
+Phase journey 713 starboard: PASS, 800.4s, 155 kills, 0 deaths, 48026 frames
+Tick 0: 0.0 4.0 -84.0 -&gt; [0,0,0], SALVAGE / RECOVER AN ALIEN DRIVE
+Seed 42: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.1s
+Seed 42: phase 1, guardians 102, rank 4, 12 kills, 0 respawns at 85.5s
+Tick 24000: -622.1 0.0 144.0 -&gt; [-7,0,1], ARMOR
+Seed 42: phase 2, guardians 10a, rank 15, 157 kills, 0 respawns at 416.0s
+Seed 42: phase 3, guardians 12a, rank 16, 176 kills, 0 respawns a...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="imperfect_expeditions" classname="imperfect_expeditions" time="252.568" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>Tick 0: 0.0 4.0 -84.0 -&gt; [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.6s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 59.9s
+Seed 713: phase 2, guardians 105, rank 7, 38 kills, 0 respawns at 247.6s
+Seed 713: phase 3, guardians 115, rank 7, 39 kills, 0 respawns at 339.6s
+Tick 24000: 1116.1 0.0 336.0 -&gt; [13,0,1], RECENT BOOTPRINTS / NEW EVIDENCE IN I JOURNAL / U TRACK LEADS
+Seed 713: phase 4, guardians 155, rank 12, 84 kills, 0 respawns at 472.6s
+Tick 48000: 133.9 0.0 144.0 -&gt; [0,0,0], HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+Phase journey 713 starboard: PASS, 830.5s, 121 kills, 0 deaths, 49831 frames
+PROFILE {"seed":713,"profile":1,"passed":true,"simulated_seconds":830.52,"reaction_seconds":0.30,"turn_rad_s":2.8,"aim_error_rad":0.025,"kills":121,"deaths":0,"shots":779,"hits":467,"min_health":100.00,"min_shield":0.00,"min_energy":100.00,"health_loss":46.20,"shield_loss":237.00,"armor_loss":9.90,"damage_frames":11,"rec...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="vertical_traversal" classname="vertical_traversal" time="0.322504" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS immutable generator-8 save, 20 geometry fixtures and legacy lift behavior
+PASS tread/slab top, underside, side, parallel, starting-inside and limited rays
+PASS aligned region columns, landing/terminal clearance and rays; max 325 boxes
+PASS step limit, descent snap, head clearance, crouch and flight without free stepping
+PASS real stair support stops at phase barriers and pending decks, then resumes safely
+PASS animated rides, checkpoints, input guards, save/failure safety, rigs, co-op, death and barriers
+</system-out>
+	</testcase>
+	<testcase name="traversal_journeys" classname="traversal_journeys" time="3.4499" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>PASS real normal-gravity actions: stairs and ramps up/down 64m, reload and negative seam
+</system-out>
+	</testcase>
+	<testcase name="space_exterior" classname="space_exterior" time="0.0970782" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS surrounding sky, bay aperture, grazing angles and distant hull occlusion
+PASS shared solid shell, open hatch, furnishings, weapon rays and legacy empty space
+PASS generator-7/8 interior, enemy and collision parity across eight seeds
+PASS cabin save/resume, co-op and immutable phased generator-7 save
+</system-out>
+	</testcase>
+	<testcase name="arrival_journey" classname="arrival_journey" time="0.0633217" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>PASS controls-only skiff/cabin/bay/return journey, wall and ceiling blocking, save/resume and co-op
+</system-out>
+	</testcase>
+	<testcase name="platform_input" classname="platform_input" time="0.0248152" status="run">
+		<properties>
+			<property name="cmake_labels" value="platform"/>
+		</properties>
+		<system-out>PASS: preferences and actual SDL virtual-controller input/ownership
+</system-out>
+	</testcase>
+</testsuite>

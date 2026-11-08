@@ -1,0 +1,4 @@
+FOLLOW force=5 distance=1159
+OBSERVED force=5 traversed_cells=6 order=6 t=158.92
+INTERRUPTED force=5 dead_mask=2 t=159.15
+Raid journey incomplete phase=3 at 1500.00

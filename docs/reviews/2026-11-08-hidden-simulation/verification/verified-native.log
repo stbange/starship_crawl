@@ -1,0 +1,123 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+      Start  1: hidden_factions
+ 1/44 Test  #1: hidden_factions ..................   Passed    0.11 sec
+      Start  2: mobile_forces
+ 2/44 Test  #2: mobile_forces ....................   Passed    1.32 sec
+      Start  3: autonomous_politics
+ 3/44 Test  #3: autonomous_politics ..............   Passed    0.90 sec
+      Start  4: hidden_director
+ 4/44 Test  #4: hidden_director ..................   Passed    0.20 sec
+      Start  5: faction_revisit_journey
+ 5/44 Test  #5: faction_revisit_journey ..........   Passed   49.48 sec
+      Start  6: faction_convoy_journey
+ 6/44 Test  #6: faction_convoy_journey ...........   Passed    0.38 sec
+      Start  7: hidden_simulation_journey
+ 7/44 Test  #7: hidden_simulation_journey ........   Passed   42.72 sec
+      Start  8: political_expeditions
+ 8/44 Test  #8: political_expeditions ............   Passed    0.55 sec
+      Start  9: political_journeys
+ 9/44 Test  #9: political_journeys ...............   Passed   57.97 sec
+      Start 10: frontier_journeys
+10/44 Test #10: frontier_journeys ................   Passed   48.03 sec
+      Start 11: deep_frontiers
+11/44 Test #11: deep_frontiers ...................   Passed    0.72 sec
+      Start 12: regional_journey
+12/44 Test #12: regional_journey .................   Passed    0.18 sec
+      Start 13: regional_encounters
+13/44 Test #13: regional_encounters ..............   Passed    0.80 sec
+      Start 14: core
+14/44 Test #14: core .............................   Passed    3.29 sec
+      Start 15: living_ship
+15/44 Test #15: living_ship ......................   Passed    1.44 sec
+      Start 16: living_ship_journey
+16/44 Test #16: living_ship_journey ..............   Passed    0.18 sec
+      Start 17: generated_interiors
+17/44 Test #17: generated_interiors ..............   Passed    1.03 sec
+      Start 18: faction_faults
+18/44 Test #18: faction_faults ...................   Passed    0.01 sec
+      Start 19: edge_cases
+19/44 Test #19: edge_cases .......................   Passed    0.06 sec
+      Start 20: exploration_guidance
+20/44 Test #20: exploration_guidance .............   Passed    0.44 sec
+      Start 21: navigation_recovery
+21/44 Test #21: navigation_recovery ..............   Passed    0.29 sec
+      Start 22: navigation_psionics
+22/44 Test #22: navigation_psionics ..............   Passed    0.06 sec
+      Start 23: shelter
+23/44 Test #23: shelter ..........................   Passed    0.31 sec
+      Start 24: shelter_journey
+24/44 Test #24: shelter_journey ..................   Passed    0.40 sec
+      Start 25: equipment
+25/44 Test #25: equipment ........................   Passed    0.20 sec
+      Start 26: equipment_journey
+26/44 Test #26: equipment_journey ................   Passed    0.18 sec
+      Start 27: solo_campaign
+27/44 Test #27: solo_campaign ....................***Timeout  60.01 sec
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 21.6s / 6 kills / 0 respawns
+System 3 restored at 36.9s / 12 kills / 0 respawns
+System 4 restored at 62.4s / 17 kills / 0 respawns
+System 5 restored at 113.9s / 20 kills / 0 respawns
+System 6 restored at 197.1s / 57 kills / 0 respawns
+Campaign seed 713: stage 6, 197.1s, 57 kills, rank 9, 0 respawns, 11827 frames, failed=0
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 21.6s / 6 kills / 0 respawns
+System 3 restored at 36.9s / 12 kills / 0 respawns
+System 4 restored at 63.1s / 24 kills / 0 respawns
+System 5 restored at 114.5s / 31 kills / 0 respawns
+System 6 restored at 165.6s / 58 kills / 0 respawns
+Campaign seed 1: stage 6, 165.6s, 58 kills, rank 8, 0 respawns, 9937 frames, failed=0
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 21.6s / 6 kills / 0 respawns
+System 3 restored at 36.9s / 13 kills / 0 respawns
+System 4 restored at 62.4s / 19 kills / 0 respawns
+System 5 restored at 113.9s / 24 kills / 0 respawns
+
+      Start 28: generated_expeditions
+28/44 Test #28: generated_expeditions ............   Passed   29.55 sec
+      Start 29: history_expeditions
+29/44 Test #29: history_expeditions ..............   Passed   52.15 sec
+      Start 30: continuing_expeditions
+30/44 Test #30: continuing_expeditions ...........   Passed   40.94 sec
+      Start 31: reactive_aftermath
+31/44 Test #31: reactive_aftermath ...............   Passed    3.20 sec
+      Start 32: narrative
+32/44 Test #32: narrative ........................   Passed    2.51 sec
+      Start 33: enemy_deaths
+33/44 Test #33: enemy_deaths .....................   Passed    0.17 sec
+      Start 34: ship_matrix
+34/44 Test #34: ship_matrix ......................   Passed    0.08 sec
+      Start 35: matrix_faults
+35/44 Test #35: matrix_faults ....................   Passed    0.02 sec
+      Start 36: matrix_journeys
+36/44 Test #36: matrix_journeys ..................   Passed    3.83 sec
+      Start 37: phased_expeditions
+37/44 Test #37: phased_expeditions ...............   Passed    1.89 sec
+      Start 38: phase_journeys
+38/44 Test #38: phase_journeys ...................   Passed  140.81 sec
+      Start 39: imperfect_expeditions
+39/44 Test #39: imperfect_expeditions ............   Passed  319.87 sec
+      Start 40: vertical_traversal
+40/44 Test #40: vertical_traversal ...............   Passed    0.27 sec
+      Start 41: traversal_journeys
+41/44 Test #41: traversal_journeys ...............   Passed    3.35 sec
+      Start 42: space_exterior
+42/44 Test #42: space_exterior ...................   Passed    0.20 sec
+      Start 43: arrival_journey
+43/44 Test #43: arrival_journey ..................   Passed    0.14 sec
+      Start 44: platform_input
+44/44 Test #44: platform_input ...................   Passed    0.01 sec
+
+98% tests passed, 1 tests failed out of 44
+
+Label Time Summary:
+gameplay    = 850.47 sec*proc (19 tests)
+platform    =   0.01 sec*proc (1 test)
+unit        =  19.79 sec*proc (24 tests)
+
+Total Test time (real) = 870.28 sec
+
+The following tests FAILED:
+	 27 - solo_campaign (Timeout)                           gameplay
+Errors while running CTest

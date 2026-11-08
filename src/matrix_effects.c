@@ -193,6 +193,8 @@ bool matrix_service(Game *g, int p) {
         return false;
     }
     r->seen |= BIT(node);
+    if (service <= MX_BEACON)
+        factions_systems(g, owner, flags, p);
     r->done[service] |= BIT(node);
     if (service == MX_ARCHIVE)
         matrix_story_evidence(g, owner);
@@ -351,6 +353,7 @@ bool matrix_choose(Game *g, int p, unsigned choice) {
     if (!world_set_systems(&g->world, owner, flags))
         return false;
     r->outcome = choice;
+    factions_systems(g, owner, flags, p);
     r->alert = 3;
     r->killed |= (w->mask & ~BIT(w->entry)) | 0xff0000u;
     for (int i = 0; i < SC_MATRIX_GUARDS; i++)

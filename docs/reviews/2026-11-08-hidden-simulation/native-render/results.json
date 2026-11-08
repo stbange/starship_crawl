@@ -1,0 +1,101 @@
+[
+  {
+    "scene": "arrival",
+    "split": false,
+    "returncode": 0,
+    "wall_seconds": 1.1894107719999738,
+    "command": [
+      "build/starship_crawl",
+      "--seed",
+      "713",
+      "--scene",
+      "arrival",
+      "--smoke",
+      "30",
+      "--no-save",
+      "--capture",
+      "docs/reviews/2026-11-08-hidden-simulation/native-render/arrival.ppm"
+    ],
+    "source": "inspection scene, not an earned journey"
+  },
+  {
+    "scene": "stairs",
+    "split": true,
+    "returncode": 0,
+    "wall_seconds": 1.4707962140018935,
+    "command": [
+      "build/starship_crawl",
+      "--seed",
+      "713",
+      "--scene",
+      "stairs",
+      "--smoke",
+      "30",
+      "--no-save",
+      "--capture",
+      "docs/reviews/2026-11-08-hidden-simulation/native-render/stairs.ppm",
+      "--split"
+    ],
+    "source": "inspection scene, not an earned journey"
+  },
+  {
+    "scene": "tentacles",
+    "split": true,
+    "returncode": 0,
+    "wall_seconds": 1.2601883620009176,
+    "command": [
+      "build/starship_crawl",
+      "--seed",
+      "713",
+      "--scene",
+      "tentacles",
+      "--smoke",
+      "30",
+      "--no-save",
+      "--capture",
+      "docs/reviews/2026-11-08-hidden-simulation/native-render/tentacles.ppm",
+      "--split"
+    ],
+    "source": "inspection scene, not an earned journey"
+  },
+  {
+    "scene": "court1",
+    "split": true,
+    "returncode": 0,
+    "wall_seconds": 1.1456775779988675,
+    "command": [
+      "build/starship_crawl",
+      "--seed",
+      "713",
+      "--scene",
+      "court1",
+      "--smoke",
+      "30",
+      "--no-save",
+      "--capture",
+      "docs/reviews/2026-11-08-hidden-simulation/native-render/court1.ppm",
+      "--split"
+    ],
+    "source": "inspection scene, not an earned journey"
+  },
+  {
+    "scene": "shelter",
+    "split": true,
+    "returncode": 0,
+    "wall_seconds": 0.6982968109987269,
+    "command": [
+      "build/starship_crawl",
+      "--seed",
+      "713",
+      "--scene",
+      "shelter",
+      "--smoke",
+      "30",
+      "--no-save",
+      "--capture",
+      "docs/reviews/2026-11-08-hidden-simulation/native-render/shelter.ppm",
+      "--split"
+    ],
+    "source": "inspection scene, not an earned journey"
+  }
+]

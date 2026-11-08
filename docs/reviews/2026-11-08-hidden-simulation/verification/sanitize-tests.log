@@ -1,0 +1,141 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-sanitize
+Test project /workspace/starship_crawl/build-sanitize
+      Start  1: hidden_factions
+ 1/41 Test  #1: hidden_factions ..................   Passed    0.60 sec
+      Start  2: mobile_forces
+ 2/41 Test  #2: mobile_forces ....................   Passed    4.35 sec
+      Start  3: autonomous_politics
+ 3/41 Test  #3: autonomous_politics ..............   Passed    2.34 sec
+      Start  4: hidden_director
+ 4/41 Test  #4: hidden_director ..................   Passed    0.61 sec
+      Start  5: hidden_simulation_journey
+ 5/41 Test  #5: hidden_simulation_journey ........   Passed  220.10 sec
+      Start  6: political_expeditions
+ 6/41 Test  #6: political_expeditions ............   Passed    4.79 sec
+      Start  7: political_journeys
+ 7/41 Test  #7: political_journeys ...............   Passed  488.35 sec
+      Start  8: frontier_journeys
+ 8/41 Test  #8: frontier_journeys ................   Passed  316.72 sec
+      Start  9: deep_frontiers
+ 9/41 Test  #9: deep_frontiers ...................   Passed    3.60 sec
+      Start 10: regional_journey
+10/41 Test #10: regional_journey .................   Passed    0.61 sec
+      Start 11: regional_encounters
+11/41 Test #11: regional_encounters ..............   Passed    4.03 sec
+      Start 12: core
+12/41 Test #12: core .............................   Passed   16.29 sec
+      Start 13: living_ship
+13/41 Test #13: living_ship ......................   Passed    7.47 sec
+      Start 14: living_ship_journey
+14/41 Test #14: living_ship_journey ..............   Passed    0.70 sec
+      Start 15: generated_interiors
+15/41 Test #15: generated_interiors ..............   Passed    7.53 sec
+      Start 16: faction_faults
+16/41 Test #16: faction_faults ...................   Passed    0.03 sec
+      Start 17: edge_cases
+17/41 Test #17: edge_cases .......................   Passed    0.28 sec
+      Start 18: exploration_guidance
+18/41 Test #18: exploration_guidance .............   Passed    2.64 sec
+      Start 19: navigation_recovery
+19/41 Test #19: navigation_recovery ..............   Passed    1.61 sec
+      Start 20: navigation_psionics
+20/41 Test #20: navigation_psionics ..............   Passed    0.42 sec
+      Start 21: shelter
+21/41 Test #21: shelter ..........................   Passed    0.80 sec
+      Start 22: shelter_journey
+22/41 Test #22: shelter_journey ..................   Passed    1.18 sec
+      Start 23: equipment
+23/41 Test #23: equipment ........................   Passed    0.43 sec
+      Start 24: equipment_journey
+24/41 Test #24: equipment_journey ................   Passed    0.46 sec
+      Start 25: solo_campaign
+25/41 Test #25: solo_campaign ....................***Timeout  60.04 sec
+System 1 restored at 8.1s / 0 kills / 0 respawns
+System 2 restored at 21.6s / 6 kills / 0 respawns
+System 3 restored at 36.9s / 12 kills / 0 respawns
+System 4 restored at 62.4s / 17 kills / 0 respawns
+System 5 restored at 113.9s / 20 kills / 0 respawns
+
+      Start 26: generated_expeditions
+26/41 Test #26: generated_expeditions ............   Passed   77.40 sec
+      Start 27: history_expeditions
+27/41 Test #27: history_expeditions ..............   Passed  227.29 sec
+      Start 28: continuing_expeditions
+28/41 Test #28: continuing_expeditions ...........   Passed  296.81 sec
+      Start 29: reactive_aftermath
+29/41 Test #29: reactive_aftermath ...............   Passed   20.77 sec
+      Start 30: narrative
+30/41 Test #30: narrative ........................   Passed   16.63 sec
+      Start 31: enemy_deaths
+31/41 Test #31: enemy_deaths .....................   Passed    1.39 sec
+      Start 32: ship_matrix
+32/41 Test #32: ship_matrix ......................   Passed    0.50 sec
+      Start 33: matrix_faults
+33/41 Test #33: matrix_faults ....................   Passed    0.22 sec
+      Start 34: matrix_journeys
+34/41 Test #34: matrix_journeys ..................   Passed   10.78 sec
+      Start 35: phased_expeditions
+35/41 Test #35: phased_expeditions ...............   Passed   14.86 sec
+      Start 36: phase_journeys
+36/41 Test #36: phase_journeys ...................***Timeout 600.03 sec
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.5s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 62.5s
+Seed 713: phase 2, guardians 105, rank 7, 38 kills, 0 respawns at 247.8s
+Seed 713: phase 3, guardians 115, rank 8, 39 kills, 0 respawns at 339.4s
+Tick 24000: 1132.7 0.0 336.0 -> [13,0,1], ARMOR
+Seed 713: phase 4, guardians 155, rank 12, 84 kills, 0 respawns at 463.6s
+Tick 48000: 0.5 0.0 46.6 -> [0,0,0], SALVAGE CACHE / UPGRADE CURRENCY
+Phase journey 713 starboard: PASS, 800.4s, 157 kills, 0 deaths, 48026 frames
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], SALVAGE / RECOVER AN ALIEN DRIVE
+Seed 42: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.1s
+Seed 42: phase 1, guardians 102, rank 4, 12 kills, 0 respawns at 85.5s
+
+      Start 37: imperfect_expeditions
+37/41 Test #37: imperfect_expeditions ............***Timeout 1200.04 sec
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.6s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 59.9s
+Seed 713: phase 2, guardians 105, rank 7, 38 kills, 0 respawns at 247.6s
+Seed 713: phase 3, guardians 115, rank 7, 39 kills, 0 respawns at 339.6s
+Tick 24000: 1116.1 0.0 336.0 -> [13,0,1], RECENT BOOTPRINTS / NEW EVIDENCE IN I JOURNAL / U TRACK LEADS
+Seed 713: phase 4, guardians 155, rank 12, 84 kills, 0 respawns at 472.6s
+Tick 48000: 133.9 0.0 144.0 -> [0,0,0], HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+Phase journey 713 starboard: PASS, 830.5s, 121 kills, 0 deaths, 49831 frames
+PROFILE {"seed":713,"profile":1,"passed":true,"simulated_seconds":830.52,"reaction_seconds":0.30,"turn_rad_s":2.8,"aim_error_rad":0.025,"kills":121,"deaths":0,"shots":779,"hits":467,"min_health":100.00,"min_shield":0.00,"min_energy":100.00,"health_loss":46.20,"shield_loss":237.00,"armor_loss":9.90,"damage_frames":11,"recoveries":0,"max_stall_seconds":0.20}
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 19.6s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 74.4s
+Seed 713: phase 2, guardians 105, rank 8, 53 kills, 2 respawns at 378.9s
+Tick 24000: 576.0 0.0 197.5 -> [9,0,1], EXPEDITION RESUMED / WELCOME BACK
+Seed 713: phase 3, guardians 115, rank 8, 54 kills, 2 respawns at 478.7s
+Seed 713: phase 4, guardians 155, rank 12, 87 kills, 2 respawns at 623.3s
+Tick 48000: 864.0 0.0 167.3 -> [0,0,0], HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+Phase journey 713 starboard: PASS, 981.9s, 126 kills, 2 deaths, 58914 frames
+PROFILE {"seed":713,"profile":2,"passed":true,"simulated_seconds":981.90,"reaction_seconds":0.55,"turn_rad_s":1.8,"aim_error_rad":0.040,"kills":126,"deaths":2,"shots":1033,"hits":565,"min_health":1.60,"min_shield":0.00,"min_energy":100.00,"health_loss":923.29,"shield_loss":694.00,"armor_loss":193.36,"damage_frames":208,"recoveries":0,"max_stall_seconds":0.23}
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], SALVAGE / RECOVER AN ALIEN DRIVE
+Seed 42: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.2s
+Seed 42: phase 1, guardians 102, rank 3, 10 kills, 0 respawns at 83.8s
+
+      Start 38: vertical_traversal
+38/41 Test #38: vertical_traversal ...............   Passed    2.29 sec
+      Start 39: traversal_journeys
+39/41 Test #39: traversal_journeys ...............   Passed   25.10 sec
+      Start 40: space_exterior
+40/41 Test #40: space_exterior ...................   Passed    0.91 sec
+      Start 41: arrival_journey
+41/41 Test #41: arrival_journey ..................   Passed    0.32 sec
+
+93% tests passed, 3 tests failed out of 41
+
+Label Time Summary:
+gameplay    = 3527.55 sec*proc (17 tests)
+unit        = 113.76 sec*proc (24 tests)
+
+Total Test time (real) = 3641.32 sec
+
+The following tests FAILED:
+	 25 - solo_campaign (Timeout)                           gameplay
+	 36 - phase_journeys (Timeout)                          gameplay
+	 37 - imperfect_expeditions (Timeout)                   gameplay
+Errors while running CTest

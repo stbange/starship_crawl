@@ -1,0 +1,11 @@
+{
+  "binary_sha256": "ad8a028d036be9d2be7baaa26d07365dfb287719cdd21ed530c2f7eca03aacad",
+  "driver_sha256": "1a7f6f8b9ca10c642084f042e6b087672de317b95dff4552f177bab212a5b592",
+  "library_sha256": "4a322771518f55af73c1d47f7cd01c96c42dde3764d90dcb57eab68e506ac7ee",
+  "fixture_sha256": "495348ab85d379b686f10ccb90a44e02452628e5c373b4ee94c20c62656e3ce9",
+  "simulated_seconds": 320.47,
+  "returncode": 0,
+  "fixture_provenance": "data/preliminary-before-lift-fix/run-00/convoy-observed.sav; earned through normal movement/combat in a fresh seed-713 expedition. Current wire schema; produced before offscreen lift handoff correction, replayed by corrected production core.",
+  "reproduction_command": "./build/sc_faction_journey tests/fixtures/hidden-convoy.sav docs/reviews/2026-11-08-hidden-simulation/raid-journey",
+  "executed_command": "/tmp/starship-faction-journey-final tests/fixtures/hidden-convoy.sav docs/reviews/2026-11-08-hidden-simulation/raid-journey"
+}

@@ -5,6 +5,7 @@
 #include "encounters.h"
 #include "frontier.h"
 #include "politics.h"
+#include "factions.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -706,8 +707,12 @@ static void populate(World *w, Room *r) {
         encounter_populate(w, r);
     if (w->generator >= 12)
         frontier_populate(w, r);
-    if (w->generator >= 13)
+    if (w->generator == 13)
         politics_populate(w, r);
+    if (w->generator >= 14) {
+        r->enemy_count = (int)fmin(r->enemy_count, SC_MAX_ENEMIES - 6);
+        factions_populate(w, r);
+    }
 }
 unsigned world_stream(World *w, unsigned budget) {
     w->last_work = 0;

@@ -1,0 +1,2142 @@
+[
+  {
+    "path": "footprint-fixed/run-09/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "footprint-fixed/run-09/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-00/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-01/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-02/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-03/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-04/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-05/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-06/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-07/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-08/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-09/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-10/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "run-11/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-00/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-03/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "tuned/run-05/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-00/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-03/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/retreat-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-05/form-5.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/final.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/optional-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/form-4.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/minute-60.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/form-3.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/convoy-observed.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/form-7.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/form-2.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/unbound.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/form-1.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/form-8.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/occupation.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/extraction.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/minute-45.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/resume.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/minute-30.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/shelter.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/form-6.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/guardian-fight.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/minute-15.sav",
+    "returncode": 0,
+    "error": null
+  },
+  {
+    "path": "without-director-09/form-5.sav",
+    "returncode": 0,
+    "error": null
+  }
+]

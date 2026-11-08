@@ -191,3 +191,21 @@ The reusable movement/combat driver is `tests/encounter_driver.h`; all state
 changes use production actions. These are strong late-game characters and do
 not establish human difficulty. Logs and captures are retained in
 [the political-expedition evidence](../../docs/reviews/2026-11-07-alien-courts/README.md).
+
+
+`hidden-convoy.sav` is a generator-14 / simulation-1 / format-15 earned checkpoint
+from the seed-713 fresh-character expedition retained in
+`docs/reviews/2026-11-08-hidden-simulation/data/preliminary-before-lift-fix/run-00`.
+The input controller walked, fought, earned its build and saved at a nearby convoy;
+it did not grant progression or place actors. This preliminary expedition preceded
+the offscreen lift handoff correction; its wire schema is current. It is replayed
+by the corrected core in the raid/revisit journey, following force 5 across six
+cells, interrupting it, leaving and returning, visiting occupation and reaching
+the bay. The review retains that run and its source/binary hashes.
+
+`hidden-convoy-close.sav` continues the same checkpoint with
+`sc_faction_journey hidden-convoy.sav OUTPUT --convoy`. After 3.77 simulated seconds
+of ordinary movement, force 15 still carries twelve supplies and is visible nine
+metres away. The browser imports this close checkpoint for actual convoy capture,
+co-op and identity-preserving save/reload. Neither checkpoint is an inspection
+scene or an equipment-grant fixture.

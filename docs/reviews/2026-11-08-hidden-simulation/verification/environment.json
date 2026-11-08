@@ -1,0 +1,5 @@
+{
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "cpu_quota": "400000 100000",
+  "notes": "Cloud Linux, Mesa and Chromium SwiftShader; no physical Windows/mobile performance claim."
+}

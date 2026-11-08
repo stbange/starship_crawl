@@ -1,0 +1,5 @@
+{"government":1,"power_shortage":false,"deployment":1,"selected_goal":[0,0,4],"assertions_passed":true}
+{"government":2,"power_shortage":false,"deployment":1,"selected_goal":[11,0,4],"assertions_passed":true}
+{"government":1,"power_shortage":true,"deployment":1,"selected_goal":[11,0,4],"assertions_passed":true}
+{"government":0,"power_shortage":false,"deployment":1,"selected_goal":[5,1,4],"assertions_passed":true}
+{"government":0,"power_shortage":false,"deployment":2,"selected_goal":[4,-1,4],"assertions_passed":true}

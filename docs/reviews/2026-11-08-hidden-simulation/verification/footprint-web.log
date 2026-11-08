@@ -1,0 +1,10 @@
+[  1%] Building C object CMakeFiles/sc_core.dir/src/faction_sim.c.o
+[ 11%] Built target SDL_uclibc
+[ 83%] Built target SDL3-static
+[ 84%] Built target sc_platform
+[ 84%] Linking C static library libsc_core.a
+[ 98%] Built target sc_core
+[ 99%] Linking C executable starship_crawl.html
+[100%] Built target starship_crawl
+usage: package-web.py [-h] [--build-dir BUILD_DIR] [--output OUTPUT]
+package-web.py: error: unrecognized arguments: --base-path starship_crawl

@@ -1,0 +1,11 @@
+{
+  "command": "sc_faction_journey tests/fixtures/hidden-convoy.sav OUTPUT --convoy",
+  "returncode": 0,
+  "seconds": 3.77,
+  "distance": 9.44,
+  "force": 15,
+  "cargo": 12,
+  "fixture_sha256": "e0835f440afcbc7bc9e629a4b2130d85154c9fcecdc632a18d2c268147f80be7",
+  "library_sha256": "4a322771518f55af73c1d47f7cd01c96c42dde3764d90dcb57eab68e506ac7ee",
+  "driver_sha256": "991c255e30aae9165f70b1513acf36975837f8a552b04611a8b225457571ebde"
+}

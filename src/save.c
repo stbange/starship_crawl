@@ -436,6 +436,7 @@ static void politics_stream(Stream *s, Politics *p, Director *d, bool read) {
         d->reasons[i] = number(s, d->reasons[i], read);
     }
 }
+#include "save_factions.inc"
 bool game_save(const Game *g, const char *path) {
     if (!path || g->world.record_count > 1000000 || g->matrix.count > SC_MATRIX_RECORDS)
         return false;
@@ -452,7 +453,7 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, 14, false);
+    number(&s, g->world.generator >= 14 ? 15 : 14, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -512,6 +513,16 @@ bool game_save(const Game *g, const char *path) {
     Politics politics = g->world.generator >= 13 ? g->politics : (Politics){0};
     Director director = g->world.generator >= 13 ? g->director : (Director){0};
     politics_stream(&s, &politics, &director, false);
+    if (g->world.generator >= 14) {
+        Factions *factions = malloc(sizeof(*factions));
+        if (!factions)
+            s.ok = false;
+        else {
+            *factions = g->factions;
+            factions_stream(&s, factions, false);
+            free(factions);
+        }
+    }
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -538,10 +549,10 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 14) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 15) ||
         (version == 2 && generator != 2) || (version < 11 && generator > 6) ||
         (version < 12 && generator > 10) || (version < 13 && generator > 11) ||
-        (version < 14 && generator > 12) ||
+        (version < 14 && generator > 12) || (version < 15 && generator > 13) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
     Player players[SC_PLAYERS];
@@ -641,11 +652,24 @@ bool game_load(Game *g, const char *path) {
         politics_stream(&s, &politics, &director, true);
     if (!politics_valid(&politics, generator) || !director_valid(&director, generator))
         s.ok = false;
+    Factions *factions = calloc(1, sizeof(*factions));
+    if (!factions)
+        s.ok = false;
+    else {
+        if (version >= 15)
+            factions_stream(&s, factions, true);
+        if (!factions_valid(factions, generator))
+            s.ok = false;
+    }
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
     fclose(f);
     if (!s.ok) {
+        if (factions) {
+            factions_destroy(factions);
+            free(factions);
+        }
         if (matrix) {
             matrix_destroy(matrix);
             free(matrix);
@@ -671,6 +695,8 @@ bool game_load(Game *g, const char *path) {
     }
     World *replacement = malloc(sizeof(*replacement));
     if (!replacement) {
+        factions_destroy(factions);
+        free(factions);
         matrix_destroy(matrix);
         free(matrix);
         free(records);
@@ -683,10 +709,15 @@ bool game_load(Game *g, const char *path) {
     replacement->record_cap = count;
     Vec3 start = position_absolute(players[0].pos);
     if (!campaign_valid(&campaign, players, replacement) ||
+        !factions_world_valid(factions, replacement,
+                              campaign_phase(&campaign) < SC_PHASES ? campaign_phase(&campaign) + 1
+                                                                    : 0) ||
         !politics_world_valid(&politics, &director, replacement) || !matrix_index(matrix) ||
         !matrix_rehydrate(matrix, seed, replacement->generator) ||
         !matrix_valid(matrix, seed, replacement->generator, players, &shelter) ||
         !world_index_records(replacement) || !world_refresh(replacement, &start, 1)) {
+        factions_destroy(factions);
+        free(factions);
         matrix_destroy(matrix);
         free(matrix);
         world_destroy(replacement);
@@ -721,6 +752,9 @@ bool game_load(Game *g, const char *path) {
     g->frontier = frontier;
     g->politics = politics;
     g->director = director;
+    factions_destroy(&g->factions);
+    g->factions = *factions;
+    free(factions);
     memset(g->drills, 0, sizeof(g->drills));
     campaign_resume(g);
     Vec3 resumed = position_absolute(g->players[0].pos);

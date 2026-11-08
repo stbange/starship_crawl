@@ -1,0 +1,30 @@
+[
+  {
+    "suite": "foundation",
+    "returncode": 0,
+    "wall_seconds": 207.2866117409976
+  },
+  {
+    "suite": "guidance",
+    "returncode": 0,
+    "wall_seconds": 78.57084674900034
+  },
+  {
+    "suite": "main",
+    "returncode": 0,
+    "wall_seconds": 158.3330514219997
+  },
+  {
+    "suite": "hidden",
+    "returncode": 0,
+    "wall_seconds": 52.09961039200061
+  },
+  {
+    "capture": "release",
+    "returncode": 0
+  },
+  {
+    "capture": "profile",
+    "returncode": 0
+  }
+]

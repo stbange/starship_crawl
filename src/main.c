@@ -248,6 +248,8 @@ static void matrix_journal(int player) {
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     MatrixDiver *d = &app.game.matrix.divers[0];
     if (action >= 230 && action <= 232) {
+        if (!app.game.politics.version)
+            return;
         if (action == 230) {
             politics_journal(&app.game, 0);
             set_pause(true);
@@ -444,7 +446,7 @@ EMSCRIPTEN_KEEPALIVE uint32_t sc_web_fingerprint(uint32_t seed, int x, int y, in
     return world_fingerprint(seed, (Cell){x, y, z});
 }
 EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
-    static char result[16384];
+    static char result[32768];
     const Player *p = &app.game.players[0];
     Vec3 feet = position_absolute(p->pos);
     unsigned projectiles = 0, climbers = 0, bodies = 0;
@@ -738,6 +740,36 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              pol->countries[0].pledge, pol->countries[1].pledge, pol->countries[2].pledge,
              pol->countries[0].claimed, pol->countries[1].claimed, pol->countries[2].claimed,
              dir->reasons[(dir->sequence + SC_DIRECTOR_LOG - 1) % SC_DIRECTOR_LOG]);
+    Factions *f = &app.game.factions;
+    used = strlen(result) - 1;
+    snprintf(result + used, sizeof(result) - used,
+             ",\"simulation\":%u,\"strategy_tick\":%u,\"forces_launched\":%u,\"forces_arrived\":%u,"
+             "\"force_losses\":%u,\"captures\":%u,\"retreats\":%u,\"interventions\":%u,"
+             "\"rejections\":%u,"
+             "\"pressure\":[%.3f,%.3f],\"pacing\":[%u,%u],\"regions\":%zu,\"forces\":[",
+             f->version, f->tick, f->launched, f->arrived, f->casualties, f->captures, f->retreats,
+             f->director.accepted, f->director.rejected, f->director.pressure[0],
+             f->director.pressure[1], f->director.pace[0], f->director.pace[1], f->count);
+    unsigned printed = 0;
+    for (unsigned i = 0; i < SC_FACTION_FORCES; i++) {
+        const FactionForce *force = &f->forces[i];
+        if (!force->id)
+            continue;
+        unsigned member = 0;
+        while (member + 1 < force->count && !force->members[member].alive)
+            member++;
+        Vec3 point = enemy_center(&force->members[member]);
+        used = strlen(result);
+        snprintf(
+            result + used, sizeof(result) - used,
+            "%s{\"id\":%u,\"country\":%u,\"order\":%u,\"strength\":%u,\"physical\":%s,\"cargo\":%u,"
+            "\"at\":[%.2f,%.2f,%.2f],\"goal\":[%d,%d,%d]}",
+            printed++ ? "," : "", force->id, force->country, force->order, factions_strength(force),
+            force->physical ? "true" : "false", force->cargo, point.x, point.y, point.z,
+            force->goal.x, force->goal.y, force->goal.z);
+    }
+    used = strlen(result);
+    snprintf(result + used, sizeof(result) - used, "]}");
     return result;
 }
 static void audio_frame(void) {
@@ -761,27 +793,51 @@ static void audio_frame(void) {
         if (feet.z >= 0 && room && room->ready)
             target[room->district] += (room->type == CONDUIT ? .45f : 1.0f) / app.game.player_count;
     }
-    /* A small single mixed output: district drones crossfade, including co-op
-       views in different districts. Generation never touches the audio device. */
-    double warning[ALIEN_BEHAVIORS] = {0};
+    /* District drones share the mix. Creature cues pan relative to a solo view;
+       split-screen cues favour the channel belonging to the affected viewport. */
+    double warning[ALIEN_BEHAVIORS][2] = {{0}};
     for (int room = 0; room < app.game.world.count; room++)
         for (int n = 0; n < app.game.world.rooms[room].enemy_count; n++) {
             const Enemy *e = &app.game.world.rooms[room].enemies[n];
-            if (!e->alive || !e->behavior || e->warning_sound <= 0)
+            unsigned voice = e->behavior;
+            double strength = e->warning_sound;
+            if (app.game.factions.version && e->country) {
+                voice = ALIEN_CONDUCTOR + politics_government(app.game.world.seed, e->country - 1);
+                const FactionForce *force = factions_force(&app.game, e->force);
+                if (force && force->physical)
+                    strength = fmax(strength, force->order == ORDER_RETREAT ? .24 : .10);
+                for (int player = 0; player < app.game.player_count; player++) {
+                    const FactionIncident *incident =
+                        &app.game.factions.incidents[player][e->country - 1];
+                    if (incident->strikes == 1 && incident->grace > 0 &&
+                        cell_equal(world_region(incident->site),
+                                   world_region(world_cell(position_absolute(e->pos)))))
+                        strength = fmax(strength, incident->grace);
+                }
+            }
+            if (!e->alive || !voice || strength <= 0)
                 continue;
             for (int player = 0; player < app.game.player_count; player++) {
                 const Player *p = &app.game.players[player];
                 if (p->sheltered || app.game.matrix.divers[player].active)
                     continue;
-                double distance = vlen(vsub(player_eye(p), enemy_center(e)));
-                if (distance < 35)
-                    warning[e->behavior] =
-                        fmax(warning[e->behavior], (1 - distance / 35) * e->warning_sound);
+                Vec3 delta = vsub(enemy_center(e), player_eye(p));
+                double distance = vlen(delta);
+                if (distance < 35) {
+                    double pan = app.game.player_count == 2
+                                     ? (player ? .8 : -.8)
+                                     : vdot(vnorm(delta), v3(cos(p->yaw), 0, -sin(p->yaw)));
+                    for (int channel = 0; channel < 2; channel++) {
+                        double gain = .75 * (1 + (channel ? pan : -pan) * .8);
+                        warning[voice][channel] =
+                            fmax(warning[voice][channel], (1 - distance / 35) * strength * gain);
+                    }
+                }
             }
         }
     int queued = SDL_GetAudioStreamQueued(app.audio);
-    for (int block = 0; block < 4 && queued < 8192; block++) {
-        float samples[512];
+    for (int block = 0; block < 4 && queued < 16384; block++) {
+        float samples[1024];
         for (int i = 0; i < 512; i++) {
             double t = app.audio_time;
             for (int d = 0; d < DISTRICT_TYPES; d++)
@@ -797,12 +853,14 @@ static void audio_frame(void) {
                     app.ambience[d] *
                     (sin(t * SC_PI * 2 * (42 + d * 5)) + .25 * sin(t * SC_PI * 2 * (84 + d * 7))) *
                     .007;
-            for (int k = 1; k < ALIEN_BEHAVIORS; k++) {
-                if (warning[k] <= 0)
-                    continue;
-                double pulse = pow(fmax(0, sin(t * (k == ALIEN_MACHINE ? 28 : 12 + k))), 6);
-                ambient += warning[k] * .024 * pulse * sin(t * SC_PI * 2 * (95 + k * 37));
-            }
+            double cues[2] = {0};
+            for (int k = 1; k < ALIEN_BEHAVIORS; k++)
+                if (warning[k][0] > 0 || warning[k][1] > 0) {
+                    double pulse = pow(fmax(0, sin(t * (k == ALIEN_MACHINE ? 28 : 12 + k))), 6);
+                    double tone = .024 * pulse * sin(t * SC_PI * 2 * (95 + k * 37));
+                    for (int channel = 0; channel < 2; channel++)
+                        cues[channel] += warning[k][channel] * tone;
+                }
             double shot = 0;
             if (app.shot_sample < 1800) {
                 double age = (double)app.shot_sample++ / 22050;
@@ -811,7 +869,8 @@ static void audio_frame(void) {
                         ((double)(app.audio_noise % 1000) / 500 - 1) * .05) *
                        exp(-age * 65);
             }
-            samples[i] = (float)(ambient + shot);
+            for (int channel = 0; channel < 2; channel++)
+                samples[i * 2 + channel] = (float)clampd(ambient + shot + cues[channel], -.95, .95);
             app.audio_time += 1.0 / 22050;
         }
         SDL_PutAudioStreamData(app.audio, samples, sizeof(samples));
@@ -1096,9 +1155,10 @@ static void events(void) {
                             choose_player(player, choice))
                             set_pause(false);
                         if (b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
-                            p->journal_page = p->journal_page == 6   ? 1
-                                              : p->journal_page == 3 ? 6
-                                                                     : p->journal_page + 1;
+                            p->journal_page = p->journal_page == 6 ? 1
+                                              : p->journal_page == 3
+                                                  ? (app.game.politics.version ? 6 : 1)
+                                                  : p->journal_page + 1;
                         if (b == SDL_GAMEPAD_BUTTON_WEST) {
                             if (p->journal_page == 6)
                                 politics_read(&app.game, player);
@@ -1429,7 +1489,8 @@ static void events(void) {
                 sc_web_action(86);
                 break;
             case SDLK_F6:
-                sc_web_action(app.game.players[0].journal && app.game.players[0].journal_page == 2
+                sc_web_action(app.game.politics.version && app.game.players[0].journal &&
+                                      app.game.players[0].journal_page == 2
                                   ? 230
                                   : 85);
                 break;
@@ -1900,6 +1961,8 @@ int main(int argc, char **argv) {
             for (int i = 0; i < SC_PLAYERS; i++)
                 app.game.players[i].weapons = SC_START_WEAPONS;
         }
+        if (court_scene)
+            app.game.world.generator = 13;
         politics_init(&app.game);
         app.game.message_time = 0;
         Cell c = {0, 0, 0};
@@ -2191,7 +2254,7 @@ int main(int argc, char **argv) {
         open_pad(ids[i]);
     SDL_free(ids);
     if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {
-        SDL_AudioSpec spec = {.format = SDL_AUDIO_F32, .channels = 1, .freq = 22050};
+        SDL_AudioSpec spec = {.format = SDL_AUDIO_F32, .channels = 2, .freq = 22050};
         app.audio = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
         if (app.audio)
             SDL_ResumeAudioStreamDevice(app.audio);

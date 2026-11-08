@@ -1,0 +1,19 @@
+PASS biome0: bounded sprites, correct profile, rendered detail
+PASS biome1: bounded sprites, correct profile, rendered detail
+PASS biome2: bounded sprites, correct profile, rendered detail
+PASS biome3: bounded sprites, correct profile, rendered detail
+PASS biome4: bounded sprites, correct profile, rendered detail
+PASS biome5: bounded sprites, correct profile, rendered detail
+PASS biome6: bounded sprites, correct profile, rendered detail
+PASS biome7: bounded sprites, correct profile, rendered detail
+PASS biome8: bounded sprites, correct profile, rendered detail
+PASS biome9: bounded sprites, correct profile, rendered detail
+PASS biome10: bounded sprites, correct profile, rendered detail
+PASS biome11: bounded sprites, correct profile, rendered detail
+PASS biome12: bounded sprites, correct profile, rendered detail
+PASS biome13: bounded sprites, correct profile, rendered detail
+PASS volume1: bounded sprites, correct profile, rendered detail
+PASS volume2: bounded sprites, correct profile, rendered detail
+PASS shape4: bounded sprites, correct profile, rendered detail
+PASS shape6: bounded sprites, correct profile, rendered detail
+PASS generated atmospheres, vaults, dossier, map, split budgets and touch-sized rendering

@@ -1,0 +1,874 @@
+{
+  "seed": 713,
+  "players": 1,
+  "paused": false,
+  "frames": 514,
+  "rooms": 25,
+  "x": 92.12603,
+  "y": 1e-05,
+  "z": 715.40914,
+  "rank": 15,
+  "kills": 124,
+  "shots": 0,
+  "failed": false,
+  "generator": 14,
+  "form": 0,
+  "volume": 0,
+  "atmosphere": 4,
+  "ecology": 3,
+  "tale": 1,
+  "sprites": 824,
+  "sprites2": 0,
+  "tentacles": 20,
+  "tentacles2": 0,
+  "room_height": 8.0,
+  "chunks": 29,
+  "pending": 0,
+  "generated": 29,
+  "work": 0,
+  "uploads": 0,
+  "span": 1,
+  "ready": true,
+  "fingerprint": 3704932103,
+  "flashlight": true,
+  "projectiles": 2,
+  "enemy_shots": 80,
+  "projectile_hits": 0,
+  "climbers": 2,
+  "mission": 2,
+  "weapon": 0,
+  "weapons": 278603,
+  "shield": 50.0,
+  "armor": 40.0,
+  "energy": 100.0,
+  "credits": 598,
+  "pickups": 19,
+  "contracts": 3,
+  "theme": 26,
+  "logs": 1288,
+  "yaw": 2.8789,
+  "pitch": -0.0115,
+  "time": 34.55,
+  "sheltered": false,
+  "shelter_deployed": false,
+  "sx": 0.0,
+  "sz": 0.0,
+  "resting": 0.0,
+  "nourished": 0.0,
+  "health": 250.0,
+  "facility": 0,
+  "map": false,
+  "map_x": 0,
+  "map_y": 0,
+  "map_z": 0,
+  "veil": false,
+  "flight": 0.0,
+  "leap": 0.0,
+  "nova": 0.0,
+  "power": 0,
+  "bodies": 4194304,
+  "key_w": 0,
+  "riding": 0,
+  "rig_weapon": 0,
+  "hull": 0.0,
+  "drive_speed": 0.0,
+  "mech_deployed": false,
+  "wagon_deployed": false,
+  "beams": 0,
+  "flares": 0,
+  "flare_lifetime": 0,
+  "flare_strength": 0,
+  "flare_life": 0.0,
+  "flare_power": 0.0,
+  "points": 5,
+  "profile": 1,
+  "layout": 2,
+  "incident": 2,
+  "intensity": 3,
+  "landmark": 0,
+  "room_depth": 76.0,
+  "cache_x": 117.5,
+  "cache_z": 732.0,
+  "story_version": 3,
+  "motivation": 1,
+  "story_assigned": 33040815,
+  "story_seen": 9963951,
+  "story_done": 129,
+  "story_choice": 0,
+  "story_tracked": 13,
+  "story_reading": 0,
+  "journal": false,
+  "journal_page": 0,
+  "decision": false,
+  "has_goal": true,
+  "goal_x": 13,
+  "goal_y": 0,
+  "goal_z": 1,
+  "victories": 0,
+  "choice1": "TAKE THE ARCHIVE / REFUGE LOSES ITS NAVIGATOR",
+  "choice2": "TRANSMIT A SURVEY / KEEP THE ARCHIVE ABOARD",
+  "choice3": "COPY THE FULL ARCHIVE / KEEP THE NAVIGATOR ABOARD",
+  "prepared": false,
+  "history_cause": 0,
+  "history_arc": 1,
+  "history_role": 0,
+  "origin_x": 2,
+  "origin_y": -1,
+  "origin_z": 0,
+  "council": 0,
+  "support0": 50,
+  "support1": 50,
+  "chapter": 0,
+  "arc_kind": 0,
+  "chapter_choice": 0,
+  "remaining": 192,
+  "events": 8,
+  "systems": 0,
+  "safe": false,
+  "event_reading": 0,
+  "last0": 0,
+  "last1": 0,
+  "last2": 0,
+  "last3": 0,
+  "total0": 0,
+  "total1": 0,
+  "total2": 0,
+  "total3": 0,
+  "total4": 0,
+  "career0": 0,
+  "career1": 0,
+  "career2": 0,
+  "career3": 0,
+  "career4": 0,
+  "corpses": 0,
+  "death_forms": 0,
+  "death_age": 0.0,
+  "hazards": 0,
+  "hazard_kinds": 0,
+  "hazard_triggered": 0,
+  "hazard_spent": 0,
+  "respawns": 0,
+  "matrix": false,
+  "matrix_near": false,
+  "mx": 0.0,
+  "my": 0.0,
+  "mz": 0.0,
+  "integrity": 0.0,
+  "bandwidth": 0.0,
+  "trace": 0.0,
+  "matrix_map": false,
+  "matrix_choice": false,
+  "programs": 7,
+  "slot0": 0,
+  "slot1": 2,
+  "matrix_selected": 0,
+  "matrix_data": 0,
+  "matrix_service": 0,
+  "matrix_keys": 0,
+  "matrix_flags": 0,
+  "matrix_outcome": 0,
+  "matrix_seen": 0,
+  "matrix_killed": 0,
+  "matrix_entry": 0,
+  "matrix_core": 0,
+  "matrix_credential": 0,
+  "matrix_vault": 0,
+  "matrix_rare": false,
+  "matrix_theme": 0,
+  "matrix_guards": 0,
+  "matrix_shots": 0,
+  "matrix_switch0": 0.0,
+  "matrix_switch1": 0.0,
+  "matrix_goal_x": 0.0,
+  "matrix_goal_z": 0.0,
+  "matrix_veil": 0.0,
+  "matrix_lock": 0.0,
+  "matrix_nodes": [],
+  "campaign": 1,
+  "phase": 3,
+  "defeated": 277,
+  "guardian": 6,
+  "guardian_active": false,
+  "guardian_health": 0.0,
+  "reward_pending": 0,
+  "powers_owned": 0,
+  "rigs_owned": 0,
+  "modules_owned": 0,
+  "claimed": 277,
+  "gun_slots": [
+    0,
+    14
+  ],
+  "power_slots": [
+    4,
+    4
+  ],
+  "rig_slot": 0,
+  "module": 0,
+  "build_slot": 0,
+  "offer1": "FLECHETTE FAN",
+  "offer2": "NOVA AURA",
+  "offer3": "MOBILE STORM",
+  "nav_kind": 2,
+  "nav_next": [
+    1,
+    0,
+    6
+  ],
+  "nav_point": [
+    96.0,
+    0.02,
+    720.0
+  ],
+  "nav_searched": 256,
+  "lift_latched": false,
+  "arrival": 0.0,
+  "nav2_kind": 0,
+  "pace": 0,
+  "local_state": 0,
+  "frontier_active": false,
+  "frontier_living": 1,
+  "frontier_core": 170.0,
+  "frontier_attacker": 0,
+  "frontier_disrupt": 0.0,
+  "alien_behaviors": 1,
+  "alien_motions": 1,
+  "frontier_offer": "",
+  "drill_time": 0.0,
+  "drill_complete": false,
+  "encounter_console": [
+    96.0,
+    0.02,
+    722.0
+  ],
+  "regional_enemies": [],
+  "challenge": 0,
+  "reveal": 0,
+  "contract": 0,
+  "circuit": 0,
+  "hazard_time": 0.0,
+  "relics": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "specialists": [
+    {
+      "kind": 28,
+      "behavior": 0,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        94.0,
+        0.67,
+        727.0
+      ]
+    },
+    {
+      "kind": 28,
+      "behavior": 0,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        98.0,
+        0.67,
+        727.0
+      ]
+    },
+    {
+      "kind": 27,
+      "behavior": 0,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        118.698,
+        0.67,
+        728.849
+      ]
+    },
+    {
+      "kind": 27,
+      "behavior": 0,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        101.285,
+        0.67,
+        745.076
+      ]
+    },
+    {
+      "kind": 12,
+      "behavior": 0,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        99.421,
+        0.67,
+        687.879
+      ]
+    },
+    {
+      "kind": 32,
+      "behavior": 5,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        105.984,
+        0.67,
+        705.148
+      ]
+    },
+    {
+      "kind": 14,
+      "behavior": 2,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        86.259,
+        0.67,
+        742.458
+      ]
+    },
+    {
+      "kind": 7,
+      "behavior": 2,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        68.419,
+        0.67,
+        751.334
+      ]
+    },
+    {
+      "kind": 22,
+      "behavior": 3,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        108.373,
+        0.67,
+        688.533
+      ]
+    },
+    {
+      "kind": 36,
+      "behavior": 9,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        129.06,
+        0.67,
+        734.404
+      ]
+    },
+    {
+      "kind": 6,
+      "behavior": 0,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        128.246,
+        0.67,
+        695.121
+      ]
+    },
+    {
+      "kind": 6,
+      "behavior": 0,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        130.061,
+        0.67,
+        694.883
+      ]
+    },
+    {
+      "kind": 15,
+      "behavior": 0,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        76.788,
+        0.67,
+        720.953
+      ]
+    },
+    {
+      "kind": 33,
+      "behavior": 6,
+      "motion": 0,
+      "alive": false,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        98.124,
+        0.67,
+        698.354
+      ]
+    },
+    {
+      "kind": 23,
+      "behavior": 0,
+      "motion": 0,
+      "alive": true,
+      "observed": false,
+      "molted": false,
+      "unfold": 0.0,
+      "sound": 0.0,
+      "at": [
+        95.351,
+        0.65,
+        722.93
+      ]
+    }
+  ],
+  "politics": 0,
+  "country": 3,
+  "court": 3,
+  "court_reading": 0,
+  "audience": 0,
+  "pledge": 0,
+  "court_stage": 0,
+  "political_goal": 0,
+  "director_kind": 0,
+  "director_sequence": 0,
+  "director_cooldown": 0,
+  "director_remaining": 0,
+  "court_stages": [
+    0,
+    0,
+    0
+  ],
+  "court_pledges": [
+    0,
+    0,
+    0
+  ],
+  "court_claims": [
+    0,
+    0,
+    0
+  ],
+  "director_reason": 0,
+  "simulation": 1,
+  "strategy_tick": 276,
+  "forces_launched": 30,
+  "forces_arrived": 29,
+  "force_losses": 14,
+  "captures": 3,
+  "retreats": 19,
+  "interventions": 10,
+  "rejections": 4,
+  "pressure": [
+    0.0,
+    0.0
+  ],
+  "pacing": [
+    0,
+    0
+  ],
+  "regions": 32,
+  "forces": [
+    {
+      "id": 27,
+      "country": 1,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        -288.9,
+        0.67,
+        918.0
+      ],
+      "goal": [
+        -3,
+        0,
+        9
+      ]
+    },
+    {
+      "id": 20,
+      "country": 2,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        287.1,
+        0.67,
+        534.0
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 3,
+      "country": 3,
+      "order": 6,
+      "strength": 3,
+      "physical": true,
+      "cargo": 0,
+      "at": [
+        95.83,
+        0.65,
+        665.69
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 28,
+      "country": 3,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        575.1,
+        0.67,
+        1014.0
+      ],
+      "goal": [
+        -1,
+        0,
+        8
+      ]
+    },
+    {
+      "id": 25,
+      "country": 3,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        95.73,
+        0.65,
+        963.11
+      ],
+      "goal": [
+        -1,
+        0,
+        8
+      ]
+    },
+    {
+      "id": 6,
+      "country": 3,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        95.1,
+        0.67,
+        534.0
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 8,
+      "country": 3,
+      "order": 6,
+      "strength": 3,
+      "physical": true,
+      "cargo": 0,
+      "at": [
+        95.83,
+        0.65,
+        665.69
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 9,
+      "country": 1,
+      "order": 6,
+      "strength": 1,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        -191.1,
+        0.67,
+        345.6
+      ],
+      "goal": [
+        -2,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 26,
+      "country": 1,
+      "order": 2,
+      "strength": 1,
+      "physical": true,
+      "cargo": 0,
+      "at": [
+        -7.58,
+        0.65,
+        813.46
+      ],
+      "goal": [
+        0,
+        0,
+        8
+      ]
+    },
+    {
+      "id": 11,
+      "country": 2,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        575.1,
+        0.67,
+        534.0
+      ],
+      "goal": [
+        6,
+        0,
+        5
+      ]
+    },
+    {
+      "id": 16,
+      "country": 2,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        1343.1,
+        0.67,
+        726.0
+      ],
+      "goal": [
+        15,
+        0,
+        1
+      ]
+    },
+    {
+      "id": 30,
+      "country": 2,
+      "order": 4,
+      "strength": 3,
+      "physical": false,
+      "cargo": 12,
+      "at": [
+        95.1,
+        64.67,
+        534.0
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 15,
+      "country": 2,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        863.1,
+        0.67,
+        630.0
+      ],
+      "goal": [
+        15,
+        0,
+        1
+      ]
+    },
+    {
+      "id": 18,
+      "country": 1,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        191.1,
+        0.67,
+        1014.0
+      ],
+      "goal": [
+        7,
+        0,
+        9
+      ]
+    },
+    {
+      "id": 19,
+      "country": 3,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        287.1,
+        0.67,
+        534.0
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 21,
+      "country": 1,
+      "order": 2,
+      "strength": 3,
+      "physical": true,
+      "cargo": 0,
+      "at": [
+        190.73,
+        64.65,
+        705.74
+      ],
+      "goal": [
+        1,
+        1,
+        5
+      ]
+    },
+    {
+      "id": 22,
+      "country": 3,
+      "order": 6,
+      "strength": 3,
+      "physical": true,
+      "cargo": 0,
+      "at": [
+        40.26,
+        0.65,
+        719.92
+      ],
+      "goal": [
+        -2,
+        0,
+        6
+      ]
+    },
+    {
+      "id": 24,
+      "country": 2,
+      "order": 5,
+      "strength": 1,
+      "physical": true,
+      "cargo": 0,
+      "at": [
+        95.35,
+        0.65,
+        722.93
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 29,
+      "country": 1,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        -94.89,
+        64.65,
+        760.72
+      ],
+      "goal": [
+        3,
+        1,
+        8
+      ]
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+      Start  1: hidden_factions
+ 1/44 Test  #1: hidden_factions ..................   Passed    0.13 sec
+      Start  2: mobile_forces
+ 2/44 Test  #2: mobile_forces ....................   Passed    1.17 sec
+      Start  3: autonomous_politics
+ 3/44 Test  #3: autonomous_politics ..............   Passed    0.73 sec
+      Start  4: hidden_director
+ 4/44 Test  #4: hidden_director ..................   Passed    0.25 sec
+      Start  5: faction_revisit_journey
+ 5/44 Test  #5: faction_revisit_journey ..........   Passed   62.85 sec
+      Start  6: faction_convoy_journey
+ 6/44 Test  #6: faction_convoy_journey ...........   Passed    0.32 sec
+      Start  7: hidden_simulation_journey
+ 7/44 Test  #7: hidden_simulation_journey ........   Passed   45.53 sec
+      Start  8: political_expeditions
+ 8/44 Test  #8: political_expeditions ............   Passed    0.39 sec
+      Start  9: political_journeys
+ 9/44 Test  #9: political_journeys ...............   Passed   65.56 sec
+      Start 10: frontier_journeys
+10/44 Test #10: frontier_journeys ................   Passed   64.64 sec
+      Start 11: deep_frontiers
+11/44 Test #11: deep_frontiers ...................   Passed    0.96 sec
+      Start 12: regional_journey
+12/44 Test #12: regional_journey .................   Passed    0.16 sec
+      Start 13: regional_encounters
+13/44 Test #13: regional_encounters ..............   Passed    1.01 sec
+      Start 14: core
+14/44 Test #14: core .............................   Passed    4.39 sec
+      Start 15: living_ship
+15/44 Test #15: living_ship ......................   Passed    1.75 sec
+      Start 16: living_ship_journey
+16/44 Test #16: living_ship_journey ..............   Passed    0.18 sec
+      Start 17: generated_interiors
+17/44 Test #17: generated_interiors ..............   Passed    1.37 sec
+      Start 18: faction_faults
+18/44 Test #18: faction_faults ...................   Passed    0.01 sec
+      Start 19: edge_cases
+19/44 Test #19: edge_cases .......................   Passed    0.07 sec
+      Start 20: exploration_guidance
+20/44 Test #20: exploration_guidance .............   Passed    0.59 sec
+      Start 21: navigation_recovery
+21/44 Test #21: navigation_recovery ..............   Passed    0.35 sec
+      Start 22: navigation_psionics
+22/44 Test #22: navigation_psionics ..............   Passed    0.09 sec
+      Start 23: shelter
+23/44 Test #23: shelter ..........................   Passed    0.22 sec
+      Start 24: shelter_journey
+24/44 Test #24: shelter_journey ..................   Passed    0.35 sec
+      Start 25: equipment
+25/44 Test #25: equipment ........................   Passed    0.13 sec
+      Start 26: equipment_journey
+26/44 Test #26: equipment_journey ................   Passed    0.18 sec
+      Start 27: solo_campaign
+27/44 Test #27: solo_campaign ....................   Passed   49.21 sec
+      Start 28: generated_expeditions
+28/44 Test #28: generated_expeditions ............   Passed   17.78 sec
+      Start 29: history_expeditions
+29/44 Test #29: history_expeditions ..............   Passed   45.55 sec
+      Start 30: continuing_expeditions
+30/44 Test #30: continuing_expeditions ...........   Passed   38.45 sec
+      Start 31: reactive_aftermath
+31/44 Test #31: reactive_aftermath ...............   Passed    2.24 sec
+      Start 32: narrative
+32/44 Test #32: narrative ........................   Passed    2.01 sec
+      Start 33: enemy_deaths
+33/44 Test #33: enemy_deaths .....................   Passed    0.20 sec
+      Start 34: ship_matrix
+34/44 Test #34: ship_matrix ......................   Passed    0.14 sec
+      Start 35: matrix_faults
+35/44 Test #35: matrix_faults ....................   Passed    0.03 sec
+      Start 36: matrix_journeys
+36/44 Test #36: matrix_journeys ..................   Passed    3.09 sec
+      Start 37: phased_expeditions
+37/44 Test #37: phased_expeditions ...............   Passed    2.18 sec
+      Start 38: phase_journeys
+38/44 Test #38: phase_journeys ...................   Passed  124.63 sec
+      Start 39: imperfect_expeditions
+39/44 Test #39: imperfect_expeditions ............***Failed  131.98 sec
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.6s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 59.9s
+Seed 713: phase 2, guardians 105, rank 7, 38 kills, 0 respawns at 247.6s
+Seed 713: phase 3, guardians 115, rank 7, 39 kills, 0 respawns at 339.6s
+Tick 24000: 1116.1 0.0 336.0 -> [13,0,1], RECENT BOOTPRINTS / NEW EVIDENCE IN I JOURNAL / U TRACK LEADS
+Seed 713: phase 4, guardians 155, rank 12, 84 kills, 0 respawns at 472.6s
+Tick 48000: 133.9 0.0 144.0 -> [0,0,0], HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+Phase journey 713 starboard: PASS, 830.5s, 121 kills, 0 deaths, 49831 frames
+PROFILE {"seed":713,"profile":1,"passed":true,"simulated_seconds":830.52,"reaction_seconds":0.30,"turn_rad_s":2.8,"aim_error_rad":0.025,"kills":121,"deaths":0,"shots":779,"hits":467,"min_health":100.00,"min_shield":0.00,"min_energy":100.00,"health_loss":46.20,"shield_loss":237.00,"armor_loss":9.90,"damage_frames":11,"recoveries":0,"max_stall_seconds":0.20}
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 19.6s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 74.4s
+Seed 713: phase 2, guardians 105, rank 8, 53 kills, 2 respawns at 378.9s
+Tick 24000: 576.0 0.0 197.5 -> [9,0,1], SHIELD
+Seed 713: phase 3, guardians 115, rank 8, 54 kills, 2 respawns at 478.7s
+Seed 713: phase 4, guardians 155, rank 11, 79 kills, 2 respawns at 623.3s
+Tick 48000: 864.0 0.0 167.3 -> [0,0,0], ASCENSION / OPEN JOURNAL WITH I / CHOOSE AN UPGRADE
+Phase journey 713 starboard: PASS, 981.9s, 116 kills, 2 deaths, 58914 frames
+PROFILE {"seed":713,"profile":2,"passed":true,"simulated_seconds":981.90,"reaction_seconds":0.55,"turn_rad_s":1.8,"aim_error_rad":0.040,"kills":116,"deaths":2,"shots":1065,"hits":547,"min_health":1.60,"min_shield":0.00,"min_energy":100.00,"health_loss":923.29,"shield_loss":663.00,"armor_loss":193.36,"damage_frames":207,"recoveries":0,"max_stall_seconds":0.23}
+
+      Start 40: vertical_traversal
+40/44 Test #40: vertical_traversal ...............   Passed    0.26 sec
+      Start 41: traversal_journeys
+41/44 Test #41: traversal_journeys ...............   Passed    3.23 sec
+      Start 42: space_exterior
+42/44 Test #42: space_exterior ...................   Passed    0.10 sec
+      Start 43: arrival_journey
+43/44 Test #43: arrival_journey ..................   Passed    0.05 sec
+      Start 44: platform_input
+44/44 Test #44: platform_input ...................   Passed    0.01 sec
+
+98% tests passed, 1 tests failed out of 44
+
+Label Time Summary:
+gameplay    = 654.09 sec*proc (19 tests)
+platform    =   0.01 sec*proc (1 test)
+unit        =  20.44 sec*proc (24 tests)
+
+Total Test time (real) = 674.56 sec
+
+The following tests FAILED:
+	 39 - imperfect_expeditions (Failed)                    gameplay
+Errors while running CTest

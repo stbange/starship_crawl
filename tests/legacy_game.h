@@ -8,6 +8,7 @@ static void legacy_game_init(Game *g, uint32_t seed) {
     world_destroy(&g->world);
     world_init(&g->world, seed);
     g->world.generator = 6;
+    factions_init(g); /* Legacy fixtures must not retain new-ship simulation flags. */
     g->campaign = (Campaign){0};
     for (int p = 0; p < SC_PLAYERS; p++) {
         g->players[p].weapons = SC_START_WEAPONS;

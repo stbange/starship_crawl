@@ -78,7 +78,12 @@ bool game_navigation_to(const Game *g, int player, Cell goal, Navigation *nav) {
     const Player *p = &g->players[player];
     if (p->sheltered || g->matrix.divers[player].active)
         return false;
-    Vec3 feet = position_absolute(p->pos);
+    return game_navigation_from(g, p->pos, p->lift_active, goal, nav);
+}
+bool game_navigation_from(const Game *g, Position position, bool in_lift, Cell goal,
+                          Navigation *nav) {
+    memset(nav, 0, sizeof(*nav));
+    Vec3 feet = position_absolute(position);
     Cell from = bounded(world_cell(feet));
     nav->from = nav->next = from;
     nav->goal = bounded(goal);
@@ -89,7 +94,7 @@ bool game_navigation_to(const Game *g, int player, Cell goal, Navigation *nav) {
         return true;
     }
     Vec3 origin = world_center(from), local = vsub(feet, origin);
-    bool service = g->world.generator >= 9 && !p->lift_active &&
+    bool service = g->world.generator >= 9 && !in_lift &&
                    world_service_column(g->world.seed, from) && fabs(local.x) > 3.7 &&
                    fabs(local.x) < 12 && local.z < -6;
     /* Deck-height landings connect across the back of the shaft. A diagonal

@@ -1,0 +1,82 @@
+[
+  {
+    "suite": "matrix",
+    "returncode": 0,
+    "wall_seconds": 134.7
+  },
+  {
+    "suite": "shelter",
+    "returncode": 0,
+    "wall_seconds": 112.5
+  },
+  {
+    "suite": "exterior",
+    "returncode": 0,
+    "wall_seconds": 389.07
+  },
+  {
+    "suite": "phases",
+    "returncode": 0,
+    "wall_seconds": 471.59
+  },
+  {
+    "suite": "features",
+    "returncode": 0,
+    "wall_seconds": 149.45
+  },
+  {
+    "suite": "equipment",
+    "returncode": 0,
+    "wall_seconds": 150.41
+  },
+  {
+    "suite": "foundation",
+    "returncode": 1,
+    "wall_seconds": 503.67
+  },
+  {
+    "suite": "guidance",
+    "returncode": 1,
+    "wall_seconds": 57.6
+  },
+  {
+    "suite": "interiors",
+    "returncode": 0,
+    "wall_seconds": 438.41
+  },
+  {
+    "suite": "regional",
+    "returncode": 0,
+    "wall_seconds": 145.95
+  },
+  {
+    "suite": "politics",
+    "returncode": 0,
+    "wall_seconds": 288.27
+  },
+  {
+    "suite": "frontier",
+    "returncode": 0,
+    "wall_seconds": 519.51
+  },
+  {
+    "suite": "habitat",
+    "returncode": 0,
+    "wall_seconds": 391.85
+  },
+  {
+    "suite": "story",
+    "returncode": 0,
+    "wall_seconds": 541.16
+  },
+  {
+    "suite": "aftermath",
+    "returncode": 0,
+    "wall_seconds": 178.84
+  },
+  {
+    "suite": "deaths",
+    "returncode": 0,
+    "wall_seconds": 69.35
+  }
+]

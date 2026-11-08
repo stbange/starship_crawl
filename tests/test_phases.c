@@ -498,6 +498,10 @@ static void malformed_appendix(void) {
     CHECK(f);
     CHECK(!fseek(f, 0, SEEK_END));
     long length = ftell(f);
+    size_t faction_bytes =
+        g->world.generator >= 14
+            ? SC_FACTIONS_SAVE_BYTES + g->factions.count * SC_FACTION_REGION_BYTES
+            : 0;
     rewind(f);
     unsigned char *original = malloc((size_t)length), *data = malloc((size_t)length);
     CHECK(original && data);
@@ -511,8 +515,8 @@ static void malformed_appendix(void) {
     CHECK(before); /* A world snapshot exceeds the default Windows stack. */
     for (unsigned n = 0; n < sizeof(offsets) / sizeof(offsets[0]); n++) {
         memcpy(data, original, (size_t)length);
-        size_t at = (size_t)length - 204 - SC_POLITICS_SAVE_BYTES - SC_PLAYERS * RELICS * 4 -
-                    g->world.record_count * 4 + offsets[n];
+        size_t at = (size_t)length - faction_bytes - 204 - SC_POLITICS_SAVE_BYTES -
+                    SC_PLAYERS * RELICS * 4 - g->world.record_count * 4 + offsets[n];
         for (int b = 0; b < 4; b++)
             data[at + b] = (unsigned char)(values[n] >> (b * 8));
         uint32_t hash = 2166136261u;

@@ -16,7 +16,9 @@ def controls(page):
 
 
 def expect_controls(page, expression):
-    wait_for(page, "() => {const c=JSON.parse(Module.ccall('sc_web_preferences','string',[],[])); return " + expression + ";}", timeout=20000)
+    # Software WebGL can advance a multi-second lift ride slowly under CPU load.
+    # Keep the actual transit/deck/latch assertions; this is a wall-time allowance.
+    wait_for(page, "() => {const c=JSON.parse(Module.ccall('sc_web_preferences','string',[],[])); return " + expression + ";}", timeout=60000)
 
 
 VIRTUAL_PADS = """
@@ -164,7 +166,7 @@ def run():
                 page.goto(base + '?seed=713&scene=' + scene)
                 wait_ready(page)
                 start_play(page)
-                assert state(page)['generator'] == 13
+                assert state(page)['generator'] == 14
                 page.screenshot(path=str(ARTIFACTS / ('foundation-' + scene + '.png')))
                 page.keyboard.down('w')
                 wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).y>4", timeout=20000)

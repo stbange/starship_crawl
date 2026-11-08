@@ -4,7 +4,7 @@
 
 void director_init(Director *d, unsigned generator) {
     memset(d, 0, sizeof(*d));
-    d->version = generator >= 13;
+    d->version = generator == 13;
     if (d->version) {
         d->cooldown = 30000;
         d->budget = 2;
@@ -15,7 +15,7 @@ static bool valid_cell(Cell c) {
            c.z <= 10000000;
 }
 bool director_valid(const Director *d, unsigned generator) {
-    if (d->version != (generator >= 13) || d->sequence > 1000000000 || d->cooldown > 180000 ||
+    if (d->version != (generator == 13) || d->sequence > 1000000000 || d->cooldown > 180000 ||
         d->budget > 3 || d->recharge >= 30000 || d->quiet > 120000 || d->kind >= EVENTS ||
         d->remaining > 180000 || d->claimed > 3 || (!!d->kind != !!d->remaining) ||
         (!d->kind && d->claimed) || !valid_cell(d->site))

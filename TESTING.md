@@ -1,6 +1,50 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
 
 
+**Hidden factions (generator 14 / simulation 1 / format 15).** Five focused unit
+suites cover the shared clock and geography, persistent forces and capacity,
+autonomous orders/resources/hostility, invisible intervention effects and memory,
+and malformed/allocation-failed saves. Crowded-room leases, separated co-op,
+exposed matrix bodies, shelter suspension, repeated imports, casualties and cargo
+have dedicated checks. The coverage gate includes all four new C sources and
+`save_factions.inc`, with no uncovered core exclusions.
+
+The final native release suite passes **44/44** (24 unit, 19 gameplay, one SDL
+platform); all 19 gameplay-labelled tests also pass separately. Unit-only core
+coverage is **97.92% (10,119/10,334)**, with every source at least 95%. All 18
+packaged browser suites pass across the retained batches/reruns. The final
+nonlethal-warning capture adds a normal co-op join, emulated controller shot,
+separate incident attribution, actual signal bars and stereo output. Full
+sanitizer/CI publication status is recorded in the linked review.
+
+`faction_revisit_journey` follows an earned cross-sector raid, shoots a real
+member, leaves and revisits, sees occupation and returns to the bay.
+`faction_convoy_journey` approaches a real supply carrier through a doorway.
+`hidden_simulation_journey` starts a fresh character and uses ordinary movement,
+aiming, combat, upgrades, shelter and save/resume. Linux linker wrappers used by
+that driver record timings and permit paired director-disabled comparisons;
+the shipped game/core has no disable switch, test grants or timing hooks.
+
+The new packaged `test_hidden_browser.py` imports the close earned convoy through
+the ordinary UI and checks hidden desktop/touch controls, normal dossier/map
+access, actual WebGL output, optional co-op, IndexedDB resume and frozen strategy
+while paused. Existing legacy-court browser controls stay covered separately.
+
+```sh
+ctest --test-dir build -R 'hidden_|mobile_forces|autonomous_politics|faction_' --output-on-failure
+python3 tests/test_hidden_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
+python3 docs/reviews/2026-11-08-hidden-simulation/data/run.py --jobs 2
+# Use a separate output directory when repeating an existing retained batch.
+python3 docs/reviews/2026-11-08-hidden-simulation/data/run.py --runs 0 3 5 9 --no-director --jobs 1
+```
+
+The [current implementation review](docs/reviews/2026-11-08-hidden-simulation/README.md)
+retains all attempted long runs, exact build/source hashes, failed routes,
+comparisons, native/web measurements and actual captures. It records final gate
+results and publication status; historical results below describe their own
+release. Human readability/audio judgement and physical-device checks are
+tracked in the [repeatable checklist](docs/playtests/HIDDEN_FACTIONS_CHECKLIST.md).
+
 **Alien courts and the director (generator 13 / format 14).** The suite contains
 36 native CTests: 19 unit, 16 gameplay and one SDL platform test. All 36 pass;
 all 16 gameplay-labelled tests also pass separately.

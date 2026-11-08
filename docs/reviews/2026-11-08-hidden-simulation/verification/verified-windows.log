@@ -1,0 +1,197 @@
+-- Checking for module 'libusb-1.0>=1.0.16'
+--   Package 'libusb-1.0', required by 'virtual:world', not found
+-- Could NOT find LibUSB (missing: LibUSB_LIBRARY LibUSB_INCLUDE_PATH) (found version "LibUSB_VERSION-NOTFOUND")
+-- 
+-- SDL3 was configured with the following options:
+-- 
+-- Platform: Windows
+-- 64-bit:   TRUE
+-- Compiler: /workspace/.starship-tools/sysroot/usr/bin/x86_64-w64-mingw32-gcc-posix
+-- Revision: SDL-3.2.30-HEAD-HASH-NOTFOUND
+-- Vendor:   
+-- 
+-- Subsystems:
+--   Audio:    ON
+--   Video:    ON
+--   GPU:      ON
+--   Render:   ON
+--   Camera:   ON
+--   Joystick: ON
+--   Haptic:   ON
+--   Hidapi:   ON
+--   Power:    ON
+--   Sensor:   ON
+--   Dialog:   ON
+-- 
+-- Options:
+--   SDL_ALSA                    (Wanted: OFF): OFF
+--   SDL_ALSA_SHARED             (Wanted: OFF): OFF
+--   SDL_ALTIVEC                 (Wanted: OFF): OFF
+--   SDL_ARMNEON                 (Wanted: OFF): OFF
+--   SDL_ASAN                    (Wanted: OFF): OFF
+--   SDL_ASSEMBLY                (Wanted: ON): ON
+--   SDL_ASSERTIONS              (Wanted: auto): auto
+--   SDL_AVX                     (Wanted: ON): ON
+--   SDL_AVX2                    (Wanted: ON): ON
+--   SDL_AVX512F                 (Wanted: ON): ON
+--   SDL_BACKGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_CCACHE                  (Wanted: OFF): OFF
+--   SDL_CLANG_TIDY              (Wanted: OFF): OFF
+--   SDL_CLOCK_GETTIME           (Wanted: OFF): OFF
+--   SDL_COCOA                   (Wanted: OFF): OFF
+--   SDL_DBUS                    (Wanted: OFF): OFF
+--   SDL_DEPS_SHARED             (Wanted: ON): OFF
+--   SDL_DIRECTX                 (Wanted: ON): ON
+--   SDL_DISKAUDIO               (Wanted: ON): ON
+--   SDL_DUMMYAUDIO              (Wanted: ON): ON
+--   SDL_DUMMYCAMERA             (Wanted: ON): ON
+--   SDL_DUMMYVIDEO              (Wanted: ON): ON
+--   SDL_EXAMPLES                (Wanted: OFF): OFF
+--   SDL_EXAMPLES_LINK_SHARED    (Wanted: OFF): OFF
+--   SDL_FOREGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_GCC_ATOMICS             (Wanted: ON): ON
+--   SDL_GPU_DXVK                (Wanted: OFF): OFF
+--   SDL_HIDAPI                  (Wanted: ON): ON
+--   SDL_HIDAPI_JOYSTICK         (Wanted: ON): ON
+--   SDL_HIDAPI_LIBUSB           (Wanted: ON): OFF
+--   SDL_HIDAPI_LIBUSB_SHARED    (Wanted: ON): OFF
+--   SDL_IBUS                    (Wanted: OFF): OFF
+--   SDL_INSTALL                 (Wanted: OFF): OFF
+--   SDL_INSTALL_TESTS           (Wanted: OFF): OFF
+--   SDL_JACK                    (Wanted: OFF): OFF
+--   SDL_JACK_SHARED             (Wanted: OFF): OFF
+--   SDL_KMSDRM                  (Wanted: OFF): OFF
+--   SDL_KMSDRM_SHARED           (Wanted: OFF): OFF
+--   SDL_LASX                    (Wanted: OFF): OFF
+--   SDL_LIBC                    (Wanted: ON): ON
+--   SDL_LIBICONV                (Wanted: OFF): OFF
+--   SDL_LIBUDEV                 (Wanted: ON): OFF
+--   SDL_LIBURING                (Wanted: OFF): OFF
+--   SDL_LSX                     (Wanted: OFF): OFF
+--   SDL_METAL                   (Wanted: OFF): OFF
+--   SDL_MMX                     (Wanted: ON): ON
+--   SDL_OFFSCREEN               (Wanted: ON): ON
+--   SDL_OPENGL                  (Wanted: ON): ON
+--   SDL_OPENGLES                (Wanted: ON): ON
+--   SDL_OPENVR                  (Wanted: OFF): OFF
+--   SDL_OSS                     (Wanted: OFF): OFF
+--   SDL_PIPEWIRE                (Wanted: OFF): OFF
+--   SDL_PIPEWIRE_SHARED         (Wanted: OFF): OFF
+--   SDL_PTHREADS                (Wanted: OFF): OFF
+--   SDL_PTHREADS_SEM            (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO              (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO_SHARED       (Wanted: OFF): OFF
+--   SDL_RENDER_D3D              (Wanted: ON): ON
+--   SDL_RENDER_D3D11            (Wanted: ON): ON
+--   SDL_RENDER_D3D12            (Wanted: ON): ON
+--   SDL_RENDER_GPU              (Wanted: ON): ON
+--   SDL_RENDER_METAL            (Wanted: OFF): OFF
+--   SDL_RENDER_VULKAN           (Wanted: ON): ON
+--   SDL_ROCKCHIP                (Wanted: OFF): OFF
+--   SDL_RPATH                   (Wanted: OFF): OFF
+--   SDL_RPI                     (Wanted: OFF): OFF
+--   SDL_SNDIO                   (Wanted: OFF): OFF
+--   SDL_SNDIO_SHARED            (Wanted: OFF): OFF
+--   SDL_SSE                     (Wanted: ON): ON
+--   SDL_SSE2                    (Wanted: ON): ON
+--   SDL_SSE3                    (Wanted: ON): ON
+--   SDL_SSE4_1                  (Wanted: ON): ON
+--   SDL_SSE4_2                  (Wanted: ON): ON
+--   SDL_SYSTEM_ICONV            (Wanted: OFF): OFF
+--   SDL_TESTS                   (Wanted: OFF): OFF
+--   SDL_TESTS_LINK_SHARED       (Wanted: OFF): OFF
+--   SDL_UNINSTALL               (Wanted: OFF): OFF
+--   SDL_VIRTUAL_JOYSTICK        (Wanted: ON): ON
+--   SDL_VIVANTE                 (Wanted: OFF): OFF
+--   SDL_VULKAN                  (Wanted: ON): ON
+--   SDL_WASAPI                  (Wanted: ON): ON
+--   SDL_WAYLAND                 (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR        (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR_SHARED (Wanted: OFF): OFF
+--   SDL_WAYLAND_SHARED          (Wanted: OFF): OFF
+--   SDL_X11                     (Wanted: OFF): OFF
+--   SDL_X11_SHARED              (Wanted: OFF): OFF
+--   SDL_X11_XCURSOR             (Wanted: OFF): OFF
+--   SDL_X11_XDBE                (Wanted: OFF): OFF
+--   SDL_X11_XFIXES              (Wanted: OFF): OFF
+--   SDL_X11_XINPUT              (Wanted: OFF): OFF
+--   SDL_X11_XRANDR              (Wanted: OFF): OFF
+--   SDL_X11_XSCRNSAVER          (Wanted: OFF): OFF
+--   SDL_X11_XSHAPE              (Wanted: OFF): OFF
+--   SDL_X11_XSYNC               (Wanted: OFF): OFF
+--   SDL_XINPUT                  (Wanted: ON): ON
+-- 
+--  Build Shared Library: OFF
+--  Build Static Library: ON
+--  Build Static Library with Position Independent Code: 
+-- 
+-- Configuring done (0.2s)
+-- Generating done (0.2s)
+-- Build files have been written to: /workspace/starship_crawl/build-windows
+[ 10%] Built target sc_core_fault
+[ 19%] Built target sc_core
+[ 19%] Building C object CMakeFiles/sc_edge_tests.dir/tests/test_edges.c.obj
+[ 20%] Built target sc_faction_fault_tests
+[ 20%] Building C object CMakeFiles/sc_matrix_fault_tests.dir/tests/test_matrix_faults.c.obj
+[ 26%] Built target SDL_uclibc
+[ 26%] Building C object CMakeFiles/sc_phase_tests.dir/tests/test_phases.c.obj
+[ 26%] Building C object CMakeFiles/sc_matrix_journey.dir/tests/test_matrix_journey.c.obj
+[ 26%] Linking C executable sc_matrix_journey.exe
+[ 26%] Built target sc_matrix_journey
+[ 26%] Built target sc_phase_journey
+[ 27%] Built target sc_traversal_tests
+[ 28%] Linking C executable sc_matrix_fault_tests.exe
+[ 28%] Built target sc_exterior_tests
+[ 28%] Built target sc_matrix_fault_tests
+[ 28%] Built target sc_faction_tests
+[ 29%] Built target sc_force_tests
+[ 29%] Linking C executable sc_edge_tests.exe
+[ 30%] Built target sc_faction_order_tests
+[ 86%] Built target SDL3-static
+[ 86%] Built target sc_hidden_director_tests
+[ 86%] Built target sc_faction_journey
+[ 87%] Built target sc_politics_tests
+[ 88%] Built target sc_edge_tests
+[ 88%] Built target sc_politics_journey
+[ 88%] Built target sc_frontier_journey
+[ 89%] Built target sc_frontier_tests
+[ 88%] Built target sc_regional_journey
+[ 89%] Building C object CMakeFiles/sc_tests.dir/tests/test_core.c.obj
+[ 90%] Built target sc_habitat_tests
+[ 91%] Built target sc_regional_tests
+[ 91%] Building C object CMakeFiles/sc_navigation_tests.dir/tests/test_navigation_psionics.c.obj
+[ 92%] Building C object CMakeFiles/sc_interior_tests.dir/tests/test_interiors.c.obj
+[ 93%] Linking C executable sc_phase_tests.exe
+[ 93%] Built target sc_phase_tests
+[ 93%] Built target sc_guidance_tests
+[ 93%] Built target sc_navigation_recovery
+[ 93%] Building C object CMakeFiles/sc_shelter_tests.dir/tests/test_shelter.c.obj
+[ 94%] Linking C executable sc_navigation_tests.exe
+[ 94%] Linking C executable sc_interior_tests.exe
+[ 94%] Built target sc_navigation_tests
+[ 94%] Built target sc_interior_tests
+[ 94%] Building C object CMakeFiles/sc_equipment_tests.dir/tests/test_equipment.c.obj
+[ 95%] Building C object CMakeFiles/sc_campaign_tests.dir/tests/test_campaign.c.obj
+[ 95%] Linking C executable sc_tests.exe
+[ 95%] Linking C executable sc_shelter_tests.exe
+[ 95%] Built target sc_tests
+[ 95%] Built target sc_shelter_tests
+[ 95%] Building C object CMakeFiles/sc_expedition_tests.dir/tests/test_expedition.c.obj
+[ 95%] Building C object CMakeFiles/sc_story_tests.dir/tests/test_story.c.obj
+[ 95%] Linking C executable sc_equipment_tests.exe
+[ 95%] Built target sc_equipment_tests
+[ 95%] Building C object CMakeFiles/sc_death_tests.dir/tests/test_deaths.c.obj
+[ 95%] Linking C executable sc_campaign_tests.exe
+[ 95%] Linking C executable sc_death_tests.exe
+[ 95%] Built target sc_campaign_tests
+[ 95%] Building C object CMakeFiles/sc_matrix_tests.dir/tests/test_matrix.c.obj
+[ 96%] Linking C executable sc_expedition_tests.exe
+[ 96%] Built target sc_death_tests
+[ 96%] Built target sc_platform
+[ 96%] Built target sc_expedition_tests
+[ 97%] Built target starship_crawl
+[ 98%] Built target sc_platform_tests
+[ 99%] Linking C executable sc_story_tests.exe
+[ 99%] Built target sc_story_tests
+[100%] Linking C executable sc_matrix_tests.exe
+[100%] Built target sc_matrix_tests

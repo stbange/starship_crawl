@@ -1,0 +1,27 @@
+[
+  {
+    "test": "sc_faction_tests",
+    "returncode": 0,
+    "wall_seconds": 0.8508637830018415
+  },
+  {
+    "test": "sc_force_tests",
+    "returncode": 0,
+    "wall_seconds": 7.7916264129999036
+  },
+  {
+    "test": "sc_faction_order_tests",
+    "returncode": 0,
+    "wall_seconds": 5.014821695996943
+  },
+  {
+    "test": "sc_hidden_director_tests",
+    "returncode": 0,
+    "wall_seconds": 1.7138982380020025
+  },
+  {
+    "test": "sc_faction_fault_tests",
+    "returncode": 0,
+    "wall_seconds": 0.10147395300009521
+  }
+]

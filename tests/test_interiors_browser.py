@@ -150,7 +150,7 @@ def run():
             expect(page, 's.generator === 3 && s.rank === 7 && s.sheltered && s.mission === 2')
             page.keyboard.press('n')
             page.keyboard.press('Enter')
-            expect(page, 's.generator === 13 && s.rank === 1 && s.mission === 0')
+            expect(page, 's.generator === 14 && s.rank === 1 && s.mission === 0')
             assert not state(page)['failed'] and not errors
             context.close()
             mobile = browser.new_context(viewport={'width': 844, 'height': 390}, is_mobile=True, has_touch=True)

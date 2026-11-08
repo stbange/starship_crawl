@@ -194,7 +194,7 @@ static void saves_and_faults(void) {
     CHECK(bytes);
     size_t appendix = size - 4 - SC_POLITICS_SAVE_BYTES - SC_PLAYERS * RELICS * 4 -
                       g->world.record_count * 4 - 200 - 1584 - 64 * g->matrix.count;
-    CHECK(original[4] == 14 && original[appendix] == 1);
+    CHECK(original[4] == (g->world.generator >= 14 ? 15 : 14) && original[appendix] == 1);
     size_t offsets[] = {0, 4, 8, 20, 52, 68};
     uint32_t values[] = {2, SC_MATRIX_RECORDS + 1, 1, 0x10000, 8, 9};
     for (unsigned i = 0; i < sizeof(offsets) / sizeof(offsets[0]); i++) {

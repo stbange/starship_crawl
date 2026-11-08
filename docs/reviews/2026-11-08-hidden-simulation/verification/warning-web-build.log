@@ -1,0 +1,141 @@
+-- 
+-- SDL3 was configured with the following options:
+-- 
+-- Platform: Emscripten-1
+-- 64-bit:   FALSE
+-- Compiler: /workspace/.starship-tools/sysroot/usr/share/emscripten/emcc
+-- Revision: SDL-3.2.30-HEAD-HASH-NOTFOUND
+-- Vendor:   
+-- 
+-- Subsystems:
+--   Audio:    ON
+--   Video:    ON
+--   GPU:      ON
+--   Render:   ON
+--   Camera:   ON
+--   Joystick: ON
+--   Haptic:   ON
+--   Hidapi:   ON
+--   Power:    ON
+--   Sensor:   ON
+--   Dialog:   ON
+-- 
+-- Options:
+--   SDL_ALSA                    (Wanted: ON): OFF
+--   SDL_ALSA_SHARED             (Wanted: OFF): OFF
+--   SDL_ALTIVEC                 (Wanted: OFF): OFF
+--   SDL_ARMNEON                 (Wanted: OFF): OFF
+--   SDL_ASAN                    (Wanted: OFF): OFF
+--   SDL_ASSEMBLY                (Wanted: OFF): OFF
+--   SDL_ASSERTIONS              (Wanted: auto): auto
+--   SDL_AVX                     (Wanted: OFF): OFF
+--   SDL_AVX2                    (Wanted: OFF): OFF
+--   SDL_AVX512F                 (Wanted: OFF): OFF
+--   SDL_BACKGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_CCACHE                  (Wanted: OFF): OFF
+--   SDL_CLANG_TIDY              (Wanted: OFF): OFF
+--   SDL_CLOCK_GETTIME           (Wanted: ON): ON
+--   SDL_COCOA                   (Wanted: OFF): OFF
+--   SDL_DBUS                    (Wanted: ON): OFF
+--   SDL_DEPS_SHARED             (Wanted: OFF): OFF
+--   SDL_DIRECTX                 (Wanted: OFF): OFF
+--   SDL_DISKAUDIO               (Wanted: ON): ON
+--   SDL_DUMMYAUDIO              (Wanted: ON): ON
+--   SDL_DUMMYCAMERA             (Wanted: ON): ON
+--   SDL_DUMMYVIDEO              (Wanted: ON): ON
+--   SDL_EXAMPLES                (Wanted: OFF): OFF
+--   SDL_EXAMPLES_LINK_SHARED    (Wanted: OFF): OFF
+--   SDL_FOREGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_GCC_ATOMICS             (Wanted: ON): ON
+--   SDL_GPU_DXVK                (Wanted: OFF): OFF
+--   SDL_HIDAPI                  (Wanted: ON): OFF
+--   SDL_HIDAPI_JOYSTICK         (Wanted: ON): OFF
+--   SDL_HIDAPI_LIBUSB           (Wanted: ON): OFF
+--   SDL_HIDAPI_LIBUSB_SHARED    (Wanted: OFF): OFF
+--   SDL_IBUS                    (Wanted: ON): OFF
+--   SDL_INSTALL                 (Wanted: OFF): OFF
+--   SDL_INSTALL_TESTS           (Wanted: OFF): OFF
+--   SDL_JACK                    (Wanted: ON): OFF
+--   SDL_JACK_SHARED             (Wanted: OFF): OFF
+--   SDL_KMSDRM                  (Wanted: ON): OFF
+--   SDL_KMSDRM_SHARED           (Wanted: OFF): OFF
+--   SDL_LASX                    (Wanted: OFF): OFF
+--   SDL_LIBC                    (Wanted: ON): ON
+--   SDL_LIBICONV                (Wanted: OFF): OFF
+--   SDL_LIBUDEV                 (Wanted: ON): OFF
+--   SDL_LIBURING                (Wanted: ON): OFF
+--   SDL_LSX                     (Wanted: OFF): OFF
+--   SDL_METAL                   (Wanted: OFF): OFF
+--   SDL_MMX                     (Wanted: OFF): OFF
+--   SDL_OFFSCREEN               (Wanted: ON): ON
+--   SDL_OPENGL                  (Wanted: ON): OFF
+--   SDL_OPENGLES                (Wanted: ON): ON
+--   SDL_OPENVR                  (Wanted: OFF): OFF
+--   SDL_OSS                     (Wanted: ON): OFF
+--   SDL_PIPEWIRE                (Wanted: ON): OFF
+--   SDL_PIPEWIRE_SHARED         (Wanted: OFF): OFF
+--   SDL_PTHREADS                (Wanted: OFF): OFF
+--   SDL_PTHREADS_SEM            (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO              (Wanted: ON): OFF
+--   SDL_PULSEAUDIO_SHARED       (Wanted: OFF): OFF
+--   SDL_RENDER_D3D              (Wanted: OFF): OFF
+--   SDL_RENDER_D3D11            (Wanted: OFF): OFF
+--   SDL_RENDER_D3D12            (Wanted: OFF): OFF
+--   SDL_RENDER_GPU              (Wanted: ON): ON
+--   SDL_RENDER_METAL            (Wanted: OFF): OFF
+--   SDL_RENDER_VULKAN           (Wanted: OFF): OFF
+--   SDL_ROCKCHIP                (Wanted: OFF): OFF
+--   SDL_RPATH                   (Wanted: ON): OFF
+--   SDL_RPI                     (Wanted: OFF): OFF
+--   SDL_SNDIO                   (Wanted: ON): OFF
+--   SDL_SNDIO_SHARED            (Wanted: OFF): OFF
+--   SDL_SSE                     (Wanted: OFF): OFF
+--   SDL_SSE2                    (Wanted: OFF): OFF
+--   SDL_SSE3                    (Wanted: OFF): OFF
+--   SDL_SSE4_1                  (Wanted: OFF): OFF
+--   SDL_SSE4_2                  (Wanted: OFF): OFF
+--   SDL_SYSTEM_ICONV            (Wanted: ON): ON
+--   SDL_TESTS                   (Wanted: OFF): OFF
+--   SDL_TESTS_LINK_SHARED       (Wanted: OFF): OFF
+--   SDL_UNINSTALL               (Wanted: OFF): OFF
+--   SDL_VIRTUAL_JOYSTICK        (Wanted: ON): ON
+--   SDL_VIVANTE                 (Wanted: OFF): OFF
+--   SDL_VULKAN                  (Wanted: OFF): OFF
+--   SDL_WASAPI                  (Wanted: OFF): OFF
+--   SDL_WAYLAND                 (Wanted: ON): OFF
+--   SDL_WAYLAND_LIBDECOR        (Wanted: ON): OFF
+--   SDL_WAYLAND_LIBDECOR_SHARED (Wanted: OFF): OFF
+--   SDL_WAYLAND_SHARED          (Wanted: OFF): OFF
+--   SDL_X11                     (Wanted: ON): OFF
+--   SDL_X11_SHARED              (Wanted: OFF): OFF
+--   SDL_X11_XCURSOR             (Wanted: ON): OFF
+--   SDL_X11_XDBE                (Wanted: ON): OFF
+--   SDL_X11_XFIXES              (Wanted: ON): OFF
+--   SDL_X11_XINPUT              (Wanted: ON): OFF
+--   SDL_X11_XRANDR              (Wanted: ON): OFF
+--   SDL_X11_XSCRNSAVER          (Wanted: ON): OFF
+--   SDL_X11_XSHAPE              (Wanted: ON): OFF
+--   SDL_X11_XSYNC               (Wanted: ON): OFF
+--   SDL_XINPUT                  (Wanted: OFF): OFF
+-- 
+--  Build Shared Library: OFF
+--  Build Static Library: ON
+--  Build Static Library with Position Independent Code: 
+-- 
+-- If something was not detected, although the libraries
+-- were installed, then make sure you have set the
+-- CMAKE_C_FLAGS and CMAKE_PREFIX_PATH CMake variables correctly.
+-- 
+-- Configuring done (0.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: /workspace/starship_crawl/build-web
+[  0%] Building C object CMakeFiles/sc_core.dir/src/faction_orders.c.o
+[ 10%] Built target SDL_uclibc
+[ 82%] Built target SDL3-static
+[ 83%] Built target sc_platform
+[ 83%] Linking C static library libsc_core.a
+[ 98%] Built target sc_core
+[ 99%] Building C object CMakeFiles/starship_crawl.dir/src/render.c.o
+[ 99%] Building C object CMakeFiles/starship_crawl.dir/src/main.c.o
+[100%] Linking C executable starship_crawl.html
+[100%] Built target starship_crawl

@@ -1,0 +1,8 @@
+{
+  "returncode": 0,
+  "wall_seconds": 44.176411585001915,
+  "user_seconds": 44.115717,
+  "system_seconds": 0.03245,
+  "max_rss_kib": 15616,
+  "conditions": "single expedition after the local browser/render queue; sanitizer checks may run concurrently"
+}

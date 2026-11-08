@@ -1,0 +1,3 @@
+PASS foundation desktop: persisted settings, import/new-ship independence, cached split targets, gamepad ownership and focus
+PASS foundation traversal: actual keyboard stair/ramp ascent and split-screen lift, safe IndexedDB ride snapshot and round trip
+PASS foundation mobile: rotation/cancellation clear held touches and fresh input/settings and touch lifts remain usable

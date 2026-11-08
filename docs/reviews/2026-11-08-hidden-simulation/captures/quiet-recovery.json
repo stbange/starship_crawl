@@ -1,0 +1,576 @@
+{
+  "seed": 713,
+  "players": 1,
+  "paused": false,
+  "frames": 747,
+  "rooms": 18,
+  "x": 0.926,
+  "y": 1e-05,
+  "z": 43.09689,
+  "rank": 13,
+  "kills": 93,
+  "shots": 0,
+  "failed": false,
+  "generator": 14,
+  "form": 0,
+  "volume": 0,
+  "atmosphere": 0,
+  "ecology": 0,
+  "tale": 0,
+  "sprites": 0,
+  "sprites2": 0,
+  "tentacles": 0,
+  "tentacles2": 0,
+  "room_height": 28.0,
+  "chunks": 27,
+  "pending": 0,
+  "generated": 27,
+  "work": 0,
+  "uploads": 0,
+  "span": 1,
+  "ready": true,
+  "fingerprint": 3945337611,
+  "flashlight": true,
+  "projectiles": 0,
+  "enemy_shots": 104,
+  "projectile_hits": 0,
+  "climbers": 0,
+  "mission": 6,
+  "weapon": 0,
+  "weapons": 286795,
+  "shield": 50.0,
+  "armor": 52.0,
+  "energy": 100.0,
+  "credits": 5,
+  "pickups": 19,
+  "contracts": 7,
+  "theme": 0,
+  "logs": 1354,
+  "yaw": 0.0,
+  "pitch": 0.0,
+  "time": 55.367,
+  "sheltered": true,
+  "shelter_deployed": true,
+  "sx": 0.0,
+  "sz": -5.6,
+  "resting": 0.0,
+  "nourished": 0.0,
+  "health": 400.0,
+  "facility": 1,
+  "map": false,
+  "map_x": 0,
+  "map_y": 0,
+  "map_z": 0,
+  "veil": false,
+  "flight": 0.0,
+  "leap": 0.0,
+  "nova": 0.0,
+  "power": 0,
+  "bodies": 0,
+  "key_w": 0,
+  "riding": 0,
+  "rig_weapon": 0,
+  "hull": 0.0,
+  "drive_speed": 0.0,
+  "mech_deployed": false,
+  "wagon_deployed": false,
+  "beams": 0,
+  "flares": 0,
+  "flare_lifetime": 0,
+  "flare_strength": 0,
+  "flare_life": 0.0,
+  "flare_power": 0.0,
+  "points": 0,
+  "profile": 1,
+  "layout": 2,
+  "incident": 0,
+  "intensity": 0,
+  "landmark": 0,
+  "room_depth": 92.0,
+  "cache_x": 1.5,
+  "cache_z": 45.8,
+  "story_version": 3,
+  "motivation": 1,
+  "story_assigned": 99133871,
+  "story_seen": 76065199,
+  "story_done": 41089,
+  "story_choice": 1,
+  "story_tracked": 26,
+  "story_reading": 0,
+  "journal": false,
+  "journal_page": 0,
+  "decision": false,
+  "has_goal": true,
+  "goal_x": 0,
+  "goal_y": 0,
+  "goal_z": 0,
+  "victories": 1,
+  "choice1": "TAKE THE ARCHIVE / REFUGE LOSES ITS NAVIGATOR",
+  "choice2": "TRANSMIT A SURVEY / KEEP THE ARCHIVE ABOARD",
+  "choice3": "COPY THE FULL ARCHIVE / KEEP THE NAVIGATOR ABOARD",
+  "prepared": false,
+  "history_cause": 0,
+  "history_arc": 1,
+  "history_role": 0,
+  "origin_x": 2,
+  "origin_y": -1,
+  "origin_z": 0,
+  "council": 0,
+  "support0": 25,
+  "support1": 40,
+  "chapter": 0,
+  "arc_kind": 0,
+  "chapter_choice": 0,
+  "remaining": 192,
+  "events": 9,
+  "systems": 0,
+  "safe": false,
+  "event_reading": 0,
+  "last0": 0,
+  "last1": 1,
+  "last2": 0,
+  "last3": 0,
+  "total0": 0,
+  "total1": 1,
+  "total2": 0,
+  "total3": 0,
+  "total4": 1,
+  "career0": 0,
+  "career1": 1,
+  "career2": 0,
+  "career3": 0,
+  "career4": 1,
+  "corpses": 0,
+  "death_forms": 0,
+  "death_age": 0.0,
+  "hazards": 0,
+  "hazard_kinds": 0,
+  "hazard_triggered": 0,
+  "hazard_spent": 0,
+  "respawns": 0,
+  "matrix": false,
+  "matrix_near": false,
+  "mx": 0.0,
+  "my": 0.0,
+  "mz": 0.0,
+  "integrity": 0.0,
+  "bandwidth": 0.0,
+  "trace": 0.0,
+  "matrix_map": false,
+  "matrix_choice": false,
+  "programs": 7,
+  "slot0": 0,
+  "slot1": 2,
+  "matrix_selected": 0,
+  "matrix_data": 0,
+  "matrix_service": 0,
+  "matrix_keys": 0,
+  "matrix_flags": 0,
+  "matrix_outcome": 0,
+  "matrix_seen": 0,
+  "matrix_killed": 0,
+  "matrix_entry": 0,
+  "matrix_core": 0,
+  "matrix_credential": 0,
+  "matrix_vault": 0,
+  "matrix_rare": false,
+  "matrix_theme": 0,
+  "matrix_guards": 0,
+  "matrix_shots": 0,
+  "matrix_switch0": 0.0,
+  "matrix_switch1": 0.0,
+  "matrix_goal_x": 0.0,
+  "matrix_goal_z": 0.0,
+  "matrix_veil": 0.0,
+  "matrix_lock": 0.0,
+  "matrix_nodes": [],
+  "campaign": 1,
+  "phase": 4,
+  "defeated": 341,
+  "guardian": 9,
+  "guardian_active": false,
+  "guardian_health": 2200.0,
+  "reward_pending": 0,
+  "powers_owned": 0,
+  "rigs_owned": 0,
+  "modules_owned": 0,
+  "claimed": 341,
+  "gun_slots": [
+    0,
+    13
+  ],
+  "power_slots": [
+    4,
+    4
+  ],
+  "rig_slot": 0,
+  "module": 0,
+  "build_slot": 0,
+  "offer1": "EMBER THROWER / OWNED: +2 POINTS +100 SALVAGE",
+  "offer2": "LONG JUMP",
+  "offer3": "MOBILE STORM",
+  "nav_kind": 0,
+  "nav_next": [
+    0,
+    0,
+    0
+  ],
+  "nav_point": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "nav_searched": 0,
+  "lift_latched": false,
+  "arrival": 0.0,
+  "nav2_kind": 0,
+  "pace": 1,
+  "local_state": 0,
+  "frontier_active": false,
+  "frontier_living": 0,
+  "frontier_core": 0.0,
+  "frontier_attacker": 0,
+  "frontier_disrupt": 0.0,
+  "alien_behaviors": 0,
+  "alien_motions": 0,
+  "frontier_offer": "",
+  "drill_time": 0.0,
+  "drill_complete": false,
+  "encounter_console": [
+    0.0,
+    0.02,
+    50.0
+  ],
+  "regional_enemies": [],
+  "challenge": 0,
+  "reveal": 0,
+  "contract": 0,
+  "circuit": 0,
+  "hazard_time": 0.0,
+  "relics": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "specialists": [],
+  "politics": 0,
+  "country": 2,
+  "court": 0,
+  "court_reading": 0,
+  "audience": 0,
+  "pledge": 0,
+  "court_stage": 0,
+  "political_goal": 0,
+  "director_kind": 0,
+  "director_sequence": 0,
+  "director_cooldown": 0,
+  "director_remaining": 0,
+  "court_stages": [
+    0,
+    0,
+    0
+  ],
+  "court_pledges": [
+    0,
+    0,
+    0
+  ],
+  "court_claims": [
+    0,
+    0,
+    0
+  ],
+  "director_reason": 0,
+  "simulation": 1,
+  "strategy_tick": 283,
+  "forces_launched": 25,
+  "forces_arrived": 30,
+  "force_losses": 8,
+  "captures": 2,
+  "retreats": 18,
+  "interventions": 12,
+  "rejections": 2,
+  "pressure": [
+    0.0,
+    0.0
+  ],
+  "pacing": [
+    0,
+    0
+  ],
+  "regions": 20,
+  "forces": [
+    {
+      "id": 13,
+      "country": 2,
+      "order": 6,
+      "strength": 2,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        864.0,
+        0.67,
+        151.8
+      ],
+      "goal": [
+        9,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 19,
+      "country": 2,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        1343.1,
+        -63.33,
+        54.0
+      ],
+      "goal": [
+        14,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": 3,
+      "country": 3,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        95.1,
+        0.67,
+        726.0
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 22,
+      "country": 2,
+      "order": 3,
+      "strength": 3,
+      "physical": false,
+      "cargo": 12,
+      "at": [
+        479.1,
+        -63.33,
+        438.0
+      ],
+      "goal": [
+        4,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": 20,
+      "country": 2,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        767.1,
+        0.67,
+        342.0
+      ],
+      "goal": [
+        8,
+        0,
+        3
+      ]
+    },
+    {
+      "id": 6,
+      "country": 3,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        95.1,
+        0.67,
+        630.0
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 8,
+      "country": 3,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        95.1,
+        0.67,
+        726.0
+      ],
+      "goal": [
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 9,
+      "country": 1,
+      "order": 6,
+      "strength": 1,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        -191.1,
+        0.67,
+        57.6
+      ],
+      "goal": [
+        -2,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 21,
+      "country": 3,
+      "order": 3,
+      "strength": 3,
+      "physical": false,
+      "cargo": 12,
+      "at": [
+        287.1,
+        0.67,
+        438.0
+      ],
+      "goal": [
+        6,
+        0,
+        5
+      ]
+    },
+    {
+      "id": 11,
+      "country": 2,
+      "order": 6,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        479.1,
+        0.67,
+        534.0
+      ],
+      "goal": [
+        6,
+        0,
+        5
+      ]
+    },
+    {
+      "id": 16,
+      "country": 2,
+      "order": 3,
+      "strength": 3,
+      "physical": false,
+      "cargo": 12,
+      "at": [
+        1439.1,
+        0.67,
+        726.0
+      ],
+      "goal": [
+        15,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 15,
+      "country": 2,
+      "order": 3,
+      "strength": 2,
+      "physical": false,
+      "cargo": 12,
+      "at": [
+        863.1,
+        0.67,
+        726.0
+      ],
+      "goal": [
+        9,
+        0,
+        7
+      ]
+    },
+    {
+      "id": 23,
+      "country": 3,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        -192.9,
+        -63.33,
+        54.0
+      ],
+      "goal": [
+        1,
+        -1,
+        3
+      ]
+    },
+    {
+      "id": 24,
+      "country": 1,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        95.1,
+        0.67,
+        726.0
+      ],
+      "goal": [
+        -2,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 25,
+      "country": 3,
+      "order": 2,
+      "strength": 3,
+      "physical": false,
+      "cargo": 0,
+      "at": [
+        -192.9,
+        0.67,
+        54.0
+      ],
+      "goal": [
+        1,
+        -1,
+        3
+      ]
+    }
+  ]
+}

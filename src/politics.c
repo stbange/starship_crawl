@@ -4,11 +4,12 @@
 
 void politics_init(Game *g) {
     memset(&g->politics, 0, sizeof(g->politics));
-    g->politics.version = g->world.generator >= 13;
+    g->politics.version = g->world.generator == 13;
     director_init(&g->director, g->world.generator);
+    factions_init(g);
 }
 bool politics_valid(const Politics *p, unsigned generator) {
-    if (p->version != (generator >= 13) || p->tracked > SC_COUNTRIES)
+    if (p->version != (generator == 13) || p->tracked > SC_COUNTRIES)
         return false;
     for (unsigned i = 0; i < SC_COUNTRIES; i++) {
         const CountryState *c = &p->countries[i];
@@ -64,6 +65,8 @@ bool politics_world_valid(const Politics *p, const Director *d, const World *w) 
     return true;
 }
 unsigned politics_owner(const Game *g, Cell cell) {
+    if (g->factions.version)
+        return factions_owner(g, cell);
     if (!g->politics.version)
         return 0;
     for (unsigned i = 0; i < SC_COUNTRIES; i++) {
@@ -84,6 +87,12 @@ int politics_reputation(const Game *g, unsigned country, int player) {
     return c->stage == 3 ? 3 : c->met ? 1 : 0;
 }
 bool politics_threat(const Game *g, const Enemy *enemy) {
+    if (g->factions.version && enemy->country) {
+        for (int p = 0; p < g->player_count; p++)
+            if (!g->players[p].sheltered && factions_hostile(g, enemy, p))
+                return true;
+        return false;
+    }
     if (!g->politics.version || !enemy->country)
         return true;
     for (int p = 0; p < g->player_count; p++)
@@ -93,14 +102,14 @@ bool politics_threat(const Game *g, const Enemy *enemy) {
     return false;
 }
 void politics_journal(Game *g, int player) {
-    if (player < 0 || player >= g->player_count)
+    if (!g->politics.version || player < 0 || player >= g->player_count)
         return;
     g->players[player].journal = true;
     g->players[player].journal_page = 6;
     g->politics.audience[player] = 0;
 }
 void politics_read(Game *g, int player) {
-    if (player < 0 || player >= g->player_count)
+    if (!g->politics.version || player < 0 || player >= g->player_count)
         return;
     g->politics.reading[player] = (g->politics.reading[player] + 1) % SC_COUNTRIES;
     g->politics.audience[player] = 0;
@@ -224,18 +233,21 @@ void politics_attack(Game *g, const Enemy *e, int player) {
     }
 }
 bool politics_enemy_step(Game *g, Room *room, Enemy *e, double dt) {
-    if (!g->politics.version || !e->country || e->allegiance)
+    if (g->factions.version && !e->country && !e->behavior && !e->allegiance)
+        return factions_feral(g, room, e, dt);
+    if ((!g->politics.version && !g->factions.version) || !e->country || e->allegiance)
         return false;
     bool hostile = false, nearby = false;
     for (int p = 0; p < g->player_count; p++)
         if (!g->players[p].sheltered && !g->matrix.divers[p].active) {
             double d = vlen(position_delta(g->players[p].pos, e->pos));
             nearby |= d < 60;
-            hostile |= d < 60 && politics_reputation(g, e->country, p) < 0;
+            hostile |= d < 60 && (g->factions.version ? factions_hostile(g, e, p)
+                                                      : politics_reputation(g, e->country, p) < 0);
         }
     if (hostile)
         return false;
-    if (!nearby)
+    if (!nearby || (g->factions.version && factions_safe(g, room->cell)))
         return true;
     e->cooldown = fmaxf(0, e->cooldown - (float)dt);
     e->flash = fmaxf(0, e->flash - (float)dt);
@@ -243,7 +255,10 @@ bool politics_enemy_step(Game *g, Room *room, Enemy *e, double dt) {
     for (int i = 0; i < room->enemy_count; i++) {
         Enemy *other = &room->enemies[i];
         if (!other->alive || other == e || other->allegiance ||
-            (other->country && politics_relation(g, e->country - 1, other->country - 1) != REL_WAR))
+            (other->country &&
+             (g->factions.version
+                  ? factions_relation(g, e->country, other->country)
+                  : politics_relation(g, e->country - 1, other->country - 1)) != REL_WAR))
             continue;
         Vec3 delta = vsub(enemy_center(other), enemy_center(e));
         double length = vlen(delta);
@@ -253,8 +268,11 @@ bool politics_enemy_step(Game *g, Room *room, Enemy *e, double dt) {
             e->warning_sound = .3f;
             e->heading = vnorm(delta);
             other->flash = .2f;
-            other->health -= 14;
-            if (other->health <= 0) {
+            if (g->factions.version)
+                factions_damage(g, room, i, 14, -1);
+            else
+                other->health -= 14;
+            if (!g->factions.version && other->health <= 0) {
                 world_kill(&g->world, room, i);
                 if (!other->alive)
                     game_enemy_death(g, other, -1);
