@@ -13,8 +13,10 @@ permissions:
 jobs:
   quality:
     name: Specifications and 95% unit coverage
-    # Keep the compiler/sanitizer environment stable during runner migrations.
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      shards: ${{ steps.test-matrix.outputs.shards }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,54 +29,84 @@ jobs:
           OPENSPEC_TELEMETRY: '0'
         run: npm run spec:validate
       - run: python -m pip install -r tests/requirements.txt
-      - name: Coverage gate self-tests
-        run: python -m unittest discover -s tests -p 'test_quality_tools.py'
-      - name: Unit coverage gate
-        run: python scripts/check-coverage.py --quest
-      - name: Complete expeditions and sanctuary journey
-        run: ctest --test-dir build-coverage -L gameplay --output-on-failure --output-junit gameplay-tests.xml
-      - name: Core sanitizers
+      - name: Coverage and CI gate self-tests
         run: |
-          cmake -S . -B build-sanitize -DSC_BUILD_GAME=OFF -DSC_QUEST_TESTS=ON -DSC_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug '-DCMAKE_C_FLAGS_DEBUG=-O1 -g'
-          cmake --build build-sanitize --parallel 4
-          ctest --test-dir build-sanitize --output-on-failure --output-junit sanitizer-tests.xml
-      - name: Report quality test failures
-        if: failure()
-        shell: python
-        run: |
-          from pathlib import Path
-          import xml.etree.ElementTree as ET
-          for filename in ('build-coverage/gameplay-tests.xml', 'build-sanitize/sanitizer-tests.xml'):
-              report = Path(filename)
-              if not report.is_file():
-                  continue
-              for case in ET.parse(report).iter('testcase'):
-                  failure = case.find('failure')
-                  error = case.find('error')
-                  if failure is not None or error is not None:
-                      problem = failure if failure is not None else error
-                      detail = filename + ': ' + case.get('name', 'Quality test') + '\n'
-                      detail += ' '.join(filter(None, (problem.get('type'), problem.get('message'), problem.text))) + '\n'
-                      detail += (case.findtext('system-out') or '')[-10000:]
-                      detail = detail.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-                      print('::error title=Quality test failure::' + detail)
-      - name: Retain quality test diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: quality-test-diagnostics
-          path: |
-            build-coverage/gameplay-tests.xml
-            build-sanitize/sanitizer-tests.xml
-            build-sanitize/Testing/Temporary/LastTest.log
-            build-sanitize/Testing/Temporary/LastTestsFailed.log
-          if-no-files-found: ignore
-      - name: Retain coverage reports
+          python -m unittest discover -s tests -p 'test_quality_tools.py'
+          python -m unittest discover -s tests -p 'test_ci_tools.py'
+          python scripts/run-ci-tests.py browser --check
+      - name: Unit-only coverage gate
+        run: python scripts/check-coverage.py --quest --split-campaigns
+      - name: Retain unit-only coverage reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-coverage
           path: build-coverage/coverage
+          if-no-files-found: ignore
+      - name: Package instrumented campaign executables
+        id: test-matrix
+        run: |
+          python scripts/run-ci-tests.py ctest --build-dir build-coverage --label gameplay --check
+          python scripts/run-ci-tests.py ctest --build-dir build-coverage --label gameplay --matrix >> "$GITHUB_OUTPUT"
+          tar -czf ci-tests.tgz build-coverage/CTestTestfile.cmake build-coverage/sc_*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-coverage-tests
+          path: ci-tests.tgz
+          compression-level: 0
+          retention-days: 7
+  sanitizer-build:
+    name: Build core sanitizer tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build unchanged address, undefined-behavior and leak checks
+        run: |
+          cmake -S . -B build-sanitize -DSC_BUILD_GAME=OFF -DSC_QUEST_TESTS=ON -DSC_SPLIT_CAMPAIGN_TESTS=ON -DSC_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug '-DCMAKE_C_FLAGS_DEBUG=-O1 -g'
+          cmake --build build-sanitize --parallel 4
+          python scripts/run-ci-tests.py ctest --build-dir build-sanitize --check
+          tar -czf ci-tests.tgz build-sanitize/CTestTestfile.cmake build-sanitize/sc_*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-sanitize-tests
+          path: ci-tests.tgz
+          compression-level: 0
+          retention-days: 7
+  instrumented:
+    name: ${{ matrix.mode }} / ${{ matrix.shard }}
+    needs: [quality, sanitizer-build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        mode: [coverage, sanitize]
+        shard: ${{ fromJSON(needs.quality.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-${{ matrix.mode }}-tests
+      - name: Run every assigned instrumented case
+        shell: bash
+        run: |
+          tar -xzf ci-tests.tgz
+          ci_label_args=()
+          if [[ '${{ matrix.mode }}' == 'coverage' ]]; then
+            ci_label_args=(--label gameplay)
+          fi
+          python scripts/run-ci-tests.py ctest --build-dir 'build-${{ matrix.mode }}' --shard '${{ matrix.shard }}' "${ci_label_args[@]}"
+      - name: Retain instrumented diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-${{ matrix.mode }}-${{ matrix.shard }}
+          path: |
+            build-${{ matrix.mode }}/shard-tests.xml
+            build-${{ matrix.mode }}/Testing/Temporary/LastTest.log
+            build-${{ matrix.mode }}/Testing/Temporary/LastTestsFailed.log
           if-no-files-found: ignore
   native:
     strategy:
@@ -144,109 +176,37 @@ jobs:
             build/starship_crawl
             build/Release/starship_crawl.exe
   web:
-    # Keep Playwright's system packages stable during hosted-runner migrations.
+    name: Build ordinary WebGL target
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      suites: ${{ steps.test-matrix.outputs.suites }}
     steps:
       - uses: actions/checkout@v4
+      - name: Require every ordinary browser suite in the matrix
+        id: test-matrix
+        run: python scripts/run-ci-tests.py browser --matrix >> "$GITHUB_OUTPUT"
       - name: Explain Pages publishing target
-        shell: bash
         env:
           SC_EVENT_NAME: ${{ github.event_name }}
           SC_REF: ${{ github.ref }}
         run: |
           if [[ "$SC_EVENT_NAME" != "pull_request" && "$SC_REF" == "refs/heads/main" ]]; then
-            echo 'This main-branch run publishes GitHub Pages after all quality, native, and web checks pass.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Pages publishes after all native, instrumented, browser and Quest checks pass.' >> "$GITHUB_STEP_SUMMARY"
           else
-            echo 'This run tests the selected branch. GitHub Pages publishes from main only. To publish manually, choose main in the Run workflow branch selector after merging your changes.' >> "$GITHUB_STEP_SUMMARY"
-            echo '::notice title=Pages requires main::This branch is tested without deployment. Select main when manually running the publishing workflow.'
+            echo 'This branch is fully tested. Pages publishes from main only.' >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Pinned Emscripten SDK
         run: |
           git clone --depth 1 --branch 4.0.23 https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
           "$RUNNER_TEMP/emsdk/emsdk" install 4.0.23
           "$RUNNER_TEMP/emsdk/emsdk" activate 4.0.23
-      - name: Build WebGL 2 application
+      - name: Build and package the ordinary application once
         run: |
           source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
           emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
           cmake --build build-web --parallel 4
-      - name: Native generator reference
-        run: |
-          cmake -S . -B build-parity -DSC_BUILD_GAME=OFF -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-parity --parallel 4
-          ctest --test-dir build-parity --output-on-failure
-      - name: Python browser tooling
-        run: python -m pip install -r tests/requirements.txt
-      - name: Browser dependencies
-        run: |
-          if ! python -m playwright install --with-deps chromium > "$RUNNER_TEMP/browser-install.log" 2>&1; then
-            cat "$RUNNER_TEMP/browser-install.log"
-            python - <<'PY'
-          import os
-          from pathlib import Path
-          detail = (Path(os.environ['RUNNER_TEMP']) / 'browser-install.log').read_text()[-4000:]
-          print('::error title=Browser dependency installation::' + detail.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
-          PY
-            exit 1
-          fi
-      - name: Package the Pages site
-        run: python scripts/package-web.py --output build-pages-preview/starship_crawl
-      - name: Play ship matrix links, programs, controllers and safe return
-        run: |
-          if ! python tests/test_matrix_browser.py --site-dir build-pages-preview --url-path /starship_crawl/ > "$RUNNER_TEMP/matrix-browser.log" 2>&1; then
-            cat "$RUNNER_TEMP/matrix-browser.log"
-            python - <<'PYERROR'
-          import os
-          from pathlib import Path
-          detail = (Path(os.environ['RUNNER_TEMP']) / 'matrix-browser.log').read_text()[-10000:]
-          print('::error title=Ship matrix browser test::' + detail.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
-          PYERROR
-            exit 1
-          fi
-          cat "$RUNNER_TEMP/matrix-browser.log"
-      - name: Test the deployed URL structure
-        env:
-          SC_CORE_TEST: build-parity/sc_tests
-        run: python scripts/run-browser-test.py tests/test_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Play sanctuary recovery and return
-        run: python scripts/run-browser-test.py tests/test_shelter_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Board the arrival skiff and inspect the surrounding space
-        run: python scripts/run-browser-test.py tests/test_exterior_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Play phase rewards, loadouts, guardian retry and fresh characters
-        run: python scripts/run-browser-test.py tests/test_phases_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Play navigation, body variants and psionics
-        run: python scripts/run-browser-test.py tests/test_features_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Play fold rigs, beams and flare lighting
-        run: python scripts/run-browser-test.py tests/test_equipment_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Preferences, controllers, touch lifecycle and vertical traversal
-        run: python scripts/run-browser-test.py tests/test_foundation_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Actionable navigation and deliberate lift controls
-        run: python scripts/run-browser-test.py tests/test_guidance_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Explore generated interiors and discoveries
-        run: python scripts/run-browser-test.py tests/test_interiors_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Optional encounters, earned tools and local consequences
-        run: python scripts/run-browser-test.py tests/test_regional_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Alien courts, royal-guard settlements, saved director and touch
-        run: python scripts/run-browser-test.py tests/test_politics_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Hidden factions, travelling convoys and invisible director
-        run: python scripts/run-browser-test.py tests/test_hidden_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Deep contracts, alien specialists and architectural reveals
-        run: python scripts/run-browser-test.py tests/test_frontier_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Living ship generation and atmosphere
-        run: python scripts/run-browser-test.py tests/test_habitat_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Play generated histories, dossiers and decisions
-        run: python scripts/run-browser-test.py tests/test_story_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Play reactive factions, debriefs and continuing stories
-        run: python scripts/run-browser-test.py tests/test_aftermath_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Play enemy deaths, machines and avoidable traps
-        run: python scripts/run-browser-test.py tests/test_deaths_browser.py --site-dir build-pages-preview --url-path /starship_crawl/
-      - name: Retain browser captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: browser-captures
-          path: build-web/test-artifacts
-          if-no-files-found: ignore
+          python scripts/package-web.py --output build-pages-preview/starship_crawl
       - uses: actions/upload-artifact@v4
         with:
           name: web
@@ -254,13 +214,55 @@ jobs:
             build-web/starship_crawl.html
             build-web/starship_crawl.js
             build-web/starship_crawl.wasm
-      - name: Retain the ordinary Pages root
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      - name: Retain the exact site for browser tests and Pages
         uses: actions/upload-artifact@v4
         with:
           name: pages-ordinary
           path: build-pages-preview/starship_crawl
           include-hidden-files: true
+  web-browser:
+    name: Web browser / ${{ matrix.suite }}
+    needs: web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJSON(needs.web.outputs.suites) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: pages-ordinary
+          path: build-pages-preview/starship_crawl
+      - name: Build only the native browser reference helpers
+        if: matrix.suite == 'arrival' || matrix.suite == 'story'
+        run: |
+          cmake -S . -B build-parity -DSC_BUILD_GAME=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-parity --target sc_tests sc_matrix_journey --parallel 4
+      - name: Pinned browser tooling
+        run: |
+          python -m pip install -r tests/requirements.txt
+          python -m playwright install --with-deps chromium
+          python - <<'PYBROWSER'
+          import os
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as browser:
+              with open(os.environ['GITHUB_ENV'], 'a') as env:
+                  env.write('SC_BROWSER=' + browser.chromium.executable_path + '\n')
+          PYBROWSER
+      - name: Run all assigned browser suites
+        env:
+          SC_CORE_TEST: build-parity/sc_tests
+          SC_MATRIX_JOURNEY: build-parity/sc_matrix_journey
+        run: python scripts/run-ci-tests.py browser --shard '${{ matrix.suite }}' --site-dir build-pages-preview --url-path /starship_crawl/
+      - name: Retain captures, full logs and timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-captures-${{ matrix.suite }}
+          path: build-web/test-artifacts
+          if-no-files-found: ignore
   quest:
     name: Standalone Quest WebXR target
     runs-on: ubuntu-24.04
@@ -309,7 +311,7 @@ jobs:
   pages:
     name: Assemble both tested web targets
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: [web, quest]
+    needs: [web-browser, quest]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
@@ -326,7 +328,7 @@ jobs:
   deploy:
     name: Publish GitHub Pages
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: [pages, native, quality]
+    needs: [pages, native, quality, instrumented]
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -110,7 +110,10 @@ def run():
                 s=state(page)
                 if s['local_state'] & 2:break
                 alive=[e for e in s['regional_enemies'] if e['alive']]
-                assert alive,s
+                if not alive:
+                    # Completion follows the final projectile death on the next tick.
+                    expect(page,'(s.local_state & 2) !== 0')
+                    break
                 aim_at(page,alive[0]['at'],cursor)
                 page.mouse.down();expect(page,f"s.time > {s['time']+.18}");page.mouse.up()
             expect(page,'(s.local_state & 2) !== 0')

@@ -42,9 +42,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build-dir", type=Path, default=ROOT / "build-coverage")
     parser.add_argument("--quest", action="store_true", help="Also instrument and require the isolated Quest adapter/core tests")
+    parser.add_argument("--split-campaigns", action="store_true", help="Register the same campaign cases separately for subsequent CI jobs")
     args = parser.parse_args()
     build = args.build_dir.resolve()
-    run(["cmake", "-S", ROOT, "-B", build, "-DSC_BUILD_GAME=OFF", "-DSC_COVERAGE=ON", "-DCMAKE_BUILD_TYPE=Debug"] +
+    run(["cmake", "-S", ROOT, "-B", build, "-DSC_BUILD_GAME=OFF", "-DSC_COVERAGE=ON", "-DCMAKE_BUILD_TYPE=Debug",
+         "-DSC_SPLIT_CAMPAIGN_TESTS=" + ("ON" if args.split_campaigns else "OFF")] +
         (["-DSC_QUEST_TESTS=ON"] if args.quest else []))
     run(["cmake", "--build", build, "--parallel", "4"])
     # Reports describe this unit run alone, not accumulated campaign/browser work.

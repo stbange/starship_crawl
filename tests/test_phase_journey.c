@@ -315,6 +315,24 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
     return ok ? 0 : 1;
 }
 int main(int argc, char **argv) {
+    if (argc == 3 && !strcmp(argv[1], "--case")) {
+        static const struct {
+            const char *name;
+            unsigned seed;
+            bool port;
+            unsigned profile;
+        } cases[] = {{"starboard", 713, false, 0},
+                     {"port", 42, true, 0},
+                     {"starboard-responsive", 713, false, 1},
+                     {"starboard-cautious", 713, false, 2},
+                     {"port-responsive", 42, true, 1},
+                     {"port-cautious", 42, true, 2}};
+        for (unsigned i = 0; i < sizeof(cases) / sizeof(cases[0]); i++)
+            if (!strcmp(argv[2], cases[i].name))
+                return journey(cases[i].seed, cases[i].port, NULL, cases[i].profile);
+        fprintf(stderr, "Unknown expedition case: %s\n", argv[2]);
+        return 2;
+    }
     if (argc == 2 && !strcmp(argv[1], "--profiles"))
         return journey(713, false, NULL, 1) || journey(713, false, NULL, 2) ||
                journey(42, true, NULL, 1) || journey(42, true, NULL, 2);

@@ -1,0 +1,248 @@
+{
+  "run": "https://github.com/stbange/starship_crawl/actions/runs/42475281192",
+  "commit": "1dfebc1",
+  "web": [
+    {
+      "name": "Set up job",
+      "conclusion": "success",
+      "seconds": 1.0
+    },
+    {
+      "name": "Run actions/checkout@v4",
+      "conclusion": "success",
+      "seconds": 2.0
+    },
+    {
+      "name": "Explain Pages publishing target",
+      "conclusion": "success",
+      "seconds": 0.0
+    },
+    {
+      "name": "Pinned Emscripten SDK",
+      "conclusion": "success",
+      "seconds": 28.0
+    },
+    {
+      "name": "Build WebGL 2 application",
+      "conclusion": "success",
+      "seconds": 48.0
+    },
+    {
+      "name": "Native generator reference",
+      "conclusion": "success",
+      "seconds": 626.0
+    },
+    {
+      "name": "Python browser tooling",
+      "conclusion": "success",
+      "seconds": 5.0
+    },
+    {
+      "name": "Browser dependencies",
+      "conclusion": "success",
+      "seconds": 25.0
+    },
+    {
+      "name": "Package the Pages site",
+      "conclusion": "success",
+      "seconds": 0.0
+    },
+    {
+      "name": "Play ship matrix links, programs, controllers and safe return",
+      "conclusion": "success",
+      "seconds": 94.0
+    },
+    {
+      "name": "Test the deployed URL structure",
+      "conclusion": "success",
+      "seconds": 227.0
+    },
+    {
+      "name": "Play sanctuary recovery and return",
+      "conclusion": "success",
+      "seconds": 84.0
+    },
+    {
+      "name": "Board the arrival skiff and inspect the surrounding space",
+      "conclusion": "success",
+      "seconds": 218.0
+    },
+    {
+      "name": "Play phase rewards, loadouts, guardian retry and fresh characters",
+      "conclusion": "success",
+      "seconds": 228.0
+    },
+    {
+      "name": "Play navigation, body variants and psionics",
+      "conclusion": "success",
+      "seconds": 94.0
+    },
+    {
+      "name": "Play fold rigs, beams and flare lighting",
+      "conclusion": "success",
+      "seconds": 68.0
+    },
+    {
+      "name": "Preferences, controllers, touch lifecycle and vertical traversal",
+      "conclusion": "success",
+      "seconds": 251.0
+    },
+    {
+      "name": "Actionable navigation and deliberate lift controls",
+      "conclusion": "success",
+      "seconds": 118.0
+    },
+    {
+      "name": "Explore generated interiors and discoveries",
+      "conclusion": "success",
+      "seconds": 263.0
+    },
+    {
+      "name": "Optional encounters, earned tools and local consequences",
+      "conclusion": "success",
+      "seconds": 143.0
+    },
+    {
+      "name": "Alien courts, royal-guard settlements, saved director and touch",
+      "conclusion": "failure",
+      "seconds": 226.0
+    },
+    {
+      "name": "Hidden factions, travelling convoys and invisible director",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Deep contracts, alien specialists and architectural reveals",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Living ship generation and atmosphere",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Play generated histories, dossiers and decisions",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Play reactive factions, debriefs and continuing stories",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Play enemy deaths, machines and avoidable traps",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Retain browser captures",
+      "conclusion": "success",
+      "seconds": 2.0
+    },
+    {
+      "name": "Run actions/upload-artifact@v4",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Retain the ordinary Pages root",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Post Run actions/checkout@v4",
+      "conclusion": "success",
+      "seconds": 1.0
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success",
+      "seconds": 0.0
+    }
+  ],
+  "quality": [
+    {
+      "name": "Set up job",
+      "conclusion": "success",
+      "seconds": 1.0
+    },
+    {
+      "name": "Run actions/checkout@v4",
+      "conclusion": "success",
+      "seconds": 3.0
+    },
+    {
+      "name": "Run actions/setup-node@v4",
+      "conclusion": "success",
+      "seconds": 1.0
+    },
+    {
+      "name": "Run npm ci --ignore-scripts --no-audit --no-fund",
+      "conclusion": "success",
+      "seconds": 2.0
+    },
+    {
+      "name": "Validate specifications",
+      "conclusion": "success",
+      "seconds": 0.0
+    },
+    {
+      "name": "Run python -m pip install -r tests/requirements.txt",
+      "conclusion": "success",
+      "seconds": 6.0
+    },
+    {
+      "name": "Coverage gate self-tests",
+      "conclusion": "success",
+      "seconds": 0.0
+    },
+    {
+      "name": "Unit coverage gate",
+      "conclusion": "success",
+      "seconds": 57.0
+    },
+    {
+      "name": "Complete expeditions and sanctuary journey",
+      "conclusion": "success",
+      "seconds": 1339.0
+    },
+    {
+      "name": "Core sanitizers",
+      "conclusion": "success",
+      "seconds": 3712.0
+    },
+    {
+      "name": "Report quality test failures",
+      "conclusion": "skipped",
+      "seconds": 0.0
+    },
+    {
+      "name": "Retain quality test diagnostics",
+      "conclusion": "success",
+      "seconds": 2.0
+    },
+    {
+      "name": "Retain coverage reports",
+      "conclusion": "success",
+      "seconds": 1.0
+    },
+    {
+      "name": "Post Run actions/setup-node@v4",
+      "conclusion": "success",
+      "seconds": 0.0
+    },
+    {
+      "name": "Post Run actions/checkout@v4",
+      "conclusion": "success",
+      "seconds": 1.0
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success",
+      "seconds": 0.0
+    }
+  ]
+}

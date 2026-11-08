@@ -77,7 +77,10 @@ def run():
                 s=state(page);disrupted |= s['frontier_disrupt']>0
                 if s['local_state'] & 2:break
                 alive=[e for e in s['regional_enemies'] if e['alive']]
-                assert alive,s
+                if not alive:
+                    # The last projectile can kill after this tick's encounter check.
+                    expect(page,'(s.local_state & 2) !== 0')
+                    break
                 # Shoot a shielded guard first, so the beam must pressure a real link.
                 target=alive[-1]
                 aim_at(page,target['at'],cursor)

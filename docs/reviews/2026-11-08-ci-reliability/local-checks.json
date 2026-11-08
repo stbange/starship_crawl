@@ -1,0 +1,26 @@
+{
+  "browser_checks": [
+    "politics CPU throttle normal",
+    "politics CPU throttle 4",
+    "regional CPU throttle normal",
+    "frontier CPU throttle normal"
+  ],
+  "observed_delayed_settlement": true,
+  "native_cases": [
+    "imperfect_expeditions_port_cautious",
+    "imperfect_expeditions_port_responsive",
+    "imperfect_expeditions_starboard_cautious",
+    "imperfect_expeditions_starboard_responsive",
+    "phase_journeys_port",
+    "phase_journeys_starboard"
+  ],
+  "unit_tests": 29,
+  "core_lines_covered": 10259,
+  "core_lines_total": 10471,
+  "all_core_files_at_least_95_percent": true,
+  "ci_tool_tests": 5,
+  "coverage_gate_tests": 7,
+  "packaged_test_commands": 52,
+  "coverage_archive_execution": "shelter_journey passed",
+  "game_sources_changed": false
+}

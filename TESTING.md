@@ -1,4 +1,39 @@
-The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for the quality, native, and web jobs together.
+The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for all required native, instrumented, browser, Quest and quality jobs together.
+
+**CI scheduling.** Every main push still runs the complete publication gates.
+The ordinary web application is compiled and packaged once; six isolated browser
+jobs download that exact artifact and run all 18 suites. Each runner uses one
+browser test at a time. The browser launcher streams progress immediately and
+retains full logs plus per-suite timing/exit-status JSON in its capture artifact.
+
+Coverage is still measured from the 29 unit tests alone, at the same 95% overall
+and per-file threshold. Afterwards, six separate jobs run all instrumented
+campaign cases from the coverage build, and six run all address/undefined-behavior/
+leak sanitizer cases. `SC_SPLIT_CAMPAIGN_TESTS=ON` registers the existing two phase
+routes and four imperfect-control expeditions individually, without changing their
+inputs or assertions. That produces 23 campaign cases and 52 sanitizer tests.
+The default local/native test registration is unchanged. Runners use separate
+filesystems so journeys with the same temporary save filename cannot collide.
+
+`tests/ci-suites.json` assigns the groups. The runner rejects missing, duplicate,
+stale or empty assignments before executing them; newly added CTests go into the
+required remainder group. Pages requires all groups, the native platforms, strict
+specifications, unit coverage and Quest checks. A failed group cannot publish.
+
+```sh
+python3 -m unittest discover -s tests -p 'test_ci_tools.py'
+python3 scripts/run-ci-tests.py browser --check
+python3 scripts/run-ci-tests.py browser --shard combat --site-dir build-pages-preview
+cmake -S . -B build-ci-checks -DSC_BUILD_GAME=OFF -DSC_QUEST_TESTS=ON -DSC_SPLIT_CAMPAIGN_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build-ci-checks --parallel 4
+python3 scripts/run-ci-tests.py ctest --build-dir build-ci-checks --check
+python3 scripts/run-ci-tests.py ctest --build-dir build-ci-checks --shard starboard
+```
+
+Court, regional and frontier browser combat checks allow the encounter-completion
+tick after the last projectile kills a guard. They still require the real victory,
+earned reward and save/reload checks. `SC_CPU_THROTTLE=4` on the court browser suite
+reproduces the slow-renderer scheduling gap without changing the simulation.
 
 
 **Quest 3 target.** `SC_QUEST_TESTS=ON` adds isolated tracking/combat tests and a

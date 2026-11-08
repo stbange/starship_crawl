@@ -28,6 +28,8 @@ def run():
                 args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'])
             context = browser.new_context(viewport={'width':1280, 'height':720})
             page = context.new_page(); errors=[]
+            if os.environ.get('SC_CPU_THROTTLE'):
+                context.new_cdp_session(page).send('Emulation.setCPUThrottlingRate', {'rate': float(os.environ['SC_CPU_THROTTLE'])})
             page.on('pageerror', lambda e: errors.append(str(e)))
             page.on('dialog', lambda d: d.accept())
             hashes=set()
@@ -65,7 +67,12 @@ def run():
                     s=state(page)
                     if s['local_state']&2:break
                     enemies=[e for e in s['regional_enemies'] if e['alive']]
-                    assert enemies,s
+                    if not enemies:
+                        # Projectiles resolve after encounters in the simulation tick.
+                        # The final death can precede FRONTIER_CLEARED by one tick.
+                        print(f'Waiting for final-guard settlement, outcome {outcome}',flush=True)
+                        expect(page,'(s.local_state&2)!==0')
+                        break
                     aim_at(page,enemies[0]['at'],cursor)
                     page.mouse.down();expect(page,f"s.time>{s['time']+.15}");page.mouse.up()
                 expect(page,'(s.local_state&2)!==0')
