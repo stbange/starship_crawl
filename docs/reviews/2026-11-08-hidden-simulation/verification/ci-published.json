@@ -1,0 +1,28 @@
+{
+  "run_url": "https://github.com/stbange/starship_crawl/actions/runs/42440873874",
+  "commit_url": "/stbange/starship_crawl/commit/212fe1e0ee9221dcfd1503c757ee232b049d2874",
+  "state": {
+    "status": "WORKFLOW_RUN_STATUS_COMPLETED",
+    "conclusion": "WORKFLOW_RUN_CONCLUSION_SUCCESS"
+  },
+  "jobs": {
+    "quality": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42440873874/job/128609631056"
+    },
+    "web": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42440873874/job/128609631294"
+    },
+    "deploy": {
+      "status": "completed successfully:",
+      "url": "/stbange/starship_crawl/actions/runs/42440873874/job/128630495362"
+    }
+  },
+  "native_group": "data-job-id=\"native\" data-group-id=\"group-_-native-_deploy\"> 2 jobs completed Show all jobs <a class=\"Workflow",
+  "annotations": [],
+  "observed_utc": "2026-11-08T04:42:58.208983+00:00",
+  "native_group_status": "completed successfully:",
+  "site_url": "https://stbange.github.io/starship_crawl/",
+  "verification_method": "Public GitHub Actions run and successful official Pages deployment; live-site HTTP access is blocked by the cloud proxy."
+}

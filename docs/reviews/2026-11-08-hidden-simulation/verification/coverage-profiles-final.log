@@ -1,0 +1,11 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-coverage
+Test project /workspace/starship_crawl/build-coverage
+    Start 39: imperfect_expeditions
+1/1 Test #39: imperfect_expeditions ............   Passed  623.20 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+gameplay    = 623.20 sec*proc (1 test)
+
+Total Test time (real) = 623.20 sec

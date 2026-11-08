@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Linux-cc"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="ef4ec227e429"
+	time="623"
+	timestamp="2026-11-08T02:58:51"
+	>
+	<testcase name="imperfect_expeditions" classname="imperfect_expeditions" time="623.202" status="run">
+		<properties>
+			<property name="cmake_labels" value="gameplay"/>
+		</properties>
+		<system-out>Tick 0: 0.0 4.0 -84.0 -&gt; [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.6s
+Seed 713: phase 1, guardians 101, rank 1, 2 kills, 0 respawns at 59.9s
+Seed 713: phase 2, guardians 105, rank 7, 38 kills, 0 respawns at 247.6s
+Seed 713: phase 3, guardians 115, rank 7, 39 kills, 0 respawns at 339.6s
+Tick 24000: 1116.1 0.0 336.0 -&gt; [13,0,1], RECENT BOOTPRINTS / NEW EVIDENCE IN I JOURNAL / U TRACK LEADS
+Seed 713: phase 4, guardians 155, rank 12, 84 kills, 0 respawns at 472.6s
+Tick 48000: 133.9 0.0 144.0 -&gt; [0,0,0], HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+Phase journey 713 starboard: PASS, 830.5s, 121 kills, 0 deaths, 49831 frames
+PROFILE {"seed":713,"profile":1,"passed":true,"simulated_seconds":830.52,"reaction_seconds":0.30,"turn_rad_s":2.8,"aim_error_rad":0.025,"kills":121,"deaths":0,"shots":779,"hits":467,"min_health":100.00,"min_shield":0.00,"min_energy":100.00,"health_loss":46.20,"shield_loss":237.00,"armor_loss":9.90,"damage_frames":11,"rec...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

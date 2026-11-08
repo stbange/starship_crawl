@@ -1,14 +1,17 @@
 # Hidden factions and invisible director: implementation review
 
 This review covers the six milestones in the
-[OpenSpec change](../../../openspec/changes/hidden-factions-and-director/tasks.md).
+[archived OpenSpec change](../../../openspec/changes/archive/2026-11-08-hidden-factions-and-director/tasks.md).
 The implementation is generator 14 / simulation 1 / narrative 3 / matrix 1 /
 save 15. Generator-13 courts retain their format-14 path. The
 [player guide](../../../HIDDEN_FACTIONS.md) describes the resulting behaviour.
 
-All six milestones' mechanics and the long-run tuning are implemented. Native
-release, separate gameplay, coverage, all 43 sanitizer tests and packaged
-browser/render checks pass; CI/Pages publication is still in progress.
+All six milestones are complete. Native release, separate gameplay, coverage,
+all 43 sanitizer tests and packaged browser/render checks pass. The complete
+[main-branch workflow](https://github.com/stbange/starship_crawl/actions/runs/42440873874)
+passed for `212fe1e` and published [GitHub Pages](https://stbange.github.io/starship_crawl/)
+on 2026-11-08. The [publication record](verification/ci-published.json) retains the
+successful quality, Linux/Windows, web and deployment status.
 The [verification record](verification/README.md) separates the performed gates
 from pending checks and retains unsuccessful attempts.
 
@@ -179,6 +182,7 @@ include renderer/SDL allocations or imply a mobile-device frame-rate guarantee.
   remain unchanged. Unit-only coverage is still collected before gameplay and
   does not incorporate these campaign runs. The [CI annotation](verification/ci-first-attempt.json)
   and [local timeout](verification/coverage-profiles-timeout.log) are retained.
+  The corrected local run passes all four profiles in 623.20 seconds.
 
 ## Measurement and human follow-up
 

@@ -1,0 +1,48 @@
+
+> starship-crawl-development@0.1.0 spec:validate
+> openspec validate --all --strict --no-interactive && openspec validate --archived --strict --no-interactive
+
+✓ spec/combat
+✓ spec/deep-frontiers
+✓ spec/equipment
+✓ spec/expedition
+✓ spec/expedition-aftermath
+✓ spec/matrix
+✓ spec/narrative
+✓ spec/navigation
+✓ spec/persistence
+✓ spec/phased-expeditions
+✓ spec/political-expeditions
+✓ spec/presentation-input
+✓ spec/progression
+✓ spec/psionics
+✓ spec/quality-gates
+✓ spec/reactive-expeditions
+✓ spec/regional-encounters
+✓ spec/shelter
+✓ spec/ship-generation
+✓ spec/ship-history
+✓ spec/space-exterior
+✓ spec/vertical-traversal
+Totals: 22 passed, 0 failed (22 items)
+✓ change/2026-11-03-fold-rigs-beams-and-flares
+✓ change/2026-11-03-navigation-and-psionics
+✓ change/2026-11-03-quality-foundation
+✓ change/2026-11-03-richer-generated-interiors
+✓ change/2026-11-03-summonable-shelter
+✓ change/2026-11-04-enemy-deaths-and-machines
+✓ change/2026-11-04-history-shaped-expeditions
+✓ change/2026-11-04-procedural-expeditions
+✓ change/2026-11-04-reactive-expeditions-and-aftermath
+✓ change/2026-11-05-arrival-exterior
+✓ change/2026-11-05-phased-expeditions
+✓ change/2026-11-05-ship-matrix
+✓ change/2026-11-06-animated-tentacles
+✓ change/2026-11-06-foundation-traversal
+✓ change/2026-11-06-living-ship-generation
+✓ change/2026-11-07-alien-courts-director
+✓ change/2026-11-07-deep-frontiers
+✓ change/2026-11-07-regional-encounters
+✓ change/2026-11-07-reliable-exploration
+✓ change/2026-11-08-hidden-factions-and-director
+Totals: 20 passed, 0 failed (20 items)

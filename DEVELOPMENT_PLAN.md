@@ -2,7 +2,7 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
-The latest [long-expedition design review](docs/reviews/2026-11-07-long-expeditions/README.md)
+The preceding [long-expedition design review](docs/reviews/2026-11-07-long-expeditions/README.md)
 contains thirteen hour-long automated simulations, earned-checkpoint screenshots,
 and a controlled navigation comparison. Its proposed next priorities are growth
 and recovery tuning, stronger finales, clearer patrol consequences and rewards
@@ -20,11 +20,14 @@ direction for **new ships**. The implementation uses generator 14 / simulation 1
 save 15; generator-13 expeditions retain their original court rules. See
 [Hidden factions](HIDDEN_FACTIONS.md) for the playable behaviour.
 
-The complete [OpenSpec proposal](openspec/changes/hidden-factions-and-director/proposal.md),
-[design and acceptance criteria](openspec/changes/hidden-factions-and-director/design.md)
-and [implementation checklist](openspec/changes/hidden-factions-and-director/tasks.md)
-define six milestones. M1–M5 are implemented; M6 integration and publication
-verification is in progress:
+The archived [OpenSpec proposal](openspec/changes/archive/2026-11-08-hidden-factions-and-director/proposal.md),
+[design and acceptance criteria](openspec/changes/archive/2026-11-08-hidden-factions-and-director/design.md)
+and [implementation checklist](openspec/changes/archive/2026-11-08-hidden-factions-and-director/tasks.md)
+define six completed milestones. The [implementation review](docs/reviews/2026-11-08-hidden-simulation/README.md)
+records twenty simulated hour-long expeditions, rendered captures, tuning and
+remaining human/device checks. The complete
+[CI and Pages run](https://github.com/stbange/starship_crawl/actions/runs/42440873874)
+passed and published the game on 2026-11-08:
 
 | Milestone | Work | Playable result |
 | --- | --- | --- |

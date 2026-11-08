@@ -4,7 +4,7 @@
 
 See [proposal.md](proposal.md) for motivation and scope. The replacement is now
 implemented as generator 14 / simulation 1 / save 15. The decisions below record
-the original design; the [implementation review](../../../docs/reviews/2026-11-08-hidden-simulation/README.md)
+the original design; the [implementation review](../../../../docs/reviews/2026-11-08-hidden-simulation/README.md)
 records actual limits, tuning, compatibility and verification evidence.
 
 The preceding `politics_gen.c` assigned three powers and reserved audience/conduit/

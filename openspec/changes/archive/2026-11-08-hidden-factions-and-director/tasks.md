@@ -1,7 +1,9 @@
 # Tasks
 
-Implementation and verification are in progress. Each group owns
-its tests and documentation. Use the existing unit-only >=95% overall/per-file
+All six milestones are implemented and verified. The complete
+[CI and Pages run](https://github.com/stbange/starship_crawl/actions/runs/42440873874)
+passed on 2026-11-08. Each group owns its tests and documentation.
+Use the existing unit-only >=95% overall/per-file
 coverage gate without exclusions. Reference [design.md](design.md) for acceptance
 experiences and the final comparison protocol.
 
@@ -67,7 +69,7 @@ experiences and the final comparison protocol.
 - [x] 6.5 Tune encounter cadence, government priorities, hostility grace periods and evidence density from the recorded comparisons; rerun affected checks and document changes without altering the separate character-growth plan.
 - [x] 6.6 Prepare repeatable human solo/split-screen and physical-device checkpoints for neutrality, surprise, recovery and readability; record performed sessions and explicitly list unavailable/pending checks.
 - [x] 6.7 Run the full strict-spec, native unit/gameplay, >=95% unit-only coverage, sanitizer, packaged browser, render and Linux/Windows/web build gates; retain captures of a convoy, battle, retreat, changed site and quiet recovery.
-- [ ] 6.8 Update the roadmap, player docs, compatibility notes and review with final implemented versions and limitations; push to main and verify the complete CI/Pages deployment before marking publication complete.
+- [x] 6.8 Update the roadmap, player docs, compatibility notes and review with final implemented versions and limitations; push to main and verify the complete CI/Pages deployment before marking publication complete.
 
 ## Workflow follow-up
 
