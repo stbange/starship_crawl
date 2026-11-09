@@ -1,0 +1,363 @@
+[
+  {
+    "t": 11.583,
+    "event": "story_completed",
+    "scene": 0,
+    "title": "RECEIVE THE COMMISSION",
+    "entry": "THE THRESHOLD: COMMISSION ACCEPTED. INVESTIGATE THE SIGNAL; SECURE SITES FOR 75 SALVAGE AND 2 POINTS."
+  },
+  {
+    "event": "fight_start",
+    "t": 15.533,
+    "guardian": 8,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 0,
+    "rank": 1,
+    "cell": [
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "t": 19.1,
+    "event": "guardian_victory",
+    "guardian": 8,
+    "name": "THRESHOLD HUNTER"
+  },
+  {
+    "event": "fight_end",
+    "t": 19.1,
+    "seconds": 3.567,
+    "damage": 0.0,
+    "guardian": 8,
+    "cell": [
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "event": "fight_start",
+    "t": 51.3,
+    "guardian": 0,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 0,
+    "rank": 1,
+    "cell": [
+      1,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 74.683,
+    "event": "guardian_victory",
+    "guardian": 0,
+    "name": "CHOIR OF GLASS"
+  },
+  {
+    "event": "fight_end",
+    "t": 74.683,
+    "seconds": 23.383,
+    "damage": 0.0,
+    "guardian": 0,
+    "cell": [
+      1,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 159.467,
+    "event": "story_completed",
+    "scene": 6,
+    "title": "SECURE THE REFUGE SIGNAL",
+    "entry": "CAPTAIN'S APARTMENTS: REFUGE SIGNAL SECURED. A SURVIVOR IDENTIFIED THE TARGET AND A SECOND WAY TO COMPLETE THE JOB."
+  },
+  {
+    "event": "fight_start",
+    "t": 291.4,
+    "guardian": 2,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 7,
+    "rank": 6,
+    "cell": [
+      5,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 306.267,
+    "event": "guardian_victory",
+    "guardian": 2,
+    "name": "FOUNDRY MARSHAL"
+  },
+  {
+    "event": "fight_end",
+    "t": 306.267,
+    "seconds": 14.867,
+    "damage": 46.0,
+    "guardian": 2,
+    "cell": [
+      5,
+      0,
+      1
+    ]
+  },
+  {
+    "event": "fight_start",
+    "t": 383.983,
+    "guardian": 4,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 7,
+    "rank": 8,
+    "cell": [
+      9,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 406.1,
+    "event": "guardian_victory",
+    "guardian": 4,
+    "name": "CRYOGENIC CUSTODIAN"
+  },
+  {
+    "event": "fight_end",
+    "t": 406.1,
+    "seconds": 22.117,
+    "damage": 28.0,
+    "guardian": 4,
+    "cell": [
+      9,
+      0,
+      1
+    ]
+  },
+  {
+    "event": "fight_start",
+    "t": 509.383,
+    "guardian": 6,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 7,
+    "rank": 9,
+    "cell": [
+      13,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 524.767,
+    "event": "guardian_victory",
+    "guardian": 6,
+    "name": "CHOIR OF GLASS"
+  },
+  {
+    "event": "fight_end",
+    "t": 524.767,
+    "seconds": 15.383,
+    "damage": 33.0,
+    "guardian": 6,
+    "cell": [
+      13,
+      0,
+      1
+    ]
+  },
+  {
+    "event": "decision",
+    "t": 544.05,
+    "scene": 12,
+    "choice": 1
+  },
+  {
+    "t": 544.067,
+    "event": "story_completed",
+    "scene": 12,
+    "title": "REACH THE SURVIVOR VAULT",
+    "entry": "CREW SEPULCHRES: THE REFUGE IS READY TO EVACUATE. THE RELAY CAN ALSO RESCUE A REMOTE GROUP OF SLEEPERS."
+  },
+  {
+    "t": 788.25,
+    "event": "story_completed",
+    "scene": 15,
+    "title": "RETURN TO THE EXTRACTION BEACON",
+    "entry": "THE THRESHOLD: EXTRACTION COMPLETE. YOUR CHOICE IS RECORDED; EXPLORE ON OR BEGIN A NEW EXPEDITION."
+  },
+  {
+    "event": "shelter_enter",
+    "t": 788.25
+  },
+  {
+    "event": "shelter_exit",
+    "t": 800.267
+  },
+  {
+    "event": "abandon_detour",
+    "t": 998.283,
+    "kind": 1
+  },
+  {
+    "event": "fight_start",
+    "t": 1167.483,
+    "guardian": -1,
+    "challenge": 2,
+    "court": 0,
+    "weapon": 7,
+    "rank": 13,
+    "cell": [
+      -6,
+      4,
+      9
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 1171.183,
+    "seconds": 3.7,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      -6,
+      4,
+      9
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 1171.533,
+    "seconds": 13.233,
+    "kind": 1,
+    "challenge": 2,
+    "contract": 0
+  },
+  {
+    "event": "detour_claim",
+    "t": 1341.083,
+    "seconds": 22.767,
+    "kind": 2,
+    "challenge": 0,
+    "contract": 0
+  },
+  {
+    "event": "fight_start",
+    "t": 1523.067,
+    "guardian": -1,
+    "challenge": 2,
+    "court": 0,
+    "weapon": 7,
+    "rank": 18,
+    "cell": [
+      -17,
+      8,
+      17
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 1527.233,
+    "seconds": 4.167,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      -17,
+      8,
+      17
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 1527.583,
+    "seconds": 49.25,
+    "kind": 1,
+    "challenge": 2,
+    "contract": 1
+  },
+  {
+    "event": "resume",
+    "t": 1800.017,
+    "ok": true
+  },
+  {
+    "event": "detour_claim",
+    "t": 1822.083,
+    "seconds": 23.717,
+    "kind": 2,
+    "challenge": 0,
+    "contract": 0
+  },
+  {
+    "event": "abandon_detour",
+    "t": 2138.383,
+    "kind": 1
+  },
+  {
+    "event": "fight_start",
+    "t": 2319.45,
+    "guardian": -1,
+    "challenge": 5,
+    "court": 0,
+    "weapon": 15,
+    "rank": 27,
+    "cell": [
+      -32,
+      17,
+      37
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 2322.367,
+    "seconds": 2.917,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      -32,
+      17,
+      37
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 2322.733,
+    "seconds": 24.35,
+    "kind": 1,
+    "challenge": 5,
+    "contract": 3
+  },
+  {
+    "event": "detour_claim",
+    "t": 2489.867,
+    "seconds": 31.483,
+    "kind": 2,
+    "challenge": 0,
+    "contract": 0
+  },
+  {
+    "event": "abandon_detour",
+    "t": 2798.383,
+    "kind": 1
+  },
+  {
+    "event": "abandon_detour",
+    "t": 3138.383,
+    "kind": 1
+  },
+  {
+    "event": "detour_claim",
+    "t": 3323.917,
+    "seconds": 25.533,
+    "kind": 2,
+    "challenge": 0,
+    "contract": 0
+  }
+]

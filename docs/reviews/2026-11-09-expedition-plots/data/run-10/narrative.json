@@ -1,0 +1,579 @@
+{
+  "seed": 9001,
+  "generator": 15,
+  "seen": 79205479,
+  "done": 36929,
+  "choice": 1,
+  "extracted": true,
+  "chapter": 0,
+  "checkpoint": "/workspace/starship-playtests/2026-11-09-plots/run-10/final.sav",
+  "ship": "LAST DAWN",
+  "commission": "RESCUE / BRING THE LOST HOME",
+  "ship_type": "CROWN LINER",
+  "history": "A DEFENSE INTELLIGENCE PURGED ITS CREW AND OPENED CONTAINMENT",
+  "controller": "ORISON / THE QUARANTINE INTELLIGENCE",
+  "survivor_agenda": "THE PASSENGERS WANT A SAFE ROUTE TO THE NEAREST PORT",
+  "debrief": [
+    "LAST DAWN / CHAPTER 0 / EXTRACTED",
+    "EVACUATE THE REFUGE / EVERYONE HERE GOES HOME",
+    "THIS OUTCOME / 153 RESCUED / 0 KNOWLEDGE / 0 TECHNOLOGY / 0 THREATS CONTAINED",
+    "SHIP TOTAL / 153 RESCUED / 51 STILL ABOARD / 0 KNOWLEDGE / 0 TECHNOLOGY / 0 CONTAINED",
+    "REFUGE SUPPORT 62/100 / THE PASSENGERS WANT A SAFE ROUTE TO THE NEAREST PORT",
+    "KEEPERS SUPPORT 61/100 / PRESERVE THE SHIP AND ITS LIVING SYSTEMS",
+    "REFUGE SYSTEMS / EMERGENCY POWER / WARD NOT POWERED",
+    "CAREER / 1 ARCS / 153 RESCUED / 0 KNOWLEDGE / 0 TECHNOLOGY / 0 CONTAINED"
+  ],
+  "scenes": [
+    {
+      "id": 0,
+      "seen": true,
+      "done": true,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "RECEIVE THE COMMISSION",
+      "entry": "THE THRESHOLD: COMMISSION ACCEPTED. INVESTIGATE THE SIGNAL; SECURE SITES FOR 75 SALVAGE AND 2 POINTS."
+    },
+    {
+      "id": 1,
+      "seen": true,
+      "done": false,
+      "site": [
+        2,
+        -1,
+        0
+      ],
+      "title": "RECENT BOOTPRINTS",
+      "entry": "CAPTAIN'S APARTMENTS: FRESH BOOTPRINTS CROSS OLD DUST. SOMEONE STILL TRAVELS BETWEEN THE REFUGES."
+    },
+    {
+      "id": 2,
+      "seen": true,
+      "done": false,
+      "site": [
+        1,
+        -1,
+        1
+      ],
+      "title": "SPLICED POWER CABLES",
+      "entry": "VOID OBSERVATORY: NEW SPLICES BRIDGE DEAD CABLES. SURVIVORS ARE DIVERTING THE LAST POWER."
+    },
+    {
+      "id": 3,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "THAWED IDENTIFICATION TAGS",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 4,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "SCRUBBED SPECIMEN LABELS",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 5,
+      "seen": true,
+      "done": false,
+      "site": [
+        0,
+        1,
+        0
+      ],
+      "title": "A WARM RATION SHRINE",
+      "entry": "GILDED ATRIUM: A RATION TIN IS STILL WARM. THIS SHRINE IS A WAYPOINT FOR LIVING PEOPLE."
+    },
+    {
+      "id": 6,
+      "seen": true,
+      "done": true,
+      "site": [
+        2,
+        -1,
+        0
+      ],
+      "title": "SECURE THE REFUGE SIGNAL",
+      "entry": "CAPTAIN'S APARTMENTS: REFUGE SIGNAL SECURED. A SURVIVOR IDENTIFIED THE TARGET AND A SECOND WAY TO COMPLETE THE JOB."
+    },
+    {
+      "id": 7,
+      "seen": false,
+      "done": false,
+      "site": [
+        3,
+        1,
+        0
+      ],
+      "title": "RECOVER THE WITNESS ARCHIVE",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 8,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "READ THE CONTAINMENT LEDGER",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 9,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "RESTART THE ALIEN FABRICATOR",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 10,
+      "seen": true,
+      "done": false,
+      "site": [
+        9,
+        0,
+        0
+      ],
+      "title": "REACH THE REMOTE SLEEPER RELAY",
+      "entry": "TACTICAL THEATRE: REMOTE RELAY RESTORED. SLEEPERS FROM ANOTHER REFUGE CAN JOIN THE EVACUATION."
+    },
+    {
+      "id": 11,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "REBUILD THE DAMAGED CATALOGUE",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 12,
+      "seen": true,
+      "done": true,
+      "site": [
+        12,
+        -1,
+        1
+      ],
+      "title": "REACH THE SURVIVOR VAULT",
+      "entry": "CREW SEPULCHRES: THE REFUGE IS READY TO EVACUATE. THE RELAY CAN ALSO RESCUE A REMOTE GROUP OF SLEEPERS."
+    },
+    {
+      "id": 13,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "REACH THE LIVING ARCHIVE",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 14,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "REACH THE ALIEN DRIVE",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 15,
+      "seen": true,
+      "done": true,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "RETURN TO THE EXTRACTION BEACON",
+      "entry": "THE THRESHOLD: EXTRACTION COMPLETE. YOUR CHOICE IS RECORDED; EXPLORE ON OR BEGIN A NEW EXPEDITION."
+    },
+    {
+      "id": 16,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "REACH THE DEEP CONTAINMENT CONTROL",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 17,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "RESTORE THE ISOLATION GRID",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 18,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "THE COLLAPSE ORIGIN",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 19,
+      "seen": true,
+      "done": false,
+      "site": [
+        11,
+        0,
+        1
+      ],
+      "title": "A SURVIVOR NOTICE",
+      "entry": "REFUGE NETWORK: 204 PEOPLE REPORTED. THE PASSENGERS WANT A SAFE ROUTE TO THE NEAREST PORT."
+    },
+    {
+      "id": 20,
+      "seen": true,
+      "done": false,
+      "site": [
+        0,
+        -1,
+        1
+      ],
+      "title": "THE CONTROLLER'S SIGNATURE",
+      "entry": "ACTIVE CONTROL SIGNATURE: ORISON / THE QUARANTINE INTELLIGENCE. THE LOCAL LOCKOUT DATES TO THE COLLAPSE."
+    },
+    {
+      "id": 21,
+      "seen": true,
+      "done": false,
+      "site": [
+        1,
+        0,
+        0
+      ],
+      "title": "RESTORE THE REFUGE MICROGRID",
+      "entry": "REFUGE: THE MICROGRID IS LIVE. POWERED ROOMS IMPROVE RECOVERY AND LIGHTING."
+    },
+    {
+      "id": 22,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        1,
+        3
+      ],
+      "title": "SECURE THE ROUTE BEACON",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 23,
+      "seen": true,
+      "done": false,
+      "site": [
+        0,
+        0,
+        1
+      ],
+      "title": "RECOVER THE CONTROLLER CIPHER",
+      "entry": "KEEPERS: THE CIPHER IDENTIFIES A CONTROLLER CONSOLE. IT CAN ALSO BROKER OUR AGREEMENT."
+    },
+    {
+      "id": 24,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        1,
+        2
+      ],
+      "title": "MEET THE SURVIVOR COUNCIL",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 25,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "DISABLE THE LOCAL CONTROLLER",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 26,
+      "seen": true,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "ACCEPT ANOTHER COMMISSION AT THE BAY",
+      "entry": "THE BAY TRANSMITTER OFFERS ANOTHER COMMISSION BASED ON YOUR ACTIONS ABOARD."
+    },
+    {
+      "id": 27,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "TRACE ORISON'S HARROW SIGNAL",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 28,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "RESTORE THE HARROW PARTITION RELAY",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 29,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "HARROW / ORISON'S HEART",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    },
+    {
+      "id": 30,
+      "seen": false,
+      "done": false,
+      "site": [
+        0,
+        0,
+        0
+      ],
+      "title": "RETURN TO THE BAY / CHAPTER EXTRACTION",
+      "entry": "NO OBSERVATION YET / EXPLORE THE SHIP"
+    }
+  ],
+  "guardians": [
+    {
+      "id": 0,
+      "defeated": true,
+      "name": "CHOIR OF GLASS"
+    },
+    {
+      "id": 1,
+      "defeated": false,
+      "name": "CRYOGENIC CUSTODIAN"
+    },
+    {
+      "id": 2,
+      "defeated": true,
+      "name": "FOUNDRY MARSHAL"
+    },
+    {
+      "id": 3,
+      "defeated": false,
+      "name": "CONVOY DEVOURER"
+    },
+    {
+      "id": 4,
+      "defeated": true,
+      "name": "CRYOGENIC CUSTODIAN"
+    },
+    {
+      "id": 5,
+      "defeated": false,
+      "name": "FIREWALL SAINT"
+    },
+    {
+      "id": 6,
+      "defeated": true,
+      "name": "CHOIR OF GLASS"
+    },
+    {
+      "id": 7,
+      "defeated": false,
+      "name": "CRYOGENIC CUSTODIAN"
+    },
+    {
+      "id": 8,
+      "defeated": true,
+      "name": "THRESHOLD HUNTER"
+    }
+  ],
+  "themes": [
+    "THE THRESHOLD",
+    "CATHEDRAL NAVE",
+    "REACTOR CHOIR",
+    "CREW SEPULCHRES",
+    "THE UNDERCROFT",
+    "GILDED ATRIUM",
+    "FIRST CLASS PROMENADE",
+    "BALLROOM OF ASH",
+    "THERMAL BATHS",
+    "THE LAST CASINO",
+    "IRON FOUNDRY",
+    "COOLANT CATHEDRAL",
+    "MACHINE SHOP",
+    "TURBINE GALLERY",
+    "COMMAND BRIDGE",
+    "CAPTAIN'S APARTMENTS",
+    "TACTICAL THEATRE",
+    "VOID OBSERVATORY",
+    "SURGICAL WARD",
+    "QUARANTINE BLOCK",
+    "XENOBIOLOGY LAB",
+    "HYDROPONIC JUNGLE",
+    "CONTAINER MAZE",
+    "SEALED ARMORY",
+    "MEMORY ARCHIVE",
+    "RELIQUARY VAULT",
+    "CRYOSLEEP GALLERY",
+    "SPORE CONSERVATORY"
+  ],
+  "weapons": [
+    {
+      "id": 0,
+      "owned": true,
+      "name": "PULSE CARBINE"
+    },
+    {
+      "id": 1,
+      "owned": true,
+      "name": "BREACH SHOTGUN"
+    },
+    {
+      "id": 2,
+      "owned": false,
+      "name": "NAIL REPEATER"
+    },
+    {
+      "id": 3,
+      "owned": false,
+      "name": "RELIQUARY RAIL"
+    },
+    {
+      "id": 4,
+      "owned": false,
+      "name": "PLASMA LANCE"
+    },
+    {
+      "id": 5,
+      "owned": true,
+      "name": "FUNERAL ROCKET"
+    },
+    {
+      "id": 6,
+      "owned": false,
+      "name": "EMBER THROWER"
+    },
+    {
+      "id": 7,
+      "owned": true,
+      "name": "CRYO NEEDLER"
+    },
+    {
+      "id": 8,
+      "owned": false,
+      "name": "ARC CONDUCTOR"
+    },
+    {
+      "id": 9,
+      "owned": false,
+      "name": "SIPHON RIFLE"
+    },
+    {
+      "id": 10,
+      "owned": false,
+      "name": "GRAVITY MORTAR"
+    },
+    {
+      "id": 11,
+      "owned": false,
+      "name": "SUNBURST CANNON"
+    },
+    {
+      "id": 12,
+      "owned": false,
+      "name": "VOID SCALPEL"
+    },
+    {
+      "id": 13,
+      "owned": false,
+      "name": "FLECHETTE FAN"
+    },
+    {
+      "id": 14,
+      "owned": false,
+      "name": "SERAPH BEAM"
+    },
+    {
+      "id": 15,
+      "owned": true,
+      "name": "STORM RELIC"
+    },
+    {
+      "id": 16,
+      "owned": false,
+      "name": "LUMEN CUTTER"
+    },
+    {
+      "id": 17,
+      "owned": false,
+      "name": "PRISM LANCE"
+    },
+    {
+      "id": 18,
+      "owned": false,
+      "name": "SIPHON RAY"
+    },
+    {
+      "id": 19,
+      "owned": false,
+      "name": "LANTERN FLARE CANNON"
+    }
+  ]
+}

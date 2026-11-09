@@ -1,0 +1,512 @@
+[
+  {
+    "t": 11.583,
+    "event": "story_completed",
+    "scene": 0,
+    "title": "RECEIVE THE COMMISSION",
+    "entry": "THE THRESHOLD: COMMISSION ACCEPTED. INVESTIGATE THE SIGNAL; SECURE SITES FOR 75 SALVAGE AND 2 POINTS."
+  },
+  {
+    "event": "fight_start",
+    "t": 15.533,
+    "guardian": 8,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 0,
+    "rank": 1,
+    "cell": [
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "t": 22.217,
+    "event": "guardian_victory",
+    "guardian": 8,
+    "name": "THRESHOLD HUNTER"
+  },
+  {
+    "event": "fight_end",
+    "t": 22.217,
+    "seconds": 6.683,
+    "damage": 0.0,
+    "guardian": 8,
+    "cell": [
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "event": "fight_start",
+    "t": 104.7,
+    "guardian": 1,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 0,
+    "rank": 3,
+    "cell": [
+      -3,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 115.567,
+    "event": "guardian_victory",
+    "guardian": 1,
+    "name": "FIREWALL SAINT"
+  },
+  {
+    "event": "fight_end",
+    "t": 115.567,
+    "seconds": 10.867,
+    "damage": 0.0,
+    "guardian": 1,
+    "cell": [
+      -3,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 244.0,
+    "event": "story_completed",
+    "scene": 6,
+    "title": "SECURE THE REFUGE SIGNAL",
+    "entry": "CRYOSLEEP GALLERY: REFUGE SIGNAL SECURED. A SURVIVOR IDENTIFIED THE TARGET AND A SECOND WAY TO COMPLETE THE JOB."
+  },
+  {
+    "event": "fight_start",
+    "t": 447.233,
+    "guardian": 3,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 12,
+    "rank": 6,
+    "cell": [
+      -7,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 457.35,
+    "event": "guardian_victory",
+    "guardian": 3,
+    "name": "CHOIR OF GLASS"
+  },
+  {
+    "event": "fight_end",
+    "t": 457.35,
+    "seconds": 10.117,
+    "damage": 0.0,
+    "guardian": 3,
+    "cell": [
+      -7,
+      0,
+      1
+    ]
+  },
+  {
+    "event": "fight_start",
+    "t": 559.067,
+    "guardian": 5,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 2,
+    "rank": 8,
+    "cell": [
+      -11,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 572.967,
+    "event": "guardian_victory",
+    "guardian": 5,
+    "name": "CONVOY DEVOURER"
+  },
+  {
+    "event": "fight_end",
+    "t": 572.967,
+    "seconds": 13.9,
+    "damage": 0.0,
+    "guardian": 5,
+    "cell": [
+      -11,
+      0,
+      1
+    ]
+  },
+  {
+    "event": "fight_start",
+    "t": 650.3,
+    "guardian": 7,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 13,
+    "rank": 10,
+    "cell": [
+      -15,
+      0,
+      1
+    ]
+  },
+  {
+    "t": 664.983,
+    "event": "guardian_victory",
+    "guardian": 7,
+    "name": "FOUNDRY MARSHAL"
+  },
+  {
+    "event": "fight_end",
+    "t": 664.983,
+    "seconds": 14.683,
+    "damage": 0.0,
+    "guardian": 7,
+    "cell": [
+      -15,
+      0,
+      1
+    ]
+  },
+  {
+    "event": "decision",
+    "t": 683.717,
+    "scene": 16,
+    "choice": 1
+  },
+  {
+    "t": 683.733,
+    "event": "story_completed",
+    "scene": 16,
+    "title": "REACH THE DEEP CONTAINMENT CONTROL",
+    "entry": "REACTOR CHOIR: THE COLLAPSE SOURCE IS STILL ACTIVE. PURGE IT, SEAL IT ABOARD, OR RESTORE ISOLATION TO SAVE THE RESEARCH."
+  },
+  {
+    "t": 955.283,
+    "event": "story_completed",
+    "scene": 15,
+    "title": "RETURN TO THE EXTRACTION BEACON",
+    "entry": "THE THRESHOLD: EXTRACTION COMPLETE. YOUR CHOICE IS RECORDED; EXPLORE ON OR BEGIN A NEW EXPEDITION."
+  },
+  {
+    "event": "shelter_enter",
+    "t": 955.283
+  },
+  {
+    "event": "shelter_exit",
+    "t": 967.3
+  },
+  {
+    "event": "fight_start",
+    "t": 1088.6,
+    "guardian": -1,
+    "challenge": 4,
+    "court": 0,
+    "weapon": 13,
+    "rank": 13,
+    "cell": [
+      5,
+      0,
+      7
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 1094.283,
+    "seconds": 5.683,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      5,
+      0,
+      7
+    ]
+  },
+  {
+    "event": "abandon_detour",
+    "t": 1265.333,
+    "kind": 1
+  },
+  {
+    "event": "detour_claim",
+    "t": 1432.3,
+    "seconds": 6.95,
+    "kind": 2,
+    "challenge": 0,
+    "contract": 0
+  },
+  {
+    "event": "fight_start",
+    "t": 1653.283,
+    "guardian": -1,
+    "challenge": 1,
+    "court": 0,
+    "weapon": 13,
+    "rank": 24,
+    "cell": [
+      21,
+      0,
+      25
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 1656.083,
+    "seconds": 2.8,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      21,
+      0,
+      25
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 1683.933,
+    "seconds": 58.55,
+    "kind": 1,
+    "challenge": 1,
+    "contract": 1
+  },
+  {
+    "event": "fight_start",
+    "t": 1728.517,
+    "guardian": -1,
+    "challenge": 3,
+    "court": 0,
+    "weapon": 13,
+    "rank": 25,
+    "cell": [
+      25,
+      0,
+      27
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 1738.817,
+    "seconds": 10.3,
+    "damage": 22.0,
+    "guardian": 9,
+    "cell": [
+      25,
+      0,
+      27
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 1738.967,
+    "seconds": 13.567,
+    "kind": 1,
+    "challenge": 3,
+    "contract": 5
+  },
+  {
+    "event": "resume",
+    "t": 1800.017,
+    "ok": true
+  },
+  {
+    "event": "fight_start",
+    "t": 1848.55,
+    "guardian": -1,
+    "challenge": 2,
+    "court": 0,
+    "weapon": 13,
+    "rank": 26,
+    "cell": [
+      29,
+      0,
+      32
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 1851.517,
+    "seconds": 2.967,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      29,
+      0,
+      32
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 1851.8,
+    "seconds": 26.383,
+    "kind": 1,
+    "challenge": 2,
+    "contract": 1
+  },
+  {
+    "event": "fight_start",
+    "t": 1940.583,
+    "guardian": -1,
+    "challenge": 5,
+    "court": 0,
+    "weapon": 13,
+    "rank": 28,
+    "cell": [
+      30,
+      0,
+      35
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 1943.733,
+    "seconds": 3.15,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      30,
+      0,
+      35
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 1943.933,
+    "seconds": 18.5,
+    "kind": 1,
+    "challenge": 5,
+    "contract": 1
+  },
+  {
+    "event": "fight_start",
+    "t": 2039.517,
+    "guardian": -1,
+    "challenge": 1,
+    "court": 0,
+    "weapon": 13,
+    "rank": 30,
+    "cell": [
+      34,
+      0,
+      35
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 2047.1,
+    "seconds": 7.583,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      34,
+      0,
+      35
+    ]
+  },
+  {
+    "event": "abandon_detour",
+    "t": 2205.45,
+    "kind": 1
+  },
+  {
+    "event": "detour_claim",
+    "t": 2573.317,
+    "seconds": 7.867,
+    "kind": 2,
+    "challenge": 0,
+    "contract": 0
+  },
+  {
+    "event": "abandon_detour",
+    "t": 2945.45,
+    "kind": 1
+  },
+  {
+    "event": "detour_claim",
+    "t": 3109.5,
+    "seconds": 4.05,
+    "kind": 2,
+    "challenge": 0,
+    "contract": 0
+  },
+  {
+    "event": "fight_start",
+    "t": 3211.25,
+    "guardian": -1,
+    "challenge": 0,
+    "court": 0,
+    "weapon": 13,
+    "rank": 43,
+    "cell": [
+      82,
+      0,
+      84
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 3221.867,
+    "seconds": 10.617,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      82,
+      0,
+      84
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 3222.1,
+    "seconds": 16.65,
+    "kind": 1,
+    "challenge": 0,
+    "contract": 5
+  },
+  {
+    "event": "fight_start",
+    "t": 3309.717,
+    "guardian": -1,
+    "challenge": 2,
+    "court": 0,
+    "weapon": 15,
+    "rank": 43,
+    "cell": [
+      87,
+      0,
+      89
+    ]
+  },
+  {
+    "event": "fight_end",
+    "t": 3311.283,
+    "seconds": 1.567,
+    "damage": 0.0,
+    "guardian": 9,
+    "cell": [
+      87,
+      0,
+      89
+    ]
+  },
+  {
+    "event": "detour_claim",
+    "t": 3368.95,
+    "seconds": 63.5,
+    "kind": 1,
+    "challenge": 2,
+    "contract": 5
+  },
+  {
+    "event": "detour_claim",
+    "t": 3407.3,
+    "seconds": 1.85,
+    "kind": 2,
+    "challenge": 0,
+    "contract": 0
+  }
+]
