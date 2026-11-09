@@ -143,6 +143,11 @@ static void matrix_introduction(void) {
     game_interact(g, 0);
     CHECK(g->matrix.divers[0].active && onboarding_matrix_intro(g, 0));
     CHECK(matrix_protected(g, 0));
+    Actions actions[2] = {0};
+    p->points = 2;
+    p->guide_quiet = 3;
+    onboarding_step(g, actions, .02);
+    CHECK(p->lesson == LESSON_MATRIX); /* The active interface takes priority over body lessons. */
     MatrixDiver *d = &g->matrix.divers[0];
     CHECK(d->service == MX_POWER && !matrix_cast(g, 0, 0));
     matrix_cycle_service(g, 0, 1);
@@ -157,6 +162,9 @@ static void matrix_introduction(void) {
     settle(g);
     game_interact(g, 0);
     CHECK(g->matrix.divers[0].active && !onboarding_matrix_intro(g, 0));
+    g->players[0].guide_quiet = 3;
+    onboarding_step(g, actions, .02);
+    CHECK(g->players[0].lesson == LESSON_NONE); /* No body controls while inside the matrix. */
     CHECK(matrix_equip(g, 0, MX_INTERRUPT));
     matrix_disconnect(g, 0, false);
     CHECK(game_save(g, "onboarding-link.sav") && game_load(g, "onboarding-link.sav"));
@@ -222,10 +230,14 @@ static void instruction(void) {
     CHECK(p->lessons & (1u << LESSON_POWER));
     CHECK(p->lessons & (1u << LESSON_RIG));
     char text[180];
+    const char *upgrades[] = {"F4 / CHARACTER", "DPAD LEFT / UP / RIGHT", "MENU / CHARACTER",
+                              "Y / CHARACTER UPGRADES", "F4 / CHARACTER"};
     for (unsigned device = 0; device <= 4; device++)
         for (unsigned lesson = 0; lesson <= LESSON_COUNT; lesson++) {
             onboarding_text(lesson, device, text, sizeof(text));
             CHECK((lesson == 0 || lesson == LESSON_COUNT) || strlen(text) > 10);
+            if (lesson == LESSON_UPGRADE)
+                CHECK(strstr(text, upgrades[device]));
         }
     for (unsigned device = 0; device < 4; device++)
         for (unsigned item = 0; item < 4; item++) {

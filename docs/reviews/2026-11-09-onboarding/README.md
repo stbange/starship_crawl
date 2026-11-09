@@ -22,12 +22,17 @@ sanitizer unit cases and the introductory expedition pass. Unit-only core line
 coverage is 98.0%, above 95% for every measured source; presentation adapters are
 validated separately through rendering and packaged browser input.
 
+All 19 ordinary packaged-browser suites pass, including legacy matrix imports.
 The new WebGL suite passes actual keyboard, virtual-standard-controller and touch
 interactions, progressive menus, Guided/Minimal/Off persistence, saved character
 lessons, old-save access and power restoration. Full Quest regression exercises
 stereo frames, tracking recovery, menus, ordinary/VR storage isolation and earned
 legacy facility journeys. The focused new Quest case uses the earned interface
 checkpoint and right-grip interactions. No physical headset was tested.
+
+The final guidance check verifies that the matrix lesson takes priority while
+linked and that upgrades name the correct keyboard, controller, touch and Quest
+controls. The reviewable field guide includes those upgrade controls.
 
 Captured directly from the compiled game:
 

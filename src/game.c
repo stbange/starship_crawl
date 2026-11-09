@@ -180,7 +180,7 @@ static void award(Game *g, Player *p, unsigned xp) {
         p->shield = player_max_shield(p);
         p->armor = player_max_armor(p);
         p->energy = player_max_energy(p);
-        game_message(g, "ASCENSION / OPEN JOURNAL WITH I / CHOOSE AN UPGRADE");
+        game_message(g, "ASCENSION / CHARACTER UPGRADE AVAILABLE");
     }
     g->dirty = true;
 }

@@ -1,0 +1,6 @@
+RUN test_matrix_browser.py
+PASS matrix journey seed 713 / choice 1 / shots 30 / integrity 100 / data 14
+PASS matrix journey seed 42 / choice 2 / shots 26 / integrity 100 / data 13
+PASS matrix journey seed 1 / choice 3 / shots 28 / integrity 100 / data 17
+PASS packaged matrix controls, power, programs, schematic, co-op, active saves, 3 outcomes, legacy and touch
+PASS test_matrix_browser.py (55.3s)

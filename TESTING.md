@@ -11,7 +11,7 @@ teleports the player. Its earned checkpoint is documented in
 Local validation includes 26 native component/platform checks, all 20 separately
 labelled gameplay cases, 30 sanitizer unit checks including Quest, and the full
 introductory expedition under ASan/UBSan/LeakSanitizer. Unit-only coverage is
-**98.0% (10,622/10,841 lines)**, with every measured core source above 95%.
+**98.0% (10,624/10,843 lines)**, with every measured core source above 95%.
 The final menu rules also pass the focused sanitizer case. Rendering, browser
 JavaScript and platform adapters remain outside that unit coverage percentage.
 

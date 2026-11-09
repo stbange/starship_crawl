@@ -1,4 +1,4 @@
 RUN test_quest_browser.py
 BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
 PASS: earned interface first link, protected power restoration and physical return with Quest grips
-PASS test_quest_browser.py (56.9s)
+PASS test_quest_browser.py (29.1s)

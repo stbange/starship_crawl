@@ -165,6 +165,8 @@ bool onboarding_matrix_intro(const Game *g, int player) {
 }
 static Lesson next_lesson(const Game *g, int player) {
     const Player *p = &g->players[player];
+    if (g->matrix.divers[player].active)
+        return p->lessons & (1u << LESSON_MATRIX) ? LESSON_NONE : LESSON_MATRIX;
     unsigned caps = onboarding_capabilities(g, player);
     bool eligible[LESSON_COUNT] = {false};
     eligible[LESSON_BOARD] = position_absolute(p->pos).z < 0;
@@ -175,8 +177,7 @@ static Lesson next_lesson(const Game *g, int player) {
     eligible[LESSON_UPGRADE] = (caps & OB_UPGRADES) && p->points;
     eligible[LESSON_SHELTER] = caps & OB_SHELTER;
     eligible[LESSON_INTERFACE] = campaign_phase(&g->campaign) && !(caps & OB_MATRIX);
-    eligible[LESSON_LINK] = (caps & OB_MATRIX) && !g->matrix.divers[player].active;
-    eligible[LESSON_MATRIX] = g->matrix.divers[player].active;
+    eligible[LESSON_LINK] = caps & OB_MATRIX;
     eligible[LESSON_POWER] = caps & OB_POWERS;
     eligible[LESSON_RIG] = caps & OB_RIGS;
     for (unsigned i = 1; i < LESSON_COUNT; i++)
@@ -248,6 +249,8 @@ void onboarding_text(unsigned lesson, unsigned device, char *text, size_t size) 
     static const char *use[] = {"G", "DPAD DOWN", "USE", "RIGHT GRIP"};
     static const char *fire[] = {"CLICK", "RIGHT TRIGGER", "FIRE", "RIGHT TRIGGER"};
     static const char *gun[] = {"Z / X", "RIGHT SHOULDER", "WEAPON", "X"};
+    static const char *upgrade[] = {"F4 / CHARACTER", "DPAD LEFT / UP / RIGHT", "MENU / CHARACTER",
+                                    "Y / CHARACTER UPGRADES"};
     static const char *fold[] = {"R", "BACK / SELECT", "MENU / SHELTER", "MENU / EQUIPMENT"};
     static const char *grid[] = {"F", "X", "MENU / RUN SERVICE", "RIGHT GRIP"};
     if (device > GUIDE_QUEST)
@@ -274,7 +277,8 @@ void onboarding_text(unsigned lesson, unsigned device, char *text, size_t size) 
         key = gun[device];
         break;
     case LESSON_UPGRADE:
-        format = "CHARACTER / CHOOSE DAMAGE, VITALITY OR HASTE WHEN READY%s";
+        format = "%s / CHOOSE DAMAGE, VITALITY OR HASTE WHEN READY";
+        key = upgrade[device];
         break;
     case LESSON_SHELTER:
         format = "%s / UNFOLD SHELTER ON CLEAR FLOOR / REST OR USE MEDICAL";

@@ -26,9 +26,9 @@ static void onboarding_journal(Renderer *r, const Game *g, int player, float w, 
                 "FIGHT HAS A GUN-ONLY SOLUTION.",
                 ink) +
         12 * scale;
-    const unsigned lessons[] = {LESSON_BOARD,  LESSON_COMMISSION, LESSON_EXPLORE,
-                                LESSON_WEAPON, LESSON_SHELTER,    LESSON_INTERFACE,
-                                LESSON_MATRIX, LESSON_POWER,      LESSON_RIG};
+    const unsigned lessons[] = {LESSON_BOARD,   LESSON_COMMISSION, LESSON_EXPLORE,   LESSON_WEAPON,
+                                LESSON_UPGRADE, LESSON_SHELTER,    LESSON_INTERFACE, LESSON_MATRIX,
+                                LESSON_POWER,   LESSON_RIG};
     for (unsigned i = 0; i < sizeof(lessons) / sizeof(*lessons); i++) {
         onboarding_text(lessons[i], g->players[player].guide_device, line, sizeof(line));
         y = wrapped(r, left + 18 * scale, y, .85f * scale, width - 36 * scale, line, ink) +
