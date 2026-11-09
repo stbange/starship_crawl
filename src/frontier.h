@@ -12,7 +12,7 @@ typedef enum {
 } Challenge;
 typedef enum { RELIC_HEAT, RELIC_COLD, RELIC_ORDER, RELIC_CHAOS, RELIC_ALIEN, RELICS } Relic;
 typedef struct {
-    uint32_t ranks[2][RELICS];
+    uint32_t ranks[SC_PLAYERS][RELICS];
 } FrontierProgress;
 struct Game;
 struct Player;

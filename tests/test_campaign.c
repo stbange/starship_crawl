@@ -176,14 +176,14 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
                     }
                 }
                 game_interact(g, 0);
-                if (choice && p->decision_open) {
+                if (choice && PLAYER_INTERACTION(g, p).decision_open) {
                     if (fixture && !saga && !fixture_written) {
                         if (!game_save(g, fixture))
                             return 1;
                         fixture_written = true;
                     }
                     if (saga && fixture) {
-                        unsigned scene = g->players[0].decision_scene;
+                        unsigned scene = g->interactions[0].decision_scene;
                         unsigned bit = scene == STORY_COUNCIL      ? 1
                                        : scene == STORY_RESOLUTION ? 4
                                                                    : 2;
@@ -198,8 +198,10 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
                             captured |= bit;
                         }
                     }
-                    game_story_choose(g, 0,
-                                      saga && p->decision_scene == STORY_COUNCIL ? 3 : choice);
+                    game_story_choose(
+                        g, 0,
+                        saga && PLAYER_INTERACTION(g, p).decision_scene == STORY_COUNCIL ? 3
+                                                                                         : choice);
                 }
             }
         }
@@ -292,7 +294,7 @@ static int campaign(uint32_t seed, unsigned choice, const char *fixture, unsigne
                 "Stuck at %.2f %.2f %.2f, waypoint %.2f %.2f %.2f, target %d %d %d, scene %u\n",
                 p.x, p.y, p.z, waypoint.x, waypoint.y, waypoint.z, target.x, target.y, target.z,
                 g->story.tracked);
-        fprintf(stderr, "Message %s / decision %d\n", g->message, g->players[0].decision_open);
+        fprintf(stderr, "Message %s / decision %d\n", g->message, g->interactions[0].decision_open);
         for (int r = 0; r < g->world.count; r++)
             for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                 Enemy *enemy = &g->world.rooms[r].enemies[e];

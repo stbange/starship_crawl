@@ -13,8 +13,7 @@ typedef struct {
 typedef struct {
     uint32_t version, tracked;
     CountryState countries[SC_COUNTRIES];
-    /* Per-view reading/decision state is transient. */
-    unsigned reading[2], audience[2];
+    unsigned audience[SC_PLAYERS];
 } Politics;
 typedef enum {
     EVENT_NONE,
@@ -33,8 +32,8 @@ typedef enum {
 } DirectorReason;
 typedef struct {
     uint32_t version, sequence, cooldown, budget, recharge, quiet, kind, remaining, claimed;
-    Cell site, last_room[2];
-    uint32_t seen[2], history[SC_DIRECTOR_LOG], reasons[SC_DIRECTOR_LOG];
+    Cell site, last_room[SC_PLAYERS];
+    uint32_t seen[SC_PLAYERS], history[SC_DIRECTOR_LOG], reasons[SC_DIRECTOR_LOG];
 } Director;
 struct Game;
 Government politics_government(uint32_t seed, unsigned country);

@@ -17,10 +17,10 @@ static bool valid_cell(Cell c) {
 bool director_valid(const Director *d, unsigned generator) {
     if (d->version != (generator == 13) || d->sequence > 1000000000 || d->cooldown > 180000 ||
         d->budget > 3 || d->recharge >= 30000 || d->quiet > 120000 || d->kind >= EVENTS ||
-        d->remaining > 180000 || d->claimed > 3 || (!!d->kind != !!d->remaining) ||
+        d->remaining > 180000 || d->claimed > SC_PLAYER_MASK || (!!d->kind != !!d->remaining) ||
         (!d->kind && d->claimed) || !valid_cell(d->site))
         return false;
-    for (int p = 0; p < 2; p++)
+    for (int p = 0; p < SC_PLAYERS; p++)
         if (d->seen[p] > 1 || !valid_cell(d->last_room[p]))
             return false;
     for (int i = 0; i < SC_DIRECTOR_LOG; i++)
@@ -172,7 +172,7 @@ bool director_interact(Game *g, int player) {
         if (country) {
             g->politics.countries[country - 1].met = 1;
             politics_journal(g, player);
-            g->politics.reading[player] = country - 1;
+            g->views[player].country_reading = country - 1;
         }
         game_message(g, "COURIER INVITATION / U TO TRACK THE COURT / L TO READ OTHER COURTS");
     } else if (kind == EVENT_REVEAL) {

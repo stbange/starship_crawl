@@ -116,11 +116,11 @@ static void test_arcs(void) {
             investigate(g);
             reload(g);
             use(g, STORY_COUNCIL);
-            CHECK(g->players[0].decision_scene == STORY_COUNCIL);
+            CHECK(g->interactions[0].decision_scene == STORY_COUNCIL);
             CHECK(!game_story_choice_ready(g, 0));
             CHECK(!game_story_choose(g, 0, 3));
             CHECK(strstr(game_story_choice(g, 1), "EVACUATION"));
-            g->players[0].decision_open = g->players[0].journal = false;
+            g->interactions[0].decision_open = g->views[0].journal = false;
             if (choice == 1) {
                 use(g, STORY_BEACON);
                 use(g, STORY_POWER);
@@ -160,7 +160,7 @@ static void test_arcs(void) {
             reload(g);
             use(g, STORY_EXTRACTION);
             CHECK(g->story.totals[4] == 1 && g->players[0].career[4] == 1);
-            CHECK(g->players[0].journal_page == 3 && game_story_available(g, STORY_CONTINUE));
+            CHECK(g->views[0].journal_page == 3 && game_story_available(g, STORY_CONTINUE));
             unsigned money = g->players[0].credits, victories = g->players[0].victories;
             expedition_record(g, SC_STORY_SCENES, 0);
             CHECK(g->players[0].credits == money);
@@ -183,14 +183,14 @@ static void test_arcs(void) {
                     heart->enemies[0].kind = 26;
                     heart->enemies[0].alive = true;
                     heart->enemies[0].pos = position_from(vadd(game_terminal(fixed), v3(30, 0, 0)));
-                    g->players[0].decision_open = false;
+                    g->interactions[0].decision_open = false;
                     game_interact(g, 0);
-                    CHECK(!g->players[0].decision_open && strstr(g->message, "WARDEN"));
+                    CHECK(!g->interactions[0].decision_open && strstr(g->message, "WARDEN"));
                     world_kill(&g->world, heart, 0);
                 }
                 use(g, STORY_RESOLUTION);
                 CHECK(!game_story_choose(g, 0, 3));
-                g->players[0].decision_open = g->players[0].journal = false;
+                g->interactions[0].decision_open = g->views[0].journal = false;
                 use(g, STORY_RELAY);
                 CHECK(cell_equal(fixed, g->story.sites[STORY_RESOLUTION]));
                 CHECK(game_story_safe(g, game_terminal(g->story.sites[STORY_RELAY])));

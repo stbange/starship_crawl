@@ -399,9 +399,9 @@ void game_story_interact(Game *g, int player) {
     Story *s = &g->story;
     if (TARGETS & BIT(scene)) {
         Player *p = &g->players[player];
-        p->decision_open = p->journal = true;
-        p->journal_page = 1;
-        p->story_reading = p->decision_scene = (uint8_t)scene;
+        PLAYER_INTERACTION(g, p).decision_open = PLAYER_VIEW(g, p).journal = true;
+        PLAYER_VIEW(g, p).journal_page = 1;
+        PLAYER_VIEW(g, p).story_reading = PLAYER_INTERACTION(g, p).decision_scene = (uint8_t)scene;
         s->seen |= BIT(scene);
         g->dirty = true;
         game_message(g, "REVIEW THE CONSEQUENCES / 1 2 3 CHOOSE / ENTER LEAVES UNDECIDED");
@@ -448,8 +448,9 @@ static const char *primary_choice(const Game *g, unsigned choice) {
 }
 const char *game_story_choice_for(const Game *g, int player, unsigned choice) {
     if (g->story.version >= 3 && player >= 0 && player < g->player_count &&
-        g->players[player].decision_open && g->players[player].decision_scene >= STORY_POWER)
-        return expedition_option(g, g->players[player].decision_scene, choice);
+        g->interactions[player].decision_open &&
+        g->interactions[player].decision_scene >= STORY_POWER)
+        return expedition_option(g, g->interactions[player].decision_scene, choice);
     return primary_choice(g, choice);
 }
 const char *game_story_choice(const Game *g, unsigned choice) {
@@ -457,7 +458,8 @@ const char *game_story_choice(const Game *g, unsigned choice) {
 }
 bool game_story_choice_ready(const Game *g, int player) {
     if (g->story.version >= 3 && player >= 0 && player < g->player_count &&
-        g->players[player].decision_open && g->players[player].decision_scene == STORY_COUNCIL)
+        g->interactions[player].decision_open &&
+        g->interactions[player].decision_scene == STORY_COUNCIL)
         return (g->story.done & BIT(STORY_POWER)) && (g->story.done & BIT(STORY_CIPHER));
     return game_story_prepared(g);
 }
@@ -466,7 +468,7 @@ bool game_story_choose(Game *g, int player, unsigned choice) {
     if (g->story.version >= 3 && scene >= STORY_POWER && scene < SC_STORY_SCENES)
         return expedition_choose(g, player, scene, choice);
     if (choice < 1 || choice > 3 || scene != game_story_target(g) ||
-        !g->players[player].decision_open)
+        !g->interactions[player].decision_open)
         return false;
     if (choice == 3 && !game_story_prepared(g)) {
         game_message(g, "OPTIONAL OPERATION REQUIRED / U TRACK IT / ENTER TO RETURN");
@@ -491,7 +493,7 @@ bool game_story_choose(Game *g, int player, unsigned choice) {
     g->story.assigned |= BIT(STORY_EXTRACTION);
     g->story.tracked = STORY_EXTRACTION;
     for (int p = 0; p < g->player_count; p++)
-        g->players[p].decision_open = g->players[p].journal = false;
+        g->interactions[p].decision_open = g->views[p].journal = false;
     game_message(g, "DECISION RECORDED / RETURN TO THE BAY TO EXTRACT");
     return true;
 }
@@ -500,9 +502,9 @@ void game_story_read(Game *g, int player) {
         return;
     Player *p = &g->players[player];
     for (int n = 1; n <= SC_STORY_SCENES; n++) {
-        unsigned at = (p->story_reading + n) % SC_STORY_SCENES;
+        unsigned at = (PLAYER_VIEW(g, p).story_reading + n) % SC_STORY_SCENES;
         if (g->story.seen & BIT(at)) {
-            p->story_reading = (uint8_t)at;
+            PLAYER_VIEW(g, p).story_reading = (uint8_t)at;
             return;
         }
     }

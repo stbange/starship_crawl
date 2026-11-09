@@ -28,6 +28,7 @@ void game_flashlight(Game *g, int player) {
 void game_message(Game *g, const char *s) {
     snprintf(g->message, sizeof(g->message), "%s", s);
     g->message_time = 4;
+    game_player_message(g, (PlayerId){0}, s);
 }
 static void player_init(Player *p) {
     memset(p, 0, sizeof(*p));
@@ -48,8 +49,11 @@ void game_init(Game *g, uint32_t seed) {
     story_init(&g->story);
     matrix_init(&g->matrix);
     g->player_count = 1;
-    for (int i = 0; i < SC_PLAYERS; i++)
+    g->epoch = 1;
+    for (int i = 0; i < SC_PLAYERS; i++) {
         player_init(&g->players[i]);
+        g->generations[i] = 1;
+    }
     game_equipment_reset(g);
     campaign_init(g);
     if (onboarding_active(g))
@@ -88,7 +92,7 @@ void game_lift_cancel(Game *g, int player) {
     g->dirty = true;
 }
 void game_join(Game *g) {
-    if (g->player_count == 2)
+    if (g->player_count >= SC_LOCAL_VIEWS)
         return;
     if (g->matrix.divers[1].active) {
         g->player_count = 2;
@@ -128,15 +132,20 @@ void game_leave(Game *g) {
     g->players[1].sheltered = false;
     g->players[1].resting = 0;
     g->player_count = 1;
+    g->generations[1]++;
     g->dirty = true;
     game_message(g, "SOLO EXPLORATION");
 }
 void game_new_ship(Game *g, uint32_t seed) {
     int participants = g->player_count;
+    uint32_t epoch = g->epoch;
     game_destroy(g);
     game_init(g, seed);
+    g->epoch = epoch;
+    game_identity_reset(g);
     g->player_count = participants;
-    position_move(&g->players[1].pos, v3(1.4, 0, 0));
+    for (int i = 1; i < SC_PLAYERS; i++)
+        position_move(&g->players[i].pos, v3(1.4 * i, 0, 0));
     g->dirty = true;
     game_message(g, "NEW SHIP / NEW CHARACTERS / EARN YOUR EQUIPMENT ON THIS EXPEDITION");
 }
@@ -164,7 +173,7 @@ bool game_upgrade(Game *g, int player, int upgrade) {
     p->shield = player_max_shield(p);
     p->armor = player_max_armor(p);
     p->energy = player_max_energy(p);
-    game_message(g, sc_attributes[upgrade]);
+    game_player_message(g, game_player_id(g, player), sc_attributes[upgrade]);
     return true;
 }
 static void award(Game *g, Player *p, unsigned xp) {
@@ -514,8 +523,9 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
         p->velocity = v3(0, 0, 0);
         p->crouched = true;
         p->lift_cooldown = 1;
-        Vec3 positions[2] = {position_absolute(g->players[0].pos),
-                             position_absolute(g->players[1].pos)};
+        Vec3 positions[SC_PLAYERS];
+        for (int i = 0; i < g->player_count; i++)
+            positions[i] = position_absolute(g->players[i].pos);
         world_refresh(&g->world, positions, g->player_count);
         game_message(g, "GRAV LIFT / CHECKPOINT SYNCHRONIZED");
         g->dirty = true;
@@ -568,12 +578,11 @@ static bool vulnerable(const Player *p) {
     Vec3 feet = position_absolute(p->pos);
     return !p->sheltered && feet.z >= 0 && world_difficulty(world_cell(feet)) != 0 && p->health > 0;
 }
-static bool already_hit(const Projectile *shot, Cell room, const Enemy *enemy) {
+static bool already_hit(const Game *g, const Projectile *shot, const Room *room,
+                        const Enemy *enemy) {
+    ActorId id = game_actor_id(g, room, enemy);
     for (int i = 0; i < shot->hit_count; i++)
-        if (enemy->force
-                ? shot->hit_forces[i] == enemy->force && shot->hit_members[i] == enemy->member
-                : !shot->hit_forces[i] && shot->hit_ids[i] == enemy->id &&
-                      cell_equal(shot->hit_rooms[i], room))
+        if (game_actor_same(shot->hit_actors[i], id))
             return true;
     return false;
 }
@@ -598,7 +607,7 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
             for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                 Enemy *enemy = &g->world.rooms[r].enemies[e];
                 if (!enemy->alive || enemy->allegiance == 2 ||
-                    already_hit(&history, g->world.rooms[r].cell, enemy))
+                    already_hit(g, &history, &g->world.rooms[r], enemy))
                     continue;
                 double hit = enemy_intercept(enemy, ray, dir, nearest);
                 if (hit < nearest) {
@@ -612,10 +621,7 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
             break;
         game_damage_enemy(g, room, target, owner, w->damage * (1 + .35f * p->power), w->flags);
         int at = history.hit_count++;
-        history.hit_rooms[at] = room->cell;
-        history.hit_ids[at] = (uint8_t)target;
-        history.hit_forces[at] = room->enemies[target].force;
-        history.hit_members[at] = room->enemies[target].member;
+        history.hit_actors[at] = game_actor_id(g, room, &room->enemies[target]);
         left -= nearest + .01;
         ray = vadd(end, vmul(dir, .01));
         if (left <= 0)
@@ -662,7 +668,7 @@ static void projectiles_step(Game *g, double dt) {
                     for (int e = 0; e < g->world.rooms[r].enemy_count; e++) {
                         Enemy *enemy = &g->world.rooms[r].enemies[e];
                         if (!enemy->alive || enemy->allegiance == 2 ||
-                            already_hit(shot, g->world.rooms[r].cell, enemy) ||
+                            already_hit(g, shot, &g->world.rooms[r], enemy) ||
                             (shot->owner < 0 &&
                              ((shot->source_force && enemy->force == shot->source_force) ||
                               factions_safe(g, g->world.rooms[r].cell) ||
@@ -704,10 +710,7 @@ static void projectiles_step(Game *g, double dt) {
                            shot->pierce > 1 && shot->hit_count < 4;
             if (pierces) {
                 int at = shot->hit_count++;
-                shot->hit_rooms[at] = room->cell;
-                shot->hit_ids[at] = (uint8_t)target;
-                shot->hit_forces[at] = room->enemies[target].force;
-                shot->hit_members[at] = room->enemies[target].member;
+                shot->hit_actors[at] = game_actor_id(g, room, &room->enemies[target]);
                 shot->pierce--;
                 travel -= nearest + .01;
                 position_move(&shot->pos, vmul(dir, .01));
@@ -995,8 +998,11 @@ void game_step(Game *g, const Actions *actions, double dt) {
     factions_forces_sync(g, true);
     game_equipment_step(g, dt);
     g->message_time = fmaxf(0, g->message_time - (float)dt);
-    Vec3 positions[2] = {position_absolute(g->players[0].pos),
-                         position_absolute(g->players[1].pos)};
+    for (int i = 0; i < g->player_count; i++)
+        g->views[i].message_time = fmaxf(0, g->views[i].message_time - (float)dt);
+    Vec3 positions[SC_PLAYERS];
+    for (int i = 0; i < g->player_count; i++)
+        positions[i] = position_absolute(g->players[i].pos);
     if (!world_refresh(&g->world, positions, g->player_count))
         return;
     factions_step(g, dt);

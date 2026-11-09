@@ -1,0 +1,583 @@
+{
+  "enumlimit": {
+    "DeathEffect": "DEATH_MINE",
+    "District": "DISTRICT_TYPES-1",
+    "DressingKind": "SCRAP",
+    "NavKind": "NAV_BLOCKED",
+    "RoomType": "ROOM_TYPES-1"
+  },
+  "exclude": {
+    "ActorId": [
+      "epoch"
+    ],
+    "Chunk": [
+      "boxes"
+    ],
+    "Factions": [
+      "capacity",
+      "regions"
+    ],
+    "Game": [
+      "dirty",
+      "epoch",
+      "message",
+      "message_time",
+      "presentation",
+      "views"
+    ],
+    "MatrixState": [
+      "capacity",
+      "index",
+      "index_capacity",
+      "records"
+    ],
+    "World": [
+      "index_cap",
+      "record_cap",
+      "record_index",
+      "records"
+    ]
+  },
+  "limits": {
+    "ActorId.member": [
+      "0",
+      "SC_MAX_ENEMIES-1"
+    ],
+    "Campaign.choice": [
+      "0",
+      "SC_GUARDIANS"
+    ],
+    "Campaign.tracked": [
+      "0",
+      "SC_GUARDIANS"
+    ],
+    "CampaignProfile.guns": [
+      "0",
+      "SC_EMPTY_GUN"
+    ],
+    "CampaignProfile.module": [
+      "0",
+      "SC_SPECIALIZATIONS"
+    ],
+    "CampaignProfile.power_slots": [
+      "0",
+      "SC_EMPTY_POWER"
+    ],
+    "CampaignProfile.rig": [
+      "0",
+      "WAGON"
+    ],
+    "Cell.x": [
+      "-10000000",
+      "10000000"
+    ],
+    "Cell.y": [
+      "-10000000",
+      "10000000"
+    ],
+    "Cell.z": [
+      "-10000000",
+      "10000000"
+    ],
+    "Chunk.box_count": [
+      "0",
+      "SC_CHUNK_BOXES"
+    ],
+    "Chunk.dressing_count": [
+      "0",
+      "SC_CHUNK_DRESSING"
+    ],
+    "Chunk.flight_count": [
+      "0",
+      "SC_CHUNK_FLIGHTS"
+    ],
+    "Chunk.light_count": [
+      "0",
+      "SC_CHUNK_LIGHTS"
+    ],
+    "Chunk.sprite_count": [
+      "0",
+      "SC_CHUNK_SPRITES"
+    ],
+    "CountryState.claimed": [
+      "0",
+      "SC_PLAYER_MASK"
+    ],
+    "CountryState.met": [
+      "0",
+      "1"
+    ],
+    "CountryState.offended": [
+      "0",
+      "SC_PLAYER_MASK"
+    ],
+    "CountryState.pledge": [
+      "0",
+      "3"
+    ],
+    "CountryState.stage": [
+      "0",
+      "3"
+    ],
+    "DeathHazard.owner": [
+      "-1",
+      "SC_PLAYERS-1"
+    ],
+    "DirectionProposal.kind": [
+      "0",
+      "DIRECTOR_EDITS-1"
+    ],
+    "DirectionProposal.phase": [
+      "0",
+      "4"
+    ],
+    "DirectionProposal.player": [
+      "0",
+      "SC_PLAYERS-1"
+    ],
+    "Director.history": [
+      "0",
+      "EVENTS-1"
+    ],
+    "Director.kind": [
+      "0",
+      "EVENTS-1"
+    ],
+    "Director.reasons": [
+      "0",
+      "DIRECTOR_REASONS-1"
+    ],
+    "Enemy.allegiance": [
+      "0",
+      "3"
+    ],
+    "Enemy.ally_owner": [
+      "0",
+      "SC_PLAYERS-1"
+    ],
+    "Enemy.behavior": [
+      "0",
+      "ALIEN_BEHAVIORS-1"
+    ],
+    "Enemy.country": [
+      "0",
+      "SC_COUNTRIES"
+    ],
+    "Enemy.ecology": [
+      "0",
+      "ECOLOGIES"
+    ],
+    "Enemy.id": [
+      "0",
+      "SC_MAX_ENEMIES-1"
+    ],
+    "Enemy.kind": [
+      "0",
+      "SC_ENEMY_TYPES-1"
+    ],
+    "Enemy.last_player": [
+      "0",
+      "SC_PLAYERS-1"
+    ],
+    "Enemy.member": [
+      "0",
+      "SC_FORCE_MEMBERS-1"
+    ],
+    "Enemy.motion": [
+      "0",
+      "MOTION_RECOVER"
+    ],
+    "EnvSprite.atmosphere": [
+      "0",
+      "ATMOSPHERES-1"
+    ],
+    "EnvSprite.kind": [
+      "0",
+      "SPR_SPRITES-1"
+    ],
+    "FactionEvent.country": [
+      "0",
+      "SC_COUNTRIES"
+    ],
+    "FactionEvent.kind": [
+      "0",
+      "FE_EVENTS-1"
+    ],
+    "FactionForce.count": [
+      "0",
+      "SC_FORCE_MEMBERS"
+    ],
+    "FactionForce.country": [
+      "0",
+      "SC_COUNTRIES"
+    ],
+    "FactionForce.nav_kind": [
+      "0",
+      "NAV_BLOCKED"
+    ],
+    "FactionForce.order": [
+      "0",
+      "FORCE_ORDERS-1"
+    ],
+    "FactionIncident.member": [
+      "0",
+      "SC_FORCE_MEMBERS-1"
+    ],
+    "FactionRegion.edit": [
+      "0",
+      "DIRECTOR_EDITS-1"
+    ],
+    "FactionRegion.kind": [
+      "0",
+      "SITE_FABRICATOR"
+    ],
+    "FactionRegion.owner": [
+      "0",
+      "SC_COUNTRIES"
+    ],
+    "Factions.count": [
+      "0",
+      "SC_SNAPSHOT_RECORDS"
+    ],
+    "Factions.relations": [
+      "0",
+      "REL_SYMBIOSIS"
+    ],
+    "Flare.owner": [
+      "0",
+      "SC_PLAYERS-1"
+    ],
+    "Game.generations": [
+      "1",
+      "UINT32_MAX"
+    ],
+    "Game.player_count": [
+      "1",
+      "SC_PLAYERS"
+    ],
+    "Habitat.atmosphere": [
+      "0",
+      "ATMOSPHERES-1"
+    ],
+    "Habitat.challenge": [
+      "0",
+      "CHALLENGES-1"
+    ],
+    "Habitat.contract": [
+      "0",
+      "RELICS"
+    ],
+    "Habitat.country": [
+      "0",
+      "SC_COUNTRIES"
+    ],
+    "Habitat.ecology": [
+      "0",
+      "ECOLOGIES-1"
+    ],
+    "Habitat.pace": [
+      "0",
+      "PACE_FRONTIER"
+    ],
+    "Habitat.reveal": [
+      "0",
+      "255"
+    ],
+    "Habitat.tale": [
+      "0",
+      "LOCAL_TALES-1"
+    ],
+    "HiddenDirector.history": [
+      "0",
+      "DIRECTOR_EDITS-1"
+    ],
+    "HiddenDirector.pace": [
+      "0",
+      "PACE_DISCOVERY"
+    ],
+    "InteractionState.decision_scene": [
+      "0",
+      "SC_STORY_SCENES-1"
+    ],
+    "MatrixBox.tag": [
+      "0",
+      "2"
+    ],
+    "MatrixControl.kind": [
+      "0",
+      "3"
+    ],
+    "MatrixControl.owner": [
+      "0",
+      "SC_PLAYERS-1"
+    ],
+    "MatrixDiver.network": [
+      "0",
+      "SC_PLAYERS-1"
+    ],
+    "MatrixDiver.selected": [
+      "0",
+      "1"
+    ],
+    "MatrixDiver.service": [
+      "0",
+      "SC_MATRIX_SERVICES-1"
+    ],
+    "MatrixGuard.role": [
+      "0",
+      "3"
+    ],
+    "MatrixNetwork.box_count": [
+      "0",
+      "SC_MATRIX_BOXES"
+    ],
+    "MatrixNetwork.core": [
+      "0",
+      "SC_MATRIX_NODES-1"
+    ],
+    "MatrixNetwork.count": [
+      "0",
+      "SC_MATRIX_NODES"
+    ],
+    "MatrixNetwork.credential": [
+      "0",
+      "SC_MATRIX_NODES-1"
+    ],
+    "MatrixNetwork.entry": [
+      "0",
+      "SC_MATRIX_NODES-1"
+    ],
+    "MatrixNetwork.gap_a": [
+      "0",
+      "SC_MATRIX_NODES-1"
+    ],
+    "MatrixNetwork.gap_b": [
+      "0",
+      "SC_MATRIX_NODES-1"
+    ],
+    "MatrixNetwork.motif": [
+      "0",
+      "3"
+    ],
+    "MatrixNetwork.switch_b": [
+      "0",
+      "SC_MATRIX_NODES-1"
+    ],
+    "MatrixNetwork.theme": [
+      "0",
+      "DISTRICT_TYPES-1"
+    ],
+    "MatrixNetwork.vault": [
+      "0",
+      "SC_MATRIX_NODES-1"
+    ],
+    "MatrixNode.architecture": [
+      "0",
+      "ROOM_TYPES-1"
+    ],
+    "MatrixNode.district": [
+      "0",
+      "DISTRICT_TYPES-1"
+    ],
+    "MatrixNode.service": [
+      "0",
+      "SC_MATRIX_SERVICES-1"
+    ],
+    "MatrixProfile.slots": [
+      "0",
+      "SC_MATRIX_PROGRAMS-1"
+    ],
+    "MatrixShot.owner": [
+      "-1",
+      "SC_PLAYERS-1"
+    ],
+    "MatrixShot.role": [
+      "0",
+      "3"
+    ],
+    "MatrixState.count": [
+      "0",
+      "SC_SNAPSHOT_RECORDS"
+    ],
+    "Pickup.item": [
+      "0",
+      "SC_WEAPONS-1"
+    ],
+    "Pickup.kind": [
+      "0",
+      "PICK_SALVAGE"
+    ],
+    "Player.level": [
+      "1",
+      "1000"
+    ],
+    "Player.riding": [
+      "0",
+      "WAGON"
+    ],
+    "Player.rig_weapon": [
+      "0",
+      "SC_MECH_WEAPONS-1"
+    ],
+    "Player.selected_power": [
+      "0",
+      "SC_PSIONICS-1"
+    ],
+    "Player.tint": [
+      "0",
+      "2"
+    ],
+    "Player.weapon": [
+      "0",
+      "SC_WEAPONS-1"
+    ],
+    "Politics.audience": [
+      "0",
+      "SC_COUNTRIES"
+    ],
+    "Politics.tracked": [
+      "0",
+      "SC_COUNTRIES"
+    ],
+    "Projectile.country": [
+      "0",
+      "SC_COUNTRIES"
+    ],
+    "Projectile.guardian": [
+      "0",
+      "SC_GUARDIANS"
+    ],
+    "Projectile.hit_count": [
+      "0",
+      "4"
+    ],
+    "Projectile.owner": [
+      "-1",
+      "SC_PLAYERS-1"
+    ],
+    "Room.depth": [
+      "0",
+      "SC_CELL*SC_REGION"
+    ],
+    "Room.enemy_count": [
+      "0",
+      "SC_MAX_ENEMIES"
+    ],
+    "Room.frontier_attacker": [
+      "0",
+      "255"
+    ],
+    "Room.height": [
+      "0",
+      "SC_DECK*2"
+    ],
+    "Room.history_role": [
+      "0",
+      "HISTORY_CONTROL"
+    ],
+    "Room.incident": [
+      "0",
+      "INCIDENT_TYPES-1"
+    ],
+    "Room.landmark": [
+      "0",
+      "LANDMARK_TYPES-1"
+    ],
+    "Room.layout": [
+      "0",
+      "INTERIOR_LAYOUTS-1"
+    ],
+    "Room.pickup_count": [
+      "0",
+      "5"
+    ],
+    "Room.span_x": [
+      "0",
+      "SC_REGION"
+    ],
+    "Room.span_z": [
+      "0",
+      "SC_REGION"
+    ],
+    "Room.theme": [
+      "0",
+      "SC_THEMES-1"
+    ],
+    "Room.width": [
+      "0",
+      "SC_CELL*SC_REGION"
+    ],
+    "Story.arc": [
+      "0",
+      "STORY_ARCS-1"
+    ],
+    "Story.chapter_choice": [
+      "0",
+      "3"
+    ],
+    "Story.choice": [
+      "0",
+      "3"
+    ],
+    "Story.tracked": [
+      "0",
+      "SC_STORY_SCENES-1"
+    ],
+    "StoryEvent.arc": [
+      "0",
+      "STORY_ARCS-1"
+    ],
+    "StoryEvent.choice": [
+      "0",
+      "3"
+    ],
+    "StoryEvent.scene": [
+      "0",
+      "SC_STORY_SCENES-1"
+    ],
+    "Vec3.x": [
+      "-1e9",
+      "1e9"
+    ],
+    "Vec3.y": [
+      "-1e9",
+      "1e9"
+    ],
+    "Vec3.z": [
+      "-1e9",
+      "1e9"
+    ],
+    "World.anchor_count": [
+      "0",
+      "SC_PLAYERS"
+    ],
+    "World.chunk_count": [
+      "0",
+      "SC_MAX_CHUNKS"
+    ],
+    "World.count": [
+      "0",
+      "SC_MAX_ROOMS"
+    ],
+    "World.desired_count": [
+      "0",
+      "SC_MAX_CHUNKS"
+    ],
+    "World.generator": [
+      "SC_OLDEST_GENERATOR",
+      "SC_GENERATOR_VERSION"
+    ],
+    "World.next_player": [
+      "0",
+      "SC_PLAYERS-1"
+    ],
+    "World.pending": [
+      "0",
+      "SC_MAX_CHUNKS"
+    ],
+    "World.record_count": [
+      "0",
+      "SC_SNAPSHOT_RECORDS"
+    ]
+  }
+}

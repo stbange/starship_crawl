@@ -127,7 +127,8 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
             }
             if (!campaign_choose(g, 0, phase % 3 + 1))
                 return 1;
-            p->journal = false; /* Closing the player's journal; no simulation mutation. */
+            PLAYER_VIEW(g, p).journal =
+                false; /* Closing the player's journal; no simulation mutation. */
             if (phase == 2 && !resumed) {
                 if (!game_save(g, "phase-journey.sav") || !game_load(g, "phase-journey.sav")) {
                     fprintf(stderr,
@@ -204,7 +205,7 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
                 game_interact(g, 0);
                 if (introduction && intro_before != p->intro && !capture(g, fixtures, "interface"))
                     return 1;
-                if (p->decision_open) {
+                if (PLAYER_INTERACTION(g, p).decision_open) {
                     if (!capture(g, fixtures, "decision"))
                         return 1;
                     if (!game_story_choose(g, 0, 1))

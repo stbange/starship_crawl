@@ -13,8 +13,9 @@ bool politics_valid(const Politics *p, unsigned generator) {
         return false;
     for (unsigned i = 0; i < SC_COUNTRIES; i++) {
         const CountryState *c = &p->countries[i];
-        if (c->met > 1 || c->pledge > 3 || c->stage > 3 || c->claimed > 3 || c->offended > 3 ||
-            (!!c->pledge != !!c->stage) || (c->stage && !c->met) || (c->claimed && c->stage != 3) ||
+        if (c->met > 1 || c->pledge > 3 || c->stage > 3 || c->claimed > SC_PLAYER_MASK ||
+            c->offended > SC_PLAYER_MASK || (!!c->pledge != !!c->stage) || (c->stage && !c->met) ||
+            (c->claimed && c->stage != 3) ||
             (!p->version && (c->met || c->pledge || c->stage || c->claimed || c->offended)))
             return false;
     }
@@ -51,9 +52,10 @@ bool politics_world_valid(const Politics *p, const Director *d, const World *w) 
             for (size_t i = 0; i < w->record_count; i++)
                 if (cell_equal(w->records[i].cell, site))
                     record = &w->records[i];
-            if (!record || !(record->local & FRONTIER_CLEARED) || !(record->local & 12))
+            if (!record || !(record->local & FRONTIER_CLEARED) ||
+                !world_participants(record->local))
                 return false;
-            if (role == COURT_FINALE && c->claimed != ((record->local >> 2) & 3))
+            if (role == COURT_FINALE && c->claimed != world_participants(record->local))
                 return false;
         }
     }
@@ -104,20 +106,20 @@ bool politics_threat(const Game *g, const Enemy *enemy) {
 void politics_journal(Game *g, int player) {
     if (!g->politics.version || player < 0 || player >= g->player_count)
         return;
-    g->players[player].journal = true;
-    g->players[player].journal_page = 6;
+    g->views[player].journal = true;
+    g->views[player].journal_page = 6;
     g->politics.audience[player] = 0;
 }
 void politics_read(Game *g, int player) {
     if (!g->politics.version || player < 0 || player >= g->player_count)
         return;
-    g->politics.reading[player] = (g->politics.reading[player] + 1) % SC_COUNTRIES;
+    g->views[player].country_reading = (g->views[player].country_reading + 1) % SC_COUNTRIES;
     g->politics.audience[player] = 0;
 }
 void politics_track(Game *g, int player) {
     if (!g->politics.version || player < 0 || player >= g->player_count)
         return;
-    unsigned choice = g->politics.reading[player] + 1;
+    unsigned choice = g->views[player].country_reading + 1;
     g->politics.tracked = g->politics.tracked == choice ? 0 : choice;
     g->dirty = true;
 }
@@ -149,8 +151,7 @@ static Room *near_court(Game *g, int player) {
 }
 bool politics_choose(Game *g, int player, unsigned choice) {
     if (!g->politics.version || player < 0 || player >= g->player_count || choice < 1 ||
-        choice > 3 || !g->players[player].journal || g->players[player].journal_page != 6 ||
-        !g->politics.audience[player])
+        choice > 3 || !g->politics.audience[player])
         return false;
     Room *r = near_court(g, player);
     unsigned n = g->politics.audience[player] - 1;
@@ -163,8 +164,8 @@ bool politics_choose(Game *g, int player, unsigned choice) {
     g->politics.tracked = n + 1;
     for (int p = 0; p < SC_PLAYERS; p++) {
         g->politics.audience[p] = 0;
-        if (g->players[p].journal_page == 6)
-            g->players[p].journal = false;
+        if (g->views[p].journal_page == 6)
+            g->views[p].journal = false;
     }
     game_message(g, "COMMISSION ACCEPTED / CONDUIT MARKED IN GOLD / CLEAR IT THEN USE ITS SEAL");
     g->dirty = true;
@@ -181,7 +182,7 @@ static void resolve(Game *g, unsigned nation, Room *r) {
     if (!world_set_systems(&g->world, site, systems))
         return;
     c->stage = 3;
-    uint32_t participants = (world_local_state(&g->world, r) >> 2) & 3;
+    uint32_t participants = world_participants(world_local_state(&g->world, r));
     for (int p = 0; p < SC_PLAYERS; p++)
         if (participants & (1u << p)) {
             c->claimed |= 1u << p;
@@ -205,14 +206,14 @@ bool politics_interact(Game *g, int player) {
     c->met = 1;
     if (r->habitat.court == COURT_AUDIENCE) {
         politics_journal(g, player);
-        g->politics.reading[player] = n;
+        g->views[player].country_reading = n;
         g->politics.audience[player] = c->stage ? 0 : n + 1;
     } else if (!c->stage || (r->habitat.court == COURT_FINALE && c->stage < 2)) {
         game_message(g, "ROYAL SEAL / SEEK THE COURT FIRST, THEN SECURE ITS DISPUTED CONDUIT");
     } else {
         game_encounter_interact(g, player);
         uint32_t state = world_local_state(&g->world, r);
-        if ((state & FRONTIER_CLEARED) && (state & (FRONTIER_ELIGIBLE << player))) {
+        if ((state & FRONTIER_CLEARED) && (state & world_eligible_bit(player))) {
             if (r->habitat.court == COURT_CONDUIT && c->stage == 1) {
                 c->stage = 2;
                 g->politics.tracked = n + 1;
@@ -317,7 +318,7 @@ void politics_step(Game *g, double dt) {
     }
 }
 void politics_line(const Game *g, int player, int line, char *text, size_t size) {
-    unsigned n = g->politics.reading[player] % SC_COUNTRIES;
+    unsigned n = g->views[player].country_reading % SC_COUNTRIES;
     const CountryState *c = &g->politics.countries[n];
     Government gov = politics_government(g->world.seed, n);
     static const char *premise[] = {

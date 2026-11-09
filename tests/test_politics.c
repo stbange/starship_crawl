@@ -119,7 +119,9 @@ static void disputes(void) {
             g->players[1].pos = g->players[0].pos;
             game_interact(g, 0);
             CHECK(g->politics.audience[0] == nation + 1);
-            g->players[0].journal = false;
+            g->views[0].journal = false;
+            GameCommand close = {CMD_CLOSE_INTERACTION, game_player_id(g, 0), 0, 0, 0, 0};
+            CHECK(game_command(g, &close));
             CHECK(!politics_choose(g, 0, choice));
             game_interact(g, 0);
             politics_read(g, 0);
@@ -132,7 +134,7 @@ static void disputes(void) {
             }
             CHECK(politics_choose(g, 0, choice));
             CHECK(!politics_choose(g, 0, choice));
-            CHECK(g->politics.countries[nation].stage == 1 && !g->players[0].journal);
+            CHECK(g->politics.countries[nation].stage == 1 && !g->views[0].journal);
             Cell goal;
             CHECK(game_objective(g, &goal) &&
                   cell_equal(goal, politics_site(713, nation, COURT_CONDUIT)));
@@ -198,7 +200,7 @@ static void disputes(void) {
             if (choice == 2)
                 CHECK(g->players[0].energy > 0);
             politics_journal(g, 0);
-            g->politics.reading[0] = nation;
+            g->views[0].country_reading = nation;
             for (int l = 0; l <= 10; l++) {
                 char text[256];
                 politics_line(g, 0, l, text, sizeof(text));

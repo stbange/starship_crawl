@@ -28,10 +28,10 @@ typedef struct {
 } GuardianAttempt;
 typedef struct {
     uint32_t version, defeated, eligible[SC_GUARDIANS], tracked;
-    CampaignProfile profiles[2];
+    CampaignProfile profiles[SC_PLAYERS];
     GuardianAttempt attempts[SC_GUARDIANS];
-    /* Journal selection is presentation state and is reconstructed after loading. */
-    unsigned slot[2], choice[2];
+    /* Pending reward decisions belong to the expedition. */
+    unsigned choice[SC_PLAYERS];
 } Campaign;
 struct Game;
 struct Player;

@@ -11,7 +11,7 @@ const float sc_matrix_costs[SC_MATRIX_PROGRAMS] = {15, 12, 18, 12, 14, 16};
 void matrix_init(MatrixState *m) {
     memset(m, 0, sizeof(*m));
     m->version = SC_MATRIX_VERSION;
-    for (int p = 0; p < 2; p++) {
+    for (int p = 0; p < SC_PLAYERS; p++) {
         m->profiles[p].programs = 7;
         m->profiles[p].slots[1] = MX_INTERRUPT;
     }
@@ -99,7 +99,7 @@ static uint32_t guard_mask(const MatrixNetwork *w, unsigned alert) {
 }
 static bool key_valid(Cell c);
 bool matrix_rehydrate(MatrixState *m, uint32_t seed, uint32_t generator) {
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < SC_PLAYERS; i++) {
         MatrixNetwork *w = &m->networks[i];
         if (!w->active)
             continue;
@@ -152,7 +152,7 @@ bool matrix_valid(const MatrixState *m, uint32_t seed, uint32_t generator, const
             if (r->done[s] & ~r->seen)
                 return false;
     }
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < SC_PLAYERS; i++) {
         const MatrixProfile *p = &m->profiles[i];
         const MatrixDiver *d = &m->divers[i];
         if ((p->programs & ~63u) ||
@@ -178,7 +178,7 @@ bool matrix_valid(const MatrixState *m, uint32_t seed, uint32_t generator, const
             !isfinite(d->echo.y) || !isfinite(d->echo.z) || vlen(d->echo) > 400)
             return false;
         if (d->active) {
-            if (!key_valid(d->key) || d->network >= 2 || !m->networks[d->network].active ||
+            if (!key_valid(d->key) || d->network >= SC_PLAYERS || !m->networks[d->network].active ||
                 !cell_equal(d->key, m->networks[d->network].key) || players[i].riding ||
                 players[i].health <= 0 || !cell_equal(matrix_region(d->terminal), d->key) ||
                 !cell_equal(world_describe_version(seed, generator, d->terminal).cell, d->terminal))
@@ -192,7 +192,7 @@ bool matrix_valid(const MatrixState *m, uint32_t seed, uint32_t generator, const
                 return false;
         }
     }
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < SC_PLAYERS; i++) {
         const MatrixNetwork *w = &m->networks[i];
         if (!w->active)
             continue;
@@ -204,7 +204,7 @@ bool matrix_valid(const MatrixState *m, uint32_t seed, uint32_t generator, const
     }
     for (int i = 0; i < SC_MATRIX_CONTROLS; i++) {
         const MatrixControl *c = &m->controls[i];
-        if (!bounded(c->life, 30) || c->kind > 3 || c->owner >= 2)
+        if (!bounded(c->life, 30) || c->kind > 3 || c->owner >= SC_PLAYERS)
             return false;
         if (c->life > 0) {
             if (!c->kind || c->room.x < -10000000 || c->room.x > 10000000 || c->room.y < -4000000 ||

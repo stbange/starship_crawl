@@ -220,13 +220,12 @@ bool game_encounter_interact(Game *g, int player) {
     uint32_t state = world_local_state(&g->world, r);
     if (r->habitat.pace == PACE_FRONTIER && vlen(vsub(feet, encounter_console(r))) < 3) {
         if (state & FRONTIER_CLEARED) {
-            if (!(state & (FRONTIER_ELIGIBLE << player)) ||
-                (state & (FRONTIER_CLAIMED << player))) {
+            if (!(state & world_eligible_bit(player)) || (state & world_claim_bit(player))) {
                 game_message(g, "CHALLENGE CLEARED / YOUR CLAIM IS COMPLETE");
                 return true;
             }
             CampaignReward reward = encounter_reward(g, player, r);
-            if (!world_mark_local(&g->world, r, FRONTIER_CLAIMED << player))
+            if (!world_mark_local(&g->world, r, world_claim_bit(player)))
                 return true;
             bool owned = campaign_owns(g, player, reward);
             campaign_grant(g, player, reward);
@@ -247,7 +246,7 @@ bool game_encounter_interact(Game *g, int player) {
             for (int i = 0; i < g->player_count; i++)
                 if (!g->players[i].sheltered && !g->matrix.divers[i].active &&
                     world_find(&g->world, world_cell(position_absolute(g->players[i].pos))) == r)
-                    participants |= FRONTIER_ELIGIBLE << i;
+                    participants |= world_eligible_bit(i);
             if (!world_mark_local(&g->world, r, participants))
                 return true;
             r->frontier_active = true;
@@ -343,7 +342,7 @@ void game_encounters_step(Game *g, double dt) {
             Player *p = &g->players[i];
             if (!p->sheltered && p->health > 0 && !g->matrix.divers[i].active &&
                 world_find(&g->world, world_cell(position_absolute(p->pos))) == r)
-                present |= FRONTIER_ELIGIBLE << i;
+                present |= world_eligible_bit(i);
         }
         if (!present) {
             r->frontier_active = false;

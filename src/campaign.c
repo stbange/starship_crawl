@@ -132,8 +132,8 @@ void campaign_journal(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
     Player *p = &g->players[player];
-    p->journal = true;
-    p->journal_page = 5;
+    PLAYER_VIEW(g, p).journal = true;
+    PLAYER_VIEW(g, p).journal_page = 5;
     g->campaign.choice[player] = 0;
     if (!g->campaign.version)
         return;
@@ -395,9 +395,9 @@ bool campaign_valid(const Campaign *c, const Player *players, const World *w) {
     for (unsigned i = 0; i < SC_GUARDIANS; i++) {
         bool done = (c->defeated & (1u << i)) != 0;
         const GuardianAttempt *a = &c->attempts[i];
-        if (c->eligible[i] > 3 || done != (c->eligible[i] != 0) || a->participants > 3 ||
-            a->active != (a->participants != 0) || (done && a->active) ||
-            (i < 8 && i / 2 > phase && (done || a->active)))
+        if (c->eligible[i] > SC_PLAYER_MASK || done != (c->eligible[i] != 0) ||
+            a->participants > SC_PLAYER_MASK || a->active != (a->participants != 0) ||
+            (done && a->active) || (i < 8 && i / 2 > phase && (done || a->active)))
             return false;
         bool killed = false;
         for (size_t j = 0; j < w->record_count; j++)

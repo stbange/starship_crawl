@@ -287,7 +287,7 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
                 fprintf(stderr, "Reward refused at %.3f\n", g->time);
                 break;
             }
-            p->journal = false;
+            PLAYER_VIEW(g, p).journal = false;
             previous_defeated = g->campaign.defeated;
             if (campaign_phase(&g->campaign) == 4)
                 save_at(g, directory, "unbound", &m);
@@ -478,9 +478,9 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
                     nav_until = 0;
                 } else {
                     game_interact(g, 0);
-                    if (p->decision_open) {
+                    if (PLAYER_INTERACTION(g, p).decision_open) {
                         printf("{\"event\":\"decision\",\"t\":%.3f,\"scene\":%u,\"choice\":1}\n",
-                               g->time, p->decision_scene);
+                               g->time, PLAYER_INTERACTION(g, p).decision_scene);
                         game_story_choose(g, 0, 1);
                     }
                     if (mode == 1) {
@@ -491,7 +491,7 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
                             save_at(g, directory, "changed-court", &m);
                         }
                     }
-                    p->journal = false;
+                    PLAYER_VIEW(g, p).journal = false;
                     last_use = g->time;
                 }
             }

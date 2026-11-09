@@ -100,7 +100,7 @@ static void test_arcs(void) {
             game_story_read(g, -1);
             game_story_read(g, 2);
             game_story_read(g, 0); /* No observations yet. */
-            CHECK(g->players[0].story_reading == 0);
+            CHECK(g->views[0].story_reading == 0);
             CHECK(!game_story_available(g, 99));
             CHECK(game_story_near(g, -1) == SC_STORY_SCENES);
             CHECK(game_story_near(g, 2) == SC_STORY_SCENES);
@@ -158,14 +158,14 @@ static void test_arcs(void) {
                   cell_equal(fixed_op, g->story.sites[op]));
             roundtrip(g);
             use(g, goal);
-            CHECK(g->players[0].decision_open);
+            CHECK(g->interactions[0].decision_open);
             CHECK(!game_story_choose(g, 0, 3));
             CHECK(g->story.choice == 0 && strstr(g->message, "REQUIRED"));
             /* Even an open decision cannot be committed remotely. */
             g->players[0].pos = position_from(game_terminal((Cell){0}));
             CHECK(!game_story_choose(g, 0, 1));
             if (choice == 3) {
-                g->players[0].decision_open = g->players[0].journal = false;
+                g->interactions[0].decision_open = g->views[0].journal = false;
                 use(g, op);
                 roundtrip(g);
             }
@@ -194,7 +194,7 @@ static void test_arcs(void) {
             inspect_text(g);
             for (int n = 0; n < 20; n++) {
                 game_story_read(g, 0);
-                CHECK(g->story.seen & BIT(g->players[0].story_reading));
+                CHECK(g->story.seen & BIT(g->views[0].story_reading));
             }
             roundtrip(g);
             game_new_ship(g, seed + 987);

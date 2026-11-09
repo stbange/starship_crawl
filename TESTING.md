@@ -1,5 +1,37 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for all required native, instrumented, browser, Quest and quality jobs together.
 
+**Session architecture (R1–R7).**
+
+The default native build registers 51 tests (30 unit, 20 gameplay and one SDL
+platform check). The headless Quest configuration has 37 unit tests. Final
+unit-only coverage is **98.1% (11,204/11,420 lines)**, with every measured
+source above 95%. Renderer and platform integration remain outside this metric.
+The ordinary-control replay retains the pre-refactor checkpoint bytes exactly.
+
+`session_core`, `session_party_core`, and `session_quest` exercise semantic command
+validation, addressed messages, view/connection identity, stale handles, room
+compaction, bounded streaming and a command/input replay at 30/60/120 display Hz.
+The four-player variant also exercises distant anchors, progression and reward masks
+while retaining exactly two local view bindings. The ordinary/Quest control/save
+parity test and historical save fixtures remain compatibility gates.
+
+`snapshot_core`, `snapshot_party_core`, `snapshot_quest`, and `snapshot_faults` cover
+live combat/matrix restoration, subsequent tick equivalence, view preference
+isolation, malformed/truncated/schema-mismatched data and transactional allocation
+failure. These snapshots are separate from checkpoint `.sav` files.
+
+Run `python3 scripts/generate-snapshot-schema.py --check` after changing core data
+structures. The quality job runs this check using the pinned `pycparser` development
+dependency. To change the wire contract, review field ownership and bounds in
+`scripts/snapshot-fields.json`, then regenerate the schema. A changed fingerprint
+rejects incompatible live snapshots; it does not change historical checkpoints.
+
+Coverage's required source inventory comes from `cmake/CoreSources.cmake` and remains
+at least 95% per measured source and overall. Immutable table-only compilation units
+have no executable gcov lines; the gate rejects functions added to that declaration
+and measures every reported executable line, including newly added source files.
+
+
 **Staged onboarding (generator 15 / save 16).** `staged_onboarding` checks earned
 access, reward tiers, independent saved lessons, optional guidance, malformed-save
 rollback, opening-room populations and the protected first matrix operation.
@@ -27,17 +59,17 @@ by these automated checks. [Onboarding evidence](docs/reviews/2026-11-09-onboard
 
 **CI scheduling.** Every main push still runs the complete publication gates.
 The ordinary web application is compiled and packaged once; six isolated browser
-jobs download that exact artifact and run all 18 suites. Each runner uses one
+jobs download that exact artifact and run all 19 suites. Each runner uses one
 browser test at a time. The browser launcher streams progress immediately and
 retains full logs plus per-suite timing/exit-status JSON in its capture artifact.
 
-Coverage is measured from the 30 unit tests alone, at the same 95% overall
+Coverage is measured from the 37 unit tests alone, at the same 95% overall
 and per-file threshold. Afterwards, six separate jobs run all instrumented
 campaign cases from the coverage build, and six run all address/undefined-behavior/
 leak sanitizer cases. `SC_SPLIT_CAMPAIGN_TESTS=ON` registers the existing two phase
 routes and four imperfect-control expeditions individually, without changing their
-inputs or assertions. That produces 24 campaign cases and 54 sanitizer tests.
-The default local/native test registration is unchanged. Runners use separate
+inputs or assertions. That produces 24 campaign cases and 61 sanitizer tests.
+The default registration retains the combined campaign cases. Runners use separate
 filesystems so journeys with the same temporary save filename cannot collide.
 
 `tests/ci-suites.json` assigns the groups. The runner rejects missing, duplicate,
@@ -103,7 +135,7 @@ autonomous orders/resources/hostility, invisible intervention effects and memory
 and malformed/allocation-failed saves. Crowded-room leases, separated co-op,
 exposed matrix bodies, shelter suspension, repeated imports, casualties and cargo
 have dedicated checks. The coverage gate includes all four new C sources and
-`save_factions.inc`, with no uncovered core exclusions.
+`save_factions.c`, with no uncovered core exclusions.
 
 The final native release suite passes **44/44** (24 unit, 19 gameplay, one SDL
 platform); all 19 gameplay-labelled tests also pass separately. Unit-only core

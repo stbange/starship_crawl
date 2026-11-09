@@ -35,7 +35,7 @@ static void foundations(void) {
     politics_journal(g, 0);
     politics_read(g, 0);
     politics_track(g, 0);
-    CHECK(!g->players[0].journal && !g->politics.tracked);
+    CHECK(!g->views[0].journal && !g->politics.tracked);
     MapView map;
     CHECK(game_map_build(g, 0, (Cell){3, 1, 4}, 3, &map));
     CHECK(g->factions.tick == 0 && g->factions.count == 0);

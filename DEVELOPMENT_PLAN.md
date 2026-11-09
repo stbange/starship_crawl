@@ -305,3 +305,14 @@ SDL's official [Emscripten documentation](https://github.com/libsdl-org/SDL/blob
 **Enemy deaths and machines (implemented).** All species have bounded death presentation and debris. Selected species leave acid, a delayed blast or a proximity mine. Five machines add a sixth body family and an expanded generator-6 roster; generator 3–5 encounters remain stable. Unit, real campaign, native render and browser tests cover warning periods, cover, safe-space isolation, exactly-once defeats, pool budgets and compatibility.
 
 **Ship Matrix (implemented).** All four [hacking milestones](HACKING.md) now provide body/virtual-space separation, safe return and shelter login, independent optional co-op links, seeded regional networks, security combat, six upgradeable programs, credentials and routing, persistent ship systems and robot controls, shared story preparation, rare vaults and generated controller conclusions. Format 10 retains active and reserved links without changing ship generator 6 or narrative 3. Unit and allocation/corruption tests, three normal-control journeys, native rendering and packaged browser input/save/touch tests cover the layer.
+
+
+## Session architecture refactor (R1–R7)
+
+The command, presentation, fixed-step session, identity/capacity, module, persistence
+and architecture-test work is implemented and archived in
+[OpenSpec](openspec/changes/archive/2026-11-09-session-architecture-refactor/tasks.md).
+See [docs/architecture.md](docs/architecture.md) for the resulting APIs, compatibility
+contracts and the remaining Internet multiplayer milestones. Online transport,
+replication, prediction, co-op policies and hosting are subsequent work; the existing
+application remains solo with optional local split-screen.

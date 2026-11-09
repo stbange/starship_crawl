@@ -2,6 +2,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+import tempfile
 
 path = Path(__file__).resolve().parents[1] / "scripts" / "check-coverage.py"
 spec = importlib.util.spec_from_file_location("coverage_gate", path)
@@ -11,8 +12,28 @@ spec.loader.exec_module(gate)
 
 class CoverageGateTests(unittest.TestCase):
     def report(self):
-        return {"files": [{"file": name, "lines": [{"count": 1}] * 20} for name in (
-            "src/onboarding.c", "src/faction_sim.c", "src/faction_forces.c", "src/faction_orders.c", "src/hidden_director.c", "src/save_factions.inc", "src/politics_gen.c", "src/politics.c", "src/director.c", "src/frontier.c", "src/reveals.c", "src/alien_special.c", "src/game.c", "src/encounters.c", "src/alien.c", "src/generation.c", "src/history.c", "src/interior.c", "src/habitat.c", "src/world.c", "src/traversal.c", "src/exterior.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/death.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/matrix.c", "src/matrix_gen.c", "src/matrix_state.c", "src/matrix_effects.c", "src/campaign.c", "src/campaign_gen.c", "src/campaign_combat.c", "src/math3d.h") ]}
+        return {"files": [{"file": name, "lines": [{"count": 1}] * 20}
+                          for name in sorted(gate.required_sources())]}
+
+    def test_data_table_macros_are_allowed_but_functions_are_rejected(self):
+        original = gate.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "cmake").mkdir()
+            (root / "src").mkdir()
+            (root / "cmake/CoreSources.cmake").write_text(
+                "set(SC_CORE_SOURCES src/content.c src/session.c)\n"
+                "set(SC_CORE_DATA_SOURCES src/content.c)\n")
+            source = root / "src/content.c"
+            try:
+                gate.ROOT = root
+                source.write_text("#define TABLE(name) {name, 1}\nconst int table[] = TABLE(2);\n")
+                self.assertIn("src/session.c", gate.required_sources())
+                source.write_text("int gameplay(void) { return 7; }\n")
+                with self.assertRaises(SystemExit):
+                    gate.required_sources()
+            finally:
+                gate.ROOT = original
 
     def test_empty_report_is_rejected(self):
         with self.assertRaises(SystemExit):

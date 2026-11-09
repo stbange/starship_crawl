@@ -27,7 +27,7 @@ typedef struct {
     float integrity, bandwidth, trace, cooldown, hurt, veil, siphon, grace, counter, lockout,
         echo_life;
     uint32_t network, selected, service, unbanked;
-    bool active, map, choice, grounded;
+    bool active, choice, grounded;
 } MatrixDiver;
 typedef struct {
     Cell room;
@@ -76,9 +76,9 @@ typedef struct {
 } MatrixLink;
 typedef struct {
     uint32_t version;
-    MatrixProfile profiles[2];
-    MatrixDiver divers[2];
-    MatrixNetwork networks[2];
+    MatrixProfile profiles[SC_PLAYERS];
+    MatrixDiver divers[SC_PLAYERS];
+    MatrixNetwork networks[SC_PLAYERS];
     MatrixControl controls[SC_MATRIX_CONTROLS];
     MatrixLink links[16];
     MatrixRecord *records;

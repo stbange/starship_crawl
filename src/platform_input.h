@@ -2,6 +2,7 @@
 #define SC_PLATFORM_INPUT_H
 #include <SDL3/SDL.h>
 #include <stdbool.h>
+#include "identity.h"
 
 enum {
     PREF_MOUSE,
@@ -19,11 +20,11 @@ typedef struct {
     unsigned quality, guidance;
 } ViewPreferences;
 typedef struct {
-    ViewPreferences view[2];
+    ViewPreferences view[SC_LOCAL_VIEWS];
 } Preferences;
 typedef struct {
-    SDL_Gamepad *pads[2];
-    int owner[2], players;
+    SDL_Gamepad *pads[SC_LOCAL_VIEWS];
+    int owner[SC_LOCAL_VIEWS], players;
 } InputDevices;
 
 void preferences_default(Preferences *p);

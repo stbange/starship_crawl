@@ -79,7 +79,7 @@ static bool eligible(Game *g, Cell site, unsigned kind, uint32_t force) {
 bool hidden_director_propose(Game *g, unsigned kind, int player, Cell site, uint32_t force) {
     HiddenDirector *d = &g->factions.director;
     if (onboarding_active(g) && player >= 0 && player < g->player_count &&
-        (onboarding_opening(site) || g->drills[player].time > 0 || g->players[player].lesson ||
+        (onboarding_opening(site) || g->drills[player].time > 0 || g->views[player].lesson ||
          (!g->players[player].kills && !g->campaign.defeated)))
         return false;
     if (!g->factions.version || !exploring(g, player) || kind <= EDIT_NONE ||

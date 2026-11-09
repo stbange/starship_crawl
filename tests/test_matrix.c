@@ -128,15 +128,15 @@ static void entry_and_programs(void) {
     for (int i = 0; i < 10; i++)
         game_step(g, (Actions[2]){a, {0}}, .02);
     CHECK(vlen(vsub(d->pos, before)) > 1 && vlen(position_delta(body, g->players[0].pos)) < .001);
-    d->map = true;
+    DIVER_VIEW(g, d).matrix_map = true;
     before = d->pos;
     matrix_player_step(g, 0, &a, .02);
     CHECK(vlen(vsub(d->pos, before)) == 0);
-    d->map = false;
+    DIVER_VIEW(g, d).matrix_map = false;
     game_map_toggle(g, 0);
-    CHECK(d->map);
+    CHECK(DIVER_VIEW(g, d).matrix_map);
     game_map_toggle(g, 0);
-    CHECK(!d->map);
+    CHECK(!DIVER_VIEW(g, d).matrix_map);
     CHECK(!matrix_equip(g, 0, MX_FORK) && !matrix_equip(g, -1, 0) && !matrix_equip(g, 0, 8));
     p->programs = 63;
     p->data = 30;
@@ -155,9 +155,9 @@ static void entry_and_programs(void) {
         CHECK(d->bandwidth < 100 && d->cooldown > 0);
         CHECK(!matrix_cast(g, 0, slot));
         ready(g);
-        d->map = true;
+        DIVER_VIEW(g, d).matrix_map = true;
         CHECK(!matrix_cast(g, 0, slot));
-        d->map = false;
+        DIVER_VIEW(g, d).matrix_map = false;
         d->choice = true;
         CHECK(!matrix_cast(g, 0, slot));
         d->choice = false;
@@ -231,9 +231,9 @@ static void consequences(void) {
         MatrixRecord *r = record(g);
         MatrixDiver *d = &g->matrix.divers[0];
         CHECK(!matrix_service(g, -1));
-        d->map = true;
+        DIVER_VIEW(g, d).matrix_map = true;
         CHECK(!matrix_service(g, 0));
-        d->map = false;
+        DIVER_VIEW(g, d).matrix_map = false;
         d->pos = v3(-30, 0, -30);
         CHECK(!matrix_service(g, 0));
         at_node(g, w->entry, v3(0, 0, -2));
@@ -597,9 +597,9 @@ static void routing_and_guards(void) {
         r->outcome = 1;
         CHECK(matrix_goal(g, 0, &goal));
         r->outcome = 0;
-        d->map = true;
+        DIVER_VIEW(g, d).matrix_map = true;
         matrix_use(g, 0);
-        d->map = false;
+        DIVER_VIEW(g, d).matrix_map = false;
         d->pos = v3(-70, 0, -70);
         matrix_use(g, 0);
         at_node(g, w->entry, v3(0, 0, -2));
@@ -637,7 +637,7 @@ static void routing_and_guards(void) {
         d->pos = v3(0, 0, 0);
         d->integrity = 100;
         d->veil = d->grace = 0;
-        g->players[0].journal = false;
+        g->views[0].journal = false;
         g->players[0].yaw = 0;
         g->players[0].pitch = 0;
         w->guards[0] = (MatrixGuard){.pos = {0, 1.1, 12}, .health = 100, .role = 0, .active = true};

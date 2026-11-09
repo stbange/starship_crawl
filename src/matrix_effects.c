@@ -71,7 +71,8 @@ bool matrix_cast(Game *g, int p, unsigned slot) {
     MatrixDiver *d = &g->matrix.divers[p];
     MatrixProfile *profile = &g->matrix.profiles[p];
     unsigned program = profile->slots[slot], level = profile->upgrades[program];
-    if (d->map || d->choice || d->cooldown > 0 || d->bandwidth < sc_matrix_costs[program])
+    if (DIVER_VIEW(g, d).matrix_map || d->choice || d->cooldown > 0 ||
+        d->bandwidth < sc_matrix_costs[program])
         return false;
     MatrixNetwork *w = &g->matrix.networks[d->network];
     MatrixRecord *r = &g->matrix.records[w->record];
@@ -144,7 +145,7 @@ static int console(Game *g, int p, MatrixNetwork **world, MatrixRecord **record)
     if (!active(g, p))
         return -1;
     MatrixDiver *d = &g->matrix.divers[p];
-    if (d->map || d->choice)
+    if (DIVER_VIEW(g, d).matrix_map || d->choice)
         return -1;
     *world = &g->matrix.networks[d->network];
     *record = &g->matrix.records[(*world)->record];
@@ -287,7 +288,7 @@ void matrix_use(Game *g, int p) {
     if (!active(g, p))
         return;
     MatrixDiver *d = &g->matrix.divers[p];
-    if (d->map || d->choice)
+    if (DIVER_VIEW(g, d).matrix_map || d->choice)
         return;
     MatrixNetwork *w = &g->matrix.networks[d->network];
     MatrixRecord *r = &g->matrix.records[w->record];
@@ -342,8 +343,8 @@ void matrix_use(Game *g, int p) {
             w->gate = 6;
         }
         d->choice = true;
-        g->players[p].journal = true;
-        g->players[p].journal_page = 4;
+        g->views[p].journal = true;
+        g->views[p].journal_page = 4;
         return;
     }
     game_message(g,
@@ -387,7 +388,7 @@ bool matrix_choose(Game *g, int p, unsigned choice) {
             g->players[i].career[3] = plus(g->players[i].career[3], 1);
         if (g->matrix.divers[i].active && cell_equal(g->matrix.divers[i].key, w->key)) {
             g->matrix.divers[i].choice = false;
-            g->players[i].journal = false;
+            g->views[i].journal = false;
         }
     }
     support(g, choice == 2 ? -3 : choice == 3 ? 8 : 5, choice == 2 ? -8 : choice == 3 ? 8 : 3);

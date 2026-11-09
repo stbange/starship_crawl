@@ -145,9 +145,10 @@ static void matrix_introduction(void) {
     CHECK(matrix_protected(g, 0));
     Actions actions[2] = {0};
     p->points = 2;
-    p->guide_quiet = 3;
+    PLAYER_VIEW(g, p).guide_quiet = 3;
     onboarding_step(g, actions, .02);
-    CHECK(p->lesson == LESSON_MATRIX); /* The active interface takes priority over body lessons. */
+    CHECK(PLAYER_VIEW(g, p).lesson ==
+          LESSON_MATRIX); /* The active interface takes priority over body lessons. */
     MatrixDiver *d = &g->matrix.divers[0];
     CHECK(d->service == MX_POWER && !matrix_cast(g, 0, 0));
     matrix_cycle_service(g, 0, 1);
@@ -162,9 +163,9 @@ static void matrix_introduction(void) {
     settle(g);
     game_interact(g, 0);
     CHECK(g->matrix.divers[0].active && !onboarding_matrix_intro(g, 0));
-    g->players[0].guide_quiet = 3;
+    g->views[0].guide_quiet = 3;
     onboarding_step(g, actions, .02);
-    CHECK(g->players[0].lesson == LESSON_NONE); /* No body controls while inside the matrix. */
+    CHECK(g->views[0].lesson == LESSON_NONE); /* No body controls while inside the matrix. */
     CHECK(matrix_equip(g, 0, MX_INTERRUPT));
     matrix_disconnect(g, 0, false);
     CHECK(game_save(g, "onboarding-link.sav") && game_load(g, "onboarding-link.sav"));
@@ -178,32 +179,32 @@ static void instruction(void) {
     Actions actions[2] = {0};
     for (int i = 0; i < 110; i++)
         onboarding_step(g, actions, .02);
-    CHECK(p->lesson == LESSON_BOARD);
+    CHECK(PLAYER_VIEW(g, p).lesson == LESSON_BOARD);
     onboarding_dismiss(g, -1);
     onboarding_dismiss(g, 2);
     onboarding_dismiss(g, 1);
     onboarding_dismiss(g, 0);
     CHECK(p->lessons & (1u << LESSON_BOARD));
-    CHECK(!g->players[1].lessons && !p->lesson);
+    CHECK(!g->players[1].lessons && !PLAYER_VIEW(g, p).lesson);
     CHECK(game_save(g, "onboarding-hints.sav") && game_load(g, "onboarding-hints.sav"));
     p = &g->players[0];
     CHECK(p->lessons & (1u << LESSON_BOARD));
-    p->guide_mode = GUIDE_OFF;
+    PLAYER_VIEW(g, p).guide_mode = GUIDE_OFF;
     for (int i = 0; i < 150; i++)
         onboarding_step(g, actions, .02);
-    CHECK(!p->lesson && p->weapons == 1);
-    p->guide_mode = GUIDE_MINIMAL;
+    CHECK(!PLAYER_VIEW(g, p).lesson && p->weapons == 1);
+    PLAYER_VIEW(g, p).guide_mode = GUIDE_MINIMAL;
     p->pos = position_from(v3(0, .02, 12));
     for (int i = 0; i < 110; i++)
         onboarding_step(g, actions, .02);
-    CHECK(!p->lesson);
-    p->guide_mode = GUIDE_GUIDED;
+    CHECK(!PLAYER_VIEW(g, p).lesson);
+    PLAYER_VIEW(g, p).guide_mode = GUIDE_GUIDED;
     g->message_time = 0;
     onboarding_step(g, actions, .02);
-    CHECK(p->lesson == LESSON_COMMISSION);
+    CHECK(PLAYER_VIEW(g, p).lesson == LESSON_COMMISSION);
     actions[0].fire = true;
     onboarding_step(g, actions, .02);
-    CHECK(!p->lesson);
+    CHECK(!PLAYER_VIEW(g, p).lesson);
     actions[0].fire = false;
     p->hurt = 1;
     CHECK(onboarding_danger(g, 0));
@@ -213,7 +214,7 @@ static void instruction(void) {
     p->health = 30;
     for (int i = 0; i < 110; i++)
         onboarding_step(g, actions, .02);
-    CHECK(p->lesson == LESSON_RECOVER);
+    CHECK(PLAYER_VIEW(g, p).lesson == LESSON_RECOVER);
     for (int i = 0; i < 610; i++)
         onboarding_step(g, actions, .02);
     CHECK(p->lessons & (1u << LESSON_RECOVER));
@@ -241,17 +242,17 @@ static void instruction(void) {
         }
     for (unsigned device = 0; device < 4; device++)
         for (unsigned item = 0; item < 4; item++) {
-            p->guide_device = device;
+            PLAYER_VIEW(g, p).guide_device = device;
             p->selected_power = item;
-            p->lesson = LESSON_POWER;
+            PLAYER_VIEW(g, p).lesson = LESSON_POWER;
             onboarding_hint_text(g, 0, text, sizeof(text));
             CHECK(strstr(text, sc_psionic_names[item]));
-            p->lesson = LESSON_RIG;
+            PLAYER_VIEW(g, p).lesson = LESSON_RIG;
             g->campaign.profiles[0].rig = item % 2 + 1;
             onboarding_hint_text(g, 0, text, sizeof(text));
             CHECK(strstr(text, item % 2 ? "WAGON" : "MECH"));
         }
-    p->lesson = LESSON_BOARD;
+    PLAYER_VIEW(g, p).lesson = LESSON_BOARD;
     onboarding_hint_text(g, 0, text, sizeof(text));
     CHECK(strstr(text, "LOADING BAY"));
     CHECK(!strcmp(onboarding_mode(0), "GUIDED") && !strcmp(onboarding_mode(1), "MINIMAL"));

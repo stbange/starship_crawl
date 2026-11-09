@@ -564,7 +564,7 @@ static void evict(World *w, int room) {
     w->revision++;
 }
 bool world_refresh(World *w, const Vec3 *positions, int players) {
-    if (players < 1 || players > 2)
+    if (players < 1 || players > SC_PLAYERS)
         return false;
     bool changed = players != w->anchor_count;
     for (int p = 0; p < players; p++) {
@@ -618,6 +618,7 @@ static Room *room_create(World *w, RoomSpec spec) {
     }
     r = &w->rooms[w->count++];
     memset(r, 0, sizeof(*r));
+    r->residency = ++w->next_residency;
     r->cell = spec.cell;
     r->type = spec.type;
     r->district = spec.district;
@@ -752,8 +753,8 @@ unsigned world_stream(World *w, unsigned budget) {
                     if (contains(r, w->desired[j]))
                         need = true;
                 int d = distance(r->cell, w->anchors[0]);
-                if (w->anchor_count == 2) {
-                    int b = distance(r->cell, w->anchors[1]);
+                for (int p = 1; p < w->anchor_count; p++) {
+                    int b = distance(r->cell, w->anchors[p]);
                     if (b < d)
                         d = b;
                 }
@@ -955,7 +956,7 @@ uint32_t world_local_state(const World *w, const Room *r) {
     return r && r->record != SIZE_MAX ? w->records[r->record].local : 0;
 }
 bool world_mark_local(World *w, Room *r, uint32_t bits) {
-    if (!r || w->generator < 11 || bits >= 64)
+    if (!r || w->generator < 11 || (bits & ~SC_LOCAL_STATE_MASK))
         return false;
     size_t index = record_for(w, r->cell, true);
     if (index == SIZE_MAX || w->failed)

@@ -419,7 +419,7 @@ static void guidance_and_builds(void) {
     r->ready = true;
     win(g, 0);
     CHECK(campaign_safe_refit(g, 0));
-    CHECK(campaign_interact(g, 0) && g->players[0].journal_page == 5);
+    CHECK(campaign_interact(g, 0) && g->views[0].journal_page == 5);
     g->story.done = 1;
     CHECK(!campaign_objective(g, &goal));
     g->story.assigned |= 1u << game_story_target(g);
@@ -632,13 +632,13 @@ static void generated_stories(void) {
               campaign_guardian(g->story.sites[target]) < 0);
         CHECK(campaign_layer(g->story.sites[op]) == 3);
         use_story(g, target);
-        CHECK(!g->players[0].decision_open && strstr(g->message, "SEALED"));
+        CHECK(!g->interactions[0].decision_open && strstr(g->message, "SEALED"));
         for (unsigned id = 0; id < 8; id += 2)
             win(g, id);
         use_story(g, op);
         CHECK(g->story.done & (1u << op));
         use_story(g, target);
-        CHECK(g->players[0].decision_open);
+        CHECK(g->interactions[0].decision_open);
         CHECK(game_story_choose(g, 0, seed % 3 + 1));
         CHECK(story_valid(&g->story, seed, g->world.generator, g->mission));
         CHECK(game_save(g, "phase-story.sav") && game_load(g, "phase-story.sav"));

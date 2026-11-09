@@ -2,6 +2,7 @@
 """Build, run unit tests, and enforce 95% core line coverage per file and overall."""
 import argparse
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -13,6 +14,20 @@ THRESHOLD = 95
 def run(args):
     print("+ " + " ".join(str(arg) for arg in args), flush=True)
     return subprocess.run([str(arg) for arg in args], cwd=ROOT, check=True)
+
+
+def required_sources():
+    manifest = (ROOT / "cmake" / "CoreSources.cmake").read_text()
+    sources = set(re.findall(r"src/[\w.]+\.c", manifest.split("set(SC_CORE_DATA_SOURCES")[0]))
+    data = set(re.findall(r"src/[\w.]+\.c", manifest.split("set(SC_CORE_DATA_SOURCES")[1]))
+    if not sources or not data <= sources:
+        raise SystemExit("Invalid core source manifest")
+    # Data tables have no executable lines. Any reported lines are still measured.
+    for name in data:
+        source = re.sub(r"(?m)^\s*#.*$", "", (ROOT / name).read_text())
+        if re.search(r"\)\s*\{", source):
+            raise SystemExit("Executable code added to data-only source: " + name)
+    return (sources - data) | {"src/math3d.h", "src/world.h"}
 
 
 def validate_report(data, require_quest=False):
@@ -29,8 +44,7 @@ def validate_report(data, require_quest=False):
         if covered * 100 < THRESHOLD * len(lines):
             failed.append(source["file"])
     # Do not accidentally pass with an empty, stale, or incorrectly filtered report.
-    required = {"src/politics_gen.c", "src/politics.c", "src/director.c", "src/frontier.c", "src/reveals.c", "src/alien_special.c", "src/game.c", "src/encounters.c", "src/alien.c", "src/generation.c", "src/history.c", "src/interior.c", "src/habitat.c", "src/world.c", "src/traversal.c", "src/exterior.c", "src/progression.c", "src/story.c", "src/expedition.c", "src/death.c", "src/save.c", "src/shelter.c", "src/navigation.c", "src/psionics.c", "src/equipment.c", "src/matrix.c", "src/matrix_gen.c", "src/matrix_state.c", "src/matrix_effects.c", "src/campaign.c", "src/campaign_gen.c", "src/campaign_combat.c", "src/math3d.h"}
-    required.update({"src/onboarding.c", "src/faction_sim.c", "src/faction_forces.c", "src/faction_orders.c", "src/hidden_director.c", "src/save_factions.inc"})
+    required = required_sources()
     if require_quest:
         required.add("src/quest.c")
     missing = required - names

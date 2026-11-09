@@ -316,7 +316,7 @@ bool factions_valid(const Factions *f, unsigned generator) {
             if (f->relations[a][b] > REL_SYMBIOSIS || f->relations[a][b] != f->relations[b][a] ||
                 (a == b && f->relations[a][b] != REL_PEACE) || f->nations[a].supplies[b] > 1000000)
                 return false;
-        for (unsigned p = 0; p < 2; p++) {
+        for (unsigned p = 0; p < SC_PLAYERS; p++) {
             const FactionIncident *in = &f->incidents[p][a];
             if (!valid_cell(in->site) || in->strikes > 20 || in->reports > 3 ||
                 in->member >= SC_FORCE_MEMBERS ||
@@ -347,13 +347,15 @@ bool factions_valid(const Factions *f, unsigned generator) {
         }
         if (a->id >= f->next_id || a->country < 1 || a->country > 3 ||
             a->count != SC_FORCE_MEMBERS || a->order <= ORDER_NONE || a->order >= FORCE_ORDERS ||
-            a->cargo > 12 || a->claimed > 3 || a->siege > 3 || a->present > 7 ||
+            a->cargo > 12 || a->claimed > SC_PLAYER_MASK || a->siege > 3 || a->present > 7 ||
             a->generation > f->tick || !valid_cell(a->home) || !valid_cell(a->goal) ||
             !valid_cell(a->next) || !finite_range(a->age, 20.01f) || !finite_range(a->wait, 120) ||
             !finite_range(a->route_time, 3) || !finite_range(a->stuck, 1000000) ||
-            !valid_point(a->waypoint) || a->participation[0] > 1000000 ||
-            a->participation[1] > 1000000)
+            !valid_point(a->waypoint))
             return false;
+        for (unsigned p = 0; p < SC_PLAYERS; p++)
+            if (a->participation[p] > 1000000)
+                return false;
         for (unsigned j = 0; j < i; j++)
             if (f->forces[j].id == a->id)
                 return false;
@@ -365,8 +367,8 @@ bool factions_valid(const Factions *f, unsigned generator) {
         for (unsigned m = 0; m < a->count; m++) {
             const Enemy *e = &a->members[m];
             if (e->force != a->id || e->member != m || e->country != a->country ||
-                e->kind >= SC_ENEMY_TYPES || e->allegiance > 3 || e->ally_owner > 1 ||
-                e->last_player > 1 || !finite_range(e->health, 1000000) ||
+                e->kind >= SC_ENEMY_TYPES || e->allegiance > 3 || e->ally_owner >= SC_PLAYERS ||
+                e->last_player >= SC_PLAYERS || !finite_range(e->health, 1000000) ||
                 (e->alive && e->health <= 0) || !finite_range(e->cooldown, 60) ||
                 !finite_range(e->slow, 10) || !finite_range(e->burn, 10) ||
                 !valid_point(position_absolute(e->pos)) ||
@@ -377,7 +379,7 @@ bool factions_valid(const Factions *f, unsigned generator) {
     const HiddenDirector *d = &f->director;
     if (d->budget > 3 || !finite_range(d->cooldown, 120) || !finite_range(d->recharge, 50.01f))
         return false;
-    for (unsigned p = 0; p < 2; p++)
+    for (unsigned p = 0; p < SC_PLAYERS; p++)
         if (d->pace[p] > PACE_DISCOVERY || !finite_range(d->pressure[p], 1) ||
             !finite_range(d->quiet[p], 600) || !finite_range(d->recovery[p], 45) ||
             !finite_range(d->defenses[p], 1000000) || !valid_cell(d->last_room[p]))

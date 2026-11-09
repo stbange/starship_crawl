@@ -10,17 +10,17 @@ void game_map_toggle(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
     if (g->matrix.divers[player].active) {
-        g->matrix.divers[player].map = !g->matrix.divers[player].map;
+        g->views[player].matrix_map = !g->views[player].matrix_map;
         return;
     }
     Player *p = &g->players[player];
-    p->map_open = !p->map_open;
-    p->map_center = bounded(world_cell(position_absolute(p->pos)));
+    PLAYER_VIEW(g, p).map_open = !PLAYER_VIEW(g, p).map_open;
+    PLAYER_VIEW(g, p).map_center = bounded(world_cell(position_absolute(p->pos)));
 }
 void game_map_pan(Game *g, int player, int x, int y, int z) {
-    if (player < 0 || player >= g->player_count || !g->players[player].map_open)
+    if (player < 0 || player >= g->player_count || !g->views[player].map_open)
         return;
-    Cell *c = &g->players[player].map_center;
+    Cell *c = &g->views[player].map_center;
     c->x += (x > 0) - (x < 0);
     c->y += (y > 0) - (y < 0);
     c->z += (z > 0) - (z < 0);

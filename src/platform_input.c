@@ -5,7 +5,7 @@
 #include <string.h>
 
 void preferences_default(Preferences *p) {
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < SC_LOCAL_VIEWS; i++)
         p->view[i] = (ViewPreferences){1, 1, 1, .16f, false, 0, 0};
 }
 bool preferences_set(Preferences *p, int player, int setting, double value) {
@@ -70,7 +70,7 @@ bool preferences_load(Preferences *p, const char *path) {
         return false;
     unsigned version = 0;
     bool ok = fscanf(f, "SC_PREFS %u", &version) == 1 && (version == 1 || version == 2);
-    for (int i = 0; ok && i < 2; i++) {
+    for (int i = 0; ok && i < SC_LOCAL_VIEWS; i++) {
         double values[PREF_COUNT];
         for (int j = 0; ok && j < (version == 1 ? 6 : PREF_COUNT); j++)
             ok = fscanf(f, "%lf", &values[j]) == 1 && preferences_set(&next, i, j, values[j]);
@@ -95,7 +95,7 @@ bool preferences_save(const Preferences *p, const char *path) {
     bool ok = f != NULL;
     if (f) {
         ok = fprintf(f, "SC_PREFS 2\n") > 0;
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < SC_LOCAL_VIEWS; i++) {
             const ViewPreferences *v = &p->view[i];
             if (fprintf(f, "%.6g %.6g %.6g %.6g %u %u %u\n", v->mouse, v->touch, v->stick,
                         v->deadzone, (unsigned)v->inverted, v->quality, v->guidance) < 0)
@@ -115,7 +115,7 @@ bool preferences_save(const Preferences *p, const char *path) {
 }
 int preferences_height(const Preferences *p, int player, bool touch) {
     const int heights[] = {0, 180, 240, 360, 480};
-    unsigned quality = player >= 0 && player < 2 ? p->view[player].quality : 0;
+    unsigned quality = player >= 0 && player < SC_LOCAL_VIEWS ? p->view[player].quality : 0;
     return quality > 0 && quality < 5 ? heights[quality] : (touch ? 240 : 360);
 }
 const char *preferences_quality(unsigned quality) {
@@ -133,15 +133,15 @@ void input_devices_players(InputDevices *d, int players) {
     if (d->players == players)
         return;
     d->players = players;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < SC_LOCAL_VIEWS; i++)
         d->owner[i] = players == 1 ? 0 : (d->pads[0] && d->pads[1] ? i : 1);
 }
 bool input_devices_add(InputDevices *d, SDL_JoystickID id, int players) {
     input_devices_players(d, players);
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < SC_LOCAL_VIEWS; i++)
         if (d->pads[i] && SDL_GetGamepadID(d->pads[i]) == id)
             return true;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < SC_LOCAL_VIEWS; i++)
         if (!d->pads[i]) {
             SDL_Gamepad *pad = SDL_OpenGamepad(id);
             if (!pad)
@@ -156,7 +156,7 @@ bool input_devices_add(InputDevices *d, SDL_JoystickID id, int players) {
     return false;
 }
 bool input_devices_remove(InputDevices *d, SDL_JoystickID id) {
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < SC_LOCAL_VIEWS; i++)
         if (d->pads[i] && SDL_GetGamepadID(d->pads[i]) == id) {
             SDL_CloseGamepad(d->pads[i]);
             d->pads[i] = NULL;
@@ -165,7 +165,7 @@ bool input_devices_remove(InputDevices *d, SDL_JoystickID id) {
     return false;
 }
 void input_devices_close(InputDevices *d) {
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < SC_LOCAL_VIEWS; i++)
         if (d->pads[i])
             SDL_CloseGamepad(d->pads[i]);
     input_devices_init(d);

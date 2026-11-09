@@ -63,23 +63,25 @@ static void test_maps(void) {
     CHECK(!game_map_build(g, 2, (Cell){0}, 2, &map));
     game_map_toggle(g, -1);
     game_map_toggle(g, 2);
-    CHECK(!p->map_open);
+    CHECK(!PLAYER_VIEW(g, p).map_open);
     game_map_pan(g, 0, 1, 1, 1);
-    CHECK(!p->map_open);
+    CHECK(!PLAYER_VIEW(g, p).map_open);
     game_map_toggle(g, 0);
-    CHECK(p->map_open && cell_equal(p->map_center, world_cell(position_absolute(p->pos))));
+    CHECK(PLAYER_VIEW(g, p).map_open &&
+          cell_equal(PLAYER_VIEW(g, p).map_center, world_cell(position_absolute(p->pos))));
     game_map_pan(g, -1, 1, 1, 1);
     game_map_pan(g, 2, 1, 1, 1);
-    Cell old = p->map_center;
+    Cell old = PLAYER_VIEW(g, p).map_center;
     game_map_pan(g, 0, 4, -4, 7);
-    CHECK(p->map_center.x == old.x + 1 && p->map_center.y == old.y - 1 &&
-          p->map_center.z == old.z + 1);
-    p->map_center = (Cell){9000000, 4000000, 9000000};
+    CHECK(PLAYER_VIEW(g, p).map_center.x == old.x + 1 &&
+          PLAYER_VIEW(g, p).map_center.y == old.y - 1 &&
+          PLAYER_VIEW(g, p).map_center.z == old.z + 1);
+    PLAYER_VIEW(g, p).map_center = (Cell){9000000, 4000000, 9000000};
     game_map_pan(g, 0, 1, 1, 1);
-    CHECK(cell_equal(p->map_center, (Cell){9000000, 4000000, 9000000}));
-    p->map_center = (Cell){-9000000, -4000000, 0};
+    CHECK(cell_equal(PLAYER_VIEW(g, p).map_center, (Cell){9000000, 4000000, 9000000}));
+    PLAYER_VIEW(g, p).map_center = (Cell){-9000000, -4000000, 0};
     game_map_pan(g, 0, -1, -1, -1);
-    CHECK(cell_equal(p->map_center, (Cell){-9000000, -4000000, 0}));
+    CHECK(cell_equal(PLAYER_VIEW(g, p).map_center, (Cell){-9000000, -4000000, 0}));
     const Cell centers[] = {{0, 0, 0}, {3, 1, 3}, {-3, -1, 6}, {3000000, 2000, 3000000}};
     unsigned generated = g->world.generated, revision = g->world.revision;
     for (unsigned seed = 1; seed <= 3; seed++)
@@ -116,9 +118,9 @@ static void test_maps(void) {
     CHECK(game_map_build(g, 0, (Cell){0}, 2, &map) && !map.has_objective);
     game_join(g);
     game_map_toggle(g, 1);
-    CHECK(g->players[1].map_open);
+    CHECK(g->views[1].map_open);
     game_map_toggle(g, 0);
-    CHECK(!p->map_open && g->players[1].map_open);
+    CHECK(!PLAYER_VIEW(g, p).map_open && g->views[1].map_open);
     destroy(g);
 }
 static void test_catalog_and_projectiles(void) {

@@ -49,7 +49,7 @@ typedef struct {
     float age, wait, route_time, stuck;
     Vec3 waypoint;
     Enemy members[SC_FORCE_MEMBERS];
-    uint32_t participation[2];
+    uint32_t participation[SC_PLAYERS];
     uint32_t claimed, arrivals, siege, present;
     bool physical;
     /* Disposable navigation cache; persistent positions and lift progress are above. */
@@ -98,10 +98,10 @@ typedef struct {
     float remaining;
 } DirectionProposal;
 typedef struct {
-    uint32_t pace[2], history[16], sequence, budget, accepted, rejected;
-    Cell last_room[2];
-    float pressure[2], quiet[2], recovery[2], cooldown, recharge;
-    float defenses[2];
+    uint32_t pace[SC_PLAYERS], history[16], sequence, budget, accepted, rejected;
+    Cell last_room[SC_PLAYERS];
+    float pressure[SC_PLAYERS], quiet[SC_PLAYERS], recovery[SC_PLAYERS], cooldown, recharge;
+    float defenses[SC_PLAYERS];
     DirectionProposal proposal;
 } HiddenDirector;
 typedef struct {
@@ -109,7 +109,7 @@ typedef struct {
     float remainder;
     FactionNation nations[3];
     uint32_t relations[3][3];
-    FactionIncident incidents[2][3];
+    FactionIncident incidents[SC_PLAYERS][3];
     FactionRegion *regions;
     size_t count, capacity;
     FactionForce forces[SC_FACTION_FORCES];

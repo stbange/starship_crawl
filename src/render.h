@@ -35,7 +35,7 @@ typedef struct {
 } SpriteVertex;
 typedef struct {
     GLuint program, vao, vbo;
-    GLuint framebuffer[SC_PLAYERS], texture[SC_PLAYERS], depth[SC_PLAYERS];
+    GLuint framebuffer[SC_LOCAL_VIEWS], texture[SC_LOCAL_VIEWS], depth[SC_LOCAL_VIEWS];
     GLint mvp, eye, grid, ui, offset;
     GLint torch, time, lamp_count, lamp_pos, lamp_color, fog_density, fog_color;
 #ifdef SC_WEBXR
@@ -47,10 +47,11 @@ typedef struct {
     GLuint sprite_program, sprite_vao, sprite_vbo, sprite_atlas;
     SpriteDraw sprite_draws[SC_VIEW_SPRITES];
     SpriteVertex sprite_vertices[SC_VIEW_SPRITES * 6];
-    unsigned sprite_drawn[SC_PLAYERS];
-    unsigned tentacle_drawn[SC_PLAYERS];
-    int width[SC_PLAYERS], height[SC_PLAYERS];
-    unsigned target_resizes[SC_PLAYERS];
+    unsigned active_view;
+    unsigned sprite_drawn[SC_LOCAL_VIEWS];
+    unsigned tentacle_drawn[SC_LOCAL_VIEWS];
+    int width[SC_LOCAL_VIEWS], height[SC_LOCAL_VIEWS];
+    unsigned target_resizes[SC_LOCAL_VIEWS];
     uint32_t world_revision;
     size_t world_vertices;
     GLuint chunk_vbo[SC_MAX_CHUNKS];
@@ -61,13 +62,13 @@ typedef struct {
     SpaceStar stars[SC_SPACE_STARS];
     Mesh mesh;
     Preferences preferences;
-    int view_height[SC_PLAYERS];
+    int view_height[SC_LOCAL_VIEWS];
     bool failed;
 } Renderer;
 bool renderer_init(Renderer *r);
 void renderer_destroy(Renderer *r);
-void renderer_draw(Renderer *r, Game *g, int width, int height, bool paused, bool touch, bool debug,
-                   double fps, const char *save_status);
+void renderer_draw(Renderer *r, Game *g, const ViewBindings *views, int width, int height,
+                   bool paused, bool touch, bool debug, double fps, const char *save_status);
 bool renderer_capture(int width, int height, const char *path);
 void renderer_options(Renderer *r, int width, int height, int player, int selected);
 #ifdef SC_WEBXR

@@ -70,12 +70,12 @@ static int network_for(Game *g, Cell key) {
     MatrixRecord *r = matrix_record(&g->matrix, key, true);
     if (!r)
         return -1;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < SC_PLAYERS; i++)
         if (g->matrix.networks[i].active && cell_equal(g->matrix.networks[i].key, key))
             return i;
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < SC_PLAYERS; i++) {
         bool used = false;
-        for (int p = 0; p < 2; p++)
+        for (int p = 0; p < SC_PLAYERS; p++)
             used |= g->matrix.divers[p].active && g->matrix.divers[p].network == (unsigned)i;
         if (used)
             continue;
@@ -144,7 +144,8 @@ bool matrix_toggle(Game *g, int p) {
     body->velocity = v3(0, 0, 0);
     body->flight = body->leap = body->nova = body->nova_tick = body->nova_flash = 0;
     body->resting = body->muzzle = 0;
-    body->journal = body->decision_open = body->map_open = false;
+    PLAYER_VIEW(g, body).journal = PLAYER_INTERACTION(g, body).decision_open =
+        PLAYER_VIEW(g, body).map_open = false;
     body->yaw = body->pitch = 0;
     g->dirty = true;
     game_message(g, onboarding_matrix_intro(g, p)
@@ -168,8 +169,8 @@ void matrix_disconnect(Game *g, int p, bool failed) {
     body->yaw = d->body_yaw;
     body->pitch = d->body_pitch;
     body->velocity = v3(0, 0, 0);
-    body->journal = false;
-    d->active = d->choice = d->map = false;
+    PLAYER_VIEW(g, body).journal = false;
+    d->active = d->choice = DIVER_VIEW(g, d).matrix_map = false;
     d->integrity = fmaxf(0, d->integrity);
     d->counter = 0;
     d->unbanked = 0;
@@ -187,9 +188,9 @@ void matrix_body_hit(Game *g, int p) {
     }
 }
 void matrix_reset_ship(Game *g) {
-    for (int p = 0; p < 2; p++)
+    for (int p = 0; p < SC_PLAYERS; p++)
         matrix_disconnect(g, p, false);
-    MatrixProfile profiles[2];
+    MatrixProfile profiles[SC_PLAYERS];
     memcpy(profiles, g->matrix.profiles, sizeof(profiles));
     matrix_destroy(&g->matrix);
     matrix_init(&g->matrix);
@@ -268,7 +269,7 @@ static void pulse(Game *g, int p
 }
 void matrix_player_step(Game *g, int p, const Actions *a, double dt) {
     MatrixDiver *d = &g->matrix.divers[p];
-    if (!d->active || d->map || d->choice || g->players[p].journal)
+    if (!d->active || DIVER_VIEW(g, d).matrix_map || d->choice || g->views[p].journal)
         return;
     MatrixNetwork *w = &g->matrix.networks[d->network];
     MatrixRecord *r = &g->matrix.records[w->record];
@@ -451,7 +452,7 @@ static void guards(Game *g, MatrixNetwork *w, double dt) {
             if (target >= 0)
                 hurt_avatar(g, target, 12, 1);
             else
-                for (int p = 0; p < 2; p++)
+                for (int p = 0; p < SC_PLAYERS; p++)
                     if (g->matrix.divers[p].echo_life > 0 &&
                         vlen(vsub(g->matrix.divers[p].echo, at)) < .1)
                         g->matrix.divers[p].echo_life = 0;
@@ -490,8 +491,8 @@ static void guards(Game *g, MatrixNetwork *w, double dt) {
 void matrix_step(Game *g, double dt) {
     if (!isfinite(dt) || dt <= 0 || dt > .05)
         return;
-    bool resident[2] = {false, false};
-    for (int p = 0; p < 2; p++) {
+    bool resident[SC_PLAYERS] = {false};
+    for (int p = 0; p < SC_PLAYERS; p++) {
         MatrixDiver *d = &g->matrix.divers[p];
         d->lockout = fmaxf(0, d->lockout - (float)dt);
         if (!d->active || p >= g->player_count)
@@ -536,7 +537,7 @@ void matrix_step(Game *g, double dt) {
                 matrix_disconnect(g, p, true);
         }
     }
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < SC_PLAYERS; i++)
         if (resident[i]) {
             MatrixNetwork *w = &g->matrix.networks[i];
             w->bridge = fmaxf(0, w->bridge - (float)dt);

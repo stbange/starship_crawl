@@ -31,6 +31,7 @@ jobs:
       - run: python -m pip install -r tests/requirements.txt
       - name: Coverage and CI gate self-tests
         run: |
+          python scripts/generate-snapshot-schema.py --check
           python -m unittest discover -s tests -p 'test_quality_tools.py'
           python -m unittest discover -s tests -p 'test_ci_tools.py'
           python scripts/run-ci-tests.py browser --check

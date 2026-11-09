@@ -1,4 +1,5 @@
 #include "game.h"
+#include "client_actions.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -62,41 +63,41 @@ bool onboarding_action(const Game *g, int player, int action) {
     const Player *p = &g->players[player];
     unsigned caps = onboarding_capabilities(g, player);
     const CampaignProfile *c = &g->campaign.profiles[player];
-    if (action == 13)
+    if (action == CLIENT_SHELTER)
         return (caps & OB_SHELTER) != 0;
-    if (action == 15 || action == 16)
-        return (c->rigs & (1u << (action - 15))) != 0;
-    if (action >= 17 && action <= 19)
+    if (action == CLIENT_MECH || action == CLIENT_WAGON)
+        return (c->rigs & (1u << (action - CLIENT_MECH))) != 0;
+    if (action >= CLIENT_FLARE && action <= CLIENT_FLARE_STRENGTH)
         return (p->weapons & (1u << SC_FLARE_CANNON)) != 0;
-    if (action >= 60 && action <= 63)
-        return (c->powers & (1u << (action - 60))) != 0;
-    if (action >= 70 && action <= 72)
+    if (action >= CLIENT_PSIONIC_FIRST && action <= 63)
+        return (c->powers & (1u << (action - CLIENT_PSIONIC_FIRST))) != 0;
+    if (action >= CLIENT_MECH_WEAPON_FIRST && action <= 72)
         return (c->rigs & 1) != 0;
-    if (action >= 40 && action < 40 + SC_WEAPONS)
-        return (p->weapons & (1u << (action - 40))) != 0;
-    if (action == 85)
+    if (action >= CLIENT_WEAPON_FIRST && action < CLIENT_WEAPON_FIRST + SC_WEAPONS)
+        return (p->weapons & (1u << (action - CLIENT_WEAPON_FIRST))) != 0;
+    if (action == CLIENT_RECORDS)
         return p->logs || (g->story.seen & ~1u);
-    if (action == 86 || action == 88)
+    if (action == CLIENT_DEBRIEF || action == CLIENT_EVENT_NEXT)
         return p->victories || g->story.chapter;
-    if (action >= 30 && action <= 35)
-        return p->map_open;
-    if (action == 9 || action == 10)
+    if (action >= CLIENT_MAP_PAN_FIRST && action <= 35)
+        return PLAYER_VIEW(g, p).map_open;
+    if (action == CLIENT_WEAPON_NEXT || action == CLIENT_WEAPON_PREVIOUS)
         return (caps & OB_GUNS) != 0;
-    if (action == 84 || (action >= 1 && action <= 3))
+    if (action == CLIENT_CHARACTER || (action >= CLIENT_DAMAGE && action <= CLIENT_HASTE))
         return (caps & OB_UPGRADES) != 0;
-    if (action >= 20 && action < 30)
+    if (action >= CLIENT_ATTRIBUTE_FIRST && action < CLIENT_MAP_PAN_FIRST)
         return (caps & OB_UPGRADES) && (action < 23 || (caps & OB_FULL_STATS));
-    if (action >= 220 && action <= 224)
+    if (action >= CLIENT_BUILD && action <= CLIENT_REFIT_NEXT)
         return (caps & OB_BUILD) != 0;
-    if (action >= 226 && action <= 228)
+    if (action >= CLIENT_REWARD_FIRST && action <= 228)
         return g->campaign.choice[player] != 0;
-    if (action == 200)
+    if (action == CLIENT_MATRIX_LINK)
         return (caps & OB_MATRIX) != 0;
-    if (action == 206)
+    if (action == CLIENT_PROGRAMS)
         return (caps & OB_PROGRAMS) != 0;
-    if (action == 201)
+    if (action == CLIENT_MATRIX_SERVICE)
         return g->matrix.divers[player].active;
-    if (action >= 202 && action <= 215)
+    if (action >= CLIENT_SERVICE_PREVIOUS && action <= 215)
         return (caps & OB_PROGRAMS) != 0;
     return true;
 }
@@ -182,17 +183,17 @@ static Lesson next_lesson(const Game *g, int player) {
     eligible[LESSON_RIG] = caps & OB_RIGS;
     for (unsigned i = 1; i < LESSON_COUNT; i++)
         if (eligible[i] && !(p->lessons & (1u << i)) &&
-            (p->guide_mode != GUIDE_MINIMAL || i >= LESSON_WEAPON))
+            (PLAYER_VIEW(g, p).guide_mode != GUIDE_MINIMAL || i >= LESSON_WEAPON))
             return (Lesson)i;
     return LESSON_NONE;
 }
 void onboarding_dismiss(Game *g, int player) {
-    if (player < 0 || player >= g->player_count || !g->players[player].lesson)
+    if (player < 0 || player >= g->player_count || !g->views[player].lesson)
         return;
     Player *p = &g->players[player];
-    p->lessons |= 1u << p->lesson;
-    p->lesson = 0;
-    p->lesson_time = p->guide_quiet = 0;
+    p->lessons |= 1u << PLAYER_VIEW(g, p).lesson;
+    PLAYER_VIEW(g, p).lesson = 0;
+    PLAYER_VIEW(g, p).lesson_time = PLAYER_VIEW(g, p).guide_quiet = 0;
     g->dirty = true;
 }
 void onboarding_step(Game *g, const Actions *actions, double dt) {
@@ -226,17 +227,19 @@ void onboarding_step(Game *g, const Actions *actions, double dt) {
         if (p->riding)
             p->lessons |= 1u << LESSON_RIG;
         g->dirty |= before != p->lessons;
-        if (p->guide_mode == GUIDE_OFF || actions[i].fire || onboarding_danger(g, i)) {
-            p->guide_quiet = 0;
-            p->lesson = 0;
+        if (PLAYER_VIEW(g, p).guide_mode == GUIDE_OFF || actions[i].fire ||
+            onboarding_danger(g, i)) {
+            PLAYER_VIEW(g, p).guide_quiet = 0;
+            PLAYER_VIEW(g, p).lesson = 0;
             continue;
         }
-        p->guide_quiet += (float)dt;
+        PLAYER_VIEW(g, p).guide_quiet += (float)dt;
         Lesson next = next_lesson(g, i);
-        if (p->lesson != (unsigned)next)
-            p->lesson_time = 0;
-        p->lesson = p->guide_quiet >= 2 ? (unsigned)next : 0;
-        if (p->lesson && g->message_time <= 0 && (p->lesson_time += (float)dt) >= 12)
+        if (PLAYER_VIEW(g, p).lesson != (unsigned)next)
+            PLAYER_VIEW(g, p).lesson_time = 0;
+        PLAYER_VIEW(g, p).lesson = PLAYER_VIEW(g, p).guide_quiet >= 2 ? (unsigned)next : 0;
+        if (PLAYER_VIEW(g, p).lesson && g->message_time <= 0 &&
+            (PLAYER_VIEW(g, p).lesson_time += (float)dt) >= 12)
             onboarding_dismiss(g, i);
     }
 }
@@ -246,13 +249,7 @@ const char *onboarding_mode(unsigned mode) {
 }
 void onboarding_text(unsigned lesson, unsigned device, char *text, size_t size) {
     static const char *move[] = {"WASD", "LEFT STICK", "MOVE PAD", "LEFT STICK"};
-    static const char *use[] = {"G", "DPAD DOWN", "USE", "RIGHT GRIP"};
     static const char *fire[] = {"CLICK", "RIGHT TRIGGER", "FIRE", "RIGHT TRIGGER"};
-    static const char *gun[] = {"Z / X", "RIGHT SHOULDER", "WEAPON", "X"};
-    static const char *upgrade[] = {"F4 / CHARACTER", "DPAD LEFT / UP / RIGHT", "MENU / CHARACTER",
-                                    "Y / CHARACTER UPGRADES"};
-    static const char *fold[] = {"R", "BACK / SELECT", "MENU / SHELTER", "MENU / EQUIPMENT"};
-    static const char *grid[] = {"F", "X", "MENU / RUN SERVICE", "RIGHT GRIP"};
     if (device > GUIDE_QUEST)
         device = GUIDE_KEYBOARD;
     const char *format = "", *key = "";
@@ -263,7 +260,7 @@ void onboarding_text(unsigned lesson, unsigned device, char *text, size_t size) 
         break;
     case LESSON_COMMISSION:
         format = "%s / ACCEPT YOUR MISSION AT THE BAY CONSOLE";
-        key = use[device];
+        key = game_command_binding(CMD_INTERACT, device);
         break;
     case LESSON_EXPLORE:
         format = "%s / FIRE AT ATTACKERS / EXPLORE A PASSAGE FROM THE BAY";
@@ -274,27 +271,27 @@ void onboarding_text(unsigned lesson, unsigned device, char *text, size_t size) 
         break;
     case LESSON_WEAPON:
         format = "%s / SWITCH YOUR EARNED WEAPONS";
-        key = gun[device];
+        key = game_command_binding(CMD_WEAPON_CYCLE, device);
         break;
     case LESSON_UPGRADE:
         format = "%s / CHOOSE DAMAGE, VITALITY OR HASTE WHEN READY";
-        key = upgrade[device];
+        key = game_command_binding(CMD_UPGRADE, device);
         break;
     case LESSON_SHELTER:
         format = "%s / UNFOLD SHELTER ON CLEAR FLOOR / REST OR USE MEDICAL";
-        key = fold[device];
+        key = game_command_binding(CMD_SHELTER, device);
         break;
     case LESSON_INTERFACE:
         format = "%s / RECOVER AN INTERFACE AT A CLEARED TERMINAL IN LAYER 2";
-        key = use[device];
+        key = game_command_binding(CMD_INTERACT, device);
         break;
     case LESSON_LINK:
         format = "%s / LINK AT A TERMINAL WHEN READY / FIRST TASK: RESTORE POWER";
-        key = use[device];
+        key = game_command_binding(CMD_INTERACT, device);
         break;
     case LESSON_MATRIX:
         format = "%s / FIRST LINK: RESTORE POWER / RETURN TO SEE THE LIGHTS";
-        key = grid[device];
+        key = game_command_binding(CMD_MATRIX_SERVICE, device);
         break;
     case LESSON_POWER:
         format = "ABILITIES / TRY YOUR EARNED POWER / RECHARGE BETWEEN USES%s";
@@ -309,22 +306,24 @@ void onboarding_text(unsigned lesson, unsigned device, char *text, size_t size) 
 }
 void onboarding_hint_text(const Game *g, int player, char *text, size_t size) {
     const Player *p = &g->players[player];
-    onboarding_text(p->lesson, p->guide_device, text, size);
-    if (p->lesson == LESSON_POWER) {
+    onboarding_text(PLAYER_VIEW(g, p).lesson, PLAYER_VIEW(g, p).guide_device, text, size);
+    if (PLAYER_VIEW(g, p).lesson == LESSON_POWER) {
         unsigned power = p->selected_power % SC_PSIONICS;
         const char *keys[] = {"V", "B", "J", "H"};
         const char *pad[] = {"LEFT TRIGGER + DPAD LEFT", "LEFT TRIGGER + DPAD UP",
                              "LEFT TRIGGER + DPAD RIGHT", "LEFT TRIGGER + DPAD DOWN"};
-        const char *key = p->guide_device == GUIDE_KEYBOARD ? keys[power]
-                          : p->guide_device == GUIDE_PAD    ? pad[power]
-                          : p->guide_device == GUIDE_TOUCH  ? "CAST"
-                                                            : "Y / ABILITIES AND EQUIPMENT";
+        const char *key = PLAYER_VIEW(g, p).guide_device == GUIDE_KEYBOARD ? keys[power]
+                          : PLAYER_VIEW(g, p).guide_device == GUIDE_PAD    ? pad[power]
+                          : PLAYER_VIEW(g, p).guide_device == GUIDE_TOUCH
+                              ? "CAST"
+                              : "Y / ABILITIES AND EQUIPMENT";
         snprintf(text, size, "%s / %s / ENERGY RECHARGES BETWEEN USES", key,
                  sc_psionic_names[power]);
-    } else if (p->lesson == LESSON_RIG) {
+    } else if (PLAYER_VIEW(g, p).lesson == LESSON_RIG) {
         unsigned rig = g->campaign.profiles[player].rig;
-        const char *key = p->guide_device == GUIDE_KEYBOARD ? (rig == MECH ? "T" : "Y")
-                          : p->guide_device == GUIDE_PAD
+        const char *key = PLAYER_VIEW(g, p).guide_device == GUIDE_KEYBOARD
+                              ? (rig == MECH ? "T" : "Y")
+                          : PLAYER_VIEW(g, p).guide_device == GUIDE_PAD
                               ? (rig == MECH ? "LEFT TRIGGER + A" : "LEFT TRIGGER + B")
                               : "MENU / EQUIPMENT";
         snprintf(text, size, "%s / DEPLOY %s / USE TO BOARD", key, rig == MECH ? "MECH" : "WAGON");

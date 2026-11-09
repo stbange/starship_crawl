@@ -173,7 +173,7 @@ static void run(unsigned seed, unsigned choice) {
     }
     CHECK(game_save(g, "matrix-journey.sav"));
     CHECK(game_load(g, "matrix-journey.sav"));
-    CHECK(g->matrix.divers[0].choice && g->players[0].journal && g->players[0].journal_page == 4);
+    CHECK(g->matrix.divers[0].choice && g->views[0].journal && g->views[0].journal_page == 4);
     CHECK(matrix_choose(g, 0, choice));
     unsigned data = g->matrix.profiles[0].data;
     CHECK(matrix_toggle(g, 0));

@@ -1,6 +1,7 @@
 #ifndef SC_GAME_H
 #define SC_GAME_H
 #include "world.h"
+#include "actors.h"
 #include "story.h"
 #include "matrix.h"
 #include "campaign.h"
@@ -9,7 +10,9 @@
 #include "frontier.h"
 #include "politics.h"
 #include "factions.h"
-#define SC_PLAYERS 2
+#include "identity.h"
+#include "commands.h"
+#include "presentation.h"
 #define SC_MAX_PROJECTILES 192
 #define SC_MAP_SIDE 9
 #define SC_PSIONICS 4
@@ -34,6 +37,22 @@ typedef struct {
     NavKind kind;
     unsigned searched;
 } Navigation;
+/* Local presentation state is not part of a character or a live simulation snapshot.
+   Decision selection is reconstructed by the interaction systems. */
+typedef struct {
+    uint8_t reading, journal_page, story_reading, event_reading;
+    unsigned guide_mode, guide_device, lesson;
+    float guide_quiet, lesson_time;
+    bool journal, map_open, matrix_map;
+    unsigned loadout_slot, country_reading;
+    Cell map_center;
+    char message[128];
+    float message_time;
+} PlayerView;
+typedef struct {
+    uint8_t decision_scene;
+    bool decision_open;
+} InteractionState;
 typedef struct Player {
     Position pos, checkpoint;
     Position lift_from, lift_to;
@@ -42,29 +61,23 @@ typedef struct Player {
     bool lift_latched; /* Release at the landing before requesting another ride. */
     float arrival_time, navigation_time;
     unsigned shots_fired;  /* Transient, per-player field-drill observation. */
-    Navigation navigation; /* Derived, per-view, never serialized. */
+    Navigation navigation; /* Derived route cache; reconstructed by checkpoint loading. */
     Vec3 velocity;
     double yaw, pitch;
     float health, cooldown, hurt, muzzle, lift_cooldown;
     uint32_t xp, level, kills, points, power, vitality, haste, tint;
     uint32_t mods[7], weapons, weapon, credits, logs, victories, pickups;
     float shield, armor, energy, slow;
-    uint8_t reading;
-    uint8_t journal_page, story_reading, decision_scene, event_reading;
     uint32_t career[SC_OUTCOMES];
     uint32_t intro, lessons;                   /* Save 16: earned interface and lesson receipts. */
-    unsigned guide_mode, guide_device, lesson; /* Device preferences, never imported. */
-    float guide_quiet, lesson_time;
-    bool decision_open;
-    bool grounded, crouched, flashlight, journal;
+    bool grounded, crouched, flashlight;
     bool sheltered;
     Vec3 shelter_pos;
     double return_yaw, return_pitch;
     float resting, nourished;
-    bool cloaked, map_open;
+    bool cloaked;
     float flight, leap, nova, nova_tick, nova_flash;
     uint8_t selected_power;
-    Cell map_center;
     uint32_t riding, rig_weapon, flare_lifetime, flare_strength;
     float drive_speed;
     float noise, relic_cooldown;
@@ -101,13 +114,10 @@ typedef struct {
     float blast;
     Color color;
     int pierce, hit_count;
-    Cell hit_rooms[4];
-    uint8_t hit_ids[4];
+    ActorId hit_actors[4];
     uint8_t guardian;
     uint8_t country; /* NPC faction shots can hit rivals; zero retains ordinary hostile shots. */
     uint32_t source_force;
-    uint32_t hit_forces[4];
-    uint8_t hit_members[4];
 } Projectile;
 typedef struct {
     Position pos;
@@ -143,7 +153,11 @@ typedef struct {
 typedef struct Game {
     World world;
     Player players[SC_PLAYERS];
+    PlayerView views[SC_PLAYERS];
+    InteractionState interactions[SC_PLAYERS];
     int player_count;
+    uint32_t epoch, generations[SC_PLAYERS];
+    Presentation presentation;
     double time;
     float message_time;
     char message[128];
@@ -167,6 +181,10 @@ typedef struct Game {
     Factions factions;
     bool dirty;
 } Game;
+/* Preserves const qualification when reading a view through a const Game. */
+#define DIVER_VIEW(game, diver) ((game)->views[(diver) - (game)->matrix.divers])
+#define PLAYER_INTERACTION(game, player) ((game)->interactions[(player) - (game)->players])
+#define PLAYER_VIEW(game, player) ((game)->views[(player) - (game)->players])
 typedef struct {
     Cell origin, player, objective, shelter;
     RoomSpec rooms[SC_MAP_SIDE * SC_MAP_SIDE];

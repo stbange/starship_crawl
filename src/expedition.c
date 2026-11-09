@@ -154,9 +154,9 @@ const char *expedition_option(const Game *g, unsigned scene, unsigned choice) {
 }
 static void debrief(Game *g, int player) {
     Player *p = &g->players[player];
-    p->journal = true;
-    p->journal_page = 3;
-    p->event_reading = 0;
+    PLAYER_VIEW(g, p).journal = true;
+    PLAYER_VIEW(g, p).journal_page = 3;
+    PLAYER_VIEW(g, p).event_reading = 0;
 }
 static void settle(Game *g, int player, bool follow) {
     Story *s = &g->story;
@@ -270,9 +270,9 @@ static void interact(Game *g, int player, unsigned scene, bool remote) {
         return;
     if (scene == STORY_COUNCIL || scene == STORY_RESOLUTION) {
         Player *p = &g->players[player];
-        p->decision_open = p->journal = true;
-        p->journal_page = 1;
-        p->decision_scene = p->story_reading = (uint8_t)scene;
+        PLAYER_INTERACTION(g, p).decision_open = PLAYER_VIEW(g, p).journal = true;
+        PLAYER_VIEW(g, p).journal_page = 1;
+        PLAYER_INTERACTION(g, p).decision_scene = PLAYER_VIEW(g, p).story_reading = (uint8_t)scene;
         s->seen |= BIT(scene);
         g->dirty = true;
         game_message(g, scene == STORY_COUNCIL
@@ -297,7 +297,7 @@ static void interact(Game *g, int player, unsigned scene, bool remote) {
         story_reserve(g, STORY_CONTACT, (Cell){0, 0, 4 + (int32_t)(s->chapter - 1) * 4});
         s->tracked = STORY_CONTACT;
         for (int p = 0; p < g->player_count; p++)
-            g->players[p].journal = g->players[p].decision_open = false;
+            g->views[p].journal = g->interactions[p].decision_open = false;
         expedition_record(g, scene, 0);
         game_message(g, arcs[s->arc]);
         return;
@@ -399,7 +399,7 @@ bool expedition_choose(Game *g, int player, unsigned scene, unsigned choice) {
     Story *s = &g->story;
     if (player < 0 || player >= g->player_count ||
         (scene != STORY_COUNCIL && scene != STORY_RESOLUTION) || choice < 1 || choice > 3 ||
-        !g->players[player].decision_open || g->players[player].decision_scene != scene)
+        !g->interactions[player].decision_open || g->interactions[player].decision_scene != scene)
         return false;
     if (choice == 3 && (scene == STORY_COUNCIL ? !(has(s, STORY_POWER) && has(s, STORY_CIPHER))
                                                : !has(s, STORY_RELAY))) {
@@ -466,7 +466,7 @@ bool expedition_choose(Game *g, int player, unsigned scene, unsigned choice) {
     story_complete(g, player, scene);
     expedition_record(g, scene, choice);
     for (int p = 0; p < g->player_count; p++)
-        g->players[p].decision_open = g->players[p].journal = false;
+        g->interactions[p].decision_open = g->views[p].journal = false;
     if (scene == STORY_COUNCIL)
         game_message(g,
                      choice == 3
@@ -500,8 +500,8 @@ void expedition_entry(const Game *g, unsigned scene, char *text, size_t size) {
 void game_story_event_read(Game *g, int player) {
     if (player < 0 || player >= g->player_count || !g->story.event_count)
         return;
-    g->players[player].event_reading =
-        (uint8_t)((g->players[player].event_reading + 1) % g->story.event_count);
+    g->views[player].event_reading =
+        (uint8_t)((g->views[player].event_reading + 1) % g->story.event_count);
 }
 void game_story_debrief(const Game *g, int player, int line, char *text, size_t size) {
     const Story *s = &g->story;
@@ -549,7 +549,7 @@ void game_story_debrief(const Game *g, int player, int line, char *text, size_t 
                  "CAREER / %u ARCS / %u RESCUED / %u KNOWLEDGE / %u TECHNOLOGY / %u CONTAINED",
                  p->career[4], p->career[0], p->career[1], p->career[2], p->career[3]);
     } else if (line == 8 && s->event_count) {
-        unsigned n = player >= 0 && player < g->player_count ? g->players[player].event_reading : 0;
+        unsigned n = player >= 0 && player < g->player_count ? g->views[player].event_reading : 0;
         const StoryEvent *e = &s->events[s->event_count - 1 - n % s->event_count];
         snprintf(
             text, size,

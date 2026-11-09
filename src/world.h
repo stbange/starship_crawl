@@ -1,6 +1,7 @@
 #ifndef SC_WORLD_H
 #define SC_WORLD_H
 #include "content.h"
+#include "identity.h"
 #include <stdbool.h>
 #include <stddef.h>
 #define SC_GENERATOR_VERSION 15u
@@ -9,7 +10,7 @@
 #define SC_DECK 64.0
 #define SC_REGION 4
 #define SC_REGION_CELLS 16
-#define SC_MAX_CHUNKS 192
+#define SC_MAX_CHUNKS (96 * SC_PLAYERS)
 #define SC_MAX_ROOMS SC_MAX_CHUNKS
 #define SC_LEGACY_BOXES 256
 #define SC_CHUNK_BOXES 512
@@ -123,13 +124,25 @@ typedef struct {
     Cell cell;
     uint32_t killed, collected, systems, local;
 } RoomRecord;
+#define SC_LOCAL_STATE_MASK                                                                        \
+    (3u | ((SC_PLAYER_MASK & 3u) << 2) | ((SC_PLAYER_MASK & 3u) << 4) |                            \
+     ((SC_PLAYER_MASK & 12u) << 4) | ((SC_PLAYER_MASK & 12u) << 6))
+static inline uint32_t world_eligible_bit(unsigned player) {
+    return 1u << (player < 2 ? player + 2 : player + 4);
+}
+static inline uint32_t world_claim_bit(unsigned player) {
+    return 1u << (player < 2 ? player + 4 : player + 6);
+}
+static inline uint32_t world_participants(uint32_t local) {
+    return ((local >> 2) & 3u) | ((local >> 4) & 12u);
+}
 enum { SYSTEM_POWER = 1, SYSTEM_BEACON = 2, SYSTEM_SILENCED = 4, SYSTEM_BLACKOUT = 8 };
 enum {
     LOCAL_RESOLVED = 1,
     FRONTIER_CLEARED = 2,
     FRONTIER_ELIGIBLE = 4,
     FRONTIER_CLAIMED = 16
-}; /* Eligible and claimed are two-bit player masks; format 12 appends this word. */
+}; /* Legacy eligible/claimed bits retain their positions; expanded slots use higher bits. */
 typedef enum {
     ALIEN_NONE,
     ALIEN_PILGRIM,
@@ -225,6 +238,7 @@ typedef struct {
     Habitat habitat;
     double width, depth, height;
     uint32_t hash;
+    uint64_t residency;
     int pickup_count;
     Pickup pickups[5];
     size_t record;
@@ -271,8 +285,9 @@ typedef struct {
     size_t *record_index, index_cap;
     size_t box_count;
     uint32_t revision, generated;
+    uint64_t next_residency;
     bool failed;
-    Cell anchors[2], desired[SC_MAX_CHUNKS];
+    Cell anchors[SC_PLAYERS], desired[SC_MAX_CHUNKS];
     int anchor_count, desired_count, pending, next_player;
     unsigned last_work;
 } World;
@@ -317,7 +332,7 @@ const char *world_incident_name(unsigned incident);
 const char *world_landmark_name(unsigned landmark);
 void world_init(World *w, uint32_t seed);
 void world_destroy(World *w);
-/* Request work only. Pump once per displayed frame, also while paused. */
+/* Request work only. Session ticks own simulation pumping; GPU uploads are independent. */
 bool world_refresh(World *w, const Vec3 *positions, int players);
 unsigned world_stream(World *w, unsigned budget);
 Room *world_find(World *w, Cell cell);

@@ -90,7 +90,10 @@ void campaign_plan(uint32_t seed, RegionPlan *plan) {
 }
 float campaign_guardian_health(unsigned id, unsigned participants) {
     unsigned phase = id == 8 ? 0 : id / 2;
-    return (id == 8 ? 340.f : 2200.f + phase * 1800.f) * (participants == 3 ? 1.45f : 1);
+    unsigned count = 0;
+    for (unsigned i = 0; i < SC_PLAYERS; i++)
+        count += (participants >> i) & 1;
+    return (id == 8 ? 340.f : 2200.f + phase * 1800.f) * (1 + .45f * (count > 0 ? count - 1 : 0));
 }
 void campaign_populate(World *w, Room *r) {
     for (int i = 0; i < r->pickup_count; i++)
