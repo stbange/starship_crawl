@@ -33,6 +33,9 @@ static void settings(void) {
     CHECK(preferences_set(&p, 0, PREF_INVERT, 1));
     CHECK(preferences_set(&p, 0, PREF_QUALITY, 1));
     CHECK(preferences_set(&p, 1, PREF_QUALITY, 4));
+    CHECK(preferences_set(&p, 0, PREF_GUIDANCE, 2));
+    CHECK(preferences_set(&p, 1, PREF_GUIDANCE, 1));
+    CHECK(preferences_get(&p, 0, PREF_GUIDANCE) == 2);
     CHECK(preferences_height(&p, 0, false) == 180);
     CHECK(preferences_height(&p, 1, true) == 480);
     CHECK(preferences_save(&p, path));
@@ -45,6 +48,10 @@ static void settings(void) {
     CHECK(!preferences_save(&p, "no-such-settings-directory/settings.cfg"));
     CHECK(!preferences_load(&loaded, NULL));
     CHECK(loaded.view[0].mouse == 1);
+    FILE *legacy = fopen(path, "w");
+    CHECK(legacy && fputs("SC_PREFS 1\n1.25 1 1 .16 0 2\n1 1 1 .2 1 3\n", legacy) >= 0);
+    CHECK(!fclose(legacy) && preferences_load(&loaded, path));
+    CHECK(loaded.view[0].guidance == 0 && loaded.view[0].mouse == 1.25f && loaded.view[1].inverted);
     const char *invalid[] = {"SC_PREFS 99\n", "SC_PREFS 1\n1 1 nan .16 0 0\n1 1 1 .16 0 0\n",
                              "SC_PREFS 1\n1 1 1 .16 0 0\n",
                              "SC_PREFS 1\n1 1 1 .16 0 0\n1 1 1 .16 0 0\njunk"};

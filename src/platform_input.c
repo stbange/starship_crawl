@@ -6,7 +6,7 @@
 
 void preferences_default(Preferences *p) {
     for (int i = 0; i < 2; i++)
-        p->view[i] = (ViewPreferences){1, 1, 1, .16f, false, 0};
+        p->view[i] = (ViewPreferences){1, 1, 1, .16f, false, 0, 0};
 }
 bool preferences_set(Preferences *p, int player, int setting, double value) {
     if (player < 0 || player > 1 || setting < 0 || setting >= PREF_COUNT || !isfinite(value))
@@ -29,6 +29,9 @@ bool preferences_set(Preferences *p, int player, int setting, double value) {
     case PREF_INVERT:
         v->inverted = value >= .5;
         break;
+    case PREF_GUIDANCE:
+        v->guidance = (unsigned)fmax(0, fmin(round(value), 2));
+        break;
     case PREF_QUALITY:
         v->quality = (unsigned)fmax(0, fmin(round(value), 4));
         break;
@@ -50,6 +53,8 @@ double preferences_get(const Preferences *p, int player, int setting) {
         return v->deadzone;
     case PREF_INVERT:
         return v->inverted;
+    case PREF_GUIDANCE:
+        return v->guidance;
     default:
         return v->quality;
     }
@@ -64,10 +69,10 @@ bool preferences_load(Preferences *p, const char *path) {
     if (!f)
         return false;
     unsigned version = 0;
-    bool ok = fscanf(f, "SC_PREFS %u", &version) == 1 && version == 1;
+    bool ok = fscanf(f, "SC_PREFS %u", &version) == 1 && (version == 1 || version == 2);
     for (int i = 0; ok && i < 2; i++) {
         double values[PREF_COUNT];
-        for (int j = 0; ok && j < PREF_COUNT; j++)
+        for (int j = 0; ok && j < (version == 1 ? 6 : PREF_COUNT); j++)
             ok = fscanf(f, "%lf", &values[j]) == 1 && preferences_set(&next, i, j, values[j]);
     }
     char extra;
@@ -89,11 +94,11 @@ bool preferences_save(const Preferences *p, const char *path) {
     FILE *f = fopen(temporary, "w");
     bool ok = f != NULL;
     if (f) {
-        ok = fprintf(f, "SC_PREFS 1\n") > 0;
+        ok = fprintf(f, "SC_PREFS 2\n") > 0;
         for (int i = 0; i < 2; i++) {
             const ViewPreferences *v = &p->view[i];
-            if (fprintf(f, "%.6g %.6g %.6g %.6g %u %u\n", v->mouse, v->touch, v->stick, v->deadzone,
-                        (unsigned)v->inverted, v->quality) < 0)
+            if (fprintf(f, "%.6g %.6g %.6g %.6g %u %u %u\n", v->mouse, v->touch, v->stick,
+                        v->deadzone, (unsigned)v->inverted, v->quality, v->guidance) < 0)
                 ok = false;
         }
         if (fflush(f))

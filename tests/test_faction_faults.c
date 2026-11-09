@@ -94,7 +94,7 @@ static void allocation(void) {
     fclose(file);
     memcpy(copy, bytes, length);
     size_t start =
-        length - 4 - SC_FACTIONS_SAVE_BYTES - g->factions.count * SC_FACTION_REGION_BYTES;
+        length - 4 - 16 - SC_FACTIONS_SAVE_BYTES - g->factions.count * SC_FACTION_REGION_BYTES;
     const size_t offsets[] = {start, start + 52, start + 56 + 24,
                               start + 500 + g->factions.count * SC_FACTION_REGION_BYTES,
                               start + 500 + g->factions.count * SC_FACTION_REGION_BYTES + 4};

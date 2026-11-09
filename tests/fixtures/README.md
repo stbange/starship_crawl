@@ -209,3 +209,14 @@ of ordinary movement, force 15 still carries twelve supplies and is visible nine
 metres away. The browser imports this close checkpoint for actual convoy capture,
 co-op and identity-preserving save/reload. Neither checkpoint is an inspection
 scene or an equipment-grant fixture.
+
+
+`onboarding-interface.sav` is a generator-15 / format-16 checkpoint from
+`./build/sc_phase_journey --onboarding build-onboarding-fixtures` (seed 713).
+The driver approaches from space, fights with ordinary movement and fire inputs,
+earns its equipment, defeats the first guardian and walks to the layer-two
+terminal at `(4,0,2)`. It saves after recovering the interface and before linking.
+No progression, health, enemies or positions are injected. The same run completes
+its first power restoration, all four phases and extraction in 975.10 simulated
+seconds, with 119 kills and zero deaths. This is automated execution, not a
+human difficulty assessment. SHA-256: `54912eb25c0d05a953b644e28b0b172353dd4ee489b1a81efb568070a663bc63`.

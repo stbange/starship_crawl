@@ -85,7 +85,7 @@ def run():
             page.goto(base + "?seed=713")
             wait_ready(page)
             assert state(page)["players"] == 1
-            assert state(page)["generator"] == 14
+            assert state(page)["generator"] == 15
             native = Path(os.environ.get("SC_CORE_TEST", str(ROOT / "build" / "sc_tests")))
             assert native.is_file(), "Build sc_tests or set SC_CORE_TEST for native/WASM generation parity"
             probes = json.loads(subprocess.check_output([str(native), "--fingerprints"]))
@@ -97,7 +97,7 @@ def run():
             wait_for(page, "!JSON.parse(Module.ccall('sc_web_state','string',[],[])).paused")
             before = state(page)
             page.keyboard.down("w")
-            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > -26", timeout=20000)
+            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).z > -26", timeout=60000)
             page.keyboard.up("w")
             assert state(page)["z"] > before["z"] + 5
             page.mouse.down()

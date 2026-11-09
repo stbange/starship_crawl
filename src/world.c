@@ -2,6 +2,7 @@
 #include "habitat.h"
 #include "exterior.h"
 #include "campaign.h"
+#include "onboarding.h"
 #include "encounters.h"
 #include "frontier.h"
 #include "politics.h"
@@ -657,7 +658,9 @@ static void populate(World *w, Room *r) {
         /* Reserve offspring slots so brood species retain their defining ability. */
         r->enemy_count = (int)fmin(SC_MAX_ENEMIES - 2, r->enemy_count + r->span_x + r->span_z);
     for (int i = 0; i < r->enemy_count; i++) {
-        uint32_t population_version = w->generator == 8 ? 7 : w->generator;
+        uint32_t population_version = w->generator >= 15  ? 14
+                                      : w->generator == 8 ? 7
+                                                          : w->generator;
         uint32_t h = world_hash(w->seed ^ population_version, r->cell, 1000 + (uint32_t)i * 31);
         Enemy *e = &r->enemies[i];
         e->id = (uint8_t)i;
@@ -712,6 +715,9 @@ static void populate(World *w, Room *r) {
     if (w->generator >= 14) {
         r->enemy_count = (int)fmin(r->enemy_count, SC_MAX_ENEMIES - 6);
         factions_populate(w, r);
+    }
+    if (w->generator >= 15) {
+        onboarding_populate(w, r);
     }
 }
 unsigned world_stream(World *w, unsigned budget) {

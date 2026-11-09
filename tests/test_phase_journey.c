@@ -97,6 +97,19 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
                 campaign_track(g);
             game_objective(g, &goal);
         }
+        bool introduction = profile == 3 && phase == 1 && !(p->intro & INTRO_GRID);
+        if (introduction) {
+            goal = (Cell){4, 0, 2};
+            if (g->matrix.divers[0].active) {
+                game_interact(g, 0);
+                if (!(p->intro & INTRO_GRID)) {
+                    fprintf(stderr, "Introductory microgrid operation failed\n");
+                    return 1;
+                }
+                have = false;
+                continue;
+            }
+        }
         if (!cell_equal(previous, goal) || previous_respawns != g->respawns)
             have = false;
         previous = goal;
@@ -121,7 +134,8 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
                             "Resume refused: phase=%d story=%d matrix=%d scene=%u mission=%u\n",
                             campaign_valid(&g->campaign, g->players, &g->world),
                             story_valid(&g->story, seed, g->world.generator, g->mission),
-                            matrix_valid(&g->matrix, seed, 7, g->players, &g->shelter),
+                            matrix_valid(&g->matrix, seed, SC_GENERATOR_VERSION, g->players,
+                                         &g->shelter),
                             g->story.tracked, g->mission);
                     return 1;
                 }
@@ -175,6 +189,8 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
                 waypoint = world_center(next_cell(g, cell, goal));
             have = true;
         }
+        if (introduction && cell_equal(cell, goal))
+            waypoint = vadd(matrix_terminal(goal), v3(0, 0, -2.5));
         Vec3 diff = vsub(waypoint, feet);
         diff.y = 0;
         double distance = vlen(diff);
@@ -184,7 +200,10 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
                 actions[0].lift_up = !p->lift_latched && cell.y < goal.y;
                 actions[0].lift_down = !p->lift_latched && cell.y > goal.y;
             } else if (cell.x == goal.x && cell.z == goal.z) {
+                unsigned intro_before = p->intro;
                 game_interact(g, 0);
+                if (introduction && intro_before != p->intro && !capture(g, fixtures, "interface"))
+                    return 1;
                 if (p->decision_open) {
                     if (!capture(g, fixtures, "decision"))
                         return 1;
@@ -286,6 +305,7 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
     }
     bool ok = (g->story.done & (1u << STORY_EXTRACTION)) && campaign_phase(&g->campaign) == 4 &&
               resumed && g->players[0].kills > 8 &&
+              (profile != 3 || g->players[0].intro == (INTRO_INTERFACE | INTRO_GRID)) &&
               campaign_valid(&g->campaign, g->players, &g->world);
     printf("Phase journey %u %s: %s, %.1fs, %u kills, %u deaths, %u frames\n", seed,
            port ? "port" : "starboard", ok ? "PASS" : "FAIL", g->time, g->players[0].kills,
@@ -308,13 +328,15 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
             ok = false;
         remove("phase-journey.sav");
         game_new_ship(g, seed);
-        ok = ok && g->players[0].level == 1 && g->players[0].weapons == 3 && !g->campaign.defeated;
+        ok = ok && g->players[0].level == 1 && g->players[0].weapons == 1 && !g->campaign.defeated;
     }
     game_destroy(g);
     free(g);
     return ok ? 0 : 1;
 }
 int main(int argc, char **argv) {
+    if (argc >= 2 && !strcmp(argv[1], "--onboarding"))
+        return journey(713, false, argc == 3 ? argv[2] : NULL, 3);
     if (argc == 3 && !strcmp(argv[1], "--case")) {
         static const struct {
             const char *name;

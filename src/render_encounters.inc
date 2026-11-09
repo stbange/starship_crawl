@@ -112,7 +112,8 @@ static void encounter_hud(Renderer *r, const Game *g, int player, float w, float
     Color color = rgb(.78f, .85f, .72f);
     float width = w - 24 * s;
     const RewardDrill *drill = &g->drills[player];
-    if (drill->time > 0 && vlen(vsub(feet, world_center(drill->site))) < 35) {
+    if (p->guide_mode != GUIDE_OFF && !p->lesson && !onboarding_danger(g, player) &&
+        drill->time > 0 && vlen(vsub(feet, world_center(drill->site))) < 35) {
         const char *hint =
             drill->complete ? "FIELD DRILL COMPLETE" : reward_drill_hint(drill->reward);
         if (touch && !drill->complete) {

@@ -37,6 +37,8 @@ void game_weapon(Game *g, int player, int delta) {
     }
     p->cooldown = fmaxf(p->cooldown, .15f);
     g->dirty = true;
+    if (onboarding_active(g) && (onboarding_capabilities(g, player) & OB_GUNS))
+        p->lessons |= 1u << LESSON_WEAPON;
     game_message(g, sc_weapons[p->weapon].name);
 }
 void game_hurt(Game *g, int player, float damage, uint32_t flags) {
@@ -116,6 +118,13 @@ void game_interact(Game *g, int player) {
         return;
     if (game_shelter_interact(g, player))
         return;
+    if (onboarding_interact(g, player))
+        return;
+    if (onboarding_active(g) && (onboarding_capabilities(g, player) & OB_MATRIX) &&
+        matrix_near(g, player) && !g->players[player].sheltered) {
+        matrix_toggle(g, player);
+        return;
+    }
     if (campaign_interact(g, player))
         return;
     if (politics_interact(g, player) || director_interact(g, player))

@@ -1,0 +1,70 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-onboarding-sanitize
+Test project /workspace/starship_crawl/build-onboarding-sanitize
+      Start  1: quest_tracking_combat
+ 1/30 Test  #1: quest_tracking_combat ............   Passed    0.22 sec
+      Start  2: quest_ordinary_core
+ 2/30 Test  #2: quest_ordinary_core ..............   Passed   30.31 sec
+      Start  3: quest_parity_flat
+ 3/30 Test  #3: quest_parity_flat ................   Passed    0.96 sec
+      Start  4: quest_parity_quest
+ 4/30 Test  #4: quest_parity_quest ...............   Passed    0.82 sec
+      Start  5: quest_parity_identical
+ 5/30 Test  #5: quest_parity_identical ...........   Passed    0.01 sec
+      Start  6: hidden_factions
+ 6/30 Test  #6: hidden_factions ..................   Passed    0.85 sec
+      Start  7: mobile_forces
+ 7/30 Test  #7: mobile_forces ....................   Passed    7.11 sec
+      Start  8: autonomous_politics
+ 8/30 Test  #8: autonomous_politics ..............   Passed    3.75 sec
+      Start  9: hidden_director
+ 9/30 Test  #9: hidden_director ..................   Passed    1.41 sec
+      Start 13: political_expeditions
+10/30 Test #13: political_expeditions ............   Passed    4.39 sec
+      Start 16: deep_frontiers
+11/30 Test #16: deep_frontiers ...................   Passed    5.80 sec
+      Start 18: regional_encounters
+12/30 Test #18: regional_encounters ..............   Passed    7.34 sec
+      Start 19: core
+13/30 Test #19: core .............................   Passed   44.72 sec
+      Start 20: living_ship
+14/30 Test #20: living_ship ......................   Passed   14.22 sec
+      Start 22: generated_interiors
+15/30 Test #22: generated_interiors ..............   Passed   20.62 sec
+      Start 23: faction_faults
+16/30 Test #23: faction_faults ...................   Passed    0.08 sec
+      Start 24: edge_cases
+17/30 Test #24: edge_cases .......................   Passed    0.64 sec
+      Start 25: staged_onboarding
+18/30 Test #25: staged_onboarding ................   Passed    0.90 sec
+      Start 26: exploration_guidance
+19/30 Test #26: exploration_guidance .............   Passed    4.06 sec
+      Start 28: navigation_psionics
+20/30 Test #28: navigation_psionics ..............   Passed    1.30 sec
+      Start 29: shelter
+21/30 Test #29: shelter ..........................   Passed    0.24 sec
+      Start 31: equipment
+22/30 Test #31: equipment ........................   Passed    0.26 sec
+      Start 37: reactive_aftermath
+23/30 Test #37: reactive_aftermath ...............   Passed   24.36 sec
+      Start 38: narrative
+24/30 Test #38: narrative ........................   Passed   17.88 sec
+      Start 39: enemy_deaths
+25/30 Test #39: enemy_deaths .....................   Passed    1.56 sec
+      Start 40: ship_matrix
+26/30 Test #40: ship_matrix ......................   Passed    0.61 sec
+      Start 41: matrix_faults
+27/30 Test #41: matrix_faults ....................   Passed    0.21 sec
+      Start 43: phased_expeditions
+28/30 Test #43: phased_expeditions ...............   Passed   23.34 sec
+      Start 47: vertical_traversal
+29/30 Test #47: vertical_traversal ...............   Passed    4.66 sec
+      Start 49: space_exterior
+30/30 Test #49: space_exterior ...................   Passed    1.41 sec
+
+100% tests passed, 0 tests failed out of 30
+
+Label Time Summary:
+quest    =  32.31 sec*proc (5 tests)
+unit     = 224.03 sec*proc (30 tests)
+
+Total Test time (real) = 224.04 sec

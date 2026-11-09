@@ -6,6 +6,11 @@ There is no store submission, APK, PC streaming requirement or native OpenXR
 dependency. The ordinary Linux, Windows and web applications keep their
 existing entry points, controls and storage.
 
+New expeditions use the same [staged equipment progression](ONBOARDING.md). The Y
+menu shows acquired systems; Guidance cycles Guided / Minimal / Off, Field guide
+reviews controller instructions, and Dismiss current hint closes a lesson. These
+preferences persist in the Quest target's separate storage.
+
 After a successful main-branch Pages deployment, open
 **https://stbange.github.io/starship_crawl/quest/** in **Meta Quest Browser**.
 Hold both Touch controllers, face forward in your seated or standing position,

@@ -2,6 +2,16 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+## Staged opening and optional guidance — 2026-11-09
+
+Implemented the approved introduction: one starting gun, early earned shotgun,
+shelter from the first elite/guardian, a protected first matrix operation after
+phase one, and later powers/vehicles. New menus reveal available systems and
+hints are contextual, dismissible and reviewable. Guided / Minimal / Off persists
+per device/player. Near-bay encounters and director protections support learning.
+Generator 15 / save 16 preserves earlier expeditions without applying new locks.
+See [behavior and controls](ONBOARDING.md) and [verification](TESTING.md).
+
 ## Optional Quest 3 target — 2026-11-08
 
 The authorized VR work adds a separate WebXR/Emscripten target with tracked

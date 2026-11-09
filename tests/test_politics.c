@@ -17,6 +17,8 @@ static Game *fresh(unsigned seed) {
     world_destroy(&g->world);
     world_init(&g->world, seed);
     g->world.generator = 13;
+    campaign_init(g);
+    matrix_init(&g->matrix);
     politics_init(g);
     g->world.open_layer = 0;
     return g;
@@ -457,6 +459,8 @@ static void saves(void) {
     world_destroy(&g->world);
     world_init(&g->world, 713);
     g->world.generator = 13;
+    campaign_init(g);
+    matrix_init(&g->matrix);
     politics_init(g);
     Politics forged = g->politics;
     forged.countries[0] = (CountryState){.met = 1, .pledge = 1, .stage = 2};

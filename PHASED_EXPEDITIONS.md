@@ -4,13 +4,16 @@ Every **new ship starts two fresh character profiles**, including an inactive
 co-op partner. Saving, checkpoint death and additional commissions on the same
 ship retain the current build. Replaying the same seed also starts fresh.
 
-Begin with a pulse carbine, breach shotgun, flashlight, shelter, map and basic
-matrix access. Advanced weapons, psionics, the mech and wagon come from guardian
-rewards. Ten attributes remain upgradeable, with a cap of 12 on new ships.
+Begin with a pulse carbine, flashlight and map. Three kills earn the shotgun; an
+elite or guardian secures the shelter. After the first phase victory, recover a
+matrix interface at a safe layer-two terminal. Powers arrive in second-tier
+rewards, rigs and specializations in the third tier. Basic attributes become
+available after the first skirmish, and all ten after the first phase victory,
+with a cap of 12. See [staged onboarding](ONBOARDING.md) for guidance settings.
 
 ## Choose a route and earn a build
 
-Accept the bay commission with **G**. **F10** opens the build and guardian journal:
+Accept the bay commission with **G**. Once the first skirmish or guardian victory unlocks build choices, **F10** opens the build and guardian journal:
 preview three rewards before committing, cycle routes with **U**, and claim one
 reward with **1 / 2 / 3** after a victory. The optional Threshold Hunter one deck
 above the bay provides an early capability. It does not advance the main phases.
@@ -86,8 +89,8 @@ selection. Ceiling scale increases across deeper bands while narrow conduits and
 crew spaces retain their contrast. Existing sectors, landmarks and connected
 catastrophe trails remain part of the generator.
 
-New expeditions use **generator 8, narrative 3, matrix generator 1 and save format
-11**. Formats 1–10 remain supported. Compatible older ships keep their equipment
+New expeditions use **generator 15, narrative 3, matrix generator 1 and save format
+16**. Older expeditions retain their original access and rewards. Formats 1–10 remain supported. Compatible older ships keep their equipment
 and original rules until an explicit new-ship action. Historical `--scene` catalog
 views remain generator-6 sandboxes; `--scene guardian` previews the new arena.
 Normal play and `--seed` start the new ruleset. Generator 8 adds the [arrival skiff](ARRIVAL.md) while retaining generator-7 room plans, encounters and phase rules. Existing generator-7 saves keep their original exterior and positions.

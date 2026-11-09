@@ -1735,6 +1735,7 @@ static void debrief_journal(Renderer *r, const Game *g, int player, float w, flo
 }
 #include "render_matrix_hud.inc"
 #include "render_campaign_hud.inc"
+#include "render_onboarding.inc"
 static void hud(Renderer *r, Game *g, int player, int width, int height, bool paused, bool touch,
                 bool debug, double fps, const char *save_status) {
     Player *p = &g->players[player];
@@ -1775,7 +1776,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
     centered(r, header_center, pad, fminf(1.6f * s, header_width / (6 * strlen(title))), title,
              gold);
     snprintf(label, sizeof(label),
-             g->campaign.version ? "LAYER %u / DECK %+d / F10 BUILD" : "DEPTH %03u / DECK %+d",
+             g->campaign.version ? ((onboarding_capabilities(g, player) & OB_BUILD)
+                                        ? "LAYER %u / DECK %+d / F10 BUILD"
+                                        : "LAYER %u / DECK %+d")
+                                 : "DEPTH %03u / DECK %+d",
              position_absolute(p->pos).z < 0 ? 0
              : g->campaign.version           ? campaign_layer(cell)
                                              : world_difficulty(cell),
@@ -1999,9 +2003,11 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                                  "C OR G / LINK SHELTER MATRIX WORKSTATION"};
         centered(r, w * .5f, h * .58f, 1.1f * s, prompts[use], mint);
     }
-    if (matrix_near(g, player))
+    if ((onboarding_capabilities(g, player) & OB_MATRIX) && matrix_near(g, player))
         centered(r, w * .5f, h * .53f, 1.1f * s, "C / LINK TO SHIP MATRIX", mint);
-    if (p->sheltered)
+    if (onboarding_interface_site(g, player))
+        centered(r, w * .5f, h * .53f, s, "USE / RECOVER MATRIX INTERFACE", mint);
+    if (p->sheltered && p->guide_mode != GUIDE_OFF)
         centered(r, w * .5f, pad + 38 * s, .8f * s,
                  "BED AHEAD LEFT / MED STATION AHEAD RIGHT / KITCHEN ON LEFT", gold);
     if (p->resting > 0 || p->nourished > 0) {
@@ -2051,7 +2057,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         centered(r, w * .5f, g->campaign.version ? fmaxf(174 * s, h * .33f) : h * .19f,
                  fminf(1.2f * s, (w - 24 * s) / (6 * fmaxf(1, (float)strlen(g->message)))),
                  g->message, gold);
-    if (!p->sheltered && position_absolute(p->pos).z < 0 && !paused)
+    if (!onboarding_active(g) && p->guide_mode != GUIDE_OFF && !p->sheltered &&
+        position_absolute(p->pos).z < 0 && !paused)
         centered(r, w * .5f, h * .72f, 1.2f * s,
                  touch ? "DRAG LEFT TO DRIFT / RIGHT TO AIM"
                        : "WASD TO DRIFT / SPACE TO RISE / CTRL TO DESCEND",
@@ -2075,6 +2082,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         const float xs[] = {.90f, .77f, .64f, .90f, .77f, .64f, .90f, .77f, .64f, .51f, .51f, .51f},
                     ys[] = {.72f, .85f, .85f, .48f, .48f, .48f, .27f, .27f, .27f, .27f, .48f, .1f};
         for (int i = 0; i < 12; i++) {
+            unsigned caps = onboarding_capabilities(g, player);
+            if ((i == 7 && !(caps & OB_GUNS)) || (i == 8 && !(caps & OB_SHELTER)) ||
+                ((i == 9 || i == 10) && !(caps & OB_POWERS)))
+                continue;
             float x = w * xs[i], y = h * ys[i];
             rect(r, x - size * .5f, y - size * .5f, size, size, panel);
             frame(r, x - size * .5f, y - size * .5f, size, size, dim);
@@ -2118,7 +2129,10 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         centered(r, w * .5f, my + 154 * s, 1.1f * s, "SPACE JUMP   CTRL CROUCH   SHIFT SPRINT",
                  dim);
         centered(r, w * .5f, my + 173 * s, 1.1f * s,
-                 "E / Q LIFTS   G USE   I JOURNAL   Z / X WEAPONS", dim);
+                 (onboarding_capabilities(g, player) & OB_GUNS)
+                     ? "E / Q LIFTS   G USE   I JOURNAL   Z / X WEAPONS"
+                     : "E / Q LIFTS   G USE   F FLASHLIGHT   M MAP",
+                 dim);
         centered(r, w * .5f, my + 192 * s, 1.1f * s, "F1 SETTINGS / PAD BACK   F2 CO-OP   F5 SAVE",
                  dim);
         centered(r, w * .5f, my + 223 * s, 1.1f * s, "N + ENTER / NEW SHIP AND NEW CHARACTERS",
@@ -2130,7 +2144,11 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
         campaign_hud(r, g, player, w, h, s);
     if (!paused)
         politics_hud(r, g, player, w, h, s);
-    if (p->journal && p->journal_page == 6)
+    if (!paused)
+        onboarding_hud(r, g, player, w, h, s);
+    if (p->journal && p->journal_page == 7)
+        onboarding_journal(r, g, player, w, h);
+    else if (p->journal && p->journal_page == 6)
         politics_journal_draw(r, g, player, w, h);
     else if (p->journal && p->journal_page == 5)
         campaign_journal_draw(r, g, player, w, h);
@@ -2153,6 +2171,8 @@ static void hud(Renderer *r, Game *g, int player, int width, int height, bool pa
                  p->points, p->credits, p->victories);
         text_at(r, px + 18 * s, py + 40 * s, s, label, ink);
         for (int i = 0; i < SC_ATTRIBUTES; i++) {
+            if (!onboarding_action(g, player, 20 + i))
+                continue;
             unsigned level = *player_attribute(p, i);
             snprintf(label, sizeof(label), "%d %s %u / COST %u", (i + 1) % 10, sc_attributes[i],
                      level, 60 + level * 25);
@@ -2238,9 +2258,10 @@ void renderer_options(Renderer *r, int width, int height, int player, int select
     text_at(r, x + 22 * s, y + 20 * s, 1.5f * s, "CONTROLS AND DISPLAY", gold);
     const char *labels[] = {
         "PLAYER",         "MOUSE SENSITIVITY",    "TOUCH SENSITIVITY", "STICK SENSITIVITY",
-        "STICK DEADZONE", "INVERT VERTICAL LOOK", "WORLD RESOLUTION",  "RESET THIS PLAYER"};
-    for (int row = 0; row < 8; row++) {
-        float yy = y + (68 + row * 36) * s;
+        "STICK DEADZONE", "INVERT VERTICAL LOOK", "WORLD RESOLUTION",  "GUIDANCE",
+        "FIELD GUIDE",    "DISMISS HINT",         "RESET THIS PLAYER"};
+    for (int row = 0; row < 11; row++) {
+        float yy = y + (58 + row * 28) * s;
         if (row == selected)
             rect(r, x + 12 * s, yy - 8 * s, 626 * s, 30 * s, rgb(.06f, .12f, .13f));
         text_at(r, x + 24 * s, yy, s, labels[row], row == selected ? gold : ink);
@@ -2256,6 +2277,11 @@ void renderer_options(Renderer *r, int width, int height, int player, int select
         else if (row == 6)
             snprintf(value, sizeof(value), "%s",
                      preferences_quality(r->preferences.view[player].quality));
+        else if (row == 7)
+            snprintf(value, sizeof(value), "%s",
+                     onboarding_mode(r->preferences.view[player].guidance));
+        else if (row == 8 || row == 9)
+            snprintf(value, sizeof(value), "LEFT / RIGHT TO SELECT");
         text_at(r, x + 380 * s, yy, s, value, row == selected ? gold : ink);
     }
     text_at(r, x + 22 * s, y + 372 * s, .85f * s,

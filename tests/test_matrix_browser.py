@@ -137,7 +137,7 @@ def run():
                 start_play(page)
             # Old format-9 files retain the physical expedition and start a fresh network.
             import_fixture(page, ROOT / 'tests/fixtures/generator-v6-format9.sav')
-            assert not state(page)['matrix'] and state(page)['programs'] == 7
+            assert not state(page)['matrix'] and state(page)['programs'] == 1
             page.close()
             context.close()
             mobile = browser.new_context(viewport={'width': 844, 'height': 390}, has_touch=True, is_mobile=True)

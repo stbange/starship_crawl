@@ -36,6 +36,8 @@ void matrix_select(Game *g, int p, unsigned slot) {
         g->matrix.divers[p].selected = slot;
 }
 bool matrix_equip(Game *g, int p, unsigned program) {
+    if (!(onboarding_capabilities(g, p) & OB_PROGRAMS))
+        return false;
     if (p < 0 || p >= SC_PLAYERS || program >= 6 ||
         !(g->matrix.profiles[p].programs & BIT(program)))
         return false;
@@ -44,6 +46,8 @@ bool matrix_equip(Game *g, int p, unsigned program) {
     return true;
 }
 bool matrix_upgrade(Game *g, int p) {
+    if (!(onboarding_capabilities(g, p) & OB_PROGRAMS))
+        return false;
     if (p < 0 || p >= SC_PLAYERS)
         return false;
     MatrixProfile *m = &g->matrix.profiles[p];
@@ -60,6 +64,8 @@ bool matrix_upgrade(Game *g, int p) {
     return true;
 }
 bool matrix_cast(Game *g, int p, unsigned slot) {
+    if (!(onboarding_capabilities(g, p) & OB_PROGRAMS))
+        return false;
     if (!active(g, p) || slot >= 2)
         return false;
     MatrixDiver *d = &g->matrix.divers[p];
@@ -111,7 +117,7 @@ bool matrix_cast(Game *g, int p, unsigned slot) {
     return true;
 }
 void matrix_cycle_service(Game *g, int p, int delta) {
-    if (active(g, p) && (delta == 1 || delta == -1))
+    if (active(g, p) && !onboarding_matrix_intro(g, p) && (delta == 1 || delta == -1))
         g->matrix.divers[p].service = (unsigned)((int)g->matrix.divers[p].service + 6 + delta) % 6;
 }
 static bool control(Game *g, Cell owner, unsigned kind, unsigned player) {
@@ -147,7 +153,8 @@ static int console(Game *g, int p, MatrixNetwork **world, MatrixRecord **record)
         game_message(g, "APPROACH A NETWORK CONSOLE / FOLLOW THE GOLD SIGNAL");
         return -1;
     }
-    if (d->veil <= 0 && matrix_guarded(*world, (*world)->nodes[n].at)) {
+    if (!onboarding_matrix_intro(g, p) && d->veil <= 0 &&
+        matrix_guarded(*world, (*world)->nodes[n].at)) {
         game_message(g, "CONSOLE GUARDED / PULSE, VEIL OR INTERRUPT SECURITY");
         return -1;
     }
@@ -160,7 +167,7 @@ bool matrix_service(Game *g, int p) {
     if (node < 0)
         return false;
     MatrixDiver *d = &g->matrix.divers[p];
-    unsigned service = d->service;
+    unsigned service = onboarding_matrix_intro(g, p) ? MX_POWER : d->service;
     const float costs[] = {5, 8, 8, 6, 12, 10};
     if (d->bandwidth < costs[service]) {
         game_message(g, "SERVICE NEEDS BANDWIDTH / WAIT TO RECOVER");
@@ -227,6 +234,14 @@ bool matrix_service(Game *g, int p) {
                     : service == MX_TRAFFIC
                         ? "MAINTENANCE BROADCAST / HOSTILES DISTRACTED / DATA BRIDGE RESTORED"
                         : sc_matrix_services[service]);
+    if (onboarding_matrix_intro(g, p)) {
+        g->players[p].intro |= INTRO_GRID;
+        g->matrix.profiles[p].programs |= 7;
+        g->matrix.profiles[p].slots[1] = MX_INTERRUPT;
+        matrix_disconnect(g, p, false);
+        game_message(
+            g, "POWER RESTORED / THE ROOM IS LIT / RECONNECT WHEN READY TO EXPLORE THE MATRIX");
+    }
     return true;
 }
 static void cache(Game *g, int p, MatrixNetwork *w, MatrixRecord *r, unsigned node) {
@@ -265,6 +280,10 @@ static void cache(Game *g, int p, MatrixNetwork *w, MatrixRecord *r, unsigned no
                           : "PROGRAM CACHE RECOVERED / F8 EQUIP AND UPGRADE");
 }
 void matrix_use(Game *g, int p) {
+    if (onboarding_matrix_intro(g, p)) {
+        matrix_service(g, p);
+        return;
+    }
     if (!active(g, p))
         return;
     MatrixDiver *d = &g->matrix.divers[p];
@@ -280,7 +299,7 @@ void matrix_use(Game *g, int p) {
         cache(g, p, w, r, (unsigned)node);
         return;
     }
-    if (d->veil <= 0 && matrix_guarded(w, at)) {
+    if (!onboarding_matrix_intro(g, p) && d->veil <= 0 && matrix_guarded(w, at)) {
         game_message(g, "SECURITY ACTIVE / DEFEAT, CLOAK OR INTERRUPT IT");
         return;
     }

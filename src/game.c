@@ -52,6 +52,11 @@ void game_init(Game *g, uint32_t seed) {
         player_init(&g->players[i]);
     game_equipment_reset(g);
     campaign_init(g);
+    if (onboarding_active(g))
+        for (int i = 0; i < SC_PLAYERS; i++) {
+            g->matrix.profiles[i].programs = 1;
+            g->matrix.profiles[i].slots[1] = 0;
+        }
     politics_init(g);
     Vec3 p = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &p, 1);
@@ -140,6 +145,9 @@ bool game_upgrade(Game *g, int player, int upgrade) {
     if (player < 0 || player >= g->player_count || upgrade < 0 || upgrade >= SC_ATTRIBUTES)
         return false;
     Player *p = &g->players[player];
+    unsigned caps = onboarding_capabilities(g, player);
+    if (!(caps & OB_UPGRADES) || (upgrade >= 3 && !(caps & OB_FULL_STATS)))
+        return false;
     uint32_t *attribute = player_attribute(p, upgrade);
     unsigned cost = 60 + *attribute * 25;
     if (!p->points && p->credits < cost)
@@ -1051,6 +1059,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     matrix_step(g, dt);
     campaign_step(g, dt);
     game_navigation_step(g, dt);
+    onboarding_step(g, actions, dt);
     factions_forces_sync(g, false);
     for (int i = 0; i < g->player_count; i++) {
         Player *p = &g->players[i];

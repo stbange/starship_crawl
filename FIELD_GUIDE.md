@@ -1,5 +1,10 @@
 New phased expeditions require earning and equipping weapons, rigs and powers. F10 shows routes, guardian rewards and loadouts; see [Phased expeditions](PHASED_EXPEDITIONS.md).
 
+New characters begin with the carbine, flashlight and navigation. Equipment and
+advanced systems below are earned as the expedition develops; see
+[the staged opening and optional guidance](ONBOARDING.md).
+
+
 Generator 12 adds ten species with listening, observation, molting, shared colony
 bodies, hydraulic rhythms, physical ambushes and regional counterplay. See the
 [creature table and deep contract guide](DEEP_FRONTIERS.md#architecture-and-creatures).

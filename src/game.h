@@ -4,6 +4,7 @@
 #include "story.h"
 #include "matrix.h"
 #include "campaign.h"
+#include "onboarding.h"
 #include "encounters.h"
 #include "frontier.h"
 #include "politics.h"
@@ -51,6 +52,9 @@ typedef struct Player {
     uint8_t reading;
     uint8_t journal_page, story_reading, decision_scene, event_reading;
     uint32_t career[SC_OUTCOMES];
+    uint32_t intro, lessons;                   /* Save 16: earned interface and lesson receipts. */
+    unsigned guide_mode, guide_device, lesson; /* Device preferences, never imported. */
+    float guide_quiet, lesson_time;
     bool decision_open;
     bool grounded, crouched, flashlight, journal;
     bool sheltered;

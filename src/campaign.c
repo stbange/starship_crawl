@@ -16,9 +16,10 @@ void campaign_init(Game *g) {
     memset(&g->campaign, 0, sizeof(g->campaign));
     g->campaign.version = 1;
     for (int i = 0; i < SC_PLAYERS; i++) {
-        g->players[i].weapons = 3;
+        g->players[i].weapons = g->world.generator >= 15 ? 1 : 3;
         g->campaign.profiles[i] =
-            (CampaignProfile){.guns = {0, 1}, .power_slots = {SC_EMPTY_POWER, SC_EMPTY_POWER}};
+            (CampaignProfile){.guns = {0, g->world.generator >= 15 ? SC_EMPTY_GUN : 1},
+                              .power_slots = {SC_EMPTY_POWER, SC_EMPTY_POWER}};
     }
     campaign_sync(g);
 }
@@ -167,6 +168,15 @@ CampaignReward campaign_reward(uint32_t seed, unsigned id, unsigned choice) {
                                                 : family == 4 ? 3
                                                               : 0)};
 }
+CampaignReward campaign_offer(const Game *g, unsigned id, unsigned choice) {
+    unsigned tier = id == 8 ? 0 : id / 2;
+    CampaignReward r = campaign_reward(g->world.seed, id, choice);
+    if (onboarding_active(g) && choice == 1 && tier)
+        r = tier == 1
+                ? (CampaignReward){REWARD_POWER, campaign_family(g->world.seed, id) % SC_PSIONICS}
+                : (CampaignReward){REWARD_RIG, 1 + campaign_family(g->world.seed, id) % 2};
+    return onboarding_reward(g, r, tier);
+}
 bool campaign_owns(const Game *g, int player, CampaignReward reward) {
     const CampaignProfile *c = &g->campaign.profiles[player];
     unsigned mask = reward.kind == REWARD_GUN     ? g->players[player].weapons
@@ -177,7 +187,7 @@ bool campaign_owns(const Game *g, int player, CampaignReward reward) {
 }
 void campaign_reward_name(const Game *g, int player, unsigned id, unsigned choice, char *text,
                           size_t size) {
-    CampaignReward r = campaign_reward(g->world.seed, id, choice);
+    CampaignReward r = campaign_offer(g, id, choice);
     const char *name = r.kind == REWARD_GUN     ? sc_weapons[r.item].name
                        : r.kind == REWARD_POWER ? sc_psionic_names[r.item]
                        : r.kind == REWARD_RIG   ? (r.item == MECH ? "FOLD MECH" : "FOLD WAGON")
@@ -222,7 +232,7 @@ bool campaign_choose(Game *g, int player, unsigned choice) {
     if (id >= SC_GUARDIANS || !(c->defeated & (1u << id)) || !(c->eligible[id] & (1u << player)) ||
         (build->claimed & (1u << id)))
         return false;
-    CampaignReward reward = campaign_reward(g->world.seed, id, choice - 1);
+    CampaignReward reward = campaign_offer(g, id, choice - 1);
     campaign_grant(g, player, reward);
     game_reward_drill(g, player, reward, campaign_site(id));
     build->claimed |= 1u << id;
@@ -412,9 +422,10 @@ bool campaign_valid(const Campaign *c, const Player *players, const World *w) {
             (profile.nova > 0 && !(equipped & (1u << PSI_NOVA))))
             return false;
         if (p->powers >= 16 || p->rigs >= 4 || p->modules >= 16 || p->claimed & ~c->defeated ||
-            p->guns[0] >= SC_WEAPONS || p->guns[1] >= SC_WEAPONS || p->guns[0] == p->guns[1] ||
+            p->guns[0] >= SC_WEAPONS || p->guns[1] > SC_EMPTY_GUN ||
+            (p->guns[1] == SC_EMPTY_GUN && w->generator < 15) || p->guns[0] == p->guns[1] ||
             !(players[i].weapons & (1u << p->guns[0])) ||
-            !(players[i].weapons & (1u << p->guns[1])) ||
+            (p->guns[1] != SC_EMPTY_GUN && !(players[i].weapons & (1u << p->guns[1]))) ||
             (players[i].weapon != p->guns[0] && players[i].weapon != p->guns[1]) || p->rig > 2 ||
             (p->rig && !(p->rigs & (1u << (p->rig - 1)))) || p->module > 4 ||
             (p->module && !(p->modules & (1u << (p->module - 1)))) ||

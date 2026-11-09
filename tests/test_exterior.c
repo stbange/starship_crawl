@@ -144,6 +144,8 @@ static void persistence(void) {
     game_join(copy);
     CHECK(!world_overlap(&copy->world, position_absolute(copy->players[1].pos), .34, 1.78));
     g->world.generator = 7;
+    campaign_init(g);
+    matrix_init(&g->matrix);
     g->players[0].pos = position_from(v3(4.2, 4, -98));
     CHECK(game_save(g, "exterior-test.sav") && game_load(copy, "exterior-test.sav"));
     CHECK(copy->world.generator == 7);

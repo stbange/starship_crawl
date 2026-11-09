@@ -1,0 +1,10 @@
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 19.3s
+Seed 713: phase 1, guardians 101, rank 2, 4 kills, 0 respawns at 60.2s
+Seed 713: phase 2, guardians 105, rank 8, 42 kills, 0 respawns at 396.6s
+Tick 24000: 495.3 0.0 144.4 -> [9,0,1], PULSE CARBINE
+Seed 713: phase 3, guardians 115, rank 8, 43 kills, 0 respawns at 488.6s
+Seed 713: phase 4, guardians 155, rank 12, 89 kills, 0 respawns at 617.5s
+Tick 48000: 835.9 0.0 144.3 -> [0,0,0], ASCENSION / OPEN JOURNAL WITH I / CHOOSE AN UPGRADE
+Phase journey 713 starboard: PASS, 975.1s, 119 kills, 0 deaths, 58507 frames
+PROFILE {"seed":713,"profile":3,"passed":true,"simulated_seconds":975.10,"reaction_seconds":0.30,"turn_rad_s":2.8,"aim_error_rad":0.025,"kills":119,"deaths":0,"shots":777,"hits":452,"min_health":100.00,"min_shield":22.00,"min_energy":100.00,"health_loss":0.00,"shield_loss":68.00,"armor_loss":0.00,"damage_frames":3,"recoveries":0,"max_stall_seconds":0.22}

@@ -5,6 +5,7 @@
 #define SC_GUARDIANS 9
 #define SC_SPECIALIZATIONS 4
 #define SC_EMPTY_POWER 4u
+#define SC_EMPTY_GUN SC_WEAPONS
 typedef enum { MOD_NONE, MOD_STORM, MOD_SIEGE, MOD_HUNTER, MOD_SABOTEUR } Specialization;
 typedef enum { REWARD_GUN, REWARD_POWER, REWARD_RIG, REWARD_MODULE } RewardKind;
 typedef struct {
@@ -61,6 +62,7 @@ double campaign_gate_ray(const World *world, Vec3 origin, Vec3 direction, double
 bool campaign_interact(struct Game *game, int player);
 void campaign_journal(struct Game *game, int player);
 CampaignReward campaign_reward(uint32_t seed, unsigned guardian, unsigned choice);
+CampaignReward campaign_offer(const struct Game *game, unsigned guardian, unsigned choice);
 void campaign_reward_name(const struct Game *game, int player, unsigned guardian, unsigned choice,
                           char *text, size_t size);
 bool campaign_choose(struct Game *game, int player, unsigned choice);

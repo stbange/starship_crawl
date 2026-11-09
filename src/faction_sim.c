@@ -190,7 +190,7 @@ static bool protected_site(const Game *g, Cell cell, bool optional) {
     return false;
 }
 bool factions_safe(const Game *g, Cell cell) {
-    return protected_site(g, cell, true);
+    return (onboarding_active(g) && onboarding_opening(cell)) || protected_site(g, cell, true);
 }
 bool factions_required(const Game *g, Cell cell) {
     return protected_site(g, cell, false);

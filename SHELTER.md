@@ -1,3 +1,7 @@
+**New ships earn the shared shelter from their first elite or guardian victory.**
+The controls below appear when it is available. Earlier saves retain their shelter
+access; see [staged onboarding](ONBOARDING.md).
+
 The Fold is a portable refuge: a compact, freestanding doorway opens into an 18 by 16 metre sanctuary with warm steady lamps, a star window, dining furniture, a bed, medical equipment, and a stocked kitchen.
 
 Press **R** on clear, supported ship flooring, then **G** near the doorway. On a controller use **Back / Select** to summon and **D-pad down** to use. Touch players have **FOLD** and **USE** buttons; summoning is also available in the browser menu. Space, cramped passages, obstructions, and unfinished rooms require moving to a wider, surveyed floor. Summoning is free.
@@ -9,7 +13,7 @@ Inside, approach a facility and press **G / USE**:
 | Bed, ahead left | Six seconds of rest restores health, shield, and energy. Movement, jumping, or firing input wakes you. |
 | Medical station, ahead right | Restores health and repairs armor immediately. |
 | Kitchen, on the left | Cooks stocked stargrain stew, heals 30% of maximum health, and adds 3 health per second to normal recovery for 120 seconds. |
-| Network workstation, near the entrance on the right | C or G enters the local ship matrix while your body remains safe. Disconnect returns to the same sanctuary position; see [HACKING.md](HACKING.md). |
+| Network workstation, near the entrance on the right | After recovering a matrix interface, C or G enters the local ship matrix while your body remains safe. Disconnect returns to the same sanctuary position; see [HACKING.md](HACKING.md). |
 | Interior doorway, behind the arrival point | Returns you to the ship at your own entry position and restores your camera orientation. |
 
 The pantry is stocked; food does not require ingredients and there is no hunger penalty. Recovery stays within your upgraded capacities. Weapons are holstered inside. Enemies and their projectiles remain in the ship, and sanctuary occupants cannot collect outside caches. The network workstation can remotely complete mapped preparation and system operations through the matrix; final physical story decisions stay at their targets.

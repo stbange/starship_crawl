@@ -60,7 +60,8 @@ bool matrix_protected(const Game *g, int p) {
     if (!player_ok(g, p) || !g->matrix.divers[p].active)
         return false;
     const Player *body = &g->players[p];
-    return body->sheltered || game_story_safe(g, position_absolute(body->pos)) ||
+    return onboarding_matrix_intro(g, p) || body->sheltered ||
+           game_story_safe(g, position_absolute(body->pos)) ||
            world_describe_version(g->world.seed, g->world.generator,
                                   world_cell(position_absolute(body->pos)))
                    .type == BAY;
@@ -100,6 +101,11 @@ bool matrix_toggle(Game *g, int p) {
         matrix_disconnect(g, p, false);
         return true;
     }
+    if (!(onboarding_capabilities(g, p) & OB_MATRIX)) {
+        if (!onboarding_interact(g, p))
+            game_message(g, "MATRIX INTERFACE REQUIRED / EXPLORE BEYOND THE FIRST GUARDIAN");
+        return false;
+    }
     if (body->lift_active || body->riding || body->health <= 0 || !matrix_near(g, p)) {
         game_message(g, "C / FIND A MATRIX TERMINAL / DISMOUNT BEFORE LINKING");
         return false;
@@ -130,6 +136,10 @@ bool matrix_toggle(Game *g, int p) {
                        .bandwidth = max_bandwidth(body),
                        .grace = 1.5f,
                        .service = w->nodes[node].service};
+    if (onboarding_matrix_intro(g, p)) {
+        d->service = MX_POWER;
+        d->grace = 1.5f;
+    }
     g->matrix.records[w->record].seen |= 1u << node;
     body->velocity = v3(0, 0, 0);
     body->flight = body->leap = body->nova = body->nova_tick = body->nova_flash = 0;
@@ -137,7 +147,9 @@ bool matrix_toggle(Game *g, int p) {
     body->journal = body->decision_open = body->map_open = false;
     body->yaw = body->pitch = 0;
     g->dirty = true;
-    game_message(g, "MATRIX LINK / F SERVICES / G DATA / 1 2 PROGRAMS / C DISCONNECT");
+    game_message(g, onboarding_matrix_intro(g, p)
+                        ? "FIRST LINK / RESTORE POWER AT THIS CONSOLE / RETURN TO SEE THE LIGHTS"
+                        : "MATRIX LINK / F SERVICES / G DATA / 1 2 PROGRAMS / C DISCONNECT");
     return true;
 }
 void matrix_disconnect(Game *g, int p, bool failed) {
@@ -285,7 +297,7 @@ void matrix_player_step(Game *g, int p, const Actions *a, double dt) {
     int node = matrix_node(w, d->pos, 7);
     if (node >= 0 && d->pos.y < 2)
         r->seen |= 1u << node;
-    if (a->fire)
+    if (a->fire && !onboarding_matrix_intro(g, p))
 #ifdef SC_WEBXR
         pulse(g, p, a);
 #else
@@ -303,6 +315,8 @@ static double sphere(Vec3 from, Vec3 dir, Vec3 center, double radius, double lim
     return t >= 0 && t < limit ? t : limit;
 }
 static void hurt_avatar(Game *g, int p, float damage, unsigned role) {
+    if (onboarding_matrix_intro(g, p))
+        return;
     MatrixDiver *d = &g->matrix.divers[p];
     if (!d->active || d->grace > 0)
         return;
@@ -336,7 +350,7 @@ static void shots(Game *g, MatrixNetwork *w, double dt) {
         } else
             for (int p = 0; p < g->player_count; p++) {
                 MatrixDiver *d = &g->matrix.divers[p];
-                if (!d->active || !cell_equal(d->key, w->key))
+                if (!d->active || onboarding_matrix_intro(g, p) || !cell_equal(d->key, w->key))
                     continue;
                 double t = sphere(s->pos, dir, avatar_center(d), .48, distance);
                 if (t < distance) {
@@ -408,7 +422,7 @@ static void guards(Game *g, MatrixNetwork *w, double dt) {
         double distance = 32;
         for (int p = 0; p < g->player_count; p++) {
             MatrixDiver *d = &g->matrix.divers[p];
-            if (!d->active || !cell_equal(d->key, w->key))
+            if (!d->active || onboarding_matrix_intro(g, p) || !cell_equal(d->key, w->key))
                 continue;
             double echo = d->echo_life > 0 ? vlen(vsub(d->echo, e->pos)) : 1000;
             if (echo < distance) {

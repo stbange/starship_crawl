@@ -3,6 +3,7 @@
 #include "frontier.h"
 #include "encounters.h"
 #include "campaign.h"
+#include "onboarding.h"
 #include "politics.h"
 #include "factions.h"
 #include <string.h>
@@ -172,6 +173,9 @@ static void history(RegionPlan *p, uint32_t hash, int preferred, unsigned incide
         }
 }
 void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPlan *p) {
+    bool opening = generator >= 15;
+    if (opening)
+        generator = 14; /* Preserve the ship architecture, vary introductory encounters. */
     /* Versions 8/9 add exterior/traversal geometry to the version-7 room plan. */
     if (generator == 8 || generator == 9)
         generator = 7;
@@ -395,6 +399,8 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
         politics_plan(seed, p);
     if (generator >= 14)
         factions_plan(seed, p);
+    if (opening)
+        onboarding_plan(p);
 }
 RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell c) {
     RegionPlan p;

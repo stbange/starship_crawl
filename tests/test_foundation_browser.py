@@ -84,7 +84,7 @@ def run():
             saved = pending.value.path().read_bytes()
             page.reload()
             wait_ready(page)
-            assert controls(page)['views'][0] == [1.25, 1, 1, .16, 1, 1]
+            assert controls(page)['views'][0] == [1.25, 1, 1, .16, 1, 1, 0]
             assert controls(page)['views'][1][5] == 4
             start_play(page)
             if not state(page)['paused']:
@@ -166,7 +166,7 @@ def run():
                 page.goto(base + '?seed=713&scene=' + scene)
                 wait_ready(page)
                 start_play(page)
-                assert state(page)['generator'] == 14
+                assert state(page)['generator'] == 15
                 page.screenshot(path=str(ARTIFACTS / ('foundation-' + scene + '.png')))
                 page.keyboard.down('w')
                 wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).y>4", timeout=20000)

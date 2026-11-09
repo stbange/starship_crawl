@@ -20,6 +20,8 @@ static Game *fresh(void) {
     world_destroy(&g->world);
     world_init(&g->world, 713);
     g->world.generator = 13;
+    campaign_init(g);
+    matrix_init(&g->matrix);
     politics_init(g);
     return g;
 }

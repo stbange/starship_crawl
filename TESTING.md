@@ -1,17 +1,42 @@
 The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for all required native, instrumented, browser, Quest and quality jobs together.
 
+**Staged onboarding (generator 15 / save 16).** `staged_onboarding` checks earned
+access, reward tiers, independent saved lessons, optional guidance, malformed-save
+rollback, opening-room populations and the protected first matrix operation.
+`staged_intro_journey` uses ordinary movement/combat/interaction to earn an interface,
+restore power, finish all four phases and extract; it never grants equipment or
+teleports the player. Its earned checkpoint is documented in
+[fixture provenance](tests/fixtures/README.md).
+
+Local validation includes 26 native component/platform checks, all 20 separately
+labelled gameplay cases, 30 sanitizer unit checks including Quest, and the full
+introductory expedition under ASan/UBSan/LeakSanitizer. Unit-only coverage is
+**98.0% (10,622/10,841 lines)**, with every measured core source above 95%.
+The final menu rules also pass the focused sanitizer case. Rendering, browser
+JavaScript and platform adapters remain outside that unit coverage percentage.
+
+`test_onboarding_browser.py` uses the packaged WASM for progressive menus,
+keyboard/controller help, dismissal, saved guidance across new ships/imports,
+mobile layouts and the earned first link. The Quest suite covers guidance menus
+and repeats that first link with actual WebXR API inputs supplied by the virtual
+device; `--intro-only` selects that case during development. The complete native,
+ordinary-web and Quest workflow remains required before Pages deployment.
+Physical Quest hardware and first-time human comprehension are not established
+by these automated checks. [Onboarding evidence](docs/reviews/2026-11-09-onboarding/README.md).
+
+
 **CI scheduling.** Every main push still runs the complete publication gates.
 The ordinary web application is compiled and packaged once; six isolated browser
 jobs download that exact artifact and run all 18 suites. Each runner uses one
 browser test at a time. The browser launcher streams progress immediately and
 retains full logs plus per-suite timing/exit-status JSON in its capture artifact.
 
-Coverage is still measured from the 29 unit tests alone, at the same 95% overall
+Coverage is measured from the 30 unit tests alone, at the same 95% overall
 and per-file threshold. Afterwards, six separate jobs run all instrumented
 campaign cases from the coverage build, and six run all address/undefined-behavior/
 leak sanitizer cases. `SC_SPLIT_CAMPAIGN_TESTS=ON` registers the existing two phase
 routes and four imperfect-control expeditions individually, without changing their
-inputs or assertions. That produces 23 campaign cases and 52 sanitizer tests.
+inputs or assertions. That produces 24 campaign cases and 54 sanitizer tests.
 The default local/native test registration is unchanged. Runners use separate
 filesystems so journeys with the same temporary save filename cannot collide.
 

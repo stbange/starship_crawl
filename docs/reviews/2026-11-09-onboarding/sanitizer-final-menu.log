@@ -1,0 +1,11 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-onboarding-sanitize
+Test project /workspace/starship_crawl/build-onboarding-sanitize
+    Start 25: staged_onboarding
+1/1 Test #25: staged_onboarding ................   Passed    0.70 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+unit    =   0.70 sec*proc (1 test)
+
+Total Test time (real) =   0.70 sec

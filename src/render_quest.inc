@@ -170,14 +170,16 @@ static void quest_panels(Renderer *r, Game *g, const QuestView *q, const float *
         text_at(r, 12, 325, 1.15f, game_gun(p)->name, gold);
         flush(r);
     }
-    if (!q->menu && g->message_time > 0) {
+    if (!q->menu && (g->message_time > 0 || (p->lesson && p->guide_mode != GUIDE_OFF))) {
         Vec3 forward = quest_forward(&q->tracking, QUEST_HEAD);
         Vec3 right = quest_axis(&q->tracking, QUEST_HEAD, 0),
              up = quest_axis(&q->tracking, QUEST_HEAD, 1);
         Vec3 at = vadd(q->head, vadd(vmul(forward, 1.5), vmul(up, -.65)));
         quest_panel(r, mvp, at, right, up, 640, 110, 1.5);
         rect(r, 0, 0, 640, 110, rgb(.015f, .03f, .035f));
-        wrapped(r, 18, 18, 2, 600, g->message, gold);
+        char lesson[180];
+        onboarding_hint_text(g, 0, lesson, sizeof(lesson));
+        wrapped(r, 18, 18, 2, 600, g->message_time > 0 ? g->message : lesson, gold);
         flush(r);
     }
 }

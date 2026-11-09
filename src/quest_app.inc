@@ -22,7 +22,8 @@ enum {
     XR_DEBRIEF,
     XR_WEAPONS,
     XR_NEW,
-    XR_COURTS
+    XR_COURTS,
+    XR_HELP
 };
 enum {
     XR_BACK = -1,
@@ -33,6 +34,8 @@ enum {
     XR_COMFORT = -6,
     XR_NEW_CONFIRM = -7,
     XR_TEXT = -8,
+    XR_GUIDANCE = -9,
+    XR_DISMISS = -10,
     XR_PAGE = -100
 };
 EM_JS(void, quest_exit, (void), {
@@ -108,6 +111,8 @@ EMSCRIPTEN_KEEPALIVE void sc_xr_suspend(void) {
     xr.timestamp = 0;
 }
 static void quest_add(int action, const char *label) {
+    if (action >= 0 && !onboarding_action(&app.game, 0, action))
+        return;
     if (xr.count >= 96)
         return;
     xr.actions[xr.count] = action;
@@ -149,7 +154,8 @@ static void quest_menu(void) {
                             "EXPEDITION DEBRIEF",
                             "WEAPONS",
                             "BEGIN A NEW EXPEDITION?",
-                            "LEGACY COURTS / KINSHIPS"};
+                            "LEGACY COURTS / KINSHIPS",
+                            "FIELD GUIDE"};
     snprintf(q->title, sizeof(q->title), "%s", titles[xr.page]);
     q->line_count = 0;
     xr.count = 0;
@@ -159,28 +165,54 @@ static void quest_menu(void) {
         quest_line(xr.tracking ? "TRACKING READY" : "WAITING FOR HEADSET AND BOTH CONTROLLERS");
         quest_line("Release all buttons and sticks. Press A to resume when ready.");
     } else if (xr.page == XR_HOME) {
+        unsigned caps = onboarding_capabilities(&app.game, 0);
         quest_line(game_mission(&app.game));
         quest_line(
             "Move: left stick. Turn: right stick. Fire: right trigger. Interact: right grip.");
-        quest_line("A: jump / lift up. B: crouch / lift down. X: switch weapon. Y: menu.");
+        quest_line(caps & OB_GUNS
+                       ? "A: jump / lift up. B: crouch / lift down. X: switch weapon. Y: menu."
+                       : "A: jump / lift up. B: crouch / lift down. Y: menu.");
         quest_line("Left grip: wrist map. Left trigger: flashlight. Right stick click: recenter.");
         quest_add(XR_RESUME, "RESUME EXPEDITION");
         quest_add(XR_PAGE - XR_STORY, "STORY AND DECISIONS");
-        quest_add(XR_PAGE - XR_BUILD, "PHASES AND LOADOUT");
-        quest_add(XR_PAGE - XR_CHARACTER, "CHARACTER UPGRADES");
-        quest_add(XR_PAGE - XR_TOOLS, "ABILITIES AND EQUIPMENT");
-        quest_add(XR_PAGE - XR_WEAPONS, "WEAPONS");
+        if (caps & OB_BUILD)
+            quest_add(XR_PAGE - XR_BUILD, "PHASES AND LOADOUT");
+        if (caps & OB_UPGRADES)
+            quest_add(XR_PAGE - XR_CHARACTER, "CHARACTER UPGRADES");
+        if (caps & (OB_SHELTER | OB_POWERS | OB_RIGS))
+            quest_add(XR_PAGE - XR_TOOLS, "ABILITIES AND EQUIPMENT");
+        if (caps & OB_GUNS)
+            quest_add(XR_PAGE - XR_WEAPONS, "WEAPONS");
         quest_add(XR_PAGE - XR_MAP, "MAP AND OBJECTIVE");
-        quest_add(XR_PAGE - XR_MATRIX, "MATRIX PROGRAMS");
-        quest_add(XR_PAGE - XR_DOSSIER, "SHIP DOSSIER");
-        quest_add(XR_PAGE - XR_DEBRIEF, "EXPEDITION DEBRIEF");
+        if (caps & OB_PROGRAMS)
+            quest_add(XR_PAGE - XR_MATRIX, "MATRIX PROGRAMS");
+        else if (caps & OB_MATRIX)
+            quest_add(200, "LINK AT TERMINAL");
+        if (onboarding_action(&app.game, 0, 85))
+            quest_add(XR_PAGE - XR_DOSSIER, "SHIP DOSSIER");
+        if (onboarding_action(&app.game, 0, 86))
+            quest_add(XR_PAGE - XR_DEBRIEF, "EXPEDITION DEBRIEF");
         if (app.game.politics.version)
             quest_add(XR_PAGE - XR_COURTS, "ALIEN COURTS");
+        snprintf(line, sizeof(line), "GUIDANCE: %s",
+                 onboarding_mode(app.renderer.preferences.view[0].guidance));
+        quest_add(XR_GUIDANCE, line);
+        quest_add(XR_PAGE - XR_HELP, "FIELD GUIDE / REVIEW INSTRUCTIONS");
+        quest_add(XR_DISMISS, "DISMISS CURRENT HINT");
         quest_add(XR_CENTER, "RECENTER SEATED / STANDING");
         quest_add(XR_COMFORT, xr.vignette ? "MOVEMENT VIGNETTE: ON" : "MOVEMENT VIGNETTE: OFF");
         quest_add(XR_SAVE, "SAVE EXPEDITION");
         quest_add(XR_PAGE - XR_NEW, "NEW SHIP / NEW CHARACTER");
         quest_add(XR_EXIT, "SAVE AND EXIT VR");
+    } else if (xr.page == XR_HELP) {
+        quest_line("Explore, fight, recover. Three kills earn a shotgun. An elite or guardian "
+                   "holds the fold shelter.");
+        quest_line("After the first guardian, clear a layer-2 terminal to recover a matrix "
+                   "interface. Hacking is optional.");
+        for (unsigned lesson = 1; lesson < LESSON_COUNT; lesson++) {
+            onboarding_text(lesson, GUIDE_QUEST, line, sizeof(line));
+            quest_line(line);
+        }
     } else if (xr.page == XR_STORY) {
         for (int i = 0; i < 6; i++) {
             game_story_line(&app.game, i, line, sizeof(line));
@@ -211,7 +243,7 @@ static void quest_menu(void) {
             quest_line(line);
             CampaignProfile *profile = &c->profiles[0];
             snprintf(line, sizeof(line), "WEAPONS: %s / %s", sc_weapons[profile->guns[0]].name,
-                     sc_weapons[profile->guns[1]].name);
+                     profile->guns[1] < SC_WEAPONS ? sc_weapons[profile->guns[1]].name : "EMPTY");
             quest_line(line);
             const char *slots[] = {"GUN 1", "GUN 2", "POWER 1", "POWER 2", "RIG", "MODULE"};
             snprintf(line, sizeof(line), "SELECTED SLOT: %s / REFIT AT SAFETY", slots[c->slot[0]]);
@@ -382,7 +414,12 @@ static void quest_activate(void) {
         xr.anchor = false;
     } else if (action == XR_SAVE)
         save_game();
-    else if (action == XR_COMFORT) {
+    else if (action == XR_GUIDANCE) {
+        sc_web_setting(0, PREF_GUIDANCE, (app.renderer.preferences.view[0].guidance + 1) % 3);
+        app.game.players[0].guide_mode = app.renderer.preferences.view[0].guidance;
+    } else if (action == XR_DISMISS) {
+        onboarding_dismiss(&app.game, 0);
+    } else if (action == XR_COMFORT) {
         xr.vignette = !xr.vignette;
         quest_comfort_store(xr.vignette);
     } else if (action == XR_EXIT) {

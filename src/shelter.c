@@ -32,6 +32,11 @@ bool shelter_clear(Vec3 feet) {
 void game_summon(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
+    if (!(onboarding_capabilities(g, player) & OB_SHELTER)) {
+        game_message(g,
+                     "FOLD UNIT SALVAGE / DEFEAT AN ELITE OR GUARDIAN / BAY RECOVERY IS AVAILABLE");
+        return;
+    }
     if (g->players[player].lift_active)
         return;
     if (g->matrix.divers[player].active)
@@ -74,7 +79,8 @@ ShelterUse game_shelter_near(const Game *g, int player) {
         return SHELTER_NONE;
     if (p->sheltered) {
         for (int use = SHELTER_DOOR; use <= SHELTER_TERMINAL; use++)
-            if (vlen(vsub(p->shelter_pos, shelter_station((ShelterUse)use))) < 2.2)
+            if ((use != SHELTER_TERMINAL || (onboarding_capabilities(g, player) & OB_MATRIX)) &&
+                vlen(vsub(p->shelter_pos, shelter_station((ShelterUse)use))) < 2.2)
                 return (ShelterUse)use;
     } else if (position_absolute(p->pos).z >= 0 && g->shelter.deployed &&
                vlen(position_delta(p->pos, g->shelter.door)) < 3 &&

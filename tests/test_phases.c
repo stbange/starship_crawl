@@ -52,20 +52,22 @@ static void fresh_characters(void) {
     CHECK(g->world.generator == SC_GENERATOR_VERSION && g->campaign.version == 1 &&
           g->world.open_layer == 1);
     for (int i = 0; i < 2; i++) {
-        CHECK(g->players[i].weapons == 3 && g->players[i].level == 1);
+        CHECK(g->players[i].weapons == 1 && g->players[i].level == 1);
         CHECK(!g->campaign.profiles[i].powers && !g->campaign.profiles[i].rigs);
     }
     CHECK(!campaign_weapon(g, -1, 0) && !campaign_weapon(g, 2, 0) && !campaign_weapon(g, 0, 20));
     CHECK(!campaign_power(g, -1, 0) && !campaign_power(g, 2, 0) && !campaign_power(g, 0, 4));
     CHECK(!campaign_rig(g, -1, 1) && !campaign_rig(g, 2, 1) && !campaign_rig(g, 0, 0) &&
           !campaign_rig(g, 0, 3));
-    CHECK(campaign_weapon(g, 0, 0) && campaign_weapon(g, 0, 1) && !campaign_weapon(g, 0, 16));
+    CHECK(campaign_weapon(g, 0, 0) && !campaign_weapon(g, 0, 1) && !campaign_weapon(g, 0, 16));
     float energy = g->players[0].energy;
     for (int i = 0; i < 4; i++)
         game_psionic(g, 0, (Psionic)i);
     game_rig_toggle(g, 0, MECH);
     game_rig_toggle(g, 0, WAGON);
     CHECK(g->players[0].energy == energy && !g->players[0].cloaked && !g->rigs[0][0].deployed);
+    CHECK(!game_upgrade(g, 0, 0));
+    g->players[0].kills = 3;
     g->players[0].points = 20;
     for (int i = 0; i < 12; i++)
         CHECK(game_upgrade(g, 0, 0));
@@ -86,10 +88,10 @@ static void fresh_characters(void) {
     game_new_ship(g, 713);
     CHECK(g->player_count == 1 && g->world.seed == 713 && !g->world.record_count);
     for (int i = 0; i < 2; i++) {
-        CHECK(g->players[i].level == 1 && g->players[i].weapons == 3 && !g->players[i].credits);
+        CHECK(g->players[i].level == 1 && g->players[i].weapons == 1 && !g->players[i].credits);
         CHECK(!g->players[i].flare_strength && !g->players[i].mods[3] && !g->players[i].power);
         CHECK(!g->campaign.profiles[i].rigs && !g->campaign.profiles[i].powers);
-        CHECK(g->matrix.profiles[i].programs == 7 && !g->matrix.profiles[i].data &&
+        CHECK(g->matrix.profiles[i].programs == 1 && !g->matrix.profiles[i].data &&
               !g->matrix.profiles[i].upgrades[0]);
     }
     game_join(g);
@@ -173,7 +175,7 @@ static void rewards_and_loadouts(void) {
         for (int p = 0; p < 2; p++) {
             campaign_journal(g, p);
             unsigned choice = (seed + (unsigned)p) % 3 + 1;
-            CampaignReward rw = campaign_reward(seed, 8, choice - 1);
+            CampaignReward rw = campaign_offer(g, 8, choice - 1);
             awarded |= 1u << rw.kind;
             CHECK(g->campaign.choice[p] == 9 && campaign_choose(g, p, choice));
             CHECK(!campaign_choose(g, p, choice));
@@ -182,8 +184,7 @@ static void rewards_and_loadouts(void) {
         CHECK(campaign_phase(&g->campaign) == 1 && g->world.open_layer == 2);
         campaign_journal(g, 0);
         CHECK(campaign_choose(g, 0, 3));
-        awarded |= 1u << REWARD_MODULE;
-        CHECK(g->campaign.profiles[0].module);
+        CHECK(!g->campaign.profiles[0].module);
         /* A saved inactive partner still has a distinct, unclaimed reward. */
         game_leave(g);
         CHECK(game_save(g, "phase-unit.sav") && game_load(g, "phase-unit.sav"));
@@ -193,7 +194,7 @@ static void rewards_and_loadouts(void) {
         CHECK(campaign_valid(&g->campaign, g->players, &g->world));
         win(g, 1);
         campaign_journal(g, 0);
-        CampaignReward rw = campaign_reward(seed, 1, 0);
+        CampaignReward rw = campaign_offer(g, 1, 0);
         g->players[0].weapons |= 1u << rw.item;
         unsigned points = g->players[0].points, credits = g->players[0].credits;
         char name[140];
@@ -202,6 +203,16 @@ static void rewards_and_loadouts(void) {
         CHECK(campaign_choose(g, 0, 1));
         CHECK(g->players[0].points == points + 2 && g->players[0].credits == credits + 100);
         CHECK(campaign_phase(&g->campaign) == 1);
+        const unsigned sites[] = {2, 4, 5};
+        for (unsigned i = 0; i < 3; i++) {
+            win(g, sites[i]);
+            campaign_journal(g, 0);
+            unsigned choice = i == 2 ? 3 : 2;
+            awarded |= 1u << campaign_offer(g, sites[i], choice - 1).kind;
+            CHECK(campaign_choose(g, 0, choice));
+        }
+        CHECK(g->campaign.profiles[0].powers && g->campaign.profiles[0].rigs &&
+              g->campaign.profiles[0].module);
         destroy(g);
     }
     CHECK(awarded == 15);
@@ -375,7 +386,7 @@ static void phases_and_persistence(void) {
     CHECK(!campaign_choose(g, 0, 1));
     CHECK(!campaign_refit(g, 0, 0, 1));
     game_new_ship(g, 42);
-    CHECK(g->campaign.version == 1 && g->players[0].weapons == 3);
+    CHECK(g->campaign.version == 1 && g->players[0].weapons == 1);
     destroy(g);
     remove("phase-unit.sav");
     remove("phase-attempt.sav");
@@ -515,8 +526,9 @@ static void malformed_appendix(void) {
     CHECK(before); /* A world snapshot exceeds the default Windows stack. */
     for (unsigned n = 0; n < sizeof(offsets) / sizeof(offsets[0]); n++) {
         memcpy(data, original, (size_t)length);
-        size_t at = (size_t)length - faction_bytes - 204 - SC_POLITICS_SAVE_BYTES -
-                    SC_PLAYERS * RELICS * 4 - g->world.record_count * 4 + offsets[n];
+        size_t at = (size_t)length - (g->world.generator >= 15 ? 16 : 0) - faction_bytes - 204 -
+                    SC_POLITICS_SAVE_BYTES - SC_PLAYERS * RELICS * 4 - g->world.record_count * 4 +
+                    offsets[n];
         for (int b = 0; b < 4; b++)
             data[at + b] = (unsigned char)(values[n] >> (b * 8));
         uint32_t hash = 2166136261u;
@@ -652,10 +664,13 @@ static void generated_stories(void) {
 }
 static void matrix_on_phased_ship(void) {
     Game *g = fresh(713);
+    win(g, 0);
+    g->players[0].intro = INTRO_INTERFACE | INTRO_GRID;
+    g->matrix.profiles[0].programs = 7;
     g->players[0].pos = position_from(matrix_terminal((Cell){0}));
     settle(g);
     CHECK(matrix_toggle(g, 0));
-    CHECK(matrix_valid(&g->matrix, 713, 7, g->players, &g->shelter));
+    CHECK(matrix_valid(&g->matrix, 713, SC_GENERATOR_VERSION, g->players, &g->shelter));
     CHECK(game_save(g, "phase-matrix.sav") && game_load(g, "phase-matrix.sav"));
     CHECK(g->matrix.divers[0].active && g->campaign.version == 1);
     CHECK(matrix_toggle(g, 0) && !g->matrix.divers[0].active);

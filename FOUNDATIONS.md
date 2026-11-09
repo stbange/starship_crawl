@@ -1,6 +1,6 @@
 # Controls and vertical exploration
 
-Current ships use generator 10, retaining the generator-9 traversal foundations. Previously saved ships retain their geometry and lift
+Current ships use generator 15, retaining the generator-9 traversal foundations. Previously saved ships retain their geometry and lift
 behavior. Choose **N, Enter** (or **Begin a new ship**) to explore the new shafts;
 this starts fresh characters. Saving and resuming the current ship retains them.
 
@@ -11,8 +11,8 @@ player, navigate with arrows/D-pad, and adjust with left/right. Enter/Start resu
 The browser's **Menu → Controls and display** also provides labelled controls.
 
 Each player has independent mouse, touch and stick sensitivity, stick deadzone,
-vertical-look inversion, and world resolution. Reset restores only that player's
-settings. Resolution choices are Auto (desktop 360p, touch 240p), 180p, 240p, 360p,
+vertical-look inversion, world resolution and [Guided / Minimal / Off instruction](ONBOARDING.md). Reset restores only that player's
+settings. The same settings screen offers Field guide and Dismiss hint. Resolution choices are Auto (desktop 360p, touch 240p), 180p, 240p, 360p,
 and 480p. The HUD stays at display resolution. Lower settings reduce GPU work.
 Separate cached render targets let split-screen players choose different settings.
 

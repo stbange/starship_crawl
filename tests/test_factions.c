@@ -29,7 +29,7 @@ static void enter(Game *g, Cell cell) {
 }
 static void foundations(void) {
     Game *g = fresh(713);
-    CHECK(g->world.generator == 14 && g->factions.version == 1);
+    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->factions.version == 1);
     CHECK(!g->politics.version && !g->director.version && factions_valid(&g->factions, 14));
     CHECK(!factions_active(g));
     politics_journal(g, 0);

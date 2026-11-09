@@ -17,7 +17,7 @@ static void campaign_journal_draw(Renderer *r, const Game *g, int player, float 
     snprintf(text, sizeof(text), "EXPEDITION / %s / PHASE %u OF 4", campaign_phase_name(phase),
              phase < 4 ? phase + 1 : 4);
     cursor = wrapped(r, left, cursor, 1.1f * s, width, text, gold) + gap;
-    if (g->world.generator >= 12) {
+    if (g->world.generator >= 12 && (!onboarding_active(g) || phase)) {
         const uint32_t *ranks = g->frontier.ranks[player];
         snprintf(text, sizeof(text), "RELICS / CINDER %u RIME %u AEGIS %u MOLT %u RIFT %u",
                  ranks[0], ranks[1], ranks[2], ranks[3], ranks[4]);
@@ -66,8 +66,13 @@ static void campaign_journal_draw(Renderer *r, const Game *g, int player, float 
     cursor = wrapped(r, left, cursor, s, width, text, ink) + gap;
     const char *labels[] = {"GUN 1", "GUN 2", "POWER 1", "POWER 2", "RIG", "SPECIALIZATION"};
     for (unsigned i = 0; i < 6; i++) {
+        unsigned caps = onboarding_capabilities(g, player);
+        if (onboarding_active(g) &&
+            ((i == 1 && !(caps & OB_GUNS)) || ((i == 2 || i == 3) && !(caps & OB_POWERS)) ||
+             (i == 4 && !(caps & OB_RIGS)) || (i == 5 && !p->modules)))
+            continue;
         const char *value =
-            i < 2   ? sc_weapons[p->guns[i]].name
+            i < 2   ? (p->guns[i] < SC_WEAPONS ? sc_weapons[p->guns[i]].name : "EMPTY")
             : i < 4 ? (p->power_slots[i - 2] < SC_PSIONICS ? sc_psionic_names[p->power_slots[i - 2]]
                                                            : "EMPTY")
             : i == 4 ? (p->rig == MECH    ? "FOLD MECH"
@@ -83,7 +88,8 @@ static void campaign_journal_draw(Renderer *r, const Game *g, int player, float 
                                     "SIEGE ENGINEER / +50% MECH WEAPON DAMAGE",
                                     "SILENT HUNTER / +150% DAMAGE ON THE SHOT THAT BREAKS VEIL",
                                     "SYSTEMS SABOTEUR / +60% DAMAGE IN SECURITY-SILENCED ROOMS"};
-    cursor = wrapped(r, left, cursor + gap, s, width, effects[p->module], mint) + gap;
+    if (!onboarding_active(g) || p->module)
+        cursor = wrapped(r, left, cursor + gap, s, width, effects[p->module], mint) + gap;
     cursor = wrapped(r, left, cursor, s, width,
                      campaign_safe_refit(g, player)
                          ? "REFIT READY / Q E SLOT / Z X CHANGE ITEM"

@@ -1,0 +1,11 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-onboarding-sanitize
+Test project /workspace/starship_crawl/build-onboarding-sanitize
+    Start 44: staged_intro_journey
+1/1 Test #44: staged_intro_journey .............   Passed  631.32 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+gameplay    = 631.32 sec*proc (1 test)
+
+Total Test time (real) = 631.32 sec

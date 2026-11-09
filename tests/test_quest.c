@@ -267,6 +267,8 @@ static void combat(void) {
 }
 static void matrix_combat(void) {
     Game *g = new_game(true);
+    g->players[0].intro = INTRO_INTERFACE | INTRO_GRID;
+    g->matrix.profiles[0].programs = 7;
     g->players[0].pos = position_from(matrix_terminal((Cell){0, 0, 0}));
     CHECK(matrix_toggle(g, 0));
     MatrixDiver *d = &g->matrix.divers[0];

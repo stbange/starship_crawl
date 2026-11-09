@@ -78,7 +78,7 @@ def run():
                 page.goto(base + f'?seed=713&scene={scene}')
                 wait_ready(page)
                 s = state(page)
-                assert s['generator'] == 14 and s[field] == value and s['ready'] and not s['failed'], s
+                assert s['generator'] == 15 and s[field] == value and s['ready'] and not s['failed'], s
                 assert 0 < s['sprites'] <= 1536, s
                 start_play(page)
                 expect(page, f"s.time > {s['time'] + .4}")

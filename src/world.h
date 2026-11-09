@@ -3,7 +3,7 @@
 #include "content.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 14u
+#define SC_GENERATOR_VERSION 15u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0

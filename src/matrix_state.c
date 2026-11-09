@@ -155,9 +155,10 @@ bool matrix_valid(const MatrixState *m, uint32_t seed, uint32_t generator, const
     for (int i = 0; i < 2; i++) {
         const MatrixProfile *p = &m->profiles[i];
         const MatrixDiver *d = &m->divers[i];
-        if ((p->programs & ~63u) || (p->programs & 7) != 7 || p->data > 1000000000u ||
-            p->dives > 1000000000u || p->knowledge > 1000000000u || p->slots[0] >= 6 ||
-            p->slots[1] >= 6 || !(p->programs & (1u << p->slots[0])) ||
+        if ((p->programs & ~63u) ||
+            (generator >= 15 ? !(p->programs & 1) : (p->programs & 7) != 7) ||
+            p->data > 1000000000u || p->dives > 1000000000u || p->knowledge > 1000000000u ||
+            p->slots[0] >= 6 || p->slots[1] >= 6 || !(p->programs & (1u << p->slots[0])) ||
             !(p->programs & (1u << p->slots[1])))
             return false;
         for (int j = 0; j < 6; j++)

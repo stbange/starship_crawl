@@ -111,6 +111,23 @@ static void matrix_hud(Renderer *r, const Game *g, int player, float w, float h,
     Color ink = rgb(.75f, .9f, .92f), cyan = matrix_color(n->theme), gold = rgb(1, .72f, .25f),
           red = rgb(.9f, .2f, .35f);
     char text[200];
+    if (onboarding_matrix_intro(g, player)) {
+        centered(r, w * .5f, pad, 1.45f * s, "FIRST LINK / RESTORE THIS ROOM'S POWER", cyan);
+        if (body->guide_mode != GUIDE_OFF) {
+            onboarding_text(LESSON_MATRIX, body->guide_device, text, sizeof(text));
+            wrapped(r, pad, h - 100 * s, s, w - 2 * pad, text, gold);
+        }
+        if (touch && !paused) {
+            float size = fminf(w, h) * .12f;
+            const float xs[] = {.90f, .64f};
+            for (int i = 0; i < 2; i++) {
+                rect(r, w * xs[i] - size * .5f, h * .27f - size * .5f, size, size,
+                     rgb(.02f, .05f, .08f));
+                centered(r, w * xs[i], h * .27f - 4 * s, s, i ? "EXIT" : "USE", cyan);
+            }
+        }
+        return;
+    }
     matrix_schematic(r, g, player, pad, pad, 116 * s);
     centered(r, w * .5f, pad, 1.45f * s, "SHIP MATRIX / UPLINK ACTIVE", cyan);
     snprintf(text, sizeof(text), "%s / %s", world_district_name((District)n->theme),

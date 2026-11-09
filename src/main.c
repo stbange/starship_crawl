@@ -175,11 +175,11 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_preferences(void) {
     Vec3 v = position_absolute(p->pos);
     snprintf(
         result, sizeof(result),
-        "{\"views\":[[%.4f,%.4f,%.4f,%.4f,%u,%u],[%.4f,%.4f,%.4f,%.4f,%u,%u]],"
+        "{\"views\":[[%.4f,%.4f,%.4f,%.4f,%u,%u,%u],[%.4f,%.4f,%.4f,%.4f,%u,%u,%u]],"
         "\"pads\":[%d,%d],\"height\":[%d,%d],\"resizes\":[%u,%u],\"options\":%s,\"selected\":%d,"
         "\"p2\":[%.5f,%.5f,%.5f,%.5f,%.5f],\"transit\":%s,\"progress\":%.3f,\"deck\":%d}",
-        a->mouse, a->touch, a->stick, a->deadzone, (unsigned)a->inverted, a->quality, b->mouse,
-        b->touch, b->stick, b->deadzone, (unsigned)b->inverted, b->quality,
+        a->mouse, a->touch, a->stick, a->deadzone, (unsigned)a->inverted, a->quality, a->guidance,
+        b->mouse, b->touch, b->stick, b->deadzone, (unsigned)b->inverted, b->quality, b->guidance,
         app.devices.pads[0] ? app.devices.owner[0] : -1,
         app.devices.pads[1] ? app.devices.owner[1] : -1, app.renderer.view_height[0],
         app.renderer.view_height[1], app.renderer.target_resizes[0], app.renderer.target_resizes[1],
@@ -199,7 +199,17 @@ static void options_adjust(int direction) {
         app.option_player = 1 - app.option_player;
         return;
     }
-    if (app.option_row == 7) {
+    if (app.option_row == 8) {
+        app.game.players[app.option_player].journal = true;
+        app.game.players[app.option_player].journal_page = 7;
+        app.options = false;
+        return;
+    }
+    if (app.option_row == 9) {
+        onboarding_dismiss(&app.game, app.option_player);
+        return;
+    }
+    if (app.option_row == 10) {
         sc_web_setting(app.option_player, -1, 0);
         return;
     }
@@ -207,6 +217,8 @@ static void options_adjust(int direction) {
     double value = preferences_get(&app.renderer.preferences, app.option_player, setting);
     if (setting == PREF_INVERT)
         value = !value;
+    else if (setting == PREF_GUIDANCE)
+        value = ((int)value + direction + 3) % 3;
     else if (setting == PREF_QUALITY)
         value = ((int)value + direction + 5) % 5;
     else
@@ -241,16 +253,32 @@ static bool choose_player(int player, unsigned choice) {
                                                  : game_story_choose(&app.game, player, choice);
 }
 static void phase_journal(int player) {
+    if (!(onboarding_capabilities(&app.game, player) & OB_BUILD))
+        return;
     campaign_journal(&app.game, player);
     set_pause(true);
 }
 static void matrix_journal(int player) {
+    if (!(onboarding_capabilities(&app.game, player) & OB_PROGRAMS))
+        return;
     Player *p = &app.game.players[player];
     p->journal = true;
     p->journal_page = 4;
     set_pause(true);
 }
 EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
+    if (action == 240) {
+        app.game.players[0].journal = true;
+        app.game.players[0].journal_page = 7;
+        set_pause(true);
+        return;
+    }
+    if (action == 241) {
+        onboarding_dismiss(&app.game, 0);
+        return;
+    }
+    if (!onboarding_action(&app.game, 0, action))
+        return;
     MatrixDiver *d = &app.game.matrix.divers[0];
     if (action >= 230 && action <= 232) {
         if (!app.game.politics.version)
@@ -652,6 +680,23 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              build->guns[0], build->guns[1], build->power_slots[0], build->power_slots[1],
              build->rig, build->module, campaign->slot[0], offers[0], offers[1], offers[2]);
     used = strlen(result) - 1;
+    snprintf(result + used, sizeof(result) - used,
+             ",\"capabilities\":%u,\"intro\":%u,\"lesson\":%u,\"lessons\":%u,\"guidance\":%u,"
+             "\"interface_ready\":%s}",
+             onboarding_capabilities(&app.game, 0), p->intro, p->lesson, p->lessons,
+             app.renderer.preferences.view[0].guidance,
+             onboarding_interface_ready(&app.game, 0) ? "true" : "false");
+    used = strlen(result) - 1;
+    used += (size_t)snprintf(result + used, sizeof(result) - used, ",\"actions\":[");
+    bool first_action = true;
+    for (int action = 1; action <= 241; action++)
+        if (onboarding_action(&app.game, 0, action)) {
+            used += (size_t)snprintf(result + used, sizeof(result) - used, "%s%d",
+                                     first_action ? "" : ",", action);
+            first_action = false;
+        }
+    snprintf(result + used, sizeof(result) - used, "]}");
+    used = strlen(result) - 1;
     const Navigation *nav = &p->navigation;
     snprintf(result + used, sizeof(result) - used,
              ",\"nav_kind\":%u,\"nav_next\":[%d,%d,%d],\"nav_point\":[%.3f,%.3f,%.3f],"
@@ -902,7 +947,13 @@ static int finger_role(float x, float y) {
     if ((app.game.players[0].map_open || app.game.matrix.divers[0].map))
         return fabsf((x - .51f) * w) < radius && fabsf((y - .1f) * h) < radius ? 13 : -1;
     for (int i = 0; i < 12; i++)
-        if (fabsf((x - xs[i]) * w) < radius && fabsf((y - ys[i]) * h) < radius)
+        if (!(onboarding_active(&app.game) && !app.game.matrix.divers[0].active &&
+              ((i == 7 && !onboarding_action(&app.game, 0, 9)) ||
+               (i == 8 && !onboarding_action(&app.game, 0, 13)) ||
+               ((i == 9 || i == 10) && !(onboarding_capabilities(&app.game, 0) & OB_POWERS)))) &&
+            !(app.game.matrix.divers[0].active && onboarding_matrix_intro(&app.game, 0) && i != 6 &&
+              i != 8) &&
+            fabsf((x - xs[i]) * w) < radius && fabsf((y - ys[i]) * h) < radius)
             return i + 2;
     if (x < .42f)
         return 0;
@@ -1033,7 +1084,7 @@ static void events(void) {
                     if (app.options) {
                         if (mb == SDL_GAMEPAD_BUTTON_DPAD_UP || mb == SDL_GAMEPAD_BUTTON_DPAD_DOWN)
                             app.option_row =
-                                (app.option_row + (mb == SDL_GAMEPAD_BUTTON_DPAD_UP ? 7 : 1)) % 8;
+                                (app.option_row + (mb == SDL_GAMEPAD_BUTTON_DPAD_UP ? 10 : 1)) % 11;
                         if (mb == SDL_GAMEPAD_BUTTON_DPAD_LEFT ||
                             mb == SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
                             options_adjust(mb == SDL_GAMEPAD_BUTTON_DPAD_LEFT ? -1 : 1);
@@ -1150,6 +1201,11 @@ static void events(void) {
                         matrix_toggle(&app.game, player);
                         continue;
                     }
+                    if (p->journal && p->journal_page == 7) {
+                        if (mb == SDL_GAMEPAD_BUTTON_EAST || mb == SDL_GAMEPAD_BUTTON_START)
+                            sc_web_start();
+                        continue;
+                    }
                     if (p->journal && p->journal_page && app.game.story.version) {
                         int b = e.gbutton.button;
                         unsigned choice = b == SDL_GAMEPAD_BUTTON_DPAD_LEFT    ? 1
@@ -1159,11 +1215,17 @@ static void events(void) {
                         if ((p->journal_page == 1 || p->journal_page == 6) && choice &&
                             choose_player(player, choice))
                             set_pause(false);
-                        if (b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
-                            p->journal_page = p->journal_page == 6 ? 1
-                                              : p->journal_page == 3
-                                                  ? (app.game.politics.version ? 6 : 1)
-                                                  : p->journal_page + 1;
+                        if (b == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) {
+                            do {
+                                p->journal_page = p->journal_page == 6 ? 1
+                                                  : p->journal_page == 3
+                                                      ? (app.game.politics.version ? 6 : 1)
+                                                      : p->journal_page + 1;
+                            } while ((p->journal_page == 2 &&
+                                      !onboarding_action(&app.game, player, 85)) ||
+                                     (p->journal_page == 3 &&
+                                      !onboarding_action(&app.game, player, 86)));
+                        }
                         if (b == SDL_GAMEPAD_BUTTON_WEST) {
                             if (p->journal_page == 6)
                                 politics_read(&app.game, player);
@@ -1221,7 +1283,8 @@ static void events(void) {
                             continue;
                         }
                         if (b == SDL_GAMEPAD_BUTTON_WEST) {
-                            if (p->riding != MECH) {
+                            if (p->riding != MECH &&
+                                campaign_weapon(&app.game, player, SC_FLARE_CANNON)) {
                                 p->weapon = SC_FLARE_CANNON;
                                 p->cooldown = .15f;
                                 app.game.dirty = true;
@@ -1285,7 +1348,7 @@ static void events(void) {
             }
             if (app.options) {
                 if (e.key.key == SDLK_UP || e.key.key == SDLK_DOWN)
-                    app.option_row = (app.option_row + (e.key.key == SDLK_UP ? 7 : 1)) % 8;
+                    app.option_row = (app.option_row + (e.key.key == SDLK_UP ? 10 : 1)) % 11;
                 if (e.key.key == SDLK_LEFT || e.key.key == SDLK_RIGHT)
                     options_adjust(e.key.key == SDLK_LEFT ? -1 : 1);
                 if (e.key.key == SDLK_RETURN)
@@ -1500,7 +1563,7 @@ static void events(void) {
                                   : 85);
                 break;
             case SDLK_F4:
-                sc_web_action(app.game.players[0].journal_page ? 84 : 80);
+                sc_web_action(84);
                 break;
             case SDLK_U:
                 game_story_track(&app.game);
@@ -1515,6 +1578,12 @@ static void events(void) {
                 break;
             case SDLK_F5:
                 save_game();
+                break;
+            case SDLK_SLASH:
+                sc_web_action(240);
+                break;
+            case SDLK_BACKSPACE:
+                sc_web_action(241);
                 break;
             case SDLK_F9:
                 if (!app.no_save && game_load(&app.game, app.save_path)) {
@@ -1783,6 +1852,17 @@ static void frame(void *unused) {
                 vadd(world_center(room->cell), v3(-(room->width * .5 - 1.1), .02, -20)));
             app.demo_encounter = false;
         }
+    }
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        app.game.players[i].guide_mode = app.renderer.preferences.view[i].guidance;
+        app.game.players[i].guide_device = app.touch ? GUIDE_TOUCH : GUIDE_KEYBOARD;
+        for (int pad = 0; pad < 2; pad++)
+            if (app.devices.pads[pad] && app.devices.owner[pad] == i)
+                app.game.players[i].guide_device = GUIDE_PAD;
+#ifdef SC_WEBXR
+        if (i == 0)
+            app.game.players[i].guide_device = GUIDE_QUEST;
+#endif
     }
     if (!app.paused) {
         Actions actions[2];
@@ -2280,6 +2360,10 @@ int main(int argc, char **argv) {
             app.no_save = true;
         }
         politics_init(&app.game);
+        if (app.game.world.generator < 15) {
+            matrix_destroy(&app.game.matrix);
+            matrix_init(&app.game.matrix);
+        }
         Vec3 p = position_absolute(app.game.players[0].pos);
         world_refresh(&app.game.world, &p, 1);
     }

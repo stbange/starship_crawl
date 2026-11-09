@@ -119,7 +119,8 @@ CampaignReward encounter_reward(const Game *g, int player, const Room *r) {
                                                              {REWARD_RIG, MECH},
                                                              {REWARD_RIG, WAGON},
                                                              {REWARD_MODULE, MOD_SABOTEUR}};
-        CampaignReward tool = tools[r->habitat.challenge - 1];
+        CampaignReward tool =
+            onboarding_reward(g, tools[r->habitat.challenge - 1], campaign_layer(r->cell) - 1);
         if (!campaign_owns(g, player, tool))
             return tool;
     }
@@ -139,11 +140,12 @@ CampaignReward encounter_reward(const Game *g, int player, const Room *r) {
                                                   {REWARD_MODULE, MOD_SABOTEUR}}};
     unsigned row = r->habitat.ecology == MECHANICAL, start = (r->hash >> 17) % 7;
     for (unsigned i = 0; i < 7; i++) {
-        CampaignReward reward = rewards[row][(start + i) % 7];
+        CampaignReward reward =
+            onboarding_reward(g, rewards[row][(start + i) % 7], campaign_layer(r->cell) - 1);
         if (!campaign_owns(g, player, reward))
             return reward;
     }
-    return rewards[row][start];
+    return onboarding_reward(g, rewards[row][start], campaign_layer(r->cell) - 1);
 }
 void encounter_reward_name(const Game *g, int player, const Room *r, char *text, size_t size) {
     CampaignReward reward = encounter_reward(g, player, r);

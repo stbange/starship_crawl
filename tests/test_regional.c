@@ -16,6 +16,8 @@ static Game *fresh(void) {
     CHECK(g);
     game_init(g, 713);
     g->world.generator = 11; /* Preserve the original linked-encounter regression. */
+    campaign_init(g);
+    matrix_init(&g->matrix);
     return g;
 }
 static void destroy(Game *g) {

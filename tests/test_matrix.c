@@ -219,7 +219,7 @@ static void entry_and_programs(void) {
     CHECK(!matrix_goal(g, 0, &goal));
     unsigned owned = p->programs, level = p->upgrades[MX_VEIL];
     game_new_ship(g, 42);
-    CHECK(g->matrix.count == 0 && p->programs == 7 && p->upgrades[MX_VEIL] == 0);
+    CHECK(g->matrix.count == 0 && p->programs == 1 && p->upgrades[MX_VEIL] == 0);
     destroy(g);
 }
 static void consequences(void) {

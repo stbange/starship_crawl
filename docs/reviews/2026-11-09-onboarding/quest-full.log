@@ -1,0 +1,24 @@
+RUN test_quest_browser.py
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+PASS: head-only startup/recovery images, delayed/null/emulated controller poses, vertical entry, deliberate input recovery, stalled-session timeouts and diagnostic report
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+PASS: head-only startup/recovery images, delayed/null/emulated controller poses, vertical entry, deliberate input recovery, stalled-session timeouts and diagnostic report
+PASS: session permission/setup failure, local reference fallback, stereo views and single XR frame loop
+PASS: independent controller aim, held-stick snap latch and neutral release
+PASS: earned-only Quest menus, optional guidance and reviewable controller field guide
+PASS: paused head tracking, controller menus, objective map, wrist map, persisted comfort option
+PASS: controller loss, held-fire rejection, visibility/head tracking loss, bounded leaning, deliberate recovery with no time catch-up
+PASS: fresh-character approach and boarding using controller locomotion
+PASS: session end/re-entry, saved position reload, export and invalid-import rollback
+PASS: earned reward claim, upgrade and story decision; shelter, matrix aiming/return, mech and wagon transitions through controller actions
+PASS: same-origin ordinary/Quest storage isolation and earned-current/legacy save imports
+PASS: graphics-loss reload path and usable unsupported-browser launch page
+PASS test_quest_browser.py (725.0s)

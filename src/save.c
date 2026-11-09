@@ -453,7 +453,7 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     number(&s, UINT32_C(0x5343524c), false);
-    number(&s, g->world.generator >= 14 ? 15 : 14, false);
+    number(&s, g->world.generator >= 15 ? 16 : g->world.generator >= 14 ? 15 : 14, false);
     number(&s, g->world.seed, false);
     number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -523,6 +523,11 @@ bool game_save(const Game *g, const char *path) {
             free(factions);
         }
     }
+    if (g->world.generator >= 15)
+        for (int p = 0; p < SC_PLAYERS; p++) {
+            number(&s, g->players[p].intro, false);
+            number(&s, g->players[p].lessons, false);
+        }
     uint32_t hash = s.hash;
     number(&s, hash, false);
     if (fflush(f) != 0)
@@ -549,10 +554,11 @@ bool game_load(Game *g, const char *path) {
     Stream s = {f, UINT32_C(2166136261), true};
     uint32_t magic = number(&s, 0, true), version = number(&s, 0, true), seed = number(&s, 0, true);
     uint32_t generator = version >= 2 ? number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 15) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 16) ||
         (version == 2 && generator != 2) || (version < 11 && generator > 6) ||
         (version < 12 && generator > 10) || (version < 13 && generator > 11) ||
         (version < 14 && generator > 12) || (version < 15 && generator > 13) ||
+        (version < 16 && generator > 14) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
     Player players[SC_PLAYERS];
@@ -661,6 +667,15 @@ bool game_load(Game *g, const char *path) {
         if (!factions_valid(factions, generator))
             s.ok = false;
     }
+    if (version >= 16)
+        for (int p = 0; p < SC_PLAYERS; p++) {
+            players[p].intro = number(&s, 0, true);
+            players[p].lessons = number(&s, 0, true);
+            if (!onboarding_valid(players[p].intro, players[p].lessons, generator,
+                                  campaign.defeated) ||
+                (matrix && matrix->divers[p].active && !(players[p].intro & INTRO_INTERFACE)))
+                s.ok = false;
+        }
     uint32_t expected = s.hash, actual = number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;

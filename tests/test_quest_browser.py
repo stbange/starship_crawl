@@ -171,6 +171,7 @@ def run():
     parser.add_argument('--ordinary-path', default='/starship_crawl/')
     parser.add_argument('--journeys-only', action='store_true', help='Focus on imported progression/facility journeys during development')
     parser.add_argument('--startup-only', action='store_true', help='Focus on headset startup and recovery regressions')
+    parser.add_argument('--intro-only', action='store_true', help='Focus on the earned introductory matrix link')
     args = parser.parse_args()
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(args.site_dir.resolve())))
@@ -192,7 +193,7 @@ def run():
         page.on('console',lambda msg: print('BROWSER',msg.text,flush=True) if msg.type=='error' else None)
         page.add_init_script(path=str(ROOT/'tests/quest_device.js'))
         page.goto(url+'?seed=713');ready(page)
-        if not args.journeys_only:
+        if not args.journeys_only and not args.intro_only:
             results.append(startup_checks(page,url))
             print('PASS:',results[-1],flush=True)
             if args.startup_only:
@@ -240,6 +241,24 @@ def run():
             page.evaluate('xrTest.head.yaw=.15');step(page)
             assert state(page)['yaw']!=before['yaw'] and state(page)['time']==before['time']
             capture(page,'quest-floating-menu-stereo')
+            labels = []
+            for _ in range(60):
+                labels.append(xr_state(page)['label'])
+                page.evaluate("xrTest.stick('right',0,1)"); step(page)
+                page.evaluate("xrTest.stick('right',0,0)"); step(page)
+                if xr_state(page)['selected'] == 0: break
+            else: raise AssertionError(('menu did not wrap', labels))
+            assert not any('MATRIX PROGRAMS' in label or 'ABILITIES AND EQUIPMENT' in label for label in labels), labels
+            choose(page,'GUIDANCE: GUIDED')
+            assert state(page)['guidance'] == 1
+            choose(page,'GUIDANCE: MINIMAL')
+            assert state(page)['guidance'] == 2
+            choose(page,'FIELD GUIDE / REVIEW')
+            capture(page,'quest-onboarding-guide')
+            press(page,'right',5)
+            choose(page,'GUIDANCE: OFF')
+            assert state(page)['guidance'] == 0
+            results.append('earned-only Quest menus, optional guidance and reviewable controller field guide')
             page.evaluate('xrTest.head.yaw=0');step(page)
             choose(page,'MAP AND OBJECTIVE')
             assert state(page)['map']
@@ -323,6 +342,23 @@ def run():
             ordinary.goto(origin+args.ordinary_path);ordinary.wait_for_function("!document.getElementById('start').disabled",timeout=90000)
             assert state(ordinary)['seed']==42
             ordinary.close()
+        import_save(page,'onboarding-interface.sav');enter(page)
+        assert state(page)['intro']==1 and state(page)['programs']==1
+        press(page,'right',1)
+        assert state(page)['matrix']
+        capture(page,'quest-onboarding-first-link')
+        press(page,'right',1)
+        restored=state(page)
+        assert not restored['matrix'] and restored['intro']==3 and restored['programs']==7 and restored['systems']&1,restored
+        capture(page,'quest-onboarding-restored-power')
+        page.evaluate('scQuest.end()');page.wait_for_function("!document.getElementById('export').disabled")
+        results.append('earned interface first link, protected power restoration and physical return with Quest grips')
+        if args.intro_only:
+            assert not errors,errors
+            (ARTIFACTS/'intro-results.json').write_text(json.dumps({'checks':results,'physical_headset_tested':False},indent=2)+'\n')
+            print('PASS:',results[-1],flush=True)
+            browser.close()
+            return
         page.locator('#import').set_input_files(str(ROOT/'tests/fixtures/phase-reward.sav'))
         page.wait_for_function("document.getElementById('status').textContent.includes('Save imported')")
         enter(page);press(page,'left',5);choose(page,'PHASES AND LOADOUT')

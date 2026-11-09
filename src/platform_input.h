@@ -3,11 +3,20 @@
 #include <SDL3/SDL.h>
 #include <stdbool.h>
 
-enum { PREF_MOUSE, PREF_TOUCH, PREF_STICK, PREF_DEADZONE, PREF_INVERT, PREF_QUALITY, PREF_COUNT };
+enum {
+    PREF_MOUSE,
+    PREF_TOUCH,
+    PREF_STICK,
+    PREF_DEADZONE,
+    PREF_INVERT,
+    PREF_QUALITY,
+    PREF_GUIDANCE,
+    PREF_COUNT
+};
 typedef struct {
     float mouse, touch, stick, deadzone;
     bool inverted;
-    unsigned quality;
+    unsigned quality, guidance;
 } ViewPreferences;
 typedef struct {
     ViewPreferences view[2];

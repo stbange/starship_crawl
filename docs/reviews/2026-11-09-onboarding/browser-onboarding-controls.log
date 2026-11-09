@@ -1,0 +1,9 @@
+RUN test_onboarding_browser.py
+PASS staged onboarding WebGL: progressive controls, optional saved guidance, earned safe matrix link, legacy and touch
+PASS test_onboarding_browser.py (293.1s)
+RUN test_foundation_browser.py
+PASS foundation desktop: persisted settings, import/new-ship independence, cached split targets, gamepad ownership and focus
+PASS foundation traversal: actual keyboard stair/ramp ascent and split-screen lift, safe IndexedDB ride snapshot and round trip
+PASS foundation mobile: rotation/cancellation clear held touches and fresh input/settings and touch lifts remain usable
+PASS test_foundation_browser.py (469.4s)
+FAILED SUITES []

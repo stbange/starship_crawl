@@ -1,8 +1,10 @@
 # The Ship Matrix
 
-All four hacking milestones are implemented. Ship generator 6 and narrative 3 stay compatible; saves now use format 10 with an independent matrix generator 1.
+All four hacking milestones are implemented. New ships use generator 15 / save format 16 with matrix generator 1; earlier expeditions keep their matrix access.
 
-**Start a dive.** Find the cyan network console near a room's center, or the workstation on the shelter's right near its entrance. Press **C** to link or disconnect; **G** also uses the shelter workstation. Your body stays where you linked. The loading bay, shelter and powered beacon wards are safe; actual damage to an exposed body disconnects immediately. An outside co-op partner can guard you. Field enemies continue simulating.
+**Earn the first link.** After the first phase guardian, recover an interface from an ordinary terminal in layer two or deeper, clear of nearby visible threats. Use it again to enter a protected first link, then press G or F to restore power and return to the room. Full matrix controls and programs open after this short introduction. See [staged onboarding](ONBOARDING.md).
+
+**Start a dive.** Find the cyan network console near a room's center, or the workstation on the shelter's right near its entrance. Press **C** to link or disconnect; **G** also uses field terminals and the shelter workstation. Your body stays where you linked. The loading bay, shelter and powered beacon wards are safe; actual damage to an exposed body disconnects immediately. An outside co-op partner can guard you. Field enemies continue simulating.
 
 **Controls inside the matrix**
 
@@ -26,7 +28,7 @@ Touch has context-sensitive PULSE, SERVICE, SVC+/SVC-, USE, CAST, SLOT, EXIT and
 
 **Playable loop.** Restore entry power with F. Follow the gold schematic marker to K, recover the maintenance credential with G, then operate the A and B routing pads within 16 seconds. The broken bridge can be jumped, temporarily restored with Bridge, or permanently restored by the maintenance service. Routing plus the credential opens controller firewalls. Interrupt briefly opens them; force access at a routed controller costs 15 bandwidth and 20 trace. Clear or interrupt nearby security before confirming a controller outcome.
 
-Veil, Echo and Interrupt start unlocked, with Veil and Interrupt equipped. Find caches to unlock Bridge, Fork and Siphon. Program upgrades cost 3, 5 and 7 matrix data, cap at three, and persist through death, saving and further commissions on this ship; a new ship resets both matrix profiles. Recovery increases integrity and recovery rate, Reactor increases bandwidth and regeneration, and Precision extends Interrupt. Upgraded Siphon lets the robot service recruit machines for 20 seconds; its initial service reboots them for 12 seconds. Maintenance distracts local hostiles for 10 seconds. Confirmed services pay once; repeating a temporary control costs bandwidth without paying again.
+After the first power-restoration introduction, Veil, Echo and Interrupt are unlocked, with Veil and Interrupt equipped. Earlier expeditions start with these programs as before. Find caches to unlock Bridge, Fork and Siphon. Program upgrades cost 3, 5 and 7 matrix data, cap at three, and persist through death, saving and further commissions on this ship; a new ship resets both matrix profiles. Recovery increases integrity and recovery rate, Reactor increases bandwidth and regeneration, and Precision extends Interrupt. Upgraded Siphon lets the robot service recruit machines for 20 seconds; its initial service reboots them for 12 seconds. Maintenance distracts local hostiles for 10 seconds. Confirmed services pay once; repeating a temporary control costs bandwidth without paying again.
 
 Four seeded controller voices include ORISON fragments, memory custodians, choir engines and quarantine witnesses. Preserve restores power and a beacon; Purge silences security and blacks out local life support; Partition combines restored life support and security shutdown with retained knowledge. Partition requires a credential plus an archive copy, or the network's rare vault when present. Factions and the event journal respond after the loading-bay commission has been accepted. Final physical mission decisions remain at their actual targets.
 
