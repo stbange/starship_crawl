@@ -1,0 +1,141 @@
+[
+  {
+    "build": "quest-framebuffer-recovery-2",
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "phase": "Stopped with an error",
+    "frames": 0,
+    "eyes": 0,
+    "poses": 0,
+    "controllers": [],
+    "visibility": "visible",
+    "frameMs": 0,
+    "framebuffer": "1280 \u00d7 640",
+    "graphicsStage": "XR framebuffer binding",
+    "framebufferStatus": "0x8cdd",
+    "startupGlErrors": [],
+    "error": "VR stopped: The headset framebuffer is incomplete (0x8cdd).",
+    "failurePhase": "Waiting for the first headset view\u2026",
+    "logs": []
+  },
+  {
+    "build": "quest-framebuffer-recovery-2",
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "phase": "Stopped with an error",
+    "frames": 0,
+    "eyes": 0,
+    "poses": 31,
+    "controllers": [
+      {
+        "hand": "left",
+        "ray": "tracked-pointer",
+        "mapping": "xr-standard",
+        "profiles": []
+      },
+      {
+        "hand": "right",
+        "ray": "tracked-pointer",
+        "mapping": "xr-standard",
+        "profiles": []
+      }
+    ],
+    "visibility": "visible",
+    "frameMs": 0,
+    "framebuffer": "1280 \u00d7 640",
+    "graphicsStage": "left eye",
+    "framebufferStatus": "0x8cd5",
+    "startupGlErrors": [],
+    "error": "VR stopped: The stereo renderer could not draw a valid eye view.",
+    "failurePhase": "Waiting for the first headset view\u2026",
+    "logs": [
+      "Quest eye failed at clear: GL 0x506 / framebuffer 0x8cd5 / renderer 0 / mesh 0"
+    ]
+  },
+  {
+    "build": "quest-framebuffer-recovery-2",
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "phase": "Stopped with an error",
+    "frames": 0,
+    "eyes": 0,
+    "poses": 31,
+    "controllers": [
+      {
+        "hand": "left",
+        "ray": "tracked-pointer",
+        "mapping": "xr-standard",
+        "profiles": []
+      },
+      {
+        "hand": "right",
+        "ray": "tracked-pointer",
+        "mapping": "xr-standard",
+        "profiles": []
+      }
+    ],
+    "visibility": "visible",
+    "frameMs": 0,
+    "framebuffer": "1280 \u00d7 640",
+    "graphicsStage": "left eye",
+    "framebufferStatus": "0x8cd5",
+    "startupGlErrors": [],
+    "error": "VR stopped: The stereo renderer could not draw a valid eye view.",
+    "failurePhase": "Waiting for the first headset view\u2026",
+    "logs": [
+      "Quest eye failed at draw: GL 0x506 / framebuffer 0x8cd5 / renderer 0 / mesh 0"
+    ]
+  },
+  {
+    "build": "quest-framebuffer-recovery-2",
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "phase": "Stopped with an error",
+    "frames": 20,
+    "eyes": 40,
+    "poses": 31,
+    "controllers": [
+      {
+        "hand": "left",
+        "ray": "tracked-pointer",
+        "mapping": "xr-standard",
+        "profiles": []
+      },
+      {
+        "hand": "right",
+        "ray": "tracked-pointer",
+        "mapping": "xr-standard",
+        "profiles": []
+      }
+    ],
+    "visibility": "visible",
+    "frameMs": 8.5,
+    "framebuffer": "1280 \u00d7 640",
+    "graphicsStage": "left eye",
+    "framebufferStatus": "0x8cdd",
+    "startupGlErrors": [],
+    "error": "VR stopped: The stereo renderer could not draw a valid eye view.",
+    "failurePhase": "VR active. If paused, release controls and press A. Y opens the menu.",
+    "logs": [
+      "Quest eye failed at draw: GL 0x506 / framebuffer 0x8cdd / renderer 0 / mesh 0"
+    ]
+  },
+  {
+    "build": "quest-framebuffer-recovery-2",
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "phase": "Stopped with an error",
+    "frames": 0,
+    "eyes": 0,
+    "poses": 0,
+    "controllers": [],
+    "visibility": "visible",
+    "frameMs": 0,
+    "framebuffer": "1280 \u00d7 640",
+    "graphicsStage": "Before first XR draw",
+    "framebufferStatus": "",
+    "startupGlErrors": [
+      "0x500"
+    ],
+    "error": "VR stopped: Graphics setup failed: GL 0x500",
+    "failurePhase": "Waiting for the first headset view\u2026",
+    "logs": [
+      "Before first XR draw: GL 0x500"
+    ]
+  }
+]

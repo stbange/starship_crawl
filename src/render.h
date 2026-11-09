@@ -73,8 +73,8 @@ bool renderer_capture(int width, int height, const char *path);
 void renderer_options(Renderer *r, int width, int height, int player, int selected);
 #ifdef SC_WEBXR
 void renderer_quest_prepare(Renderer *r, Game *g);
-bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, GLuint framebuffer,
-                        int x, int y, int width, int height, const float *projection,
-                        const float *tracking_view);
+bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, int x, int y, int width,
+                        int height, const float *projection,
+                        const float *tracking_view, bool diagnose_startup);
 #endif
 #endif

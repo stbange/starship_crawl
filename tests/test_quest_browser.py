@@ -87,6 +87,79 @@ def import_save(page, name):
     page.wait_for_function("document.getElementById('status').textContent.includes('Save imported')")
 
 
+def framebuffer_checks(page, url):
+    def fresh():
+        page.goto(url+'?seed=713');ready(page)
+
+    fresh()
+    page.evaluate('xrTest.setupFramebufferError=true;xrTest.leftAvailable=false;xrTest.rightAvailable=false')
+    page.locator('#enter').click()
+    page.wait_for_function('!!(xrTest.session && xrTest.session.callback)')
+    step(page,4)
+    q=xr_state(page)
+    assert q['active'] and q['suspended'] and q['eyes']==8,q
+    capture(page,'quest-framebuffer-startup-recovery')
+    report=json.loads(page.locator('#xr-report').text_content())
+    assert report['startupGlErrors']==['0x506'] and not report['error'],report
+    (ARTIFACTS/'framebuffer-recovered.json').write_text(json.dumps(report,indent=2)+'\n')
+    assert page.evaluate('xrTest.framebufferViolations')==[]
+    assert page.evaluate('xrTest.layer.gl.getParameter(xrTest.layer.gl.FRAMEBUFFER_BINDING)===null')
+    page.evaluate('xrTest.leftAvailable=true;xrTest.rightAvailable=true');step(page,2)
+    press(page,'right',4)
+    assert not state(page)['paused']
+    page.evaluate('scQuest.end()')
+    page.wait_for_function("!document.getElementById('enter').disabled")
+    enter(page)
+    assert page.evaluate('xrTest.framebufferViolations')==[]
+    page.evaluate('scQuest.end()')
+    page.wait_for_function("!document.getElementById('enter').disabled")
+
+    failures=[]
+    for fault,stage in [('incompleteFrame','XR framebuffer binding'),('failEyeClear','left eye'),
+                        ('failEyeDraw','left eye')]:
+        fresh();page.evaluate('key=>xrTest[key]=true',fault)
+        page.locator('#enter').click()
+        page.wait_for_function('!!(xrTest.session && xrTest.session.callback)')
+        step(page)
+        page.wait_for_function("!document.getElementById('enter').disabled")
+        report=json.loads(page.locator('#xr-report').inner_text())
+        assert report['error'] and report['graphicsStage']==stage and report['eyes']==0,report
+        assert state(page)['paused'] and not xr_state(page)['active']
+        assert not page.locator('#export').is_disabled()
+        assert page.evaluate('xrTest.framebufferViolations')==[]
+        assert not page.evaluate('xrTest.layer.gl.isEnabled(xrTest.layer.gl.SCISSOR_TEST)')
+        if fault=='failEyeDraw':
+            assert any('draw: GL 0x506' in log for log in report['logs']),report
+        if fault=='failEyeClear':
+            assert any('clear: GL 0x506' in log for log in report['logs']),report
+        failures.append(report)
+    # A target that fails after successful entry must still stop immediately;
+    # setup-error recovery never applies to subsequent frames or draw errors.
+    fresh();enter(page)
+    eyes=xr_state(page)['eyes']
+    page.evaluate('xrTest.incompleteFrame=true');step(page)
+    page.wait_for_function("!document.getElementById('enter').disabled")
+    report=json.loads(page.locator('#xr-report').text_content())
+    assert report['error'] and report['eyes']==eyes and report['graphicsStage']=='left eye',report
+    assert report['framebufferStatus']=='0x8cdd',report
+    assert any('draw: GL 0x506' in log for log in report['logs']),report
+    assert not page.evaluate('xrTest.layer.gl.isEnabled(xrTest.layer.gl.SCISSOR_TEST)')
+    assert state(page)['paused'] and not xr_state(page)['active']
+    failures.append(report)
+    fresh();page.evaluate('xrTest.setupInvalidEnum=true')
+    page.locator('#enter').click()
+    page.wait_for_function('!!(xrTest.session && xrTest.session.callback)')
+    step(page)
+    page.wait_for_function("!document.getElementById('enter').disabled")
+    report=json.loads(page.locator('#xr-report').text_content())
+    assert report['startupGlErrors']==['0x500'] and report['error'] and report['eyes']==0,report
+    assert report['graphicsStage']=='Before first XR draw' and state(page)['paused'],report
+    failures.append(report)
+    (ARTIFACTS/'framebuffer-diagnostics.json').write_text(json.dumps(failures,indent=2)+'\n')
+    fresh()
+    return 'opaque framebuffer lifetime, reported setup GL error recovery, head-only stereo, re-entry, genuine incomplete/draw failures and usable exit'
+
+
 def startup_checks(page, url):
     def fresh():
         page.goto(url+'?seed=713');ready(page)
@@ -194,6 +267,8 @@ def run():
         page.add_init_script(path=str(ROOT/'tests/quest_device.js'))
         page.goto(url+'?seed=713');ready(page)
         if not args.journeys_only and not args.intro_only:
+            results.append(framebuffer_checks(page,url))
+            print('PASS:',results[-1],flush=True)
             results.append(startup_checks(page,url))
             print('PASS:',results[-1],flush=True)
             if args.startup_only:

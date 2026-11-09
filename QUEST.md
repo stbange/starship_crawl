@@ -87,6 +87,16 @@ errors. It stays on the page and is not uploaded automatically. Report the text
 along with whether the Meta system menu remained usable. Reload the Quest page
 after a deployment to receive the updated application.
 
+The framebuffer repair identifies itself as **`quest-framebuffer-recovery-2`**
+in that report. It pauses the preview before headset graphics setup and keeps
+the runtime's framebuffer inside the XR callback. A queued setup-time `0x506`
+is recorded separately; entry proceeds only when the current framebuffer is
+complete and both eyes clear/draw without errors. The report now distinguishes
+setup, framebuffer binding, frame preparation and each eye; startup C logs
+distinguish preparation, clear and draw failures. See the
+[framebuffer investigation](docs/reviews/2026-11-09-quest-framebuffer/README.md)
+for the reproduced failure and the remaining hardware uncertainty.
+
 The first physical headset report was a black view with unresponsive controls.
 The [startup repair review](docs/reviews/2026-11-08-quest-startup/README.md)
 records the reproduced software failure and regression checks; confirmation on
@@ -117,7 +127,8 @@ python3 scripts/package-quest.py --output build-pages/quest
 ```
 
 Artifacts are `starship_crawl_quest.html`, `.js` and `.wasm`. The packager produces
-`quest/index.html` and refuses to overwrite an ordinary web root. Serve the
+`quest/index.html`, versions JS/WASM request URLs together to avoid mixed cached
+builds, and refuses to overwrite an ordinary web root. Serve the packaged
 directory over HTTPS; remote plain HTTP and opening the files directly do not
 provide a usable immersive WebXR origin. GitHub Actions retains a downloadable
 **quest-webxr** artifact and publishes the tested page under `/quest/` after all

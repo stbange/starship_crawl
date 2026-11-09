@@ -129,6 +129,17 @@ stalls. Timeout cases advance the external browser clock without changing game
 state. `--startup-only` runs these focused cases during development; CI always
 runs them as part of the complete Quest suite.
 
+The framebuffer regression additionally enforces opaque XR framebuffer lifetime
+in the external device. It queues a real WebGL `INVALID_FRAMEBUFFER_OPERATION`
+during graphics setup and requires nonblank, distinct stereo recovery views with
+both controllers absent, followed by deliberate resume and session re-entry.
+Incomplete targets, actual draw/clear failures (including after successful entry),
+and unrelated setup GL errors must still end the session with diagnostics and
+usable save/retry controls. These cases run in `--startup-only` and the full CI
+suite. Captures and structured reports use the `framebuffer-*` / `quest-framebuffer-*`
+names in `build-quest/test-artifacts/`. This reproduces the reported error signature;
+it does not establish which operation originally failed on physical Quest hardware.
+
 **Hidden factions (generator 14 / simulation 1 / format 15).** Five focused unit
 suites cover the shared clock and geography, persistent forces and capacity,
 autonomous orders/resources/hostility, invisible intervention effects and memory,

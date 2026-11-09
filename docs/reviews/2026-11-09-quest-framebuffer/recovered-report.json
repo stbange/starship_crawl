@@ -1,0 +1,22 @@
+{
+  "build": "quest-framebuffer-recovery-2",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "phase": "Waiting for both Touch controllers. Hold them in view, release controls, then press A.",
+  "frames": 4,
+  "eyes": 8,
+  "poses": 1,
+  "controllers": [],
+  "visibility": "visible",
+  "frameMs": 1,
+  "framebuffer": "1280 \u00d7 640",
+  "graphicsStage": "Frame complete",
+  "framebufferStatus": "0x8cd5",
+  "startupGlErrors": [
+    "0x506"
+  ],
+  "error": "",
+  "failurePhase": "",
+  "logs": [
+    "Before first XR draw: GL 0x506"
+  ]
+}

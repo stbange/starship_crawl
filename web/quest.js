@@ -5,13 +5,14 @@
   const el = id => document.getElementById(id);
   const prefKey = 'starship-crawl.quest.preferences.v1';
   let ready = false, supported = false, starting = false, session = null;
-  let space = null, layer = null, framebufferID = 0, contextLost = false, begun = false;
+  let space = null, layer = null, contextLost = false, begun = false, graphicsStarted = false;
   let lastError = '';
   let watchdog = 0, lastFrameAt = 0, startedAt = 0, trackingReady = false, stopping = false;
   const health = {phase: 'Loading', frames: 0, eyes: 0, poses: 0, controllers: [],
-    visibility: 'none', frameMs: 0, framebuffer: '', error: '', failurePhase: '', logs: []};
+    visibility: 'none', frameMs: 0, framebuffer: '', graphicsStage: '', framebufferStatus: '',
+    startupGlErrors: [], error: '', failurePhase: '', logs: []};
   function report() {
-    el('xr-report').textContent = JSON.stringify({build: 'quest-startup-recovery-1',
+    el('xr-report').textContent = JSON.stringify({build: 'quest-framebuffer-recovery-2',
       browser: navigator.userAgent, ...health}, null, 2);
   }
   const message = text => { el('status').textContent = text; report(); };
@@ -73,9 +74,7 @@
       begun = false;
       try { _sc_xr_end(); } catch (error) { health.logs.push(String(error).slice(0, 1000)); }
     }
-    // The XR runtime owns this framebuffer. Remove its Emscripten name only.
-    if (framebufferID) GL.framebuffers[framebufferID] = null;
-    framebufferID = 0; session = space = layer = null; starting = false;
+    session = space = layer = null; starting = false;
     health.phase = lastError ? 'Stopped with an error' : 'Session ended';
     buttons();
     message(contextLost ? 'Graphics context lost. Reload to recover the last saved expedition.' :
@@ -114,6 +113,28 @@
           'Waiting for headset tracking. Look around in your play area.');
         return;
       }
+      if (!graphicsStarted) {
+        health.graphicsStage = 'Before first XR draw';
+        // GL errors are sticky. A setup-time framebuffer error says nothing
+        // about this callback's eye target. Retain it in the report, then
+        // require a complete target AND error-free clear/draw below. Other
+        // errors (including context loss/allocation failures) remain fatal.
+        for (let i = 0, error; i < 8 && (error = GLctx.getError()) !== GLctx.NO_ERROR; i++)
+          health.startupGlErrors.push('0x' + error.toString(16));
+        if (health.startupGlErrors.length) {
+          health.logs.push('Before first XR draw: GL ' + health.startupGlErrors.join(', '));
+          if (health.startupGlErrors.some(error => error !== '0x506'))
+            throw new Error('Graphics setup failed: GL ' + health.startupGlErrors.join(', '));
+        }
+        // Opaque XR framebuffers may only be checked/used inside this callback.
+        health.graphicsStage = 'XR framebuffer binding';
+        GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, layer.framebuffer);
+        const status = GLctx.checkFramebufferStatus(GLctx.FRAMEBUFFER);
+        health.framebufferStatus = '0x' + status.toString(16);
+        if (!layer.framebuffer || status !== GLctx.FRAMEBUFFER_COMPLETE)
+          throw new Error('The headset framebuffer is incomplete (' + health.framebufferStatus + ').');
+        graphicsStarted = true;
+      }
       const offset = _sc_xr_buffer() >>> 2;
       HEAPF32.set(pose.transform.matrix, offset);
       let valid = 1, left = null, right = null;
@@ -135,23 +156,31 @@
         (pressed(left, 4) ? 16 : 0) | (pressed(left, 5) ? 32 : 0) |
         (pressed(left, 0) ? 64 : 0) | (pressed(left, 1) ? 128 : 0) |
         (pressed(left, 3) ? 256 : 0) | (pressed(right, 3) ? 512 : 0);
+      health.graphicsStage = 'XR frame preparation';
       const drawable = _sc_xr_frame(time, valid, mask, lx, ly, rx, ry);
       health.poses = valid;
+      // JS owns the opaque runtime target. C draws into this binding; never
+      // register it as an application-owned GL object or retain it after RAF.
       GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, layer.framebuffer);
       if (!drawable) {
         phase('Waiting for a usable headset pose. Face forward to calibrate.');
         GLctx.disable(GLctx.SCISSOR_TEST); GLctx.clearColor(0,0,0,1);
-        GLctx.clear(GLctx.COLOR_BUFFER_BIT | GLctx.DEPTH_BUFFER_BIT); return;
+        GLctx.clear(GLctx.COLOR_BUFFER_BIT | GLctx.DEPTH_BUFFER_BIT);
+        const error = GLctx.getError();
+        if (error !== GLctx.NO_ERROR) throw new Error('XR clear failed: GL 0x' + error.toString(16));
+        return;
       }
       for (const view of pose.views) {
         const viewport = layer.getViewport(view);
         HEAPF32.set(view.projectionMatrix, offset + 80);
         HEAPF32.set(view.transform.inverse.matrix, offset + 96);
-        if (!_sc_xr_eye(framebufferID, viewport.x, viewport.y, viewport.width, viewport.height))
+        health.graphicsStage = view.eye + ' eye';
+        if (!_sc_xr_eye(viewport.x, viewport.y, viewport.width, viewport.height))
           throw new Error('The stereo renderer could not draw a valid eye view.');
         health.eyes++;
       }
       health.frames++;
+      health.graphicsStage = 'Frame complete';
       health.frameMs = Math.round((performance.now() - frameStart) * 10) / 10;
       if (drawable === 2 && !trackingReady) {
         trackingReady = true;
@@ -163,13 +192,21 @@
           'Waiting for both Touch controllers. Hold them in view, release controls, then press A.');
       }
     } catch (error) {
+      if (layer && !contextLost && GLctx.getParameter(GLctx.DRAW_FRAMEBUFFER_BINDING) === layer.framebuffer)
+        health.framebufferStatus = '0x' + GLctx.checkFramebufferStatus(GLctx.FRAMEBUFFER).toString(16);
       stopWithError('VR stopped: ' + error.message);
+    } finally {
+      if (!contextLost) {
+        GLctx.disable(GLctx.SCISSOR_TEST);
+        GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, null);
+      }
     }
   }
   async function enter() {
     if (!ready || !supported || starting || session || contextLost) return;
-    starting = true; lastError = ''; stopping = false; trackingReady = false;
-    Object.assign(health, {frames: 0, eyes: 0, poses: 0, controllers: [], frameMs: 0, error: '', failurePhase: '', logs: []});
+    starting = true; lastError = ''; stopping = false; trackingReady = false; graphicsStarted = false;
+    Object.assign(health, {frames: 0, eyes: 0, poses: 0, controllers: [], frameMs: 0, framebuffer: '',
+      graphicsStage: '', framebufferStatus: '', startupGlErrors: [], error: '', failurePhase: '', logs: []});
     phase('Requesting VR permission…'); buttons();
     let requested = null;
     try {
@@ -183,6 +220,10 @@
         if (requested.visibilityState !== 'visible') suspend();
       });
       requested.addEventListener('inputsourceschange', suspend);
+      // Stop the ordinary preview before the async graphics transition. It
+      // must not draw or consume XR setup errors while the runtime takes over.
+      begun = !!_sc_xr_begin();
+      if (!begun) throw new Error('The expedition is not ready for VR.');
       phase('Preparing headset graphics…');
       await GLctx.makeXRCompatible();
       if (session !== requested || contextLost) throw new Error('VR session ended during setup.');
@@ -195,10 +236,6 @@
       catch (_) { space = await requested.requestReferenceSpace('local'); }
       space.addEventListener('reset', suspend);
       if (session !== requested || contextLost) throw new Error('VR session ended during setup.');
-      framebufferID = GL.getNewId(GL.framebuffers);
-      GL.framebuffers[framebufferID] = layer.framebuffer;
-      begun = !!_sc_xr_begin();
-      if (!begun) throw new Error('The expedition is not ready for VR.');
       if (requested.supportedFrameRates && Array.from(requested.supportedFrameRates).includes(72) && requested.updateTargetFrameRate)
         requested.updateTargetFrameRate(72).catch(() => {});
       // Start audio from the same deliberate launch action if the browser suspended it.

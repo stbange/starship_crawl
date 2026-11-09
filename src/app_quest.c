@@ -672,12 +672,13 @@ EMSCRIPTEN_KEEPALIVE int sc_xr_frame(double time_ms, unsigned valid, unsigned bu
     /* 1: head-tracked recovery panel, 2: all required poses usable. */
     return app.running ? (xr.tracking ? 2 : 1) : 0;
 }
-EMSCRIPTEN_KEEPALIVE int sc_xr_eye(unsigned framebuffer, int x, int y, int width, int height) {
+EMSCRIPTEN_KEEPALIVE int sc_xr_eye(int x, int y, int width, int height) {
     if (!quest_running || !xr.view.active)
         return 0;
     bool ok =
-        renderer_quest_eye(&app.renderer, &app.game, &xr.view, framebuffer, x, y, width, height,
-                           xr.packet + SC_QUEST_POSES * 16, xr.packet + SC_QUEST_POSES * 16 + 16);
+        renderer_quest_eye(&app.renderer, &app.game, &xr.view, x, y, width, height,
+                           xr.packet + SC_QUEST_POSES * 16, xr.packet + SC_QUEST_POSES * 16 + 16,
+                           xr.eyes < 2);
     if (ok)
         xr.eyes++;
     return ok;

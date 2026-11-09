@@ -1,0 +1,32 @@
+{
+  "native_unit_and_platform": 31,
+  "quest_unit": 7,
+  "native_render_scenes": [
+    "space: solo, 20 frames",
+    "hall: split screen, 20 frames"
+  ],
+  "specifications": 23,
+  "quest_browser_groups": 13,
+  "ordinary_web_byte_identical": true,
+  "physical_headset_tested": false,
+  "quest_full_browser_seconds": 471.3,
+  "quest_final_packaged_startup_seconds": 71.2,
+  "ordinary_browser_suites": [
+    "test_browser.py",
+    "test_exterior_browser.py",
+    "test_shelter_browser.py"
+  ],
+  "ordinary_browser_seconds": [
+    146.2,
+    129.4,
+    55.0
+  ],
+  "quest_packaging_tests": "passed; matched content-versioned assets, changed JS and WASM, ordinary-root protection",
+  "ordinary_artifact_sha256": {
+    "build-web/starship_crawl.html": "206a684e88e2a5f27820ff5281b450daccf69787f936a2ec7d287474bf6eb1d3",
+    "build-web/starship_crawl.js": "88a0094cb368d47c8645e19ff2cc29f77115b347f6d87072b678fc4656fc6368",
+    "build-web/starship_crawl.wasm": "26213926b468705efe31a0fff6406b0aa5635637dbe6242f7e5e2289456d5f35"
+  },
+  "validation_scope": "Full Quest interaction run, followed by focused startup regressions on the final versioned package after diagnostic/performance refinements.",
+  "quest_packaged_revision": "039a7e883b8ba56d"
+}

@@ -192,9 +192,19 @@ static void quest_panels(Renderer *r, Game *g, const QuestView *q, const float *
         sc_render_flush(r);
     }
 }
-bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, GLuint framebuffer, int x, int y,
-                        int width, int height, const float *projection,
-                        const float *tracking_view) {
+static bool quest_gl_ok(Renderer *r, const char *stage) {
+    GLenum error = gl.GetError();
+    if (r->failed || error != GL_NO_ERROR) {
+        SDL_Log("Quest eye failed at %s: GL 0x%x / framebuffer 0x%x / renderer %d / mesh %d",
+                stage, error, gl.CheckFramebufferStatus(GL_FRAMEBUFFER), r->failed,
+                r->mesh.failed);
+        return false;
+    }
+    return true;
+}
+bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, int x, int y, int width,
+                        int height, const float *projection,
+                        const float *tracking_view, bool diagnose_startup) {
     if (width < 1 || height < 1 || !quest_projection_valid(projection))
         return false;
     Player *p = &g->players[0];
@@ -206,13 +216,20 @@ bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, GLuint framebu
     if (!quest_view(&q->tracking, tracking_view, q->base, r->origin, view))
         return false;
     sc_render_multiply(mvp, projection, view);
-    gl.BindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    /* The WebXR callback binds its opaque target and owns its lifetime. */
+    /* Extra error queries isolate the reported first-eye failure. Once both
+       eyes work, retain the existing single end-of-eye check: GL queries can
+       synchronize the GPU and should not add steady-state headset stalls. */
+    if (diagnose_startup && !quest_gl_ok(r, "prepare"))
+        return false;
     gl.Viewport(x, y, width, height);
     gl.Enable(GL_SCISSOR_TEST);
     gl.Scissor(x, y, width, height);
     gl.ClearColor(.001f, .002f, .004f, 1);
     gl.DepthMask(GL_TRUE);
     gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (diagnose_startup && !quest_gl_ok(r, "clear"))
+        return false;
     gl.Disable(GL_BLEND);
     gl.Enable(GL_DEPTH_TEST);
     gl.UseProgram(r->program);
@@ -290,9 +307,5 @@ bool renderer_quest_eye(Renderer *r, Game *g, const QuestView *q, GLuint framebu
     gl.Enable(GL_DEPTH_TEST);
     if (r->mesh.failed)
         r->failed = true;
-    GLenum error = gl.GetError();
-    if (r->failed || error != GL_NO_ERROR)
-        SDL_Log("Quest eye failed: GL 0x%x / renderer %d / mesh %d", error, r->failed,
-                r->mesh.failed);
-    return !r->failed && error == GL_NO_ERROR;
+    return quest_gl_ok(r, "draw");
 }

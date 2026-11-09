@@ -18,6 +18,9 @@
   const mock = window.xrTest = {
     supported: true, denied: false, localFloor: true, headAvailable: true,
     leftAvailable: true, rightAvailable: true, failLayer: false,
+    setupFramebufferError: false, setupInvalidEnum: false, incompleteFrame: false,
+    failEyeClear: false, failEyeDraw: false,
+    frameActive: false, capturing: false, framebufferViolations: [],
     missingPoses: [], emulatedPoses: [],
     head: {x:0,y:1.65,z:0}, left:{x:-.28,y:1.25,z:-.32}, right:{x:.28,y:1.25,z:-.32},
     leftAim:{x:-.28,y:1.25,z:-.32}, rightAim:{x:.28,y:1.25,z:-.32},
@@ -27,7 +30,8 @@
         const session=this.session;
         if (!session || !session.callback) throw Error('No scheduled XR frame');
         const callback=session.callback; session.callback=null; this.time+=dt;
-        callback(this.time, {
+        this.frameActive=true;
+        try { callback(this.time, {
           session,
           getViewerPose: () => {
             if (!this.headAvailable) return null;
@@ -42,7 +46,7 @@
           },
           getPose: space => this.missingPoses.includes(space.kind) ? null :
             ({transform:transform(this[space.kind]),emulatedPosition:this.emulatedPoses.includes(space.kind)})
-        });
+        }); } finally { this.frameActive=false; }
       }
     },
     button(side,index,down) {
@@ -52,13 +56,58 @@
     neutral() {for (const side of ['left','right']) {this.stick(side,0,0); for(let i=0;i<6;i++) this.button(side,i,false);}},
     capture() {
       const {gl,framebuffer,framebufferWidth:w,framebufferHeight:h}=this.layer;
+      const previous=gl.getParameter(gl.FRAMEBUFFER_BINDING);
       gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);
-      const pixels=new Uint8Array(w*h*4); gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+      // Test instrumentation may inspect the completed image. Application
+      // reads/draws still obey the opaque framebuffer's callback lifetime.
+      const pixels=new Uint8Array(w*h*4);
+      this.capturing=true;
+      try { gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,pixels); }
+      finally { this.capturing=false; gl.bindFramebuffer(gl.FRAMEBUFFER,previous); }
       const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
       const ctx=canvas.getContext('2d'), data=ctx.createImageData(w,h);
       for(let y=0;y<h;y++) data.data.set(pixels.subarray((h-y-1)*w*4,(h-y)*w*4),y*w*4);
       ctx.putImageData(data,0,0);return canvas.toDataURL('image/png');
     }
+  };
+  const proto=WebGL2RenderingContext.prototype;
+  const bind=proto.bindFramebuffer, clear=proto.clear;
+  function framebufferError(gl) {
+    // Queue a real INVALID_FRAMEBUFFER_OPERATION, not a mocked getError result.
+    const previous=gl.getParameter(gl.FRAMEBUFFER_BINDING), empty=gl.createFramebuffer();
+    bind.call(gl,gl.FRAMEBUFFER,empty);
+    clear.call(gl,gl.COLOR_BUFFER_BIT);
+    bind.call(gl,gl.FRAMEBUFFER,previous);gl.deleteFramebuffer(empty);
+  }
+  proto.bindFramebuffer=function(target,buffer) {
+    if(target===this.FRAMEBUFFER||target===this.DRAW_FRAMEBUFFER)mock.drawFramebuffer=buffer;
+    if(target===this.FRAMEBUFFER||target===this.READ_FRAMEBUFFER)mock.readFramebuffer=buffer;
+    return bind.call(this,target,buffer);
+  };
+  for(const name of ['clear','drawArrays','readPixels']) {
+    const original=proto[name];
+    proto[name]=function(...args) {
+      const bound=name==='readPixels'?mock.readFramebuffer:mock.drawFramebuffer;
+      if(mock.layer&&bound===mock.layer.framebuffer&&!mock.capturing) {
+        if(!mock.frameActive) {
+          mock.framebufferViolations.push(name+' outside XR callback');
+          framebufferError(this);return;
+        }
+        if(mock.incompleteFrame||(mock.failEyeDraw&&name==='drawArrays')||(mock.failEyeClear&&name==='clear')) {
+          if(name==='drawArrays')mock.failEyeDraw=false;
+          if(name==='clear')mock.failEyeClear=false;
+          framebufferError(this);return;
+        }
+      }
+      return original.apply(this,args);
+    };
+  }
+  const status=proto.checkFramebufferStatus;
+  proto.checkFramebufferStatus=function(target) {
+    const bound=target===this.READ_FRAMEBUFFER?mock.readFramebuffer:mock.drawFramebuffer;
+    if(mock.layer&&bound===mock.layer.framebuffer&&(!mock.frameActive||mock.incompleteFrame))
+      return this.FRAMEBUFFER_UNSUPPORTED;
+    return status.call(this,target);
   };
   class Session extends EventTarget {
     constructor() {super();this.visibilityState='visible';this.supportedFrameRates=[72,90];this.ended=false;}
@@ -77,7 +126,11 @@
     requestSession:()=>mock.denied?Promise.reject(new DOMException('Permission denied','NotAllowedError')):
       Promise.resolve(mock.session=new Session())
   }});
-  WebGL2RenderingContext.prototype.makeXRCompatible=function(){return Promise.resolve();};
+  proto.makeXRCompatible=function(){
+    if(mock.setupFramebufferError)framebufferError(this);
+    if(mock.setupInvalidEnum)this.enable(0xffffffff);
+    return Promise.resolve();
+  };
   window.XRWebGLLayer=class {
     constructor(session,gl,options){
       if(mock.failLayer)throw Error('layer setup rejected');
@@ -94,6 +147,7 @@
       gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,depth);
       if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Incomplete test XR framebuffer');
       mock.layer=this;
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);
     }
     getViewport(view){return {x:view.eye==='left'?0:640,y:0,width:640,height:640};}
   };

@@ -1,0 +1,2 @@
+BROWSER Quest eye failed: GL 0x506 / renderer 0 / mesh 0
+FAILURE {'active': False, 'tracking': False, 'suspended': True, 'neutral': False, 'valid': 1, 'frames': 1, 'eyes': 0, 'menu': 0, 'selected': 0, 'label': '', 'unsafe': False, 'vignette': True, 'fade': 1.0, 'aim': [-0.0, -0.0, 0.0]} VR stopped: The stereo renderer could not draw a valid eye view.
