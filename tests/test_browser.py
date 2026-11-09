@@ -262,8 +262,17 @@ def run():
             page.touchscreen.tap(844 * .64, 390 * .48)
             wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).flashlight")
             page.screenshot(path=str(ARTIFACTS / "mobile-touch.png"))
+            before = state(page)
             page.touchscreen.tap(844 * .77, 390 * .27)
-            wait_for(page, "JSON.parse(Module.ccall('sc_web_state','string',[],[])).weapon === 1")
+            wait_for(page, f"JSON.parse(Module.ccall('sc_web_state','string',[],[])).frames > {before['frames']+1}")
+            assert state(page)["weapon"] == 0 and state(page)["weapons"] == 1
+            # The cycle button appears once a second weapon has actually been earned.
+            from test_story_browser import import_fixture
+            page.on("dialog", lambda dialog: dialog.accept())
+            import_fixture(page, "onboarding-interface.sav")
+            before = state(page)["weapon"]
+            page.touchscreen.tap(844 * .77, 390 * .27)
+            wait_for(page, f"() => {{const s=JSON.parse(Module.ccall('sc_web_state','string',[],[]));return s.weapon !== {before} && s.gun_slots.includes(s.weapon);}}")
             page.set_viewport_size({"width": 390, "height": 844})
             page.wait_for_timeout(300)
             page.screenshot(path=str(ARTIFACTS / "mobile-portrait.png"))

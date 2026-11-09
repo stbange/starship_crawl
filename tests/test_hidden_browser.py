@@ -41,7 +41,9 @@ def run():
             assert s['generator'] == 15 and s['simulation'] == 1 and s['politics'] == 0, s
             assert s['director_kind'] == 0 and s['political_goal'] == 0, s
             page.keyboard.press('F6')
-            expect(page, 's.paused && s.journal_page===2')
+            expect(page, '!s.paused && !s.journal')
+            page.keyboard.press('i')
+            expect(page, 's.paused && s.journal_page===1')
             before = state(page)
             expect(page, f's.frames>{before["frames"]+5}')
             assert state(page)['strategy_tick'] == before['strategy_tick']
@@ -57,6 +59,13 @@ def run():
             import_fixture(page, str(args.fixture.resolve()))
             s = state(page)
             assert s['simulation'] == 1 and s['forces_launched'] > 0 and s['politics'] == 0, s
+            # Older earned expeditions retain dossier access, without exposing the hidden courts.
+            page.keyboard.press('F6')
+            expect(page, 's.paused && s.journal_page===2')
+            page.keyboard.press('F6')
+            expect(page, 's.journal_page===2')
+            page.keyboard.press('Enter')
+            expect(page, '!s.paused')
             visible = [f for f in s['forces'] if f['physical'] and f['strength'] and
                        math.dist(f['at'], [s['x'], s['y'], s['z']]) < 25]
             assert visible, s
