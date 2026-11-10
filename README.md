@@ -7,6 +7,11 @@ Starship Crawl is a playable first-person prototype in C17, SDL3, and OpenGL / W
 
 **Quest 3 VR is a separate opt-in build.** Open [the Quest page](https://stbange.github.io/starship_crawl/quest/) in Meta Quest Browser after its successful deployment. It has tracked stereo views, Touch-controller aiming and movement, a wrist map and floating menus, and separate saves. Linux, Windows and the regular web page keep their existing targets. See [Quest build, controls and hardware-testing limits](QUEST.md).
 
+**Planned next:** the [coherent-expedition roadmap](DEVELOPMENT_PLAN.md#current-next-plan-coherent-expeditions--2026-11-10)
+connects distinctive builds, staged guardians, district journeys, recurring
+individuals and hidden campaigns. Its eight milestones are planned; the list
+below describes the implemented prototype.
+
 The prototype includes:
 
 - A star-filled space approach, sparse lights receding along an enormous dark hull, and a small returnable boarding craft behind the player. The safe level-0 loading bay has left, right, inward, upper, and lower routes.

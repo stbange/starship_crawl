@@ -2,6 +2,42 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
+## Current next plan: coherent expeditions — 2026-11-10
+
+The ten accepted design proposals now form one experience: **discover a district,
+understand its problem, choose a challenge, earn a distinctive capability, prepare,
+overcome its guardian, and return to a visibly changed place**. Each ship has a
+defining operational condition; its districts connect that condition to enemies,
+environmental rules, recurring individuals, hidden conflicts and meaningful rewards.
+The existing four phases ease the player from exploration and shooting into the
+deeper combinations. New ships still start fresh characters.
+
+This is the active implementation plan; **E1–E8 are not implemented yet**.
+The [full design](openspec/changes/coherent-expedition-experience/design.md)
+contains the player journey, content limits, dependencies, compatibility strategy
+and playtest criteria. The [OpenSpec proposal](openspec/changes/coherent-expedition-experience/proposal.md),
+[behavior contracts](openspec/changes/coherent-expedition-experience/specs/)
+and [task checklist](openspec/changes/coherent-expedition-experience/tasks.md)
+make the work reviewable and trackable.
+
+| Milestone | Playable result |
+| --- | --- |
+| E1. Combat and build identity | Three transformative upgrade prototypes, deliberate encounter compositions and tuned growth/recovery |
+| E2. Memorable guardians | Two fights with destructible systems, preparation, changing arenas and visible victories |
+| E3. A coherent district | The Drowned Foundry: a landmark journey, awakening machinery, conductive water and a persistent shortcut |
+| E4. Inhabitants with a continuing story | Hidden multi-room campaigns, recurring individuals and understandable local consequences |
+| E5. A useful home | Optional meals, bounded expedition projects, safe respec and recovered keepsakes |
+| E6. An expedition rhythm | Conditional anticipation-to-aftermath director sequences; the complete integrated slice checkpoint |
+| E7. Ships worth replaying | Three ship conditions, four district families, eight specialization branches and four guardian patterns across the existing phases |
+| E8. Balance and release evidence | Long comparative simulations, human playtests, performance/readability tuning and platform checks |
+
+Implement in this order, keeping tests, saves and controls alongside each milestone.
+The first six milestones prove one complete district before expanding its
+combinations. Existing expeditions keep their rules; implementation assigns new
+versions as needed. Solo, optional local co-op, Linux, Windows, ordinary web/mobile
+and the isolated Quest target remain supported. Human and device evidence is
+reported separately from automation.
+
 ## Staged opening and optional guidance — 2026-11-09
 
 Implemented the approved introduction: one starting gun, early earned shotgun,
@@ -30,9 +66,10 @@ The preceding [long-expedition design review](docs/reviews/2026-11-07-long-exped
 contains thirteen hour-long automated simulations, earned-checkpoint screenshots,
 and a controlled navigation comparison. Its proposed next priorities are growth
 and recovery tuning, stronger finales, clearer patrol consequences and rewards
-that remain useful. These recommendations are not yet implemented or an approved
-new milestone. The faction/director correction below now supplies its own
-implementation sequence; general character-growth tuning remains separate.
+that remain useful. The approved coherent-expedition plan above now incorporates
+growth/recovery tuning, stronger guardians and useful preparation rewards. Those
+changes remain planned. The faction/director correction below records its already
+completed implementation and supplies the foundation for E4 and E6.
 
 ## Hidden factions and invisible director — implementation 2026-11-08
 

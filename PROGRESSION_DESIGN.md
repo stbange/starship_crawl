@@ -7,6 +7,13 @@ seeded directional traits. [PHASED_EXPEDITIONS.md](PHASED_EXPEDITIONS.md) define
 what is implemented. The additional examples and numbers below remain discussion
 and playtest targets, including future vehicles, artifact variants and stat respec.
 
+This document preserves the original proposal and its historical baseline. The
+[10 November coherent-expedition plan](openspec/changes/coherent-expedition-experience/design.md)
+is the active next implementation sequence, including transformative branches,
+growth tuning and safe respec. [ONBOARDING.md](ONBOARDING.md) describes the current
+starting kit and unlock schedule; descriptions of immediately available equipment
+below refer to the earlier prototype.
+
 ## The experience to build
 
 Enter a ship with a purpose and a workable character. Read the environment, choose
