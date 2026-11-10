@@ -294,46 +294,38 @@ static void generated_opening(void) {
     finish(g);
 }
 static void malformed_intro(void) {
-    Game *g = fresh();
-    CHECK(game_save(g, "onboarding-valid.sav"));
-    FILE *f = fopen("onboarding-valid.sav", "rb");
-    CHECK(f && !fseek(f, 0, SEEK_END));
-    long length = ftell(f);
-    CHECK(length > 20);
-    rewind(f);
-    unsigned char *original = malloc((size_t)length), *data = malloc((size_t)length);
-    CHECK(original && data && fread(original, 1, (size_t)length, f) == (size_t)length);
-    fclose(f);
-    World *before = malloc(sizeof(*before));
-    CHECK(before);
-    const uint32_t values[] = {4, 2, 1, 1u << LESSON_COUNT};
-    const unsigned offsets[] = {0, 0, 4, 12};
-    for (unsigned n = 0; n < 4; n++) {
-        memcpy(data, original, (size_t)length);
-        size_t at = (size_t)length - 20 + offsets[n];
-        for (unsigned b = 0; b < 4; b++)
-            data[at + b] = (unsigned char)(values[n] >> (8 * b));
-        uint32_t hash = 2166136261u;
-        for (long i = 0; i < length - 4; i++)
-            hash = (hash ^ data[i]) * 16777619u;
-        for (unsigned b = 0; b < 4; b++)
-            data[length - 4 + b] = (unsigned char)(hash >> (8 * b));
-        f = fopen("onboarding-invalid.sav", "wb");
-        CHECK(f && fwrite(data, 1, (size_t)length, f) == (size_t)length);
-        fclose(f);
-        *before = g->world;
-        Player player = g->players[0];
-        CHECK(!game_load(g, "onboarding-invalid.sav"));
-        CHECK(!memcmp(before, &g->world, sizeof(*before)) &&
-              !memcmp(&player, &g->players[0], sizeof(player)));
+    /* Construct invalid semantic fields through the real writer, so appended
+       format fields cannot silently move a hard-coded mutation to another field. */
+    for (unsigned generator = 15; generator <= 16; generator++) {
+        Game *g = fresh();
+        g->world.generator = generator;
+        if (generator == 15) {
+            g->campaign.version = 1;
+            for (int p = 0; p < SC_PLAYERS; p++) g->players[p].rules = 0;
+        }
+        CHECK(game_save(g, "onboarding-valid.sav"));
+        World *before = malloc(sizeof(*before));
+        CHECK(before);
+        const uint32_t values[] = {4, 2, 1, 1u << LESSON_COUNT};
+        for (unsigned n = 0; n < 4; n++) {
+            Player original = g->players[n == 3 ? 1 : 0];
+            Player *edited = &g->players[n == 3 ? 1 : 0];
+            if (n < 2) edited->intro = values[n];
+            else edited->lessons = values[n];
+            CHECK(game_save(g, "onboarding-invalid.sav"));
+            *edited = original;
+            *before = g->world;
+            Player player = g->players[0];
+            CHECK(!game_load(g, "onboarding-invalid.sav"));
+            CHECK(!memcmp(before, &g->world, sizeof(*before)) &&
+                  !memcmp(&player, &g->players[0], sizeof(player)));
+        }
+        CHECK(game_load(g, "onboarding-valid.sav"));
+        free(before);
+        finish(g);
     }
-    CHECK(game_load(g, "onboarding-valid.sav"));
-    free(before);
-    free(data);
-    free(original);
     remove("onboarding-valid.sav");
     remove("onboarding-invalid.sav");
-    finish(g);
 }
 int main(void) {
     starters();

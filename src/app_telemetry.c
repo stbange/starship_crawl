@@ -380,5 +380,13 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              district_room ? district_room->district_arc : 0,
              district_room ? world_district_state(&app.game.world, district_room->journey.anchor)
                            : 0);
+    used = strlen(result) - 1;
+    int near_person = chronicle_near(&app.game, 0);
+    snprintf(result + used, sizeof(result) - used,
+             ",\"person\":%d,\"person_fate\":%u,\"person_knowledge\":%u,\"story_decision\":%s}",
+             near_person,
+             near_person >= 0 ? (unsigned)app.game.chronicle.people[near_person].fate : 0,
+             near_person >= 0 ? app.game.chronicle.people[near_person].knowledge : 0,
+             app.game.interactions[0].decision_open ? "true" : "false");
     return result;
 }

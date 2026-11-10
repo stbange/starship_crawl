@@ -180,3 +180,41 @@ These are explicitly staged inspection fixtures, not human play sessions.
 The updated district geometry also passes both imported guardian encounters in
 the isolated Quest build, including actual grip input and stereo captures.
 Physical Quest performance and human route/readability reviews remain pending.
+
+
+## E4 — a remembered repair and an interrupted supply line
+
+The unit paired campaigns retain the same initial source, destination and force:
+without intervention, the supply force reaches a siege and changes its target’s
+owner; after two members are killed, the survivor retreats and the original owner
+remains. The factory variant repairs production and creates force 2 at a second
+normal resource cost. Interruption prevents that reinforcement. NPC combat adds
+no player XP or kills. See [paired outcomes](e4-paired-campaigns.txt).
+
+Two separately labelled post-first-guardian fixtures use Session movement,
+aiming, shooting and decisions after setup. Taking salvage leaves an evacuation
+note at [3,0,0]; repairing the refuge lets the same named engineer travel to
+[6,0,0] and acknowledge the earlier help. Both journeys walk to the bay, simulate
+ten minutes elsewhere, save/import and walk to the later record. They complete
+in 740.65 and 804.38 simulated seconds, with 11 kills and zero deaths each. The
+final separate gameplay CTest takes 20.88 seconds wall time on this container.
+These are controlled automated journeys, not fresh-character or human sessions.
+The [retained transcript](e4-revisit-ctest.txt) distinguishes their setup and events.
+
+Final E4 gate: **41 unit CTests pass**, with unit-only coverage **12,297/12,553
+(98.0%)**, every executable core file >=95%. Individuals are 203/208 (97.60%),
+campaign chains 120/121 (99.17%), and the checkpoint appendix 29/29 (100%).
+Strict current/archived specifications, CI inventory and five tooling tests pass.
+Native Mesa, packaged WebGL keyboard/controller/touch and isolated Quest grip/menu
+stereo checks pass. Visual inspection reduced overly large close-range labels
+and replaced a misleading generic preparation hint with the actual salvage cost.
+The malformed-onboarding test now writes invalid semantic fields through the real
+serializer; its old end-of-file offsets could target unrelated appended fields.
+Both generator-15 and generator-16 rejection paths are checked transactionally.
+
+[Engineer](captures/coherent-engineer.png),
+[known costs](captures/coherent-refuge-options.png),
+[evacuation aftermath](captures/coherent-refuge-abandoned.png),
+[touch choice](captures/coherent-mobile-refuge.png),
+[Quest emulation](captures/coherent-refuge-stereo.png).
+Human judgments about emotional impact and physical Quest testing remain pending.

@@ -140,6 +140,12 @@ bool game_load(Game *g, const char *path) {
             if (records[i].district_state & ~SC_DISTRICT_STATE_MASK)
                 s.ok = false;
         }
+    Chronicle chronicle = {0};
+    if (version >= 17) {
+        sc_save_chronicle(&s, &chronicle, true);
+        if (!chronicle_valid(&chronicle, seed, generator))
+            s.ok = false;
+    }
     uint32_t expected = s.hash, actual = sc_save_number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;
@@ -212,6 +218,7 @@ bool game_load(Game *g, const char *path) {
         .flares = flares,
         .shelter = shelter,
         .story = story,
+        .chronicle = chronicle,
         .campaign = campaign,
         .frontier = frontier,
         .politics = politics,

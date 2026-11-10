@@ -6,6 +6,7 @@
 #include "matrix.h"
 #include "campaign.h"
 #include "districts.h"
+#include "chronicle.h"
 #include "onboarding.h"
 #include "encounters.h"
 #include "frontier.h"
@@ -173,6 +174,7 @@ typedef struct Game {
     uint32_t enemy_shots, projectile_hits;
     uint32_t mission, mission_kills, mission_loot, contracts;
     Story story;
+    Chronicle chronicle;
     Shelter shelter;
     Rig rigs[SC_PLAYERS][2];
     Beam beams[SC_PLAYERS];

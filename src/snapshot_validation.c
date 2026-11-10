@@ -13,6 +13,8 @@ bool sc_snapshot_valid(const Game *g) {
         return false;
     if (w->generator >= 16 && g->campaign.version != 2)
         return false;
+    if (!chronicle_valid(&g->chronicle, w->seed, w->generator))
+        return false;
     if (g->campaign.version >= 2)
         for (unsigned id = 0; id < 8; id++) {
             const GuardianAttempt *a = &g->campaign.attempts[id];

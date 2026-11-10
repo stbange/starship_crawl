@@ -108,3 +108,34 @@ readiness, collision and support before moving either a walker or an earned rig.
 No floor or required exit disappears. District identity and outcomes persist;
 active electrical warnings are exact in live snapshots and reset at a checkpoint.
 `foundry0` through `foundry4` are explicitly prepared visual inspection scenes.
+
+
+## E4 — inhabitants and consequences
+
+New expeditions begin with an engineer and an archivist at reachable workers’
+refuges. Their names, knowledge and fates belong to this ship. Use the normal
+interact action to read a short record and review optional choices. Copying the
+route information is free. Repair costs 60 salvage, or nothing when district
+power is already available. Stripping the refuge grants 90 salvage once and
+forces its inhabitant to evacuate. The menu declares these costs before selection;
+co-op shares the outcome while charging or rewarding only the acting character.
+Required objectives never depend on a conversation or escort.
+
+A helped individual can move to a deeper refuge after a guardian opens its band.
+Migration follows the connected navigation graph, leaves a service-route note,
+and waits to arrive when neither player observes the destination. Their later
+record acknowledges the earlier repair. A captured refuge can lose an unhelped
+inhabitant; an emergency recorder preserves the information. Known individuals
+appear as violet map markers, with field records available through I and L.
+Evacuated or lost individuals retain a grey marker and a recorder. The debrief
+counts local repairs, evacuations and known losses.
+
+Hidden campaigns now connect supply to siege and repair to factory production.
+The supply crew keeps its force identity, health and casualties when it begins
+its siege; supplies are consumed once. Heavy losses cause retreat. A repaired
+factory waits 30 active seconds before paying the normal resource cost to launch
+a separately identified reinforcement force. Blackout or hostile occupation
+interrupts production. A repair crew returns independently. Existing physical
+combat, distant travel, ownership, wreckage and damaged/repaired machinery show
+these outcomes; no strategy-management interface is added. Both physical and
+matrix power operations update the same faction resource facts.

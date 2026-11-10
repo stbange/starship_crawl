@@ -107,6 +107,9 @@ bool game_story_prepared(const Game *g) {
            (g->story.version >= 3 && g->story.council == 3);
 }
 const char *game_story_title(const Game *g, unsigned scene) {
+    if (g->world.generator >= 16 && scene >= SC_STORY_SCENES &&
+        scene < SC_STORY_SCENES + g->chronicle.count)
+        return chronicle_name(&g->chronicle.people[scene - SC_STORY_SCENES]);
     if (g->world.generator >= 7 && scene == STORY_SOURCE)
         return "REACH THE DEEP CONTAINMENT CONTROL";
     if (g->story.version >= 3 && scene >= STORY_POWER)
@@ -447,6 +450,9 @@ static const char *primary_choice(const Game *g, unsigned choice) {
     return choice >= 1 && choice <= 3 ? options[motivation(g)][choice - 1] : "";
 }
 const char *game_story_choice_for(const Game *g, int player, unsigned choice) {
+    if (player >= 0 && player < g->player_count &&
+        g->interactions[player].decision_scene >= SC_STORY_SCENES)
+        return chronicle_option(g, player, choice);
     if (g->story.version >= 3 && player >= 0 && player < g->player_count &&
         g->interactions[player].decision_open &&
         g->interactions[player].decision_scene >= STORY_POWER)
@@ -457,6 +463,9 @@ const char *game_story_choice(const Game *g, unsigned choice) {
     return game_story_choice_for(g, 0, choice);
 }
 bool game_story_choice_ready(const Game *g, int player) {
+    if (player >= 0 && player < g->player_count &&
+        g->interactions[player].decision_scene >= SC_STORY_SCENES)
+        return chronicle_ready(g, player);
     if (g->story.version >= 3 && player >= 0 && player < g->player_count &&
         g->interactions[player].decision_open &&
         g->interactions[player].decision_scene == STORY_COUNCIL)
@@ -464,6 +473,10 @@ bool game_story_choice_ready(const Game *g, int player) {
     return game_story_prepared(g);
 }
 bool game_story_choose(Game *g, int player, unsigned choice) {
+    if (player < 0 || player >= g->player_count)
+        return false;
+    if (g->interactions[player].decision_scene >= SC_STORY_SCENES)
+        return chronicle_choose(g, player, choice);
     unsigned scene = game_story_near(g, player);
     if (g->story.version >= 3 && scene >= STORY_POWER && scene < SC_STORY_SCENES)
         return expedition_choose(g, player, scene, choice);
@@ -501,15 +514,21 @@ void game_story_read(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
     Player *p = &g->players[player];
-    for (int n = 1; n <= SC_STORY_SCENES; n++) {
-        unsigned at = (PLAYER_VIEW(g, p).story_reading + n) % SC_STORY_SCENES;
-        if (g->story.seen & BIT(at)) {
+    unsigned count = SC_STORY_SCENES + (g->world.generator >= 16 ? g->chronicle.count : 0);
+    for (unsigned n = 1; n <= count; n++) {
+        unsigned at = (PLAYER_VIEW(g, p).story_reading + n) % count;
+        if (at < SC_STORY_SCENES ? (g->story.seen & BIT(at)) != 0
+                                : (g->chronicle.people[at - SC_STORY_SCENES].knowledge & PERSON_SEEN) != 0) {
             PLAYER_VIEW(g, p).story_reading = (uint8_t)at;
             return;
         }
     }
 }
 void game_story_entry(const Game *g, unsigned scene, char *text, size_t size) {
+    if (g->world.generator >= 16 && scene >= SC_STORY_SCENES) {
+        chronicle_entry(g, scene - SC_STORY_SCENES, text, size);
+        return;
+    }
     const Story *s = &g->story;
     if (scene >= SC_STORY_SCENES || !(s->seen & BIT(scene))) {
         snprintf(text, size, "NO OBSERVATION YET / EXPLORE THE SHIP");

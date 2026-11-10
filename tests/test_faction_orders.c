@@ -78,6 +78,7 @@ static void hostility(void) {
 }
 static Cell deployment(unsigned government, bool shortage, unsigned serial) {
     Game *g = fixture(713);
+    g->world.generator = 15; /* Original immediate orders retain their resource policy. */
     unsigned country = 1;
     while (politics_government(g->world.seed, country - 1) != government)
         country++;

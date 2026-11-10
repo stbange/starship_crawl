@@ -1,0 +1,5 @@
+CAMPAIGN pattern=0 intervene=0 stage=5 force=1 casualties=0 owner=1
+CAMPAIGN pattern=0 intervene=1 stage=6 force=1 casualties=2 owner=2
+CAMPAIGN pattern=1 intervene=0 stage=5 force=2 casualties=0 owner=1
+CAMPAIGN pattern=1 intervene=1 stage=6 force=1 casualties=2 owner=1
+PASS recurring identities, known choices, routed campaigns and causal paired outcomes

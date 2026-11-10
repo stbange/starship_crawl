@@ -298,7 +298,7 @@
     ],
     "InteractionState.decision_scene": [
       "0",
-      "SC_STORY_SCENES-1"
+      "SC_STORY_SCENES+SC_RECURRING-1"
     ],
     "MatrixBox.tag": [
       "0",
@@ -627,6 +627,42 @@
     "Room.district_owner": [
       "0",
       "SC_PLAYERS"
+    ],
+    "Chronicle.version": [
+      "0",
+      "1"
+    ],
+    "Chronicle.count": [
+      "0",
+      "SC_RECURRING"
+    ],
+    "RecurringPerson.role": [
+      "0",
+      "6"
+    ],
+    "RecurringPerson.knowledge": [
+      "0",
+      "15"
+    ],
+    "RecurringPerson.phase": [
+      "0",
+      "4"
+    ],
+    "RecurringPerson.travel": [
+      "0",
+      "30"
+    ],
+    "ContinuingCampaign.country": [
+      "0",
+      "3"
+    ],
+    "ContinuingCampaign.pattern": [
+      "0",
+      "1"
+    ],
+    "ContinuingCampaign.clock": [
+      "0",
+      "30"
     ]
   }
 }

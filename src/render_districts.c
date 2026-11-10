@@ -4,6 +4,34 @@ void sc_render_district_scene(Renderer *renderer, const Game *g, int player) {
     if (g->world.generator < 16)
         return;
     Vec3 eye = player_eye(&g->players[player]);
+    for (unsigned i = 0; i < g->chronicle.count; i++) {
+        const RecurringPerson *person = &g->chronicle.people[i];
+        RecurringPerson trace = *person;
+        if (person->fate == PERSON_TRAVELLING)
+            trace.site = person->previous;
+        Vec3 at = chronicle_position(&trace);
+        if (!world_ready(&g->world, trace.site) || vlen(vsub(at, eye)) > 100)
+            continue;
+        Color color = person->role == 1 ? rgb(.8f, .55f, .2f) : rgb(.4f, .65f, .95f);
+        if (person->fate == PERSON_WAITING || person->fate == PERSON_SETTLED) {
+            sc_render_octahedron(renderer, vadd(at, v3(0, 1.25, 0)), .55, rgb(.12f, .2f, .24f),
+                                 .1f);
+            for (int limb = 0; limb < 3; limb++) {
+                double a = limb * SC_PI * 2 / 3;
+                sc_render_tube(renderer, vadd(at, v3(0, 1.1, 0)),
+                               vadd(at, v3(sin(a) * .7, .05, cos(a) * .7)), .08, .03, color, .3f);
+            }
+            sc_render_octahedron(renderer, vadd(at, v3(0, 2, 0)), .22, color, .8f);
+        } else
+            sc_render_block(renderer, vadd(at, v3(0, .4, 0)), v3(.7, .8, .3), color, .15f);
+        sc_render_world_label(renderer, vadd(at, v3(0, 2.7, 0)), chronicle_name(person), color, eye,
+                              .012);
+        sc_render_world_label(renderer, vadd(at, v3(0, 2.4, 0)),
+                              person->fate == PERSON_TRAVELLING ? "SERVICE ROUTE / TRAVEL NOTE"
+                              : person->fate >= PERSON_LOST     ? "RETAINED RECORDER"
+                                                                : chronicle_role(person->role),
+                              color, eye, .012);
+    }
     for (int i = 0; i < g->world.count; i++) {
         const Room *r = &g->world.rooms[i];
         Vec3 center = world_center(r->cell);
@@ -55,10 +83,10 @@ void sc_render_district_scene(Renderer *renderer, const Game *g, int player) {
         for (unsigned role = JOURNEY_PUMP; role <= JOURNEY_REFUGE; role <<= 1)
             if (r->journey.role & role) {
                 Vec3 at = district_control(r->cell, role);
-                sc_render_ship_sign(renderer, vadd(at, v3(0, 2.1, 0)),
-                                    role == JOURNEY_PUMP ? "PUMP / POWER WAKES MACHINES"
-                                                         : "WORKERS' REFUGE",
-                                    blue, eye);
+                sc_render_world_label(renderer, vadd(at, v3(0, 2.1, 0)),
+                                      role == JOURNEY_PUMP ? "PUMP / POWER WAKES MACHINES"
+                                                           : "WORKERS' REFUGE",
+                                      blue, eye, .018);
                 sc_render_octahedron(renderer, vadd(at, v3(0, 1.5, 0)), .18,
                                      r->district_warning > 0 ? gold
                                      : r->district_powered   ? green
@@ -93,4 +121,10 @@ void sc_render_district_hud(Renderer *renderer, const Game *g, int player, float
                            room->district_arc > 5 ? "WATER WARNING / MOVE TO STAIRS OR DRY CENTER"
                                                   : "LIVE WATER / REACH DRY GROUND",
                            rgb(1, .65f, .2f));
+    int person = chronicle_near(g, player);
+    if (person >= 0) {
+        snprintf(text, sizeof(text), "G / %s / OPTIONAL REFUGE RECORD",
+                 chronicle_name(&g->chronicle.people[person]));
+        sc_render_centered(renderer, w * .5f, h * .73f, .8f * s, text, rgb(.9f, .75f, .4f));
+    }
 }

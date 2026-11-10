@@ -2,10 +2,16 @@
 
 /* Renderer-only signage: no new obstacles or changes to saved geometry. */
 void sc_render_ship_sign(Renderer *r, Vec3 at, const char *label, Color color, Vec3 eye) {
-    double pixel = .055, direction = eye.z >= at.z ? -1 : 1;
+    sc_render_world_label(r, at, label, color, eye, .055);
+}
+void sc_render_world_label(Renderer *r, Vec3 at, const char *label, Color color, Vec3 eye,
+                           double pixel) {
+    double direction = eye.z >= at.z ? -1 : 1, scale = pixel / .055;
     size_t length = strlen(label);
-    sc_render_block(r, at, v3(length * pixel * 6 + .4, .65, .12), rgb(.025f, .045f, .05f), .1f);
-    at = vsub(vadd(at, v3(-direction * length * pixel * 3, .2, -direction * .07)), r->origin);
+    sc_render_block(r, at, v3(length * pixel * 6 + .4 * scale, .65 * scale, .12 * scale),
+                    rgb(.025f, .045f, .05f), .1f);
+    at = vsub(vadd(at, v3(-direction * length * pixel * 3, .2 * scale, -direction * .07 * scale)),
+              r->origin);
     for (size_t i = 0; i < length; i++) {
         int code = sc_render_glyph(label[i]);
         if (code < 0)

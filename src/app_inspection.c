@@ -1,6 +1,17 @@
 #include "app_internal.h"
 
 void app_inspect_frame(void) {
+    if (app.inspect_person) {
+        RecurringPerson *person = &app.game.chronicle.people[app.inspect_person - 1];
+        if (world_ready(&app.game.world, person->site)) {
+            Player *p = &app.game.players[0];
+            p->pos = position_from(vadd(chronicle_position(person), v3(0, 0, -2)));
+            p->yaw = p->pitch = 0;
+            app.inspect_person = 0;
+            app.inspect_static = app.paused = true;
+            app.game.message_time = 0;
+        }
+    }
     if (app.inspect_district) {
         Game *g = &app.game;
         unsigned scene = (unsigned)app.inspect_district - 1;
@@ -233,6 +244,8 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
                                !strcmp(scene + 9, "breach"));
         bool district_scene =
             !strncmp(scene, "foundry", 7) && scene[7] >= '0' && scene[7] <= '4' && !scene[8];
+        bool person_scene =
+            !strncmp(scene, "person", 6) && (scene[6] == '0' || scene[6] == '1') && !scene[7];
         bool court_scene = !strncmp(scene, "court", 5) || !strncmp(scene, "conduit", 7) ||
                            !strncmp(scene, "crown", 5);
         bool frontier_scene = !strncmp(scene, "front", 5) || !strncmp(scene, "deep", 4) ||
@@ -248,9 +261,9 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
                               !strcmp(scene, "hull");
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
-        if (strcmp(scene, "guardian") && !guardian_scene && !district_scene && !build_scene &&
-            !exterior_scene && !traversal_scene && !habitat_scene && !encounter_scene &&
-            !frontier_scene && !court_scene) {
+        if (strcmp(scene, "guardian") && !guardian_scene && !district_scene && !person_scene &&
+            !build_scene && !exterior_scene && !traversal_scene && !habitat_scene &&
+            !encounter_scene && !frontier_scene && !court_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -295,6 +308,12 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
                 district_contract(seed, app.game.world.generator, campaign_site(0));
             c = mode == 4 ? district.preparation : district.anchor;
             app.inspect_district = (int)mode + 1;
+            app.no_save = true;
+        }
+        if (person_scene) {
+            unsigned index = (unsigned)(scene[6] - '0');
+            c = app.game.chronicle.people[index].site;
+            app.inspect_person = (int)index + 1;
             app.no_save = true;
         }
         if (!strcmp(scene, "hall"))

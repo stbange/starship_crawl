@@ -160,7 +160,14 @@ void factions_orders(Game *g) {
             if (!target(g, sites, count, c + 1, gov, source, &order, &goal))
                 continue;
             f->decisions++;
-            if (factions_launch(g, c + 1, order, source->site, goal))
+            bool launched;
+            const FactionRegion *destination = factions_at(f, goal);
+            if (g->world.generator >= 16 && (order == ORDER_RAID ||
+                    (order == ORDER_REINFORCE && destination && destination->kind == SITE_FABRICATOR)))
+                launched = chronicle_order(g, c + 1, order, source->site, goal);
+            else
+                launched = factions_launch(g, c + 1, order, source->site, goal);
+            if (launched)
                 break;
         }
     }

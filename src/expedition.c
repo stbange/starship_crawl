@@ -536,6 +536,18 @@ void game_story_debrief(const Game *g, int player, int line, char *text, size_t 
                  s->support[1]);
     else if (line == 6) {
         uint32_t flags = world_systems(&g->world, s->sites[STORY_COUNCIL]);
+        if (g->world.generator >= 16) {
+            unsigned repaired = 0, left = 0, lost = 0;
+            for (unsigned i = 0; i < g->chronicle.count; i++) {
+                const RecurringPerson *person = &g->chronicle.people[i];
+                repaired += (person->knowledge & PERSON_HELPED) != 0;
+                left += person->fate == PERSON_LEFT;
+                lost += person->fate == PERSON_LOST && (person->knowledge & PERSON_SEEN);
+            }
+            snprintf(text, size, "REFUGES / %u RESTORED / %u EVACUATED / %u KNOWN LOST / MAIN %s",
+                     repaired, left, lost, flags & SYSTEM_BLACKOUT ? "OFFLINE" : "POWERED");
+            return;
+        }
         snprintf(text, size, "REFUGE SYSTEMS / %s / %s",
                  flags & SYSTEM_BLACKOUT ? "LIFE SUPPORT OFFLINE"
                  : flags & SYSTEM_POWER  ? "POWER RESTORED"

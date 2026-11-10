@@ -46,12 +46,12 @@ and update save/snapshot validation alongside each feature that introduces it.
 
 ## 4. E4 — Inhabitants with a continuing story
 
-- [ ] 4.1 Extend existing force orders into supply/siege and factory/reinforcement campaign patterns; verify resource costs, routed travel, persistent identities and near/far handoff without duplicated combat.
-- [ ] 4.2 Connect supply interruption and occupation to later orders and physical evidence; run paired intervene/ignore paths proving a visible causal difference without exposing politics or awarding NPC-only progression.
-- [ ] 4.3 Add stable recurring-individual identity, knowledge, location and fate, beginning with two roles; verify repeated meetings, plausible transitions, death/missed-meeting fallbacks and persistence.
-- [ ] 4.4 Bind district choices and known costs to the rescue and salvage slice variants using existing story interactions; verify the direct route, optional preparation and alternate information sources all preserve a completable expedition.
-- [ ] 4.5 Render recognizable individual markers, local aftermath and contextual responses; verify guidance-off navigation, shared co-op facts, maps/journals and keyboard/controller/touch interactions without a political-management interface.
-- [ ] 4.6 Run the E4 gate and long-distance revisit campaign; update story/faction documentation and retain a short illustrated account tracing one earlier decision to a later meeting and changed occupation.
+- [x] 4.1 Extend existing force orders into supply/siege and factory/reinforcement campaign patterns; verify resource costs, routed travel, persistent identities and near/far handoff without duplicated combat.
+- [x] 4.2 Connect supply interruption and occupation to later orders and physical evidence; run paired intervene/ignore paths proving a visible causal difference without exposing politics or awarding NPC-only progression.
+- [x] 4.3 Add stable recurring-individual identity, knowledge, location and fate, beginning with two roles; verify repeated meetings, plausible transitions, death/missed-meeting fallbacks and persistence.
+- [x] 4.4 Bind district choices and known costs to the rescue and salvage slice variants using existing story interactions; verify the direct route, optional preparation and alternate information sources all preserve a completable expedition.
+- [x] 4.5 Render recognizable individual markers, local aftermath and contextual responses; verify guidance-off navigation, shared co-op facts, maps/journals and keyboard/controller/touch interactions without a political-management interface.
+- [x] 4.6 Run the E4 gate and long-distance revisit campaign; update story/faction documentation and retain a short illustrated account tracing one earlier decision to a later meeting and changed occupation.
 
 ## 5. E5 — A useful home
 

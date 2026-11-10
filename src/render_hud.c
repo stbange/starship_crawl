@@ -102,6 +102,14 @@ void sc_render_deck_map(Renderer *r, Game *g, int player, float x, float y, floa
     if (map.has_shelter && map.shelter.y == map.origin.y)
         map_marker(r, &map, position_absolute(g->shelter.door), x, y, tile, rgb(.65f, .4f, 1),
                    false);
+    if (g->world.generator >= 16)
+        for (unsigned i = 0; i < g->chronicle.count; i++) {
+            const RecurringPerson *person = &g->chronicle.people[i];
+            Cell known = person->fate == PERSON_TRAVELLING ? person->previous : person->site;
+            if ((person->knowledge & PERSON_SEEN) && known.y == map.origin.y)
+                map_marker(r, &map, world_center(known), x, y, tile,
+                           person->fate >= PERSON_LOST ? rgb(.5f, .5f, .5f) : rgb(.8f, .6f, 1), false);
+        }
     if (map.has_objective) {
         map_marker(r, &map, game_terminal(map.objective), x, y, tile, gold, true);
         if (map.objective.y != map.player.y && map.player.y == map.origin.y)
@@ -204,6 +212,8 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
         sc_render_text_at(
             r, x, y + 472 * s, .85f * s,
             prepared ? "ALL THREE OUTCOMES AVAILABLE / ENTER LEAVES UNDECIDED"
+                     : PLAYER_INTERACTION(g, p).decision_scene >= SC_STORY_SCENES
+                         ? "THIRD CHOICE NEEDS 60 SALVAGE OR RESTORED POWER / ENTER LEAVES UNDECIDED"
                      : "THIRD CHOICE NEEDS THE OPTIONAL OPERATION / ENTER LEAVES UNDECIDED",
             dim);
     } else {
@@ -215,7 +225,8 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
                           "G AT A CLEARED SITE TO INVESTIGATE OR REVIEW ITS CHOICES", dim);
     }
     sc_render_text_at(r, x, y + 491 * s, .85f * s,
-                      "F6 DOSSIER / F6 AGAIN COURTS / F7 DEBRIEF / ENTER CLOSE / PAD RB PAGES",
+                      g->politics.version ? "F6 DOSSIER / F6 AGAIN COURTS / F7 DEBRIEF / ENTER CLOSE / PAD RB PAGES"
+                                          : "F6 DOSSIER / F7 DEBRIEF / ENTER CLOSE / PAD RB PAGES",
                       gold);
 }
 static void history_journal(Renderer *r, const Game *g, int player, float w, float h) {

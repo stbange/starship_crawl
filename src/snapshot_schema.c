@@ -313,7 +313,7 @@ static const SnapshotField fields_Player[] = {
 static const SnapshotSchema schema_Player = SCHEMA(Player);
 
 static const SnapshotField fields_InteractionState[] = {
-    FIELD(InteractionState, decision_scene, uint8_t, SW_U8, NULL, 0, SC_STORY_SCENES-1),
+    FIELD(InteractionState, decision_scene, uint8_t, SW_U8, NULL, 0, SC_STORY_SCENES+SC_RECURRING-1),
     FIELD(InteractionState, decision_open, _Bool, SW_BOOL, NULL, 0, 1),
 };
 static const SnapshotSchema schema_InteractionState = SCHEMA(InteractionState);
@@ -375,6 +375,43 @@ static const SnapshotField fields_Story[] = {
     FIELD(Story, events, StoryEvent, SW_STRUCT, &schema_StoryEvent, 0, 0),
 };
 static const SnapshotSchema schema_Story = SCHEMA(Story);
+
+static const SnapshotField fields_RecurringPerson[] = {
+    FIELD(RecurringPerson, identity, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(RecurringPerson, role, uint32_t, SW_U32, NULL, 0, 6),
+    FIELD(RecurringPerson, knowledge, uint32_t, SW_U32, NULL, 0, 15),
+    FIELD(RecurringPerson, meetings, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(RecurringPerson, phase, uint32_t, SW_U32, NULL, 0, 4),
+    FIELD(RecurringPerson, home, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(RecurringPerson, site, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(RecurringPerson, previous, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(RecurringPerson, destination, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(RecurringPerson, fate, PersonFate, SW_I32, NULL, 0, PERSON_LEFT),
+    FIELD(RecurringPerson, travel, float, SW_FLOAT, NULL, 0, 30),
+};
+static const SnapshotSchema schema_RecurringPerson = SCHEMA(RecurringPerson);
+
+static const SnapshotField fields_ContinuingCampaign[] = {
+    FIELD(ContinuingCampaign, identity, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(ContinuingCampaign, country, uint32_t, SW_U32, NULL, 0, 3),
+    FIELD(ContinuingCampaign, pattern, uint32_t, SW_U32, NULL, 0, 1),
+    FIELD(ContinuingCampaign, force, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(ContinuingCampaign, source, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(ContinuingCampaign, staging, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(ContinuingCampaign, goal, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(ContinuingCampaign, stage, ContinuingStage, SW_I32, NULL, 0, CHAIN_RETREATED),
+    FIELD(ContinuingCampaign, clock, float, SW_FLOAT, NULL, 0, 30),
+};
+static const SnapshotSchema schema_ContinuingCampaign = SCHEMA(ContinuingCampaign);
+
+static const SnapshotField fields_Chronicle[] = {
+    FIELD(Chronicle, version, uint32_t, SW_U32, NULL, 0, 1),
+    FIELD(Chronicle, count, uint32_t, SW_U32, NULL, 0, SC_RECURRING),
+    FIELD(Chronicle, next_id, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(Chronicle, people, RecurringPerson, SW_STRUCT, &schema_RecurringPerson, 0, 0),
+    FIELD(Chronicle, campaigns, ContinuingCampaign, SW_STRUCT, &schema_ContinuingCampaign, 0, 0),
+};
+static const SnapshotSchema schema_Chronicle = SCHEMA(Chronicle);
 
 static const SnapshotField fields_Shelter[] = {
     FIELD(Shelter, door, Position, SW_STRUCT, &schema_Position, 0, 0),
@@ -807,6 +844,7 @@ static const SnapshotField fields_Game[] = {
     FIELD(Game, mission_loot, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(Game, contracts, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(Game, story, Story, SW_STRUCT, &schema_Story, 0, 0),
+    FIELD(Game, chronicle, Chronicle, SW_STRUCT, &schema_Chronicle, 0, 0),
     FIELD(Game, shelter, Shelter, SW_STRUCT, &schema_Shelter, 0, 0),
     FIELD(Game, rigs, Rig, SW_STRUCT, &schema_Rig, 0, 0),
     FIELD(Game, beams, Beam, SW_STRUCT, &schema_Beam, 0, 0),
@@ -864,7 +902,7 @@ const SnapshotSchema sc_snapshot_box = SCHEMA(Box);
 const SnapshotSchema sc_snapshot_room_record = SCHEMA(RoomRecord);
 const SnapshotSchema sc_snapshot_matrix_record = SCHEMA(MatrixRecord);
 const SnapshotSchema sc_snapshot_faction_region = SCHEMA(FactionRegion);
-const uint32_t sc_snapshot_schema_id = UINT32_C(0x5404888f);
+const uint32_t sc_snapshot_schema_id = UINT32_C(0xc551a746);
 #undef FIELD
 #undef SCHEMA
 // clang-format on

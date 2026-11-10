@@ -64,6 +64,7 @@ void game_init(Game *g, uint32_t seed) {
             g->matrix.profiles[i].slots[1] = 0;
         }
     politics_init(g);
+    chronicle_init(g);
     Vec3 p = position_absolute(g->players[0].pos);
     world_refresh(&g->world, &p, 1);
     game_message(g, story_commission(seed));
@@ -1030,6 +1031,8 @@ void game_step(Game *g, const Actions *actions, double dt) {
     if (!world_refresh(&g->world, positions, g->player_count))
         return;
     factions_step(g, dt);
+    chronicle_campaigns(g, dt);
+    chronicle_step(g, dt);
     factions_environment(g);
     factions_forces_step(g, dt);
     for (int i = 0; i < g->player_count; i++) {

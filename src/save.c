@@ -107,6 +107,11 @@ bool game_save(const Game *g, const char *path) {
         for (size_t i = 0; i < g->world.record_count; i++)
             sc_save_number(&s, g->world.records[i].district_state, false);
     uint32_t hash = s.hash;
+    if (g->world.generator >= 16) {
+        Chronicle chronicle = g->chronicle;
+        sc_save_chronicle(&s, &chronicle, false);
+        hash = s.hash;
+    }
     sc_save_number(&s, hash, false);
     if (fflush(f) != 0)
         s.ok = false;

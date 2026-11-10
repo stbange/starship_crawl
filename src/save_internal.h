@@ -29,6 +29,7 @@ void sc_save_matrix_stream(Stream *s, MatrixState *m, bool read);
 void sc_save_campaign_stream(Stream *s, Campaign *c, bool read);
 void sc_save_politics_stream(Stream *s, Politics *p, Director *d, bool read);
 void sc_save_factions_stream(Stream *s, Factions *f, bool read);
+void sc_save_chronicle(Stream *s, Chronicle *c, bool read);
 typedef struct {
     World *world;
     MatrixState *matrix;
@@ -38,6 +39,7 @@ typedef struct {
     const Flare *flares;
     Shelter shelter;
     Story story;
+    Chronicle chronicle;
     Campaign campaign;
     FrontierProgress frontier;
     Politics politics;

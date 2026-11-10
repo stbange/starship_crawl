@@ -35,6 +35,9 @@ set(SC_CORE_SOURCES
   src/builds.c
     src/guardians.c
     src/districts.c
+  src/chronicle.c
+  src/chronicle_campaigns.c
+  src/save_chronicle.c
   src/encounters.c
   src/alien.c
   src/onboarding.c

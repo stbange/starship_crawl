@@ -191,6 +191,8 @@ static void arrive(Game *g, FactionForce *a) {
     }
     if (a->order == ORDER_OCCUPY && a->arrivals)
         return;
+    if (chronicle_arrival(g, a->id))
+        return;
     if (a->physical && a->order == ORDER_RAID) {
         Room *room = world_find(&g->world, a->goal);
         if (!room || !room->ready)

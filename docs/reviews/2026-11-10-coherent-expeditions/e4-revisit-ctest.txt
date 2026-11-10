@@ -1,0 +1,28 @@
+Start testing: Nov 10 16:13 UTC
+----------------------------------------------------------
+47/57 Testing: continuing_revisit_journey
+47/57 Test: continuing_revisit_journey
+Command: "/workspace/starship_crawl/build/sc_chronicle_journey"
+Directory: /workspace/starship_crawl/build
+"continuing_revisit_journey" start time: Nov 10 16:13 UTC
+Output:
+----------------------------------------------------------
+MEETING choice=2 person=3850189690 credits=150 home=[3,0,0]
+SAVE validity campaign=1 story=1 factions=1 forces=1 cast=1 matrix=1
+REVISIT choice=2 person=3850189690 fate=4 site=[3,0,0] time=740.65 kills=11 deaths=0 record=VEI THE MENDER / ENGINEER. YOU REMOVED THE REFUGE POWER. THEIR EVACUATION NOTE REMAINS. THE PUMP WAKES ROBOTS; USE HIGH GROUND. A BASIC ROUTE NEEDS NO HACKING.
+MEETING choice=3 person=3850189690 credits=0 home=[3,0,0]
+SAVE validity campaign=1 story=1 factions=1 forces=1 cast=1 matrix=1
+REVISIT choice=3 person=3850189690 fate=2 site=[6,0,0] time=804.38 kills=11 deaths=0 record=VEI THE MENDER / ENGINEER. THEY REMEMBER YOUR REPAIR OF THE FIRST REFUGE. THE PUMP WAKES ROBOTS; USE HIGH GROUND. A BASIC ROUTE NEEDS NO HACKING.
+PASS paired Session journeys: leave, distant simulation, save/import and causal revisit
+<end of output>
+Test time =  20.88 sec
+----------------------------------------------------------
+Test Passed.
+"continuing_revisit_journey" end time: Nov 10 16:13 UTC
+"continuing_revisit_journey" time elapsed: 00:00:20
+----------------------------------------------------------
+
+End testing: Nov 10 16:13 UTC
+
+gameplay =  20.88 sec*proc
+

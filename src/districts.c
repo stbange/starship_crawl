@@ -208,6 +208,7 @@ bool district_interact(Game *g, int player) {
         vlen(vsub(at, district_control(r->cell, JOURNEY_PUMP))) < 2.5) {
         uint32_t old = world_systems(&g->world, r->cell);
         if (world_set_systems(&g->world, r->cell, (old | SYSTEM_POWER) & ~SYSTEM_BLACKOUT)) {
+            factions_systems(g, r->cell, world_systems(&g->world, r->cell), player);
             g->dirty |= !(old & SYSTEM_POWER);
             if (campaign_guardian(r->journey.anchor) < 0)
                 district_victory(g, r->cell);
