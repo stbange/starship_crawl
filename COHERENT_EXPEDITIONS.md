@@ -1,9 +1,10 @@
 # Coherent expeditions
 
-The E1–E8 implementation is in progress. This document describes completed
-mechanics as they pass their milestone checks. Generator 15 and older saves keep
-their published rules. Generator 16 / campaign 2 / checkpoint 17 is the unreleased
-new ruleset; live snapshots use version 2 with a checked schema fingerprint.
+This document describes the E1–E8 expedition rules. New ships use generator 16 /
+campaign 2 / checkpoint 17; live snapshots use version 2 with a checked schema
+fingerprint. Generator 15 and older saves keep their published rules. The
+[implementation review](docs/reviews/2026-11-10-coherent-expeditions/README.md)
+records automated evidence and the remaining human/device checks.
 
 ## E1: build choices and growth
 
@@ -38,8 +39,12 @@ an available upgrade point pays instead. **Purchases restore no resources.**
 Level requirements are `80 + 80n + 10n²`, where `n = level - 1`. Ascension grants
 one point, 15 health, 10 shield and 10 energy, capped at current capacities; it
 does not restore armor. Supplies, free sanctuary recovery and forgiving checkpoint
-death remain available. Duplicate challenge rewards grant two points and 100
-salvage, once per eligible participant, with deferred claims retained.
+death remain available. Each phase guardian awards four attribute points once to
+every participant, including a stored co-op profile that has temporarily left.
+The opening elite keeps its introductory reward. Duplicate challenge rewards
+grant two points and 100 salvage, once per eligible participant, with deferred
+claims retained. New-rules reward paths cap unspent points at 1,000 and salvage
+at 1,000,000 so prolonged expeditions remain within the checkpoint limits.
 
 The initial three optional encounter combinations use the existing support-link warnings and
 recovery windows: shielded swarm with ceiling pursuit, suppressor with flankers,

@@ -414,7 +414,7 @@ void factions_environment(Game *g) {
                     continue;
                 player->health = fminf(player_max_health(player), player->health + 25);
                 player->energy = fminf(player_max_energy(player), player->energy + 30);
-                player->credits += 2;
+                player_add_salvage(player, 2);
                 player->pickups++;
                 r->edit_claims = 1;
                 game_message(g, "ABANDONED FIELD KIT / SUPPLIES RECOVERED");

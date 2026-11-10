@@ -184,7 +184,7 @@ bool game_upgrade(Game *g, int player, int upgrade) {
 static void award(Game *g, Player *p, unsigned xp) {
     p->kills++;
     g->mission_kills++;
-    p->credits += 5 + 2 * p->mods[6];
+    player_add_salvage(p, 5 + 2 * p->mods[6]);
     p->xp = p->rules == 2 ? (uint32_t)fmin(1000000000, (double)p->xp + xp) : p->xp + xp;
     while (p->xp >= player_next_level(p) && p->level < 1000) {
         p->xp -= player_next_level(p);

@@ -1,0 +1,37 @@
+{
+  "command": [
+    "/workspace/starship_crawl/build-e8-matched/sc_hidden_journey-before",
+    "1",
+    "/tmp/coherent-e8-before/run-01-on",
+    "3600",
+    "--review"
+  ],
+  "executable_sha256": "cc467a395fc544bd5d74c2f07b00b8ddb26ac5e89a7758d65c88812ed1caafb0",
+  "simulated_seconds": 3600,
+  "generator": 16,
+  "checkpoint": 17,
+  "campaign": 2,
+  "concurrent_simulations": 2,
+  "returncode": 0,
+  "wall_seconds": 239.519,
+  "max_rss_kib": 18516,
+  "checkpoints": {
+    "final.sav": 34256,
+    "minute-60.sav": 34256,
+    "minute-45.sav": 34256,
+    "optional-fight.sav": 34220,
+    "form-6.sav": 34012,
+    "resume.sav": 33400,
+    "minute-30.sav": 33400,
+    "form-1.sav": 32896,
+    "retreat-observed.sav": 32752,
+    "form-3.sav": 31392,
+    "convoy-observed.sav": 31068,
+    "shelter.sav": 29808,
+    "extraction.sav": 29808,
+    "minute-15.sav": 29556,
+    "unbound.sav": 29232,
+    "guardian-fight.sav": 29232,
+    "form-7.sav": 27144
+  }
+}

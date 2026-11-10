@@ -1,0 +1,16 @@
+browser / arrival: 3 tests: test_browser.py, test_exterior_browser.py, test_shelter_browser.py
+RUN test_browser.py
+PASS browser: startup, solo default, movement, firing, IndexedDB reload, optional split, invalid import, eleven interiors, first mission and rewarded armor upgrade, weapon cycling, journal, v11 reload, hall traversal across chunks, wall climbers and projectiles, keyboard/menu/touch flashlight, distant split/save, v1 migration, native/WASM generation parity, bounded streaming/uploads, multitouch, resize
+PASS test_browser.py (588.6s)
+RUN test_exterior_browser.py
+PASS exterior keyboard: cabin collision, save/resume, split views, bay and return
+PASS exterior render arrival
+PASS exterior render hull
+PASS exterior render space
+PASS exterior render skiff
+PASS exterior render cabin
+PASS exterior browser: surrounding stars, opaque hull, lamps without flashlight, lit cabin, touch entry and exit
+PASS test_exterior_browser.py (390.9s)
+RUN test_shelter_browser.py
+PASS shelter browser: portal, separate split-screen, no firing inside, kitchen, bed, med station, v10 IndexedDB reload, exact return, mobile summon/enter/exit
+PASS test_shelter_browser.py (89.6s)

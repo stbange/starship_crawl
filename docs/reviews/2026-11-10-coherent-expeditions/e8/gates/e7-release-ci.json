@@ -1,0 +1,19 @@
+{
+  "commit": "c642bc0ddf0df5e1b3b789db31749861d63f942f",
+  "run": "42883763783",
+  "url": "https://github.com/stbange/starship_crawl/actions/runs/42883763783",
+  "observed_utc": "2026-11-10T19:20:14.063038+00:00",
+  "jobs": {
+    "coverage": "skipped",
+    "sanitizer-build": "skipped",
+    "web": "completed successfully",
+    "native": "completed successfully",
+    "quality": "completed successfully",
+    "quest": "completed successfully",
+    "instrumented": "skipped",
+    "web-browser": "skipped",
+    "pages": "completed successfully",
+    "deploy": "completed successfully"
+  },
+  "scope": "E1\u2013E7, CI compiler diagnostics, Windows portability fix; E8 tuning remains local"
+}

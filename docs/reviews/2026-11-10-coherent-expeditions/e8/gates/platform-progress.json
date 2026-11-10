@@ -1,0 +1,267 @@
+[
+  {
+    "name": "browser-test_breadth_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_breadth_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 156.874
+  },
+  {
+    "name": "browser-test_frontier_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_frontier_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 475.683
+  },
+  {
+    "name": "browser-test_hidden_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_hidden_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 51.849
+  },
+  {
+    "name": "browser-test_equipment_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_equipment_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 49.387
+  },
+  {
+    "name": "browser-test_districts_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_districts_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 52.447
+  },
+  {
+    "name": "browser-test_rhythm_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_rhythm_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 27.823
+  },
+  {
+    "name": "browser-test_habitat_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_habitat_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 282.573
+  },
+  {
+    "name": "browser-test_interiors_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_interiors_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 188.911
+  },
+  {
+    "name": "browser-test_features_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_features_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 72.11
+  },
+  {
+    "name": "browser-test_story_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_story_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 403.213
+  },
+  {
+    "name": "browser-test_aftermath_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_aftermath_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 117.176
+  },
+  {
+    "name": "browser-test_matrix_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_matrix_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 51.783
+  },
+  {
+    "name": "browser-test_chronicle_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_chronicle_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 42.801
+  },
+  {
+    "name": "browser-test_preparation_browser",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_preparation_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 46.806
+  },
+  {
+    "name": "quest-full",
+    "command": [
+      "python3",
+      "scripts/run-browser-test.py",
+      "tests/test_quest_browser.py",
+      "--site-dir",
+      "build-pages-preview",
+      "--url-path",
+      "/starship_crawl/quest/"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 420.854
+  },
+  {
+    "name": "earned-captures",
+    "command": [
+      "python3",
+      "docs/reviews/2026-11-10-coherent-expeditions/e8/capture.py"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 58.623
+  },
+  {
+    "name": "frames-before",
+    "command": [
+      "python3",
+      "scripts/profile-native.py",
+      "--build-dir",
+      "/tmp/starship-e1-control/build-render",
+      "--suite",
+      "common",
+      "--output",
+      "/tmp/coherent-e8-frames-before"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 37.8
+  },
+  {
+    "name": "frames-after",
+    "command": [
+      "python3",
+      "scripts/profile-native.py",
+      "--build-dir",
+      "build",
+      "--output",
+      "/tmp/coherent-e8-frames-after"
+    ],
+    "status": "passed",
+    "returncode": 0,
+    "wall_seconds": 111.878
+  }
+]

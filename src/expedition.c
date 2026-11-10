@@ -167,12 +167,12 @@ static void settle(Game *g, int player, bool follow) {
             g->players[p].career[k] =
                 (uint32_t)fmin(1000000000, (double)g->players[p].career[k] + s->last[k]);
         if (s->support[0] >= 70)
-            g->players[p].credits += 100;
+            player_add_salvage(&g->players[p], 100);
         if (!g->campaign.version && s->support[1] >= 70)
             g->players[p].weapons |= BIT(16);
         if (follow) {
             const unsigned pay[] = {0, 250, 180, 400};
-            g->players[p].credits += pay[s->chapter_choice];
+            player_add_salvage(&g->players[p], pay[s->chapter_choice]);
             g->players[p].victories++;
         }
     }

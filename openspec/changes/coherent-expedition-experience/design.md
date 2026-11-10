@@ -1,7 +1,11 @@
 # Coherent expedition experience
 
-Status: approved design direction, **implementation planned**, 10 November 2026.
-All implementation tasks start unchecked. See the [proposal](proposal.md),
+Status: **E1–E8 gameplay implemented**, 10 November 2026. This document retains
+the approved design and initial tuning hypotheses; the
+[rules](../../../COHERENT_EXPEDITIONS.md) and
+[integrated review](../../../docs/reviews/2026-11-10-coherent-expeditions/e8/README.md)
+record actual behavior, automated results and unavailable human/device sessions.
+See the [proposal](proposal.md),
 [behavior contracts](specs/) and [execution checklist](tasks.md).
 
 ## Context

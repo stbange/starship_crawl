@@ -1,0 +1,84 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+      Start  1: snapshot_core
+ 1/37 Test  #1: snapshot_core ....................   Passed    1.04 sec
+      Start  2: session_core
+ 2/37 Test  #2: session_core .....................   Passed    1.05 sec
+      Start  3: snapshot_party_core
+ 3/37 Test  #3: snapshot_party_core ..............   Passed    2.14 sec
+      Start  4: session_party_core
+ 4/37 Test  #4: session_party_core ...............   Passed    1.36 sec
+      Start  5: hidden_factions
+ 5/37 Test  #5: hidden_factions ..................   Passed    0.10 sec
+      Start  6: mobile_forces
+ 6/37 Test  #6: mobile_forces ....................   Passed    1.10 sec
+      Start  7: autonomous_politics
+ 7/37 Test  #7: autonomous_politics ..............   Passed    0.72 sec
+      Start  8: expedition_rhythm
+ 8/37 Test  #8: expedition_rhythm ................   Passed    0.20 sec
+      Start  9: hidden_director
+ 9/37 Test  #9: hidden_director ..................   Passed    0.45 sec
+      Start 13: political_expeditions
+10/37 Test #13: political_expeditions ............   Passed    0.44 sec
+      Start 16: deep_frontiers
+11/37 Test #16: deep_frontiers ...................   Passed    0.99 sec
+      Start 18: regional_encounters
+12/37 Test #18: regional_encounters ..............   Passed    1.27 sec
+      Start 19: core
+13/37 Test #19: core .............................   Passed    5.27 sec
+      Start 20: living_ship
+14/37 Test #20: living_ship ......................   Passed    2.38 sec
+      Start 22: generated_interiors
+15/37 Test #22: generated_interiors ..............   Passed    1.60 sec
+      Start 23: snapshot_faults
+16/37 Test #23: snapshot_faults ..................   Passed    1.80 sec
+      Start 24: faction_faults
+17/37 Test #24: faction_faults ...................   Passed    0.01 sec
+      Start 25: edge_cases
+18/37 Test #25: edge_cases .......................   Passed    0.07 sec
+      Start 26: staged_onboarding
+19/37 Test #26: staged_onboarding ................   Passed    0.16 sec
+      Start 27: exploration_guidance
+20/37 Test #27: exploration_guidance .............   Passed    0.52 sec
+      Start 29: navigation_psionics
+21/37 Test #29: navigation_psionics ..............   Passed    0.10 sec
+      Start 30: shelter
+22/37 Test #30: shelter ..........................   Passed    0.03 sec
+      Start 32: equipment
+23/37 Test #32: equipment ........................   Passed    0.05 sec
+      Start 38: reactive_aftermath
+24/37 Test #38: reactive_aftermath ...............   Passed   14.20 sec
+      Start 39: narrative
+25/37 Test #39: narrative ........................   Passed    2.76 sec
+      Start 40: enemy_deaths
+26/37 Test #40: enemy_deaths .....................   Passed    0.19 sec
+      Start 41: ship_matrix
+27/37 Test #41: ship_matrix ......................   Passed    0.09 sec
+      Start 42: matrix_faults
+28/37 Test #42: matrix_faults ....................   Passed    0.06 sec
+      Start 44: coherent_builds
+29/37 Test #44: coherent_builds ..................   Passed    0.67 sec
+      Start 45: coherent_breadth
+30/37 Test #45: coherent_breadth .................   Passed    0.93 sec
+      Start 46: guardian_systems
+31/37 Test #46: guardian_systems .................   Passed    0.57 sec
+      Start 47: coherent_districts
+32/37 Test #47: coherent_districts ...............   Passed    0.67 sec
+      Start 48: shelter_preparation
+33/37 Test #48: shelter_preparation ..............   Passed    0.11 sec
+      Start 49: continuing_inhabitants
+34/37 Test #49: continuing_inhabitants ...........   Passed    1.30 sec
+      Start 52: phased_expeditions
+35/37 Test #52: phased_expeditions ...............   Passed    2.50 sec
+      Start 56: vertical_traversal
+36/37 Test #56: vertical_traversal ...............   Passed    0.29 sec
+      Start 58: space_exterior
+37/37 Test #58: space_exterior ...................   Passed    0.11 sec
+
+100% tests passed, 0 tests failed out of 37
+
+Label Time Summary:
+architecture    =   7.40 sec*proc (5 tests)
+unit            =  47.30 sec*proc (37 tests)
+
+Total Test time (real) =  47.31 sec

@@ -1,0 +1,53 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+      Start 10: faction_revisit_journey
+ 1/22 Test #10: faction_revisit_journey ..........   Passed   88.90 sec
+      Start 11: faction_convoy_journey
+ 2/22 Test #11: faction_convoy_journey ...........   Passed    0.22 sec
+      Start 12: hidden_simulation_journey
+ 3/22 Test #12: hidden_simulation_journey ........   Passed   30.73 sec
+      Start 14: political_journeys
+ 4/22 Test #14: political_journeys ...............   Passed  130.60 sec
+      Start 15: frontier_journeys
+ 5/22 Test #15: frontier_journeys ................   Passed  109.56 sec
+      Start 17: regional_journey
+ 6/22 Test #17: regional_journey .................   Passed    0.28 sec
+      Start 21: living_ship_journey
+ 7/22 Test #21: living_ship_journey ..............   Passed    0.35 sec
+      Start 28: navigation_recovery
+ 8/22 Test #28: navigation_recovery ..............   Passed    0.67 sec
+      Start 31: shelter_journey
+ 9/22 Test #31: shelter_journey ..................   Passed    0.07 sec
+      Start 33: equipment_journey
+10/22 Test #33: equipment_journey ................   Passed    0.03 sec
+      Start 34: solo_campaign
+11/22 Test #34: solo_campaign ....................   Passed    6.53 sec
+      Start 35: generated_expeditions
+12/22 Test #35: generated_expeditions ............   Passed    7.07 sec
+      Start 36: history_expeditions
+13/22 Test #36: history_expeditions ..............   Passed   15.97 sec
+      Start 37: continuing_expeditions
+14/22 Test #37: continuing_expeditions ...........   Passed   58.05 sec
+      Start 43: matrix_journeys
+15/22 Test #43: matrix_journeys ..................   Passed    0.33 sec
+      Start 50: continuing_revisit_journey
+16/22 Test #50: continuing_revisit_journey .......   Passed   35.77 sec
+      Start 51: guardian_journeys
+17/22 Test #51: guardian_journeys ................   Passed    4.96 sec
+      Start 53: staged_intro_journey
+18/22 Test #53: staged_intro_journey .............   Passed   63.82 sec
+      Start 54: phase_journeys
+19/22 Test #54: phase_journeys ...................   Passed  148.02 sec
+      Start 55: imperfect_expeditions
+20/22 Test #55: imperfect_expeditions ............   Passed  255.55 sec
+      Start 57: traversal_journeys
+21/22 Test #57: traversal_journeys ...............   Passed    1.24 sec
+      Start 59: arrival_journey
+22/22 Test #59: arrival_journey ..................   Passed    0.07 sec
+
+100% tests passed, 0 tests failed out of 22
+
+Label Time Summary:
+gameplay    = 958.78 sec*proc (22 tests)
+
+Total Test time (real) = 958.79 sec

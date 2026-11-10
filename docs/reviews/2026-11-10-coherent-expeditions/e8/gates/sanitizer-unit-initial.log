@@ -1,0 +1,104 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-sanitize-coherent
+Test project /workspace/starship_crawl/build-sanitize-coherent
+      Start  1: snapshot_quest
+ 1/44 Test  #1: snapshot_quest ...................   Passed    7.50 sec
+      Start  2: session_quest
+ 2/44 Test  #2: session_quest ....................   Passed    9.87 sec
+      Start  3: quest_tracking_combat
+ 3/44 Test  #3: quest_tracking_combat ............   Passed    0.46 sec
+      Start  4: quest_ordinary_core
+ 4/44 Test  #4: quest_ordinary_core ..............   Passed   40.41 sec
+      Start  5: quest_parity_flat
+ 5/44 Test  #5: quest_parity_flat ................   Passed    0.86 sec
+      Start  6: quest_parity_quest
+ 6/44 Test  #6: quest_parity_quest ...............   Passed    0.81 sec
+      Start  7: quest_parity_identical
+ 7/44 Test  #7: quest_parity_identical ...........   Passed    0.00 sec
+      Start  8: snapshot_core
+ 8/44 Test  #8: snapshot_core ....................   Passed    4.32 sec
+      Start  9: session_core
+ 9/44 Test  #9: session_core .....................   Passed    6.10 sec
+      Start 10: snapshot_party_core
+10/44 Test #10: snapshot_party_core ..............   Passed    9.86 sec
+      Start 11: session_party_core
+11/44 Test #11: session_party_core ...............   Passed    7.85 sec
+      Start 12: hidden_factions
+12/44 Test #12: hidden_factions ..................   Passed    0.52 sec
+      Start 13: mobile_forces
+13/44 Test #13: mobile_forces ....................   Passed    9.96 sec
+      Start 14: autonomous_politics
+14/44 Test #14: autonomous_politics ..............   Passed    5.51 sec
+      Start 15: expedition_rhythm
+15/44 Test #15: expedition_rhythm ................   Passed    2.07 sec
+      Start 16: hidden_director
+16/44 Test #16: hidden_director ..................   Passed    4.46 sec
+      Start 20: political_expeditions
+17/44 Test #20: political_expeditions ............   Passed    4.49 sec
+      Start 23: deep_frontiers
+18/44 Test #23: deep_frontiers ...................   Passed   10.28 sec
+      Start 25: regional_encounters
+19/44 Test #25: regional_encounters ..............   Passed   12.17 sec
+      Start 26: core
+20/44 Test #26: core .............................   Passed   48.37 sec
+      Start 27: living_ship
+21/44 Test #27: living_ship ......................   Passed   16.55 sec
+      Start 29: generated_interiors
+22/44 Test #29: generated_interiors ..............   Passed   17.80 sec
+      Start 30: snapshot_faults
+23/44 Test #30: snapshot_faults ..................   Passed    9.83 sec
+      Start 31: faction_faults
+24/44 Test #31: faction_faults ...................   Passed    0.09 sec
+      Start 32: edge_cases
+25/44 Test #32: edge_cases .......................   Passed    0.77 sec
+      Start 33: staged_onboarding
+26/44 Test #33: staged_onboarding ................   Passed    0.91 sec
+      Start 34: exploration_guidance
+27/44 Test #34: exploration_guidance .............   Passed    5.23 sec
+      Start 36: navigation_psionics
+28/44 Test #36: navigation_psionics ..............   Passed    1.84 sec
+      Start 37: shelter
+29/44 Test #37: shelter ..........................   Passed    0.72 sec
+      Start 39: equipment
+30/44 Test #39: equipment ........................   Passed    0.32 sec
+      Start 45: reactive_aftermath
+31/44 Test #45: reactive_aftermath ...............***Timeout 120.16 sec
+
+      Start 46: narrative
+32/44 Test #46: narrative ........................   Passed   34.34 sec
+      Start 47: enemy_deaths
+33/44 Test #47: enemy_deaths .....................   Passed    2.40 sec
+      Start 48: ship_matrix
+34/44 Test #48: ship_matrix ......................   Passed    0.96 sec
+      Start 49: matrix_faults
+35/44 Test #49: matrix_faults ....................   Passed    0.55 sec
+      Start 51: coherent_builds
+36/44 Test #51: coherent_builds ..................   Passed    6.81 sec
+      Start 52: coherent_breadth
+37/44 Test #52: coherent_breadth .................   Passed    8.82 sec
+      Start 53: guardian_systems
+38/44 Test #53: guardian_systems .................   Passed    2.83 sec
+      Start 54: coherent_districts
+39/44 Test #54: coherent_districts ...............   Passed    5.27 sec
+      Start 55: shelter_preparation
+40/44 Test #55: shelter_preparation ..............   Passed    1.15 sec
+      Start 56: continuing_inhabitants
+41/44 Test #56: continuing_inhabitants ...........   Passed    8.86 sec
+      Start 59: phased_expeditions
+42/44 Test #59: phased_expeditions ...............   Passed   27.83 sec
+      Start 67: vertical_traversal
+43/44 Test #67: vertical_traversal ...............   Passed    3.91 sec
+      Start 69: space_exterior
+44/44 Test #69: space_exterior ...................   Passed    1.80 sec
+
+98% tests passed, 1 tests failed out of 44
+
+Label Time Summary:
+architecture    =  55.33 sec*proc (7 tests)
+quest           =  59.92 sec*proc (7 tests)
+unit            = 465.59 sec*proc (44 tests)
+
+Total Test time (real) = 465.64 sec
+
+The following tests FAILED:
+	 45 - reactive_aftermath (Timeout)                      unit
+Errors while running CTest

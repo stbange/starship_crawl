@@ -1,0 +1,7 @@
+{
+  "test": "Compile with the Windows-style empty far macro",
+  "before_exit": 1,
+  "after_exit": 0,
+  "before_error": "/tmp/coherent-e7-render-districts-before.c: In function \u2018sc_render_district_scene\u2019:\n/tmp/coherent-e7-render-districts-before.c:67:28: error: expected identifier or \u2018(\u2019 before \u2018=\u2019 token\n   67 |                 double far = fmin(37, r->depth * .5 - 4), depth = far - 9;\n      |                            ^\n/tmp/coherent-e7-render-districts-before.c:68:79: error: \u2018depth\u2019 undeclared (first use in this function)\n   68 |                 sc_render_block(renderer, vadd(center, v3(side * x, .035, 9 + depth * .5)),\n      |                                                                               ^~~~~\n/tmp/coherent-e7-render-districts-before.c:68:79: note: each undeclared identifier is reported only once for each function it appears in\n",
+  "after_output": ""
+}

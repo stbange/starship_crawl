@@ -1,0 +1,7 @@
+RUN test_frontier_browser.py
+PASS nine generated focal structures and rendered scale cues
+PASS all encounter previews, activation, warnings, foot circuit and paused simulation
+PASS ten rendered species, quiet approach, observation freeze and actual molt combat
+PASS earned combat, relic evolution, once-only claim, journal and IndexedDB resume
+PASS deep frontiers WebGL; physical-device and human play remain separate
+PASS test_frontier_browser.py (475.7s)

@@ -1,5 +1,10 @@
 # Phased expeditions
 
+New ships use campaign revision 2: eight mechanical specialization branches,
+four guardian patterns and the district/condition rules in
+[Coherent expeditions](COHERENT_EXPEDITIONS.md). Revision-1 saves retain the
+older percentage-based modules described below.
+
 Every **new ship starts two fresh character profiles**, including an inactive
 co-op partner. Saving, checkpoint death and additional commissions on the same
 ship retain the current build. Replaying the same seed also starts fresh.
@@ -45,13 +50,15 @@ invulnerable, and robot controls cannot recruit a guardian.
 
 ## Fight, recover, retry
 
-Use **G** at a guardian's staging console to begin. The Foundry Marshal fires fans,
-the Convoy Devourer telegraphs a charge, the Choir of Glass alternates rings and
-fans, the Cryogenic Custodian moves laterally and chills, and the Firewall Saint
-drains energy. All fire visible avoidable shots and expose a glowing core after
-attacking. Basic weapons can defeat every family. Health scales by phase and by
-the players present when the encounter begins; ordinary hordes retain bounded
-health growth.
+Use **G** at a guardian's staging console to begin. New ships use suspended-machine,
+infested-relay, Cryo Processional and Garden Locomotive patterns. Each has two
+breakable systems and a second attack stage. Physical controls and optional earned
+matrix operations prepare the same arena facts. Visible warnings precede attacks;
+breaking a system removes its declared attack. Victory leaves a persistent breach
+and awards four attribute points to each eligible profile, once. Basic weapons
+can defeat every pattern. Health scales by phase and by the players present when
+the encounter begins; ordinary hordes retain bounded health growth. Older ships
+keep their original guardian patterns.
 
 If all participants leave the room, die or enter shelter, the attempt resets to
 full health. Owned rewards remain. Loading an active fight returns its participants
@@ -67,6 +74,12 @@ owned items remain in storage. At the bay, inside shelter or within eight metres
 of a defeated guardian's console, use F10, **Q / E** to select a slot, and **Z / X**
 to change its equipped item. Dismount or disconnect from the matrix before refitting.
 Reward claims equip a new capability immediately; they cannot be claimed twice.
+
+For revision 2, cycling the specialization slot opens a preview; **G** confirms
+the selected branch and **Enter** cancels when closing the journal. Its required
+weapon, power or rig must already be earned and equipped. Conduit, Veil, Bastion
+and Rift each have two branches; see their [effects and limits](COHERENT_EXPEDITIONS.md).
+The following table applies only to revision-1 ships:
 
 | Specialization | Effect |
 | --- | --- |
@@ -89,14 +102,15 @@ selection. Ceiling scale increases across deeper bands while narrow conduits and
 crew spaces retain their contrast. Existing sectors, landmarks and connected
 catastrophe trails remain part of the generator.
 
-New expeditions use **generator 15, narrative 3, matrix generator 1 and save format
-16**. Older expeditions retain their original access and rewards. Formats 1–10 remain supported. Compatible older ships keep their equipment
+New expeditions use **generator 16, campaign 2, narrative 3, matrix generator 1 and
+save format 17**. Older expeditions retain their original access and rewards.
+Formats 1–16 remain supported. Compatible older ships keep their equipment
 and original rules until an explicit new-ship action. Historical `--scene` catalog
 views remain generator-6 sandboxes; `--scene guardian` previews the new arena.
 Normal play and `--seed` start the new ruleset. Generator 8 adds the [arrival skiff](ARRIVAL.md) while retaining generator-7 room plans, encounters and phase rules. Existing generator-7 saves keep their original exterior and positions.
 
 The broader [design proposal](PROGRESSION_DESIGN.md) also describes possible future
-vehicles, artifact variants, stat reassignment and encounter combinations. Those
-are playtest directions. This implementation uses the existing mech/wagon and
-four explicit specialization modules. Automated campaigns establish completion
-and persistence; human playtesting must assess pacing and challenge.
+vehicles and artifact variants. Safe stat reassignment and six encounter
+compositions are now implemented alongside the existing mech/wagon and eight
+branches. Automated campaigns establish completion and persistence; human
+playtesting must assess pacing and challenge.

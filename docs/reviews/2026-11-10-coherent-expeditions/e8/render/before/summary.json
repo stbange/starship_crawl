@@ -1,0 +1,41 @@
+[
+  {
+    "seed": 713,
+    "scene": "arrival",
+    "split": false,
+    "frames": 600,
+    "samples": 570,
+    "warmup_frames": 30,
+    "p50_ms": 28.6159,
+    "p95_ms": 36.6491,
+    "p99_ms": 42.8281,
+    "max_ms": 56.0976,
+    "max_rss_kib": 168464
+  },
+  {
+    "seed": 713,
+    "scene": "bay",
+    "split": false,
+    "frames": 600,
+    "samples": 570,
+    "warmup_frames": 30,
+    "p50_ms": 12.9835,
+    "p95_ms": 15.8158,
+    "p99_ms": 17.7405,
+    "max_ms": 24.6803,
+    "max_rss_kib": 112524
+  },
+  {
+    "seed": 713,
+    "scene": "bay",
+    "split": true,
+    "frames": 600,
+    "samples": 570,
+    "warmup_frames": 30,
+    "p50_ms": 18.7666,
+    "p95_ms": 24.8263,
+    "p99_ms": 27.1082,
+    "max_ms": 30.2325,
+    "max_rss_kib": 109104
+  }
+]

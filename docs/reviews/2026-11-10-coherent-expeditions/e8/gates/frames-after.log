@@ -1,0 +1,8 @@
+713-arrival {'samples': 570, 'warmup_frames': 30, 'p50_ms': 28.5029, 'p95_ms': 34.6862, 'p99_ms': 37.8377, 'max_ms': 104.1998, 'max_rss_kib': 170212}
+713-bay {'samples': 570, 'warmup_frames': 30, 'p50_ms': 12.5367, 'p95_ms': 15.7255, 'p99_ms': 20.3763, 'max_ms': 43.0671, 'max_rss_kib': 112600}
+713-bay-split {'samples': 570, 'warmup_frames': 30, 'p50_ms': 18.5579, 'p95_ms': 24.6577, 'p99_ms': 26.9409, 'max_ms': 36.7353, 'max_rss_kib': 109768}
+27-foundry6 {'samples': 570, 'warmup_frames': 30, 'p50_ms': 20.7467, 'p95_ms': 24.903, 'p99_ms': 29.5282, 'max_ms': 62.2362, 'max_rss_kib': 119532}
+7-foundry6 {'samples': 570, 'warmup_frames': 30, 'p50_ms': 18.7836, 'p95_ms': 21.6809, 'p99_ms': 24.2904, 'max_ms': 28.6507, 'max_rss_kib': 118084}
+713-guardian6warn {'samples': 570, 'warmup_frames': 30, 'p50_ms': 21.3735, 'p95_ms': 27.4201, 'p99_ms': 35.1359, 'max_ms': 51.7762, 'max_rss_kib': 121556}
+713-build8 {'samples': 570, 'warmup_frames': 30, 'p50_ms': 32.5235, 'p95_ms': 37.7888, 'p99_ms': 41.0797, 'max_ms': 63.9988, 'max_rss_kib': 144624}
+27-foundry6-split {'samples': 570, 'warmup_frames': 30, 'p50_ms': 29.1208, 'p95_ms': 33.4512, 'p99_ms': 38.9615, 'max_ms': 45.1747, 'max_rss_kib': 119804}

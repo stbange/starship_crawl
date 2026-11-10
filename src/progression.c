@@ -1,5 +1,13 @@
 #include "game.h"
 #include <stdio.h>
+void player_add_salvage(Player *p, unsigned amount) {
+    p->credits =
+        p->rules == 2 ? (uint32_t)fmin(1000000, (double)p->credits + amount) : p->credits + amount;
+}
+void player_add_points(Player *p, unsigned amount) {
+    p->points =
+        p->rules == 2 ? (uint32_t)fmin(1000, (double)p->points + amount) : p->points + amount;
+}
 float player_max_shield(const Player *p) {
     return 50 + 15.0f * player_rank(p, p->mods[1]);
 }
@@ -214,8 +222,8 @@ void game_interact(Game *g, int player) {
     g->mission++;
     for (int i = 0; i < g->player_count; i++) {
         Player *t = &g->players[i];
-        t->points += 2;
-        t->credits += 75;
+        player_add_points(t, 2);
+        player_add_salvage(t, 75);
         t->health = player_max_health(t);
         t->shield = player_max_shield(t);
         t->energy = player_max_energy(t);
@@ -264,7 +272,7 @@ void game_progression_step(Game *g, double dt) {
                     game_message(g, "REACTOR CELL / ENERGY RESTORED");
                 }
                 if (loot->kind == PICK_SALVAGE) {
-                    p->credits += 25 + 5 * p->mods[6];
+                    player_add_salvage(p, 25 + 5 * p->mods[6]);
                     game_message(g, "SALVAGE CACHE / UPGRADE CURRENCY");
                 }
                 if (loot->kind == PICK_MEDKIT) {
@@ -285,13 +293,13 @@ void game_progression_step(Game *g, double dt) {
                         p->weapon = loot->item;
                         game_message(g, sc_weapons[loot->item].name);
                     } else {
-                        p->credits += 30;
+                        player_add_salvage(p, 30);
                         game_message(g, "DUPLICATE WEAPON / 30 SALVAGE");
                     }
                 }
                 if (loot->kind == PICK_LOG) {
                     p->logs |= 1u << loot->item;
-                    p->credits += 15;
+                    player_add_salvage(p, 15);
                     game_message(g, g->story.version
                                         ? "HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE"
                                         : sc_logs[loot->item]);
@@ -309,8 +317,8 @@ void game_progression_step(Game *g, double dt) {
             g->contracts |= 1u << c;
             g->dirty = true;
             for (int p = 0; p < g->player_count; p++) {
-                g->players[p].points += 2;
-                g->players[p].credits += 100;
+                player_add_points(&g->players[p], 2);
+                player_add_salvage(&g->players[p], 100);
             }
             game_message(g, names[c]);
         }

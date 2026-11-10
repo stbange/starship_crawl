@@ -1,0 +1,7 @@
+[ 19%] Built target sc_core
+[ 27%] Built target SDL_uclibc
+[ 88%] Built target SDL3-static
+[ 90%] Built target sc_platform
+[ 90%] Building C object CMakeFiles/starship_crawl.dir/src/render_districts.c.o
+[ 91%] Linking C executable starship_crawl
+[100%] Built target starship_crawl

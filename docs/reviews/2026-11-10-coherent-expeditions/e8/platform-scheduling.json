@@ -1,0 +1,6 @@
+{
+  "utc": "2026-11-10T19:21:36.624680+00:00",
+  "reason": "Short-timeout retries have passed; overlap one browser workload with one long sanitizer case under the four-core quota. Frame measurements wait for both batches to finish.",
+  "maximum_browser_workloads": 1,
+  "frame_profiles_isolated": true
+}

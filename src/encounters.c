@@ -309,7 +309,7 @@ bool game_encounter_interact(Game *g, int player) {
         if (!world_set_systems(&g->world, r->cell, systems) ||
             !world_mark_local(&g->world, r, LOCAL_RESOLVED))
             return true;
-        p->credits += 35;
+        player_add_salvage(p, 35);
         if (r->habitat.tale == LAST_FEAST || r->habitat.tale == CULTIVATION)
             p->nourished = fmaxf(p->nourished, 90);
         if (r->habitat.tale == TRIAGE) {

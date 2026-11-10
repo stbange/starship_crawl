@@ -1,0 +1,32 @@
+{
+  "ordinary_scripts": [
+    "test_aftermath_browser.py",
+    "test_breadth_browser.py",
+    "test_browser.py",
+    "test_builds_browser.py",
+    "test_chronicle_browser.py",
+    "test_deaths_browser.py",
+    "test_districts_browser.py",
+    "test_equipment_browser.py",
+    "test_exterior_browser.py",
+    "test_features_browser.py",
+    "test_foundation_browser.py",
+    "test_frontier_browser.py",
+    "test_guardians_browser.py",
+    "test_guidance_browser.py",
+    "test_habitat_browser.py",
+    "test_hidden_browser.py",
+    "test_interiors_browser.py",
+    "test_matrix_browser.py",
+    "test_onboarding_browser.py",
+    "test_phases_browser.py",
+    "test_politics_browser.py",
+    "test_preparation_browser.py",
+    "test_regional_browser.py",
+    "test_rhythm_browser.py",
+    "test_shelter_browser.py",
+    "test_story_browser.py"
+  ],
+  "total_passed": 26,
+  "scope": "Packaged ordinary WASM and real WebGL with keyboard, mouse, touch, co-op and persistence; isolated Quest suite is separate"
+}

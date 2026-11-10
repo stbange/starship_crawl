@@ -1,0 +1,3 @@
+RUN test_preparation_browser.py
+PASS optional shelter costs, preparation and shared facility controls / keyboard, pad and touch
+PASS test_preparation_browser.py (46.8s)

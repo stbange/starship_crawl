@@ -1,0 +1,3 @@
+RUN test_chronicle_browser.py
+PASS recurring people, declared costs, free record, controller choice and mobile shared action
+PASS test_chronicle_browser.py (42.8s)

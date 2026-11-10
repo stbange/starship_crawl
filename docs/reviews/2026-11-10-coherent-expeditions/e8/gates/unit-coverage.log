@@ -1,0 +1,563 @@
++ cmake -S /workspace/starship_crawl -B /workspace/starship_crawl/build-coverage-coherent -DSC_BUILD_GAME=OFF -DSC_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DSC_SPLIT_CAMPAIGN_TESTS=OFF -DSC_QUEST_TESTS=ON
+-- Configuring done (0.0s)
+-- Generating done (0.2s)
+-- Build files have been written to: /workspace/starship_crawl/build-coverage-coherent
++ cmake --build /workspace/starship_crawl/build-coverage-coherent --parallel 4
+[  1%] Building C object CMakeFiles/sc_core.dir/src/progression.c.o
+[  1%] Building C object CMakeFiles/sc_core_fault.dir/src/progression.c.o
+[  2%] Building C object CMakeFiles/sc_quest_core.dir/src/progression.c.o
+[  2%] Building C object CMakeFiles/sc_party_core.dir/src/progression.c.o
+[  2%] Building C object CMakeFiles/sc_core_fault.dir/src/story.c.o
+[  2%] Building C object CMakeFiles/sc_core.dir/src/story.c.o
+[  2%] Building C object CMakeFiles/sc_quest_core.dir/src/story.c.o
+[  3%] Building C object CMakeFiles/sc_party_core.dir/src/story.c.o
+[  4%] Building C object CMakeFiles/sc_core_fault.dir/src/expedition.c.o
+[  4%] Building C object CMakeFiles/sc_party_core.dir/src/expedition.c.o
+[  4%] Building C object CMakeFiles/sc_core.dir/src/expedition.c.o
+[  4%] Building C object CMakeFiles/sc_quest_core.dir/src/expedition.c.o
+[  4%] Building C object CMakeFiles/sc_party_core.dir/src/death.c.o
+[  4%] Building C object CMakeFiles/sc_core.dir/src/death.c.o
+[  4%] Building C object CMakeFiles/sc_core_fault.dir/src/death.c.o
+[  4%] Building C object CMakeFiles/sc_party_core.dir/src/game.c.o
+[  5%] Building C object CMakeFiles/sc_core.dir/src/game.c.o
+[  5%] Building C object CMakeFiles/sc_core_fault.dir/src/game.c.o
+[  5%] Building C object CMakeFiles/sc_quest_core.dir/src/death.c.o
+[  6%] Building C object CMakeFiles/sc_quest_core.dir/src/game.c.o
+[  7%] Building C object CMakeFiles/sc_party_core.dir/src/save.c.o
+[  7%] Building C object CMakeFiles/sc_core.dir/src/save.c.o
+[  7%] Building C object CMakeFiles/sc_party_core.dir/src/save_restore.c.o
+[  8%] Building C object CMakeFiles/sc_core_fault.dir/src/save.c.o
+[  8%] Building C object CMakeFiles/sc_core.dir/src/save_restore.c.o
+[  8%] Building C object CMakeFiles/sc_party_core.dir/src/save_load.c.o
+[  8%] Building C object CMakeFiles/sc_core_fault.dir/src/save_restore.c.o
+[  8%] Building C object CMakeFiles/sc_core.dir/src/save_load.c.o
+[  8%] Building C object CMakeFiles/sc_party_core.dir/src/save_stream.c.o
+[  8%] Building C object CMakeFiles/sc_core_fault.dir/src/save_load.c.o
+[  9%] Building C object CMakeFiles/sc_party_core.dir/src/save_profiles.c.o
+[ 10%] Building C object CMakeFiles/sc_core.dir/src/save_stream.c.o
+[ 10%] Building C object CMakeFiles/sc_quest_core.dir/src/save.c.o
+[ 10%] Building C object CMakeFiles/sc_core_fault.dir/src/save_stream.c.o
+[ 10%] Building C object CMakeFiles/sc_party_core.dir/src/save_story.c.o
+[ 10%] Building C object CMakeFiles/sc_core.dir/src/save_profiles.c.o
+[ 11%] Building C object CMakeFiles/sc_core_fault.dir/src/save_profiles.c.o
+[ 11%] Building C object CMakeFiles/sc_quest_core.dir/src/save_restore.c.o
+[ 11%] Building C object CMakeFiles/sc_party_core.dir/src/save_matrix.c.o
+[ 11%] Building C object CMakeFiles/sc_core_fault.dir/src/save_story.c.o
+[ 11%] Building C object CMakeFiles/sc_core.dir/src/save_story.c.o
+[ 12%] Building C object CMakeFiles/sc_party_core.dir/src/save_campaign.c.o
+[ 13%] Building C object CMakeFiles/sc_quest_core.dir/src/save_load.c.o
+[ 13%] Building C object CMakeFiles/sc_core_fault.dir/src/save_matrix.c.o
+[ 13%] Building C object CMakeFiles/sc_party_core.dir/src/save_factions.c.o
+[ 13%] Building C object CMakeFiles/sc_core.dir/src/save_matrix.c.o
+[ 13%] Building C object CMakeFiles/sc_quest_core.dir/src/save_stream.c.o
+[ 13%] Building C object CMakeFiles/sc_core_fault.dir/src/save_campaign.c.o
+[ 13%] Building C object CMakeFiles/sc_party_core.dir/src/shelter.c.o
+[ 14%] Building C object CMakeFiles/sc_core.dir/src/save_campaign.c.o
+[ 15%] Building C object CMakeFiles/sc_core_fault.dir/src/save_factions.c.o
+[ 15%] Building C object CMakeFiles/sc_quest_core.dir/src/save_profiles.c.o
+[ 15%] Building C object CMakeFiles/sc_party_core.dir/src/navigation.c.o
+[ 15%] Building C object CMakeFiles/sc_core_fault.dir/src/shelter.c.o
+[ 15%] Building C object CMakeFiles/sc_core.dir/src/save_factions.c.o
+[ 15%] Building C object CMakeFiles/sc_quest_core.dir/src/save_story.c.o
+[ 15%] Building C object CMakeFiles/sc_core_fault.dir/src/navigation.c.o
+[ 16%] Building C object CMakeFiles/sc_party_core.dir/src/psionics.c.o
+[ 17%] Building C object CMakeFiles/sc_quest_core.dir/src/save_matrix.c.o
+[ 17%] Building C object CMakeFiles/sc_core.dir/src/shelter.c.o
+[ 17%] Building C object CMakeFiles/sc_party_core.dir/src/equipment.c.o
+[ 17%] Building C object CMakeFiles/sc_quest_core.dir/src/save_campaign.c.o
+[ 17%] Building C object CMakeFiles/sc_core_fault.dir/src/psionics.c.o
+[ 17%] Building C object CMakeFiles/sc_core.dir/src/navigation.c.o
+[ 17%] Building C object CMakeFiles/sc_quest_core.dir/src/save_factions.c.o
+[ 18%] Building C object CMakeFiles/sc_core_fault.dir/src/equipment.c.o
+[ 18%] Building C object CMakeFiles/sc_party_core.dir/src/matrix.c.o
+[ 19%] Building C object CMakeFiles/sc_core.dir/src/psionics.c.o
+[ 19%] Building C object CMakeFiles/sc_quest_core.dir/src/shelter.c.o
+[ 19%] Building C object CMakeFiles/sc_core.dir/src/equipment.c.o
+[ 19%] Building C object CMakeFiles/sc_core_fault.dir/src/matrix.c.o
+[ 20%] Building C object CMakeFiles/sc_party_core.dir/src/matrix_state.c.o
+[ 20%] Building C object CMakeFiles/sc_core.dir/src/matrix.c.o
+[ 21%] Building C object CMakeFiles/sc_quest_core.dir/src/navigation.c.o
+[ 21%] Building C object CMakeFiles/sc_party_core.dir/src/matrix_effects.c.o
+[ 21%] Building C object CMakeFiles/sc_quest_core.dir/src/psionics.c.o
+[ 21%] Building C object CMakeFiles/sc_core_fault.dir/src/matrix_state.c.o
+[ 21%] Building C object CMakeFiles/sc_party_core.dir/src/campaign.c.o
+[ 21%] Building C object CMakeFiles/sc_core.dir/src/matrix_state.c.o
+[ 21%] Building C object CMakeFiles/sc_quest_core.dir/src/equipment.c.o
+[ 22%] Building C object CMakeFiles/sc_core_fault.dir/src/matrix_effects.c.o
+[ 22%] Building C object CMakeFiles/sc_quest_core.dir/src/matrix.c.o
+[ 23%] Building C object CMakeFiles/sc_party_core.dir/src/campaign_combat.c.o
+[ 23%] Building C object CMakeFiles/sc_core.dir/src/matrix_effects.c.o
+[ 23%] Building C object CMakeFiles/sc_quest_core.dir/src/matrix_state.c.o
+[ 23%] Building C object CMakeFiles/sc_core_fault.dir/src/campaign.c.o
+[ 23%] Building C object CMakeFiles/sc_party_core.dir/src/builds.c.o
+[ 23%] Building C object CMakeFiles/sc_quest_core.dir/src/matrix_effects.c.o
+[ 24%] Building C object CMakeFiles/sc_core_fault.dir/src/campaign_combat.c.o
+[ 24%] Building C object CMakeFiles/sc_party_core.dir/src/build_branches.c.o
+[ 25%] Building C object CMakeFiles/sc_party_core.dir/src/guardians.c.o
+[ 25%] Building C object CMakeFiles/sc_core_fault.dir/src/builds.c.o
+[ 25%] Building C object CMakeFiles/sc_core.dir/src/campaign.c.o
+[ 26%] Building C object CMakeFiles/sc_quest_core.dir/src/campaign.c.o
+[ 26%] Building C object CMakeFiles/sc_party_core.dir/src/districts.c.o
+[ 26%] Building C object CMakeFiles/sc_core_fault.dir/src/build_branches.c.o
+[ 26%] Building C object CMakeFiles/sc_core_fault.dir/src/guardians.c.o
+[ 26%] Building C object CMakeFiles/sc_core.dir/src/campaign_combat.c.o
+[ 26%] Building C object CMakeFiles/sc_party_core.dir/src/conditions.c.o
+[ 26%] Building C object CMakeFiles/sc_quest_core.dir/src/campaign_combat.c.o
+[ 26%] Building C object CMakeFiles/sc_core.dir/src/builds.c.o
+[ 26%] Building C object CMakeFiles/sc_party_core.dir/src/chronicle.c.o
+[ 27%] Building C object CMakeFiles/sc_core_fault.dir/src/districts.c.o
+[ 27%] Building C object CMakeFiles/sc_quest_core.dir/src/builds.c.o
+[ 28%] Building C object CMakeFiles/sc_party_core.dir/src/chronicle_campaigns.c.o
+[ 28%] Building C object CMakeFiles/sc_core.dir/src/build_branches.c.o
+[ 29%] Building C object CMakeFiles/sc_quest_core.dir/src/build_branches.c.o
+[ 29%] Building C object CMakeFiles/sc_party_core.dir/src/save_chronicle.c.o
+[ 29%] Building C object CMakeFiles/sc_core_fault.dir/src/conditions.c.o
+[ 29%] Building C object CMakeFiles/sc_party_core.dir/src/preparation.c.o
+[ 30%] Building C object CMakeFiles/sc_core.dir/src/guardians.c.o
+[ 30%] Building C object CMakeFiles/sc_core_fault.dir/src/chronicle.c.o
+[ 30%] Building C object CMakeFiles/sc_quest_core.dir/src/guardians.c.o
+[ 30%] Building C object CMakeFiles/sc_party_core.dir/src/save_preparation.c.o
+[ 30%] Building C object CMakeFiles/sc_core.dir/src/districts.c.o
+[ 31%] Building C object CMakeFiles/sc_party_core.dir/src/encounters.c.o
+[ 31%] Building C object CMakeFiles/sc_core_fault.dir/src/chronicle_campaigns.c.o
+[ 31%] Building C object CMakeFiles/sc_quest_core.dir/src/districts.c.o
+[ 32%] Building C object CMakeFiles/sc_core_fault.dir/src/save_chronicle.c.o
+[ 32%] Building C object CMakeFiles/sc_core_fault.dir/src/preparation.c.o
+[ 32%] Building C object CMakeFiles/sc_core.dir/src/conditions.c.o
+[ 32%] Building C object CMakeFiles/sc_core.dir/src/chronicle.c.o
+[ 32%] Building C object CMakeFiles/sc_party_core.dir/src/alien.c.o
+[ 32%] Building C object CMakeFiles/sc_core_fault.dir/src/save_preparation.c.o
+[ 33%] Building C object CMakeFiles/sc_core.dir/src/chronicle_campaigns.c.o
+[ 33%] Building C object CMakeFiles/sc_party_core.dir/src/onboarding.c.o
+[ 33%] Building C object CMakeFiles/sc_core_fault.dir/src/encounters.c.o
+[ 33%] Building C object CMakeFiles/sc_core.dir/src/save_chronicle.c.o
+[ 33%] Building C object CMakeFiles/sc_quest_core.dir/src/conditions.c.o
+[ 33%] Building C object CMakeFiles/sc_core.dir/src/preparation.c.o
+[ 33%] Building C object CMakeFiles/sc_party_core.dir/src/frontier.c.o
+[ 34%] Building C object CMakeFiles/sc_quest_core.dir/src/chronicle.c.o
+[ 35%] Building C object CMakeFiles/sc_core_fault.dir/src/alien.c.o
+[ 35%] Building C object CMakeFiles/sc_quest_core.dir/src/chronicle_campaigns.c.o
+[ 35%] Building C object CMakeFiles/sc_party_core.dir/src/alien_special.c.o
+[ 35%] Building C object CMakeFiles/sc_core_fault.dir/src/onboarding.c.o
+[ 35%] Building C object CMakeFiles/sc_core.dir/src/save_preparation.c.o
+[ 35%] Building C object CMakeFiles/sc_quest_core.dir/src/save_chronicle.c.o
+[ 36%] Building C object CMakeFiles/sc_core.dir/src/encounters.c.o
+[ 36%] Building C object CMakeFiles/sc_party_core.dir/src/politics.c.o
+[ 36%] Building C object CMakeFiles/sc_core_fault.dir/src/frontier.c.o
+[ 36%] Building C object CMakeFiles/sc_quest_core.dir/src/preparation.c.o
+[ 37%] Building C object CMakeFiles/sc_party_core.dir/src/director.c.o
+[ 37%] Building C object CMakeFiles/sc_party_core.dir/src/faction_sim.c.o
+[ 37%] Building C object CMakeFiles/sc_core.dir/src/alien.c.o
+[ 38%] Building C object CMakeFiles/sc_quest_core.dir/src/save_preparation.c.o
+[ 39%] Building C object CMakeFiles/sc_core_fault.dir/src/alien_special.c.o
+[ 39%] Building C object CMakeFiles/sc_quest_core.dir/src/encounters.c.o
+[ 39%] Building C object CMakeFiles/sc_party_core.dir/src/faction_forces.c.o
+[ 39%] Building C object CMakeFiles/sc_core_fault.dir/src/politics.c.o
+[ 39%] Building C object CMakeFiles/sc_core.dir/src/onboarding.c.o
+[ 39%] Building C object CMakeFiles/sc_quest_core.dir/src/alien.c.o
+[ 40%] Building C object CMakeFiles/sc_core_fault.dir/src/director.c.o
+[ 41%] Building C object CMakeFiles/sc_party_core.dir/src/faction_orders.c.o
+[ 41%] Building C object CMakeFiles/sc_quest_core.dir/src/onboarding.c.o
+[ 42%] Building C object CMakeFiles/sc_core.dir/src/frontier.c.o
+[ 42%] Building C object CMakeFiles/sc_core_fault.dir/src/faction_sim.c.o
+[ 42%] Building C object CMakeFiles/sc_party_core.dir/src/hidden_director.c.o
+[ 42%] Building C object CMakeFiles/sc_core.dir/src/alien_special.c.o
+[ 42%] Building C object CMakeFiles/sc_core_fault.dir/src/faction_forces.c.o
+[ 43%] Building C object CMakeFiles/sc_quest_core.dir/src/frontier.c.o
+[ 44%] Building C object CMakeFiles/sc_core.dir/src/politics.c.o
+[ 44%] Building C object CMakeFiles/sc_party_core.dir/src/rhythm.c.o
+[ 44%] Building C object CMakeFiles/sc_quest_core.dir/src/alien_special.c.o
+[ 44%] Building C object CMakeFiles/sc_core_fault.dir/src/faction_orders.c.o
+[ 44%] Building C object CMakeFiles/sc_party_core.dir/src/save_rhythm.c.o
+[ 44%] Building C object CMakeFiles/sc_core.dir/src/director.c.o
+[ 45%] Building C object CMakeFiles/sc_core_fault.dir/src/hidden_director.c.o
+[ 45%] Building C object CMakeFiles/sc_quest_core.dir/src/politics.c.o
+[ 46%] Building C object CMakeFiles/sc_party_core.dir/src/identity.c.o
+[ 46%] Building C object CMakeFiles/sc_core.dir/src/faction_sim.c.o
+[ 46%] Building C object CMakeFiles/sc_party_core.dir/src/commands.c.o
+[ 46%] Building C object CMakeFiles/sc_party_core.dir/src/session.c.o
+[ 46%] Building C object CMakeFiles/sc_quest_core.dir/src/director.c.o
+[ 46%] Building C object CMakeFiles/sc_core_fault.dir/src/rhythm.c.o
+[ 46%] Building C object CMakeFiles/sc_party_core.dir/src/actors.c.o
+[ 47%] Building C object CMakeFiles/sc_party_core.dir/src/presentation.c.o
+[ 47%] Building C object CMakeFiles/sc_quest_core.dir/src/faction_sim.c.o
+[ 47%] Building C object CMakeFiles/sc_core.dir/src/faction_forces.c.o
+[ 47%] Building C object CMakeFiles/sc_core_fault.dir/src/save_rhythm.c.o
+[ 47%] Building C object CMakeFiles/sc_party_core.dir/src/snapshot.c.o
+[ 47%] Building C object CMakeFiles/sc_core_fault.dir/src/identity.c.o
+[ 48%] Building C object CMakeFiles/sc_quest_core.dir/src/faction_forces.c.o
+[ 49%] Building C object CMakeFiles/sc_core_fault.dir/src/commands.c.o
+[ 49%] Building C object CMakeFiles/sc_party_core.dir/src/snapshot_schema.c.o
+[ 50%] Building C object CMakeFiles/sc_core.dir/src/faction_orders.c.o
+[ 50%] Building C object CMakeFiles/sc_party_core.dir/src/snapshot_validation.c.o
+[ 50%] Building C object CMakeFiles/sc_core_fault.dir/src/session.c.o
+[ 50%] Building C object CMakeFiles/sc_quest_core.dir/src/faction_orders.c.o
+[ 51%] Linking C static library libsc_party_core.a
+[ 51%] Building C object CMakeFiles/sc_core.dir/src/hidden_director.c.o
+[ 54%] Built target sc_party_core
+[ 54%] Building C object CMakeFiles/sc_core_fault.dir/src/actors.c.o
+[ 54%] Building C object CMakeFiles/sc_quest_core.dir/src/hidden_director.c.o
+[ 54%] Building C object CMakeFiles/sc_snapshot_party_core_tests.dir/tests/test_snapshots.c.o
+[ 54%] Building C object CMakeFiles/sc_core_fault.dir/src/presentation.c.o
+[ 54%] Linking C executable sc_snapshot_party_core_tests
+[ 54%] Building C object CMakeFiles/sc_core.dir/src/rhythm.c.o
+[ 55%] Building C object CMakeFiles/sc_core_fault.dir/src/snapshot.c.o
+[ 55%] Building C object CMakeFiles/sc_quest_core.dir/src/rhythm.c.o
+[ 55%] Building C object CMakeFiles/sc_core_fault.dir/src/snapshot_schema.c.o
+[ 55%] Built target sc_snapshot_party_core_tests
+[ 55%] Building C object CMakeFiles/sc_session_party_core_tests.dir/tests/test_sessions.c.o
+[ 55%] Building C object CMakeFiles/sc_core.dir/src/save_rhythm.c.o
+[ 55%] Building C object CMakeFiles/sc_core_fault.dir/src/snapshot_validation.c.o
+[ 56%] Building C object CMakeFiles/sc_core.dir/src/identity.c.o
+[ 56%] Linking C static library libsc_core_fault.a
+[ 56%] Linking C executable sc_session_party_core_tests
+[ 56%] Building C object CMakeFiles/sc_core.dir/src/commands.c.o
+[ 57%] Building C object CMakeFiles/sc_quest_core.dir/src/save_rhythm.c.o
+[ 59%] Built target sc_core_fault
+[ 59%] Building C object CMakeFiles/sc_snapshot_fault_tests.dir/tests/test_snapshots.c.o
+[ 59%] Building C object CMakeFiles/sc_quest_core.dir/src/identity.c.o
+[ 59%] Building C object CMakeFiles/sc_core.dir/src/session.c.o
+[ 59%] Building C object CMakeFiles/sc_quest_core.dir/src/commands.c.o
+[ 59%] Built target sc_session_party_core_tests
+[ 59%] Building C object CMakeFiles/sc_edge_tests.dir/tests/test_edges.c.o
+[ 59%] Building C object CMakeFiles/sc_core.dir/src/actors.c.o
+[ 59%] Linking C executable sc_snapshot_fault_tests
+[ 59%] Building C object CMakeFiles/sc_quest_core.dir/src/session.c.o
+[ 60%] Building C object CMakeFiles/sc_core.dir/src/presentation.c.o
+[ 61%] Built target sc_snapshot_fault_tests
+[ 62%] Building C object CMakeFiles/sc_quest_core.dir/src/actors.c.o
+[ 62%] Building C object CMakeFiles/sc_faction_fault_tests.dir/tests/test_faction_faults.c.o
+[ 62%] Building C object CMakeFiles/sc_core.dir/src/snapshot.c.o
+[ 62%] Building C object CMakeFiles/sc_quest_core.dir/src/presentation.c.o
+[ 62%] Linking C executable sc_edge_tests
+[ 62%] Building C object CMakeFiles/sc_core.dir/src/snapshot_schema.c.o
+[ 62%] Building C object CMakeFiles/sc_quest_core.dir/src/snapshot.c.o
+[ 63%] Building C object CMakeFiles/sc_core.dir/src/snapshot_validation.c.o
+[ 63%] Built target sc_edge_tests
+[ 63%] Building C object CMakeFiles/sc_matrix_fault_tests.dir/tests/test_matrix_faults.c.o
+[ 64%] Linking C executable sc_faction_fault_tests
+[ 64%] Linking C static library libsc_core.a
+[ 64%] Building C object CMakeFiles/sc_quest_core.dir/src/snapshot_schema.c.o
+[ 64%] Built target sc_faction_fault_tests
+[ 64%] Building C object CMakeFiles/sc_quest_core.dir/src/quest.c.o
+[ 65%] Building C object CMakeFiles/sc_quest_core.dir/src/snapshot_validation.c.o
+[ 69%] Built target sc_core
+[ 70%] Building C object CMakeFiles/sc_flat_parity.dir/tests/test_quest_parity.c.o
+[ 70%] Building C object CMakeFiles/sc_snapshot_core_tests.dir/tests/test_snapshots.c.o
+[ 70%] Linking C static library libsc_quest_core.a
+[ 70%] Linking C executable sc_flat_parity
+[ 70%] Linking C executable sc_snapshot_core_tests
+[ 70%] Linking C executable sc_matrix_fault_tests
+[ 74%] Built target sc_quest_core
+[ 75%] Building C object CMakeFiles/sc_session_core_tests.dir/tests/test_sessions.c.o
+[ 75%] Built target sc_flat_parity
+[ 75%] Building C object CMakeFiles/sc_faction_tests.dir/tests/test_factions.c.o
+[ 75%] Built target sc_snapshot_core_tests
+[ 75%] Building C object CMakeFiles/sc_force_tests.dir/tests/test_forces.c.o
+[ 75%] Built target sc_matrix_fault_tests
+[ 76%] Building C object CMakeFiles/sc_faction_order_tests.dir/tests/test_faction_orders.c.o
+[ 76%] Linking C executable sc_faction_tests
+[ 76%] Linking C executable sc_session_core_tests
+[ 76%] Built target sc_faction_tests
+[ 76%] Linking C executable sc_faction_order_tests
+[ 76%] Building C object CMakeFiles/sc_hidden_director_tests.dir/tests/test_hidden_director.c.o
+[ 76%] Built target sc_session_core_tests
+[ 76%] Linking C executable sc_force_tests
+[ 76%] Built target sc_faction_order_tests
+[ 76%] Building C object CMakeFiles/sc_rhythm_tests.dir/tests/test_rhythm.c.o
+[ 77%] Linking C executable sc_hidden_director_tests
+[ 77%] Building C object CMakeFiles/sc_faction_journey.dir/tests/test_faction_journey.c.o
+[ 77%] Built target sc_force_tests
+[ 77%] Building C object CMakeFiles/sc_hidden_journey.dir/tests/test_hidden_journey.c.o
+[ 77%] Built target sc_hidden_director_tests
+[ 78%] Building C object CMakeFiles/sc_politics_tests.dir/tests/test_politics.c.o
+[ 78%] Linking C executable sc_faction_journey
+[ 78%] Linking C executable sc_rhythm_tests
+[ 78%] Built target sc_faction_journey
+[ 78%] Built target sc_rhythm_tests
+[ 78%] Building C object CMakeFiles/sc_politics_journey.dir/tests/test_politics_journey.c.o
+[ 78%] Linking C executable sc_hidden_journey
+[ 79%] Building C object CMakeFiles/sc_frontier_journey.dir/tests/test_frontier_journey.c.o
+[ 79%] Linking C executable sc_politics_tests
+[ 79%] Built target sc_hidden_journey
+[ 79%] Building C object CMakeFiles/sc_frontier_tests.dir/tests/test_frontier.c.o
+[ 79%] Built target sc_politics_tests
+[ 79%] Building C object CMakeFiles/sc_regional_journey.dir/tests/test_regional_journey.c.o
+[ 79%] Linking C executable sc_politics_journey
+[ 79%] Linking C executable sc_frontier_journey
+[ 79%] Built target sc_politics_journey
+[ 79%] Built target sc_frontier_journey
+[ 80%] Building C object CMakeFiles/sc_regional_tests.dir/tests/test_regional.c.o
+[ 81%] Building C object CMakeFiles/sc_tests.dir/tests/test_core.c.o
+[ 81%] Linking C executable sc_regional_journey
+[ 81%] Built target sc_regional_journey
+[ 82%] Building C object CMakeFiles/sc_habitat_tests.dir/tests/test_habitat.c.o
+[ 82%] Linking C executable sc_regional_tests
+[ 82%] Linking C executable sc_frontier_tests
+[ 82%] Built target sc_regional_tests
+[ 82%] Building C object CMakeFiles/sc_interior_tests.dir/tests/test_interiors.c.o
+[ 82%] Built target sc_frontier_tests
+[ 82%] Linking C executable sc_habitat_tests
+[ 82%] Building C object CMakeFiles/sc_navigation_tests.dir/tests/test_navigation_psionics.c.o
+[ 82%] Linking C executable sc_tests
+[ 82%] Built target sc_habitat_tests
+[ 83%] Linking C executable sc_interior_tests
+[ 84%] Building C object CMakeFiles/sc_onboarding_tests.dir/tests/test_onboarding.c.o
+[ 84%] Built target sc_tests
+[ 84%] Built target sc_interior_tests
+[ 84%] Building C object CMakeFiles/sc_guidance_tests.dir/tests/test_guidance.c.o
+[ 84%] Linking C executable sc_navigation_tests
+[ 85%] Building C object CMakeFiles/sc_navigation_recovery.dir/tests/test_navigation_recovery.c.o
+[ 85%] Linking C executable sc_navigation_recovery
+[ 85%] Linking C executable sc_onboarding_tests
+[ 85%] Built target sc_navigation_tests
+[ 85%] Linking C executable sc_guidance_tests
+[ 85%] Building C object CMakeFiles/sc_shelter_tests.dir/tests/test_shelter.c.o
+[ 85%] Built target sc_navigation_recovery
+[ 86%] Building C object CMakeFiles/sc_equipment_tests.dir/tests/test_equipment.c.o
+[ 86%] Built target sc_onboarding_tests
+[ 86%] Built target sc_guidance_tests
+[ 86%] Building C object CMakeFiles/sc_campaign_tests.dir/tests/test_campaign.c.o
+[ 86%] Building C object CMakeFiles/sc_expedition_tests.dir/tests/test_expedition.c.o
+[ 87%] Linking C executable sc_shelter_tests
+[ 87%] Linking C executable sc_equipment_tests
+[ 87%] Linking C executable sc_campaign_tests
+[ 87%] Built target sc_equipment_tests
+[ 87%] Built target sc_shelter_tests
+[ 87%] Built target sc_campaign_tests
+[ 87%] Building C object CMakeFiles/sc_story_tests.dir/tests/test_story.c.o
+[ 88%] Building C object CMakeFiles/sc_death_tests.dir/tests/test_deaths.c.o
+[ 88%] Building C object CMakeFiles/sc_matrix_tests.dir/tests/test_matrix.c.o
+[ 87%] Linking C executable sc_expedition_tests
+[ 88%] Linking C executable sc_death_tests
+[ 88%] Linking C executable sc_story_tests
+[ 88%] Built target sc_expedition_tests
+[ 89%] Building C object CMakeFiles/sc_matrix_journey.dir/tests/test_matrix_journey.c.o
+[ 89%] Built target sc_story_tests
+[ 89%] Building C object CMakeFiles/sc_phase_tests.dir/tests/test_phases.c.o
+[ 89%] Linking C executable sc_matrix_journey
+[ 89%] Built target sc_matrix_journey
+[ 89%] Built target sc_death_tests
+[ 89%] Building C object CMakeFiles/sc_build_tests.dir/tests/test_builds.c.o
+[ 89%] Building C object CMakeFiles/sc_breadth_tests.dir/tests/test_breadth.c.o
+[ 89%] Linking C executable sc_matrix_tests
+[ 89%] Linking C executable sc_breadth_tests
+[ 89%] Built target sc_matrix_tests
+[ 90%] Building C object CMakeFiles/sc_guardian_tests.dir/tests/test_guardians.c.o
+[ 90%] Built target sc_breadth_tests
+[ 91%] Linking C executable sc_phase_tests
+[ 92%] Linking C executable sc_build_tests
+[ 92%] Building C object CMakeFiles/sc_district_tests.dir/tests/test_districts.c.o
+[ 92%] Built target sc_phase_tests
+[ 92%] Built target sc_build_tests
+[ 92%] Building C object CMakeFiles/sc_chronicle_tests.dir/tests/test_chronicle.c.o
+[ 92%] Building C object CMakeFiles/sc_preparation_tests.dir/tests/test_preparation.c.o
+[ 92%] Linking C executable sc_guardian_tests
+[ 92%] Built target sc_guardian_tests
+[ 92%] Linking C executable sc_chronicle_tests
+[ 92%] Building C object CMakeFiles/sc_chronicle_journey.dir/tests/test_chronicle_journey.c.o
+[ 93%] Linking C executable sc_district_tests
+[ 93%] Linking C executable sc_preparation_tests
+[ 94%] Linking C executable sc_chronicle_journey
+[ 94%] Built target sc_chronicle_tests
+[ 94%] Building C object CMakeFiles/sc_phase_journey.dir/tests/test_phase_journey.c.o
+[ 94%] Built target sc_district_tests
+[ 94%] Building C object CMakeFiles/sc_traversal_tests.dir/tests/test_traversal.c.o
+[ 94%] Built target sc_chronicle_journey
+[ 94%] Built target sc_preparation_tests
+[ 95%] Building C object CMakeFiles/sc_exterior_tests.dir/tests/test_exterior.c.o
+[ 96%] Building C object CMakeFiles/sc_snapshot_quest_tests.dir/tests/test_snapshots.c.o
+[ 96%] Linking C executable sc_phase_journey
+[ 97%] Linking C executable sc_traversal_tests
+[ 96%] Built target sc_phase_journey
+[ 97%] Linking C executable sc_snapshot_quest_tests
+[ 97%] Linking C executable sc_exterior_tests
+[ 98%] Building C object CMakeFiles/sc_session_quest_tests.dir/tests/test_sessions.c.o
+[ 98%] Built target sc_traversal_tests
+[ 98%] Built target sc_snapshot_quest_tests
+[ 99%] Building C object CMakeFiles/sc_quest_tests.dir/tests/test_quest.c.o
+[100%] Building C object CMakeFiles/sc_quest_legacy_tests.dir/tests/test_core.c.o
+[100%] Built target sc_exterior_tests
+[100%] Building C object CMakeFiles/sc_quest_parity.dir/tests/test_quest_parity.c.o
+[100%] Linking C executable sc_quest_tests
+[100%] Linking C executable sc_quest_parity
+[100%] Linking C executable sc_session_quest_tests
+[100%] Linking C executable sc_quest_legacy_tests
+[100%] Built target sc_quest_parity
+[100%] Built target sc_quest_tests
+[100%] Built target sc_quest_legacy_tests
+[100%] Built target sc_session_quest_tests
++ ctest --test-dir /workspace/starship_crawl/build-coverage-coherent -L unit --output-on-failure
+Internal ctest changing into directory: /workspace/starship_crawl/build-coverage-coherent
+Test project /workspace/starship_crawl/build-coverage-coherent
+      Start  1: snapshot_quest
+ 1/44 Test  #1: snapshot_quest ...................   Passed    4.30 sec
+      Start  2: session_quest
+ 2/44 Test  #2: session_quest ....................   Passed    3.12 sec
+      Start  3: quest_tracking_combat
+ 3/44 Test  #3: quest_tracking_combat ............   Passed    0.11 sec
+      Start  4: quest_ordinary_core
+ 4/44 Test  #4: quest_ordinary_core ..............   Passed   27.14 sec
+      Start  5: quest_parity_flat
+ 5/44 Test  #5: quest_parity_flat ................   Passed    0.82 sec
+      Start  6: quest_parity_quest
+ 6/44 Test  #6: quest_parity_quest ...............   Passed    0.70 sec
+      Start  7: quest_parity_identical
+ 7/44 Test  #7: quest_parity_identical ...........   Passed    0.01 sec
+      Start  8: snapshot_core
+ 8/44 Test  #8: snapshot_core ....................   Passed    4.32 sec
+      Start  9: session_core
+ 9/44 Test  #9: session_core .....................   Passed    3.20 sec
+      Start 10: snapshot_party_core
+10/44 Test #10: snapshot_party_core ..............   Passed    7.98 sec
+      Start 11: session_party_core
+11/44 Test #11: session_party_core ...............   Passed    3.77 sec
+      Start 12: hidden_factions
+12/44 Test #12: hidden_factions ..................   Passed    0.36 sec
+      Start 13: mobile_forces
+13/44 Test #13: mobile_forces ....................   Passed    3.89 sec
+      Start 14: autonomous_politics
+14/44 Test #14: autonomous_politics ..............   Passed    2.56 sec
+      Start 15: expedition_rhythm
+15/44 Test #15: expedition_rhythm ................   Passed    0.73 sec
+      Start 16: hidden_director
+16/44 Test #16: hidden_director ..................   Passed    1.73 sec
+      Start 20: political_expeditions
+17/44 Test #20: political_expeditions ............   Passed    1.56 sec
+      Start 23: deep_frontiers
+18/44 Test #23: deep_frontiers ...................   Passed    4.39 sec
+      Start 25: regional_encounters
+19/44 Test #25: regional_encounters ..............   Passed    4.43 sec
+      Start 26: core
+20/44 Test #26: core .............................   Passed   17.88 sec
+      Start 27: living_ship
+21/44 Test #27: living_ship ......................   Passed    8.09 sec
+      Start 29: generated_interiors
+22/44 Test #29: generated_interiors ..............   Passed    4.55 sec
+      Start 30: snapshot_faults
+23/44 Test #30: snapshot_faults ..................   Passed    9.17 sec
+      Start 31: faction_faults
+24/44 Test #31: faction_faults ...................   Passed    0.03 sec
+      Start 32: edge_cases
+25/44 Test #32: edge_cases .......................   Passed    0.38 sec
+      Start 33: staged_onboarding
+26/44 Test #33: staged_onboarding ................   Passed    0.41 sec
+      Start 34: exploration_guidance
+27/44 Test #34: exploration_guidance .............   Passed    2.58 sec
+      Start 36: navigation_psionics
+28/44 Test #36: navigation_psionics ..............   Passed    0.53 sec
+      Start 37: shelter
+29/44 Test #37: shelter ..........................   Passed    0.17 sec
+      Start 39: equipment
+30/44 Test #39: equipment ........................   Passed    0.17 sec
+      Start 45: reactive_aftermath
+31/44 Test #45: reactive_aftermath ...............   Passed   28.75 sec
+      Start 46: narrative
+32/44 Test #46: narrative ........................   Passed    4.58 sec
+      Start 47: enemy_deaths
+33/44 Test #47: enemy_deaths .....................   Passed    0.34 sec
+      Start 48: ship_matrix
+34/44 Test #48: ship_matrix ......................   Passed    0.17 sec
+      Start 49: matrix_faults
+35/44 Test #49: matrix_faults ....................   Passed    0.04 sec
+      Start 51: coherent_builds
+36/44 Test #51: coherent_builds ..................   Passed    1.26 sec
+      Start 52: coherent_breadth
+37/44 Test #52: coherent_breadth .................   Passed    2.70 sec
+      Start 53: guardian_systems
+38/44 Test #53: guardian_systems .................   Passed    1.68 sec
+      Start 54: coherent_districts
+39/44 Test #54: coherent_districts ...............   Passed    1.90 sec
+      Start 55: shelter_preparation
+40/44 Test #55: shelter_preparation ..............   Passed    0.54 sec
+      Start 56: continuing_inhabitants
+41/44 Test #56: continuing_inhabitants ...........   Passed    4.36 sec
+      Start 59: phased_expeditions
+42/44 Test #59: phased_expeditions ...............   Passed   12.78 sec
+      Start 63: vertical_traversal
+43/44 Test #63: vertical_traversal ...............   Passed    1.94 sec
+      Start 65: space_exterior
+44/44 Test #65: space_exterior ...................   Passed    0.86 sec
+
+100% tests passed, 0 tests failed out of 44
+
+Label Time Summary:
+architecture    =  35.86 sec*proc (7 tests)
+quest           =  36.21 sec*proc (7 tests)
+unit            = 180.98 sec*proc (44 tests)
+
+Total Test time (real) = 181.00 sec
++ /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m gcovr --root /workspace/starship_crawl --filter src/ --object-directory /workspace/starship_crawl/build-coverage-coherent --txt /workspace/starship_crawl/build-coverage-coherent/coverage/summary.txt --html-details /workspace/starship_crawl/build-coverage-coherent/coverage/index.html --json /workspace/starship_crawl/build-coverage-coherent/coverage/coverage.json --json-summary /workspace/starship_crawl/build-coverage-coherent/coverage/summary.json --cobertura /workspace/starship_crawl/build-coverage-coherent/coverage/coverage.xml --print-summary --fail-under-line 95 /workspace/starship_crawl/build-coverage-coherent
+(INFO) Reading coverage data...
+(INFO) Writing coverage report...
+lines: 98.1% (13218 out of 13473)
+functions: 99.9% (753 out of 754)
+branches: 87.4% (13543 out of 15498)
+src/actors.c: 17/17 lines (100.00%)
+src/alien.c: 138/139 lines (99.28%)
+src/alien_special.c: 182/185 lines (98.38%)
+src/build_branches.c: 110/112 lines (98.21%)
+src/builds.c: 136/136 lines (100.00%)
+src/campaign.c: 423/432 lines (97.92%)
+src/campaign_combat.c: 108/110 lines (98.18%)
+src/campaign_gen.c: 98/98 lines (100.00%)
+src/chronicle.c: 207/212 lines (97.64%)
+src/chronicle_campaigns.c: 120/121 lines (99.17%)
+src/commands.c: 117/119 lines (98.32%)
+src/conditions.c: 52/52 lines (100.00%)
+src/death.c: 90/91 lines (98.90%)
+src/director.c: 156/156 lines (100.00%)
+src/districts.c: 294/306 lines (96.08%)
+src/encounters.c: 300/309 lines (97.09%)
+src/equipment.c: 207/209 lines (99.04%)
+src/expedition.c: 518/529 lines (97.92%)
+src/exterior.c: 11/11 lines (100.00%)
+src/faction_forces.c: 567/592 lines (95.78%)
+src/faction_orders.c: 204/208 lines (98.08%)
+src/faction_sim.c: 335/352 lines (95.17%)
+src/frontier.c: 200/203 lines (98.52%)
+src/game.c: 936/953 lines (98.22%)
+src/generation.c: 396/396 lines (100.00%)
+src/guardians.c: 201/204 lines (98.53%)
+src/habitat.c: 278/278 lines (100.00%)
+src/hidden_director.c: 340/356 lines (95.51%)
+src/history.c: 35/35 lines (100.00%)
+src/identity.c: 44/44 lines (100.00%)
+src/interior.c: 368/369 lines (99.73%)
+src/math3d.h: 25/25 lines (100.00%)
+src/matrix.c: 430/446 lines (96.41%)
+src/matrix_effects.c: 397/409 lines (97.07%)
+src/matrix_gen.c: 154/155 lines (99.35%)
+src/matrix_state.c: 189/189 lines (100.00%)
+src/navigation.c: 171/173 lines (98.84%)
+src/onboarding.c: 293/294 lines (99.66%)
+src/politics.c: 309/321 lines (96.26%)
+src/politics_gen.c: 84/86 lines (97.67%)
+src/preparation.c: 225/225 lines (100.00%)
+src/presentation.c: 36/36 lines (100.00%)
+src/progression.c: 254/263 lines (96.58%)
+src/psionics.c: 54/54 lines (100.00%)
+src/quest.c: 102/102 lines (100.00%)
+src/reveals.c: 83/83 lines (100.00%)
+src/rhythm.c: 244/247 lines (98.79%)
+src/save.c: 110/112 lines (98.21%)
+src/save_campaign.c: 47/47 lines (100.00%)
+src/save_chronicle.c: 29/29 lines (100.00%)
+src/save_factions.c: 135/136 lines (99.26%)
+src/save_load.c: 199/203 lines (98.03%)
+src/save_matrix.c: 78/78 lines (100.00%)
+src/save_preparation.c: 18/18 lines (100.00%)
+src/save_profiles.c: 149/150 lines (99.33%)
+src/save_restore.c: 44/46 lines (95.65%)
+src/save_rhythm.c: 20/20 lines (100.00%)
+src/save_story.c: 49/49 lines (100.00%)
+src/save_stream.c: 61/61 lines (100.00%)
+src/session.c: 92/92 lines (100.00%)
+src/shelter.c: 138/140 lines (98.57%)
+src/snapshot.c: 197/200 lines (98.50%)
+src/snapshot_validation.c: 68/70 lines (97.14%)
+src/story.c: 582/586 lines (99.32%)
+src/traversal.c: 165/165 lines (100.00%)
+src/world.c: 793/823 lines (96.35%)
+src/world.h: 6/6 lines (100.00%)
+PASS: >= 95% unit line coverage overall and in each measured source. Report: /workspace/starship_crawl/build-coverage-coherent/coverage/index.html

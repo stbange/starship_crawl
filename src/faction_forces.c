@@ -155,8 +155,8 @@ void factions_damage(Game *g, Room *r, int index, float damage, int player) {
             for (int p = 0; p < g->player_count; p++)
                 if (a->participation[p] >= 80 && !(a->claimed & (1u << p))) {
                     a->claimed |= 1u << p;
-                    g->players[p].credits +=
-                        3; /* Ordinary salvage, never an ability or phase key. */
+                    player_add_salvage(&g->players[p],
+                                       3); /* Ordinary salvage, never an ability or phase key. */
                 }
     }
     g->dirty = true;

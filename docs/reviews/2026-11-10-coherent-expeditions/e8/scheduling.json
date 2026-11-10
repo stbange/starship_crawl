@@ -1,0 +1,20 @@
+{
+  "utc_epoch": 1794333123.2712152,
+  "simulation_nice": 10,
+  "reason": "Keep verification deadlines meaningful while simulations share the four-core quota. Wall times include scheduler contention.",
+  "processes": [
+    577098,
+    591493,
+    593842,
+    593844,
+    597456,
+    597457,
+    597480,
+    597481,
+    597526,
+    597528,
+    597533,
+    598127,
+    598128
+  ]
+}

@@ -1,0 +1,77 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+      Start 10: faction_revisit_journey
+ 1/22 Test #10: faction_revisit_journey ..........   Passed   45.45 sec
+      Start 11: faction_convoy_journey
+ 2/22 Test #11: faction_convoy_journey ...........   Passed    0.14 sec
+      Start 12: hidden_simulation_journey
+ 3/22 Test #12: hidden_simulation_journey ........   Passed   15.86 sec
+      Start 14: political_journeys
+ 4/22 Test #14: political_journeys ...............   Passed   40.68 sec
+      Start 15: frontier_journeys
+ 5/22 Test #15: frontier_journeys ................   Passed   42.56 sec
+      Start 17: regional_journey
+ 6/22 Test #17: regional_journey .................   Passed    0.12 sec
+      Start 21: living_ship_journey
+ 7/22 Test #21: living_ship_journey ..............   Passed    0.15 sec
+      Start 28: navigation_recovery
+ 8/22 Test #28: navigation_recovery ..............   Passed    0.28 sec
+      Start 31: shelter_journey
+ 9/22 Test #31: shelter_journey ..................   Passed    0.05 sec
+      Start 33: equipment_journey
+10/22 Test #33: equipment_journey ................   Passed    0.02 sec
+      Start 34: solo_campaign
+11/22 Test #34: solo_campaign ....................   Passed    2.70 sec
+      Start 35: generated_expeditions
+12/22 Test #35: generated_expeditions ............   Passed    4.71 sec
+      Start 36: history_expeditions
+13/22 Test #36: history_expeditions ..............   Passed   13.42 sec
+      Start 37: continuing_expeditions
+14/22 Test #37: continuing_expeditions ...........   Passed   49.26 sec
+      Start 43: matrix_journeys
+15/22 Test #43: matrix_journeys ..................   Passed    0.32 sec
+      Start 50: continuing_revisit_journey
+16/22 Test #50: continuing_revisit_journey .......   Passed   45.34 sec
+      Start 51: guardian_journeys
+17/22 Test #51: guardian_journeys ................   Passed    6.27 sec
+      Start 53: staged_intro_journey
+18/22 Test #53: staged_intro_journey .............   Passed   74.62 sec
+      Start 54: phase_journeys
+19/22 Test #54: phase_journeys ...................***Failed  458.34 sec
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.7s
+Seed 713: phase 1, guardians 101, rank 2, 4 kills, 0 respawns at 64.3s
+Seed 713: phase 2, guardians 105, rank 5, 38 kills, 0 respawns at 251.6s
+Tick 24000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 48000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 72000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 96000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 120000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 144000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 168000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 192000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 216000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 240000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 264000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 288000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 312000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Tick 336000: 495.0 0.0 152.3 -> [9,0,1], PULSE CARBINE
+Phase journey 713 starboard: FAIL, 6000.0s, 38 kills, 0 deaths, 360000 frames
+
+      Start 55: imperfect_expeditions
+20/22 Test #55: imperfect_expeditions ............   Passed  319.74 sec
+      Start 57: traversal_journeys
+21/22 Test #57: traversal_journeys ...............   Passed    1.68 sec
+      Start 59: arrival_journey
+22/22 Test #59: arrival_journey ..................   Passed    0.04 sec
+
+95% tests passed, 1 tests failed out of 22
+
+Label Time Summary:
+gameplay    = 1121.73 sec*proc (22 tests)
+
+Total Test time (real) = 1121.74 sec
+
+The following tests FAILED:
+	 54 - phase_journeys (Failed)                           gameplay
+Errors while running CTest

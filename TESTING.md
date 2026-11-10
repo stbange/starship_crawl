@@ -4,11 +4,27 @@ browser tests. Normal CI builds all targets with fast checks. Long verification
 suites are optional through the **Run extended tests** manual workflow input;
 when selected, they must pass before that run publishes Pages.
 
+**Coherent expeditions (E1–E8).** The ordinary Linux native configuration has 60 tests:
+37 unit, 22 gameplay and one SDL platform check. Coverage and sanitizer builds
+include seven additional isolated Quest/party checks, for 44 unit tests.
+Splitting the two phase routes and four imperfect-control cases gives 26 gameplay
+cases and 70 sanitizer tests. The E8 unit-only result is **98.1%
+(13,218/13,473 lines)**, with every executable core source above 95%.
+The [release review](docs/reviews/2026-11-10-coherent-expeditions/e8/README.md)
+retains exact results, simulated expedition traces and device limitations.
+
+`scripts/run-expedition-review.py` runs the retained 12-seed matrix, matched
+director controls, or starter/co-op/resource-policy comparisons. It uses an
+explicit binary and a new output directory; no shipped gameplay hooks are added.
+`scripts/profile-native.py` measures SDL swap intervals using a temporary link
+wrapper around an existing native build. Its inspection scenes are rendering
+benchmarks, not human playthroughs. See the review for hardware and workload.
+
 **Session architecture (R1–R7).**
 
-Local native builds with default CMake options register 51 tests (30 unit,
-20 gameplay and one SDL platform check). The headless Quest configuration has 37 unit tests. Final
-unit-only coverage is **98.1% (11,204/11,420 lines)**, with every measured
+At the R1–R7 release, default native builds registered 51 tests (30 unit,
+20 gameplay and one SDL platform check); the headless Quest configuration had 37 unit tests.
+That release's unit-only coverage was **98.1% (11,204/11,420 lines)**, with every measured
 source above 95%. Renderer and platform integration remain outside this metric.
 The ordinary-control replay retains the pre-refactor checkpoint bytes exactly.
 
@@ -77,15 +93,15 @@ Run workflow**, choose the branch, and enable **Run extended tests**. The input 
 off by default and does not change later pushes. In this mode native builds also
 build/run their full CTest suites and extended Linux render scenes; Quest runs its
 browser suite. Six ordinary browser jobs download the exact ordinary web artifact
-and run all 19 suites. Each runner uses one browser test at a time. The launcher
+and run all 26 suites. Each runner uses one browser test at a time. The launcher
 retains full logs plus per-suite timing/exit-status JSON in its capture artifact.
 
-The optional coverage job measures the 37 unit tests alone, at the same 95% overall
+The optional coverage job measures the 44 unit tests alone, at the same 95% overall
 and per-file threshold. Afterwards, six separate jobs run all instrumented
 campaign cases from the coverage build, and six run all address/undefined-behavior/
 leak sanitizer cases. `SC_SPLIT_CAMPAIGN_TESTS=ON` registers the existing two phase
 routes and four imperfect-control expeditions individually, without changing their
-inputs or assertions. That produces 24 campaign cases and 61 sanitizer tests.
+inputs or assertions. That produces 26 campaign cases and 70 sanitizer tests.
 The default registration retains the combined campaign cases. Runners use separate
 filesystems so journeys with the same temporary save filename cannot collide.
 

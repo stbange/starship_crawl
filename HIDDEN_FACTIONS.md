@@ -1,11 +1,17 @@
 # Hidden factions and the living ship
 
-New ships use generator **14**, faction simulation **1**, narrative **3**, matrix
-**1** and save format **15**. Alien powers act while you explore: columns travel
+New ships use generator **16**, faction simulation **1**, narrative **3**, matrix
+**1** and save format **17**. Alien powers act while you explore: columns travel
 between supply sites, rivals fight, defeated troops retreat, and stations change
 hands. You can follow them, avoid them or interfere. There is no political quest
 to accept. **M**, the minimap and the ordinary story journal still guide your
 expedition; **F6** opens the discovered ship dossier.
+
+The generator-16 additions connect supply to siege, repaired factories to
+reinforcements, recurring individuals to local outcomes, and four longer director
+sequences to physical clues and aftermath. See
+[Coherent expeditions](COHERENT_EXPEDITIONS.md) for those rules and their limits.
+The underlying hidden simulation below was introduced in generator 14.
 
 Existing generator-13 expeditions retain their courts and visible dispatches,
 including their saved decisions and controls. [The legacy guide](POLITICS.md)
@@ -95,9 +101,11 @@ recent diagnostic events at 128. Strategy considers at most fourteen local
 resource sites per update. Sparse occupation, casualties and claims remain after
 cache eviction; their save cost grows with explored changes.
 
-Format 15 saves the simulation clock, deterministic decision state, resources,
+Format 15 introduced the simulation clock, deterministic decision state, resources,
 relationships, incidents, rosters, travel, occupation, director memory and pending
 interventions. Loads validate them before replacing the current expedition.
+Format 17 additionally retains district facts, recurring individuals and sequence
+reservations, with active-session details covered by versioned live snapshots.
 Generator-13 and earlier ships retain their original rules and compatible save
 path. Physical room proxies and transient animation effects are reconstructed.
 

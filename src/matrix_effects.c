@@ -212,7 +212,7 @@ bool matrix_service(Game *g, int p) {
         bool changed = service > MX_BEACON || old != flags;
         for (int i = 0; i < g->player_count; i++) {
             if (!mission && changed) {
-                g->players[i].credits += 50;
+                player_add_salvage(&g->players[i], 50);
                 g->matrix.profiles[i].data = plus(g->matrix.profiles[i].data, 1);
             }
             if (service == MX_ARCHIVE) {

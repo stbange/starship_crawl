@@ -1,0 +1,42 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-sanitize-coherent
+Test project /workspace/starship_crawl/build-sanitize-coherent
+      Start 17: faction_revisit_journey
+ 1/26 Test #17: faction_revisit_journey ......................   Passed  464.49 sec
+      Start 18: faction_convoy_journey
+ 2/26 Test #18: faction_convoy_journey .......................   Passed    1.42 sec
+      Start 19: hidden_simulation_journey
+ 3/26 Test #19: hidden_simulation_journey ....................   Passed  171.60 sec
+      Start 21: political_journeys
+ 4/26 Test #21: political_journeys ...........................   Passed  450.72 sec
+      Start 22: frontier_journeys
+ 5/26 Test #22: frontier_journeys ............................   Passed  444.39 sec
+      Start 24: regional_journey
+ 6/26 Test #24: regional_journey .............................   Passed    1.15 sec
+      Start 28: living_ship_journey
+ 7/26 Test #28: living_ship_journey ..........................   Passed    1.23 sec
+      Start 35: navigation_recovery
+ 8/26 Test #35: navigation_recovery ..........................   Passed    5.03 sec
+      Start 38: shelter_journey
+ 9/26 Test #38: shelter_journey ..............................   Passed    0.46 sec
+      Start 40: equipment_journey
+10/26 Test #40: equipment_journey ............................   Passed    0.21 sec
+      Start 41: solo_campaign
+11/26 Test #41: solo_campaign ................................   Passed   21.94 sec
+      Start 42: generated_expeditions
+12/26 Test #42: generated_expeditions ........................   Passed   41.77 sec
+      Start 43: history_expeditions
+13/26 Test #43: history_expeditions ..........................   Passed   99.38 sec
+      Start 44: continuing_expeditions
+14/26 Test #44: continuing_expeditions .......................   Passed  310.12 sec
+      Start 50: matrix_journeys
+15/26 Test #50: matrix_journeys ..............................   Passed    1.84 sec
+      Start 57: continuing_revisit_journey
+16/26 Test #57: continuing_revisit_journey ...................***Timeout 240.11 sec
+MEETING choice=2 person=3850189690 credits=150 home=[3,0,0]
+SAVE validity campaign=1 story=1 factions=1 forces=1 cast=1 matrix=1
+REVISIT choice=2 person=3850189690 fate=4 site=[3,0,0] time=741.60 kills=11 deaths=0 record=VEI THE MENDER / CARETAKER. THEY KEEP A BOUNDARY BETWEEN THE REFUGE AND ITS LIVING CONDUITS. YOU REMOVED THE REFUGE POWER. THEIR EVACUATION NOTE REMAINS. A COPY OF THE KNOWLEDGE RECORD SURVIVES ELSEWHERE. CONDITION: POWER WAKES MACHINES. THE CENTER AND RAISED ROUTE STAY SAFE.
+MEETING choice=3 person=3850189690 credits=0 home=[3,0,0]
+
+      Start 58: guardian_journeys
+17/26 Test #58: guardian_journeys ............................   Passed   29.66 sec
+      Start 60: staged_intro_journey

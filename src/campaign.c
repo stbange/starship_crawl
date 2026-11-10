@@ -332,6 +332,10 @@ void campaign_defeat(Game *g, unsigned id) {
     for (int shot = 0; shot < SC_MAX_PROJECTILES; shot++)
         if (g->projectiles[shot].guardian == id + 1)
             g->projectiles[shot].active = false;
+    if (c->version >= 2 && id != 8)
+        for (int p = 0; p < SC_PLAYERS; p++)
+            if (c->eligible[id] & (1u << p))
+                g->players[p].points = (uint32_t)fmin(1000, g->players[p].points + 4);
     for (int p = 0; p < g->player_count; p++)
         if (c->eligible[id] & (1u << p)) {
             g->players[p].checkpoint = position_from(game_terminal(campaign_site(id)));
@@ -341,7 +345,10 @@ void campaign_defeat(Game *g, unsigned id) {
     campaign_sync(g);
     c->tracked = campaign_phase(c) < SC_PHASES ? campaign_phase(c) * 2 : SC_GUARDIANS;
     g->dirty = true;
-    game_message(g, "GUARDIAN DEFEATED / F10 CLAIM YOUR REWARD / THE NEXT BOUNDARY IS OPEN");
+    game_message(
+        g, c->version >= 2 && id != 8
+               ? "GUARDIAN DEFEATED / +4 ATTRIBUTE POINTS / F10 CLAIM YOUR TOOL / BOUNDARY OPEN"
+               : "GUARDIAN DEFEATED / F10 CLAIM YOUR REWARD / THE NEXT BOUNDARY IS OPEN");
 }
 void campaign_step(Game *g, double dt) {
     (void)dt;

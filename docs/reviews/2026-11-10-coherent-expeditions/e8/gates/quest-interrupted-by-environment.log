@@ -1,0 +1,21 @@
+RUN test_quest_browser.py
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Quest eye failed at clear: GL 0x506 / framebuffer 0x8cd5 / renderer 0 / mesh 0
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Quest eye failed at draw: GL 0x506 / framebuffer 0x8cd5 / renderer 0 / mesh 0
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Quest eye failed at draw: GL 0x506 / framebuffer 0x8cdd / renderer 0 / mesh 0
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+PASS: opaque framebuffer lifetime, reported setup GL error recovery, head-only stereo, re-entry, genuine incomplete/draw failures and usable exit
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+PASS: head-only startup/recovery images, delayed/null/emulated controller poses, vertical entry, deliberate input recovery, stalled-session timeouts and diagnostic report
+BROWSER Renderer: WebKit WebGL / OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))

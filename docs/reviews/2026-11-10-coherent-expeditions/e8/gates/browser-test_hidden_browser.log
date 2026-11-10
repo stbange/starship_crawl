@@ -1,0 +1,3 @@
+RUN test_hidden_browser.py
+PASS hidden desktop/touch controls, normal dossier/map, earned convoy, co-op, identity-preserving resume and pause
+PASS test_hidden_browser.py (51.8s)

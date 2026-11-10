@@ -1,0 +1,3 @@
+RUN test_equipment_browser.py
+PASS equipment browser: mech deploy/mount/arsenal/cockpit/reload, wagon driving/braking, three personal beams, earned flare upgrades, attached lights/reload and touch deployment/boarding
+PASS test_equipment_browser.py (49.4s)

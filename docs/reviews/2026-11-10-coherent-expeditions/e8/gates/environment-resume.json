@@ -1,0 +1,11 @@
+{
+  "utc": "2026-11-10T20:01:18.745987+00:00",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "cpu_quota": "400000 100000",
+  "memory_limit_bytes": 34359738368,
+  "interrupted_check": "quest-full",
+  "resumed_check": "quest-full, unchanged original suite",
+  "completed_ordinary_browsers": 26,
+  "completed_sanitizers": 70,
+  "reason": "The selected cloud environment restarted; completed results and files were retained, while running processes stopped."
+}

@@ -1,0 +1,11 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build
+Test project /workspace/starship_crawl/build
+    Start 60: platform_input
+1/1 Test #60: platform_input ...................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+platform    =   0.02 sec*proc (1 test)
+
+Total Test time (real) =   0.02 sec

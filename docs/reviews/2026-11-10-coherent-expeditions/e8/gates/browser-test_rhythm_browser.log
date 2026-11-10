@@ -1,0 +1,3 @@
+RUN test_rhythm_browser.py
+PASS four physical sequence cues and retained field evidence / WebGL
+PASS test_rhythm_browser.py (27.8s)

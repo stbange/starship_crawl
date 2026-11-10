@@ -9,8 +9,9 @@ and playtest targets, including future vehicles, artifact variants and stat resp
 
 This document preserves the original proposal and its historical baseline. The
 [10 November coherent-expedition plan](openspec/changes/coherent-expedition-experience/design.md)
-is the active next implementation sequence, including transformative branches,
-growth tuning and safe respec. [ONBOARDING.md](ONBOARDING.md) describes the current
+is now implemented, including transformative branches, growth tuning and safe
+respec; [COHERENT_EXPEDITIONS.md](COHERENT_EXPEDITIONS.md) describes the final rules.
+[ONBOARDING.md](ONBOARDING.md) describes the current
 starting kit and unlock schedule; descriptions of immediately available equipment
 below refer to the earlier prototype.
 

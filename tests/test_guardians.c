@@ -137,10 +137,14 @@ static void systems(void) {
         CHECK(a->broken == 3);
         guardian_step(g, r, 0, .01);
         CHECK(a->stage == GUARDIAN_OVERRUN);
+        unsigned partner_points = g->players[1].points;
         /* Strong legal damage wins immediately; no extra health or capped phase. */
         game_damage_enemy(g, r, 0, 0, 1000000, 0);
         CHECK((g->campaign.defeated & (1u << id)) && !a->active && !r->enemies[2].alive);
         CHECK(g->campaign.eligible[id] == 3 && campaign_valid(&g->campaign, g->players, &g->world));
+        CHECK(g->players[1].points == partner_points + 4);
+        campaign_defeat(g, id);
+        CHECK(g->players[1].points == partner_points + 4);
         g->players[0].pos = position_from(guardian_console(id, 0));
         CHECK(guardian_prepare(g, 0));
         CHECK(game_save(g, "guardian-victory.sav") && game_load(copy, "guardian-victory.sav"));

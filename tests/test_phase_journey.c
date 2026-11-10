@@ -180,7 +180,11 @@ static int journey(unsigned seed, bool port, const char *fixtures, unsigned prof
             have = false;
         } else if (!have) {
             Navigation nav;
-            if (profile && game_navigation_to(g, 0, goal, &nav) && nav.kind != NAV_BLOCKED)
+            /* Coherent districts reserve walking routes around machinery. Use
+               the same public route cue as the player instead of cutting a
+               diagonal between room centres through the new dressing. */
+            if ((profile || g->world.generator >= 16) && game_navigation_to(g, 0, goal, &nav) &&
+                nav.kind != NAV_BLOCKED)
                 waypoint = nav.point;
             else if (cell.y != goal.y)
                 waypoint = world_lift(cell);

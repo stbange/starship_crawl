@@ -1,0 +1,23 @@
+browser / combat: 6 tests: test_politics_browser.py, test_regional_browser.py, test_deaths_browser.py, test_builds_browser.py, test_guardians_browser.py, test_breadth_browser.py
+RUN test_politics_browser.py
+PASS three physical governments, audiences, deliberate decisions, route selection and paused clocks
+PASS three actual royal-guard victories, shared co-op settlement, exactly-once claims and IndexedDB resume
+PASS touch audience/choice, portrait and landscape journals; no browser exceptions
+PASS test_politics_browser.py (403.7s)
+RUN test_regional_browser.py
+PASS optional activation, warnings, animation pause, shared co-op and local repair
+PASS earned beam disruption, claims, field practice, save/reload and touch USE
+PASS test_regional_browser.py (168.3s)
+RUN test_deaths_browser.py
+PASS finite corpse animation, pause and duplicate-reward refusal
+PASS organic death and acid residue through real beam fire
+PASS robot wrecks, dropped mine, cloak detection and moving out of a triggered blast
+PASS death browser: animated corpses, acid, machine silhouettes/wrecks, armed mine and dodge, keyboard/mouse and touch combat
+PASS test_deaths_browser.py (98.2s)
+RUN test_builds_browser.py
+PASS packaged beam relay, cloak echo, charged mech, desktop/mobile branch previews and fresh reset
+PASS test_builds_browser.py (246.1s)
+RUN test_guardians_browser.py
+PASS guardian patterns, real input, assembly destruction and visible aftermath / packaged WebGL
+PASS test_guardians_browser.py (149.7s)
+RUN test_breadth_browser.py

@@ -1,0 +1,3 @@
+PROFILE {"samples":570,"warmup_frames":30,"p50_ms":29.1208,"p95_ms":33.4512,"p99_ms":38.9615,"max_ms":45.1747,"max_rss_kib":119804}
+Renderer: llvmpipe (LLVM 19.1.7, 256 bits) / 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1
+SMOKE PASS: 600 frames, 2 players, 18 rooms, 285084 vertices

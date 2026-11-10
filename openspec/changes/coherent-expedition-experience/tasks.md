@@ -1,8 +1,10 @@
 # Tasks
 
-Implementation is planned; no task is completed by the planning commit. Execute
-E1–E8 in order, using the [design](design.md) and [delta specifications](specs/).
-The remaining open questions are tuning values within the selected mechanics.
+This checklist records implementation of E1–E8 in order, using the
+[design](design.md) and [delta specifications](specs/). Implemented rules and
+retained evidence are documented in
+[COHERENT_EXPEDITIONS.md](../../../COHERENT_EXPEDITIONS.md) and the
+[integrated review](../../../docs/reviews/2026-11-10-coherent-expeditions/e8/README.md).
 
 Each milestone gate includes `npm run spec:validate`, relevant unit CTest,
 separate gameplay CTest and `python3 scripts/check-coverage.py` with **>=95%
@@ -84,15 +86,15 @@ and update save/snapshot validation alongside each feature that introduces it.
 
 ## 8. E8 — Balance and release evidence
 
-- [ ] 8.1 Run at least twelve 60-minute simulated expeditions with the condition/motivation/direction/build matrix in the design, varied reward choices and paired controls; retain replay configuration, event plots, screenshots, simulated duration and wall time.
-- [ ] 8.2 Compare resource/build curves, specialist responses, guardian stages, optional detours, quiet periods and navigation stalls against E1; tune demonstrated outliers and rerun the affected comparison seeds.
-- [ ] 8.3 Conduct the guided/experienced two-ship human protocol and co-op/device checks where available; deliver observations on rule learning, upgrade use, causal understanding and retry appeal, clearly listing unavailable human or physical-device sessions.
-- [ ] 8.4 Measure frame percentiles, streaming stalls, memory, effect/actor peaks and save growth on declared hardware or software rendering; resolve regressions and keep physical Quest performance/comfort status explicit.
+- [x] 8.1 Run at least twelve 60-minute simulated expeditions with the condition/motivation/direction/build matrix in the design, varied reward choices and paired controls; retain replay configuration, event plots, screenshots, simulated duration and wall time.
+- [x] 8.2 Compare resource/build curves, specialist responses, guardian stages, optional detours, quiet periods and navigation stalls against E1; tune demonstrated outliers and rerun the affected comparison seeds.
+- [x] 8.3 Conduct the guided/experienced two-ship human protocol and co-op/device checks where available; deliver observations on rule learning, upgrade use, causal understanding and retry appeal, clearly listing unavailable human or physical-device sessions. The protocol is retained; human participants and physical devices were unavailable, with those gaps explicit in the review.
+- [x] 8.4 Measure frame percentiles, streaming stalls, memory, effect/actor peaks and save growth on declared hardware or software rendering; resolve regressions and keep physical Quest performance/comfort status explicit.
 - [ ] 8.5 Run full strict specifications, unit/gameplay CTest, sanitizers, >=95% per-file/overall core coverage, legacy-save/native-WASM checks, native builds, packaged browser suite and isolated Quest suite; retain green results without weakening thresholds or exclusions.
 - [ ] 8.6 Update README, DEVELOPMENT_PLAN, behavior docs and a final implementation review with the ten-proposal mapping, current versions and remaining evidence gaps; push main and verify the complete GitHub Actions and Pages deployment.
 
 ## Workflow follow-up
 
 - Archive the change after implementation and the project's review requirements
-  are satisfied; do not archive or mark implementation complete for this plan.
+  are satisfied.
 - Revalidate active and archived OpenSpec documents after archiving.

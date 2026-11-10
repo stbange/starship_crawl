@@ -4,7 +4,7 @@ context: |
   Native targets are Linux and Windows; web uses Emscripten and mobile touch controls.
   Quest 3 uses a separate opt-in WebXR browser target, sc_quest_core and /quest-persist storage; ordinary targets never compile SC_WEBXR.
   Read README.md, ONBOARDING.md, EXPANSION.md, WORLD_GENERATION.md, SHELTER.md, FIELD_GUIDE.md, FOUNDATIONS.md, LIVING_SHIP.md, REGIONAL_ENCOUNTERS.md, DEEP_FRONTIERS.md, HIDDEN_FACTIONS.md, POLITICS.md (legacy generator 13), and TESTING.md for current behavior.
-  The shipped generator is version 15, hidden faction simulation is 1, narrative version is 3 and save format is version 16 (matrix generator 1). Generator-14 expeditions retain their access and format-15 path; generator-13 courts retain format 14. Quality-only changes must not reset expeditions.
+  New ships use generator 16, campaign rules 2 and save format 17. Hidden faction simulation is 1, narrative version is 3 and matrix generator is 1; portable live snapshots use schema 2. Generator-15 expeditions retain their onboarding and format-16 path, generator-14 expeditions retain format 15, and generator-13 courts retain format 14. Quality-only changes must not reset expeditions.
   Gameplay is solo by default with optional local split-screen and ship-local character profiles, fresh on every new ship.
   Headless core unit tests cover all sc_core sources and math3d.h. Native rendering/input adapters
   are exercised by OpenGL smoke and browser integration tests, outside the unit coverage metric.

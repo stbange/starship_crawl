@@ -108,7 +108,7 @@ bool game_story_prepared(const Game *g) {
 }
 const char *game_story_title(const Game *g, unsigned scene) {
     if (g->world.generator >= 16 && scene >= PREP_MEALS_SCENE && scene <= PREP_RECORD_SCENE)
-        return scene == PREP_MEALS_SCENE ? "THE FOLD / OPTIONAL MEALS"
+        return scene == PREP_MEALS_SCENE      ? "THE FOLD / OPTIONAL MEALS"
                : scene == PREP_PROJECTS_SCENE ? "THE FOLD / EXPEDITION PROJECTS"
                                               : "DISTRICT OUTCOME RECORD";
     if (g->world.generator >= 16 && scene >= SC_STORY_SCENES &&
@@ -371,7 +371,7 @@ void story_complete(Game *g, int player, unsigned scene) {
             world_describe_version(g->world.seed, g->world.generator, s->sites[scene]).cell;
         if (service == SC_MATRIX_SERVICES || !matrix_operation_done(g, owner, service)) {
             p->points = (uint32_t)fmin(1000, p->points + 2);
-            p->credits += 75;
+            player_add_salvage(p, 75);
         }
         p->health = player_max_health(p);
         p->shield = player_max_shield(p);
@@ -381,7 +381,7 @@ void story_complete(Game *g, int player, unsigned scene) {
             p->weapons |= BIT(scene == STORY_BRIEFING ? 1 : 4 + motivation(g));
         if (scene == STORY_EXTRACTION) {
             const unsigned pay[] = {0, 250, 180, 400};
-            p->credits += pay[s->choice];
+            player_add_salvage(p, pay[s->choice]);
             p->victories++;
             if (!g->campaign.version)
                 p->weapons |= BIT(15);
@@ -531,14 +531,16 @@ void game_story_read(Game *g, int player) {
         if (preparation_next_record(g, player, false))
             return;
         PLAYER_VIEW(g, p).story_reading = (uint8_t)(count - 1);
-    } else if (PLAYER_VIEW(g, p).story_reading >= count - 1 && preparation_next_record(g, player, true))
+    } else if (PLAYER_VIEW(g, p).story_reading >= count - 1 &&
+               preparation_next_record(g, player, true))
         return;
     for (unsigned n = 1; n <= count; n++) {
         unsigned at = (PLAYER_VIEW(g, p).story_reading + n) % count;
         if (at == 0 && n > 1 && preparation_next_record(g, player, true))
             return;
-        if (at < SC_STORY_SCENES ? (g->story.seen & BIT(at)) != 0
-                                : (g->chronicle.people[at - SC_STORY_SCENES].knowledge & PERSON_SEEN) != 0) {
+        if (at < SC_STORY_SCENES
+                ? (g->story.seen & BIT(at)) != 0
+                : (g->chronicle.people[at - SC_STORY_SCENES].knowledge & PERSON_SEEN) != 0) {
             PLAYER_VIEW(g, p).story_reading = (uint8_t)at;
             return;
         }
@@ -549,7 +551,8 @@ void game_story_entry(const Game *g, unsigned scene, char *text, size_t size) {
 }
 void game_story_entry_for(const Game *g, int player, unsigned scene, char *text, size_t size) {
     if (g->world.generator >= 16 && scene >= PREP_MEALS_SCENE && scene <= PREP_RECORD_SCENE) {
-        preparation_entry(g, player >= 0 && player < g->player_count ? player : 0, scene, text, size);
+        preparation_entry(g, player >= 0 && player < g->player_count ? player : 0, scene, text,
+                          size);
         return;
     }
     if (g->world.generator >= 16 && scene >= SC_STORY_SCENES) {

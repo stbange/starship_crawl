@@ -30,3 +30,7 @@ per-participant claims and no duplicate payment.
 #### Scenario: Own every offered item
 - **WHEN** a participant qualifies for a challenge whose item choices are already owned
 - **THEN** the preview offers a defined upgrade or preparation resource with an available use, and the participant can claim one reward once.
+
+#### Scenario: Earn phase growth with a temporarily absent partner
+- **WHEN** a phase guardian is defeated under the coherent rules and a participating character has temporarily left the local view
+- **THEN** each participant's stored profile receives four attribute points once, capped at 1,000, while the separate tool choice remains claimable later; the opening elite and archived rules retain their existing awards.

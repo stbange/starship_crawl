@@ -1,0 +1,42 @@
+{
+  "command": [
+    "/workspace/starship_crawl/build-e8-matched/sc_hidden_journey-specialists",
+    "0",
+    "/tmp/coherent-e8-specialists/run-00-conduit",
+    "3600",
+    "--review",
+    "--conduit"
+  ],
+  "executable_sha256": "4f11f42449cf066729c1490b36facaf9959b6d951cedba0a8b844d5c33c17355",
+  "simulated_seconds": 3600,
+  "generator": 16,
+  "checkpoint": 17,
+  "campaign": 2,
+  "concurrent_simulations": 2,
+  "returncode": 0,
+  "wall_seconds": 809.78,
+  "max_rss_kib": 18544,
+  "checkpoints": {
+    "final.sav": 51468,
+    "minute-60.sav": 51468,
+    "optional-fight.sav": 50648,
+    "minute-45.sav": 44472,
+    "resume.sav": 38224,
+    "minute-30.sav": 38224,
+    "form-4.sav": 36856,
+    "form-3.sav": 36352,
+    "form-6.sav": 33580,
+    "form-2.sav": 30924,
+    "form-8.sav": 30456,
+    "minute-15.sav": 30384,
+    "form-7.sav": 30348,
+    "form-1.sav": 29592,
+    "form-5.sav": 28620,
+    "shelter.sav": 28584,
+    "extraction.sav": 28584,
+    "unbound.sav": 28188,
+    "guardian-fight.sav": 28152,
+    "convoy-observed.sav": 28152,
+    "occupation.sav": 27612
+  }
+}

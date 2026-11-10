@@ -1,0 +1,16 @@
+RUN test_interiors_browser.py
+PASS generated interior layout0
+PASS generated interior layout1
+PASS generated interior layout2
+PASS generated interior history0
+PASS generated interior history1
+PASS generated interior history2
+PASS generated interior history3
+PASS generated interior history4
+PASS generated interior history5
+PASS generated interior landmark1
+PASS generated interior landmark2
+PASS generated interior landmark3
+PASS generated interior landmark4
+PASS generated interiors browser: all layouts/history/landmarks, maps, reachable caches, persistence, legacy/new-ship transition, mobile rendering
+PASS test_interiors_browser.py (188.9s)

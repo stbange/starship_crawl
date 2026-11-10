@@ -271,6 +271,8 @@ void game_interact(Game *g, int player);
 void game_hurt(Game *g, int player, float damage, uint32_t flags);
 void game_hostile_hit(Game *g, int player, float damage, uint32_t flags);
 float player_rank(const Player *p, unsigned rank);
+void player_add_salvage(Player *p, unsigned amount);
+void player_add_points(Player *p, unsigned amount);
 unsigned player_investment(const Player *p);
 unsigned game_upgrade_cost(const Player *p, unsigned rank);
 bool game_build_active(const Game *g, int player, BuildBranch branch);

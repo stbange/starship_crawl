@@ -1,6 +1,10 @@
 # Coherent expedition implementation evidence
 
-This is an ongoing implementation record for E1–E8, not a completed release report.
+This records the incremental E1–E7 implementation checks. The integrated
+[E8 review](e8/README.md) contains the final tuning, 25 hour-long simulations,
+comparison plots and explicit human/device evidence gaps. Statements about
+unpublished revisions and future E8 work below describe each milestone's state
+when its evidence was collected.
 
 ## E1 baseline — 10 November 2026
 

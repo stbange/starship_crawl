@@ -1,0 +1,29 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-sanitize-coherent
+Test project /workspace/starship_crawl/build-sanitize-coherent
+      Start 57: continuing_revisit_journey
+ 1/10 Test #57: continuing_revisit_journey ...................   Passed  160.65 sec
+      Start 60: staged_intro_journey
+ 2/10 Test #60: staged_intro_journey .........................   Passed  231.63 sec
+      Start 61: phase_journeys_starboard
+ 3/10 Test #61: phase_journeys_starboard .....................   Passed  191.47 sec
+      Start 62: imperfect_expeditions_starboard_responsive
+ 4/10 Test #62: imperfect_expeditions_starboard_responsive ...   Passed  202.35 sec
+      Start 63: imperfect_expeditions_starboard_cautious
+ 5/10 Test #63: imperfect_expeditions_starboard_cautious .....   Passed  315.21 sec
+      Start 64: phase_journeys_port
+ 6/10 Test #64: phase_journeys_port ..........................   Passed  380.21 sec
+      Start 65: imperfect_expeditions_port_responsive
+ 7/10 Test #65: imperfect_expeditions_port_responsive ........   Passed  388.01 sec
+      Start 66: imperfect_expeditions_port_cautious
+ 8/10 Test #66: imperfect_expeditions_port_cautious ..........   Passed  424.72 sec
+      Start 68: traversal_journeys
+ 9/10 Test #68: traversal_journeys ...........................   Passed    8.34 sec
+      Start 70: arrival_journey
+10/10 Test #70: arrival_journey ..............................   Passed    0.41 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Label Time Summary:
+gameplay    = 2303.01 sec*proc (10 tests)
+
+Total Test time (real) = 2303.01 sec

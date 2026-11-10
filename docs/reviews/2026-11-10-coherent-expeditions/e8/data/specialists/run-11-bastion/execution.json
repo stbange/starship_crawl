@@ -1,0 +1,40 @@
+{
+  "command": [
+    "/workspace/starship_crawl/build-e8-matched/sc_hidden_journey-specialists",
+    "11",
+    "/tmp/coherent-e8-specialists/run-11-bastion",
+    "3600",
+    "--review",
+    "--bastion"
+  ],
+  "executable_sha256": "4f11f42449cf066729c1490b36facaf9959b6d951cedba0a8b844d5c33c17355",
+  "simulated_seconds": 3600,
+  "generator": 16,
+  "checkpoint": 17,
+  "campaign": 2,
+  "concurrent_simulations": 2,
+  "returncode": 0,
+  "wall_seconds": 750.832,
+  "max_rss_kib": 18568,
+  "checkpoints": {
+    "final.sav": 34664,
+    "minute-60.sav": 34664,
+    "optional-fight.sav": 34628,
+    "minute-45.sav": 34492,
+    "resume.sav": 33212,
+    "minute-30.sav": 33212,
+    "form-3.sav": 32212,
+    "form-5.sav": 31744,
+    "form-1.sav": 31420,
+    "occupation.sav": 30160,
+    "minute-15.sav": 30160,
+    "form-4.sav": 29484,
+    "shelter.sav": 29124,
+    "extraction.sav": 29124,
+    "retreat-observed.sav": 29052,
+    "form-2.sav": 28836,
+    "unbound.sav": 28548,
+    "guardian-fight.sav": 28548,
+    "convoy-observed.sav": 27036
+  }
+}

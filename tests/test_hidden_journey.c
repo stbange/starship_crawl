@@ -14,8 +14,10 @@
 /* Link wrappers are confined to this review executable. The shipped core has no
    director-disable switch or profiling hook. The paired run changes only this call. */
 static bool without_director;
-static double timings[6][300000];
-static unsigned timing_count[6];
+static bool review, starter, cooperative, resource_aware;
+static unsigned specialist;
+static double timings[7][300000];
+static unsigned timing_count[7];
 static double now(void) {
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
@@ -26,6 +28,7 @@ void __real_factions_step(Game *g, double dt);
 void __real_factions_forces_step(Game *g, double dt);
 void __real_factions_tactics(Game *g, double dt);
 void __real_game_step(Game *g, const Actions *actions, double dt);
+unsigned __real_world_stream(World *w, unsigned budget);
 static void measured(unsigned kind, double elapsed) {
     if (timing_count[kind] < 300000)
         timings[kind][timing_count[kind]++] = elapsed * 1e6;
@@ -60,14 +63,20 @@ void __wrap_game_step(Game *g, const Actions *actions, double dt) {
     __real_game_step(g, actions, dt);
     measured(5, now() - start);
 }
+unsigned __wrap_world_stream(World *w, unsigned budget) {
+    double start = now();
+    unsigned work = __real_world_stream(w, budget);
+    measured(6, now() - start);
+    return work;
+}
 static int compare_time(const void *a, const void *b) {
     double x = *(const double *)a, y = *(const double *)b;
     return (x > y) - (x < y);
 }
 static void performance(void) {
-    const char *names[] = {"strategy",        "forces",   "director", "strategy_active_tick",
-                           "faction_tactics", "game_step"};
-    for (unsigned i = 0; i < 6; i++) {
+    const char *names[] = {"strategy",        "forces",    "director", "strategy_active_tick",
+                           "faction_tactics", "game_step", "stream"};
+    for (unsigned i = 0; i < 7; i++) {
         unsigned n = timing_count[i];
         if (!n)
             continue;
@@ -116,6 +125,8 @@ static double defense(const Player *p) {
     return p->health + p->armor + p->shield;
 }
 static void upgrade(Game *g, unsigned profile, Metrics *m) {
+    if (starter)
+        return;
     Player *p = &g->players[0];
     static const unsigned order[3][SC_ATTRIBUTES] = {{0, 1, 2, 3, 4, 8, 7, 5, 6, 9},
                                                      {1, 4, 0, 3, 7, 8, 2, 5, 6, 9},
@@ -162,8 +173,11 @@ static Cell exploration_goal(unsigned run, unsigned step) {
         c.x = step % 2 ? 2 : -2; /* Walk across each deck; don't just ride the lift. */
         c.z = 2 + (int)(step % 3);
     }
-    if (run == 11)
+    if (run == 11) {
         c.x = (step / 4) % 2 ? -4 : 4;
+        if (review)
+            c.z = 2 + (int)(step % 24 <= 12 ? step % 24 : 24 - step % 24);
+    }
     return c;
 }
 static bool optional_goal(Game *g, unsigned sequence, Cell *goal, int *kind) {
@@ -229,18 +243,29 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
            seed, run, routes[run], profiles[profile], reactions[profile], turns[profile],
            errors[profile], world_profile(seed), world_history(seed).cause,
            story_motivation_version(seed, g->story.version), duration);
+    printf("{\"event\":\"configuration\",\"review\":%s,\"starter\":%s,\"coop\":%s,\"resource_"
+           "aware\":%s,\"condition\":%u,\"generator\":%u,\"campaign\":%u,\"specialist\":%u}\n",
+           review ? "true" : "false", starter ? "true" : "false", cooperative ? "true" : "false",
+           resource_aware ? "true" : "false", district_condition(seed), g->world.generator,
+           g->campaign.version, specialist);
     unsigned previous_defeated = 0, previous_story = 0, previous_politics = 0;
     unsigned stage = 4, mode = 0, option_sequence = 0, previous_deaths = 0;
     unsigned aim_target = 0, recovery_ticks = 0, optional_kind = 0;
     unsigned director_sequence = 0, director_kind = 0, fight_guardian = SC_GUARDIANS;
     unsigned captured_forms = 0, last_event = 0, captured_evidence = 0;
     unsigned pressure_frames[4] = {0}, max_forces = 0, max_actors = 0;
+    unsigned branch_frames[9] = {0}, family_frames[5] = {0}, max_enemies = 0, max_projectiles = 0,
+             max_deaths = 0, max_rooms = 0, max_chunks = 0, blocked_shots = 0, partner_cells = 0;
+    double partner_distance = 0;
+    Cell partner_previous = {9999, 9999, 9999};
+    Navigation partner_nav = {0};
     uint32_t sequence_ids[SC_SEQUENCES] = {0};
     unsigned sequence_beats[SC_SEQUENCES] = {0};
+    unsigned guardian_states[SC_GUARDIANS] = {0};
     Cell previous_cell = {9999, 9999, 9999}, previous_owner = previous_cell;
     Cell optional = {0}, nav_goal = previous_cell, fight_cell = previous_cell;
     bool detour = false, returned = false, tools_prepared = false, resumed = false;
-    bool shelter_done = false, resting = false;
+    bool shelter_done = false, resting = false, retreating = false;
     double reaction = 0, stalled = 0, optional_at = 0, next_optional = 0, rest_until = 0;
     double nav_until = 0, stage_at = 0, fight_at = 0, fight_damage = 0;
     double last_upgrade = -30, last_weapon = -10, last_use = -1;
@@ -250,7 +275,12 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
     for (frame = 0; frame < duration * 60 && !g->world.failed; frame++) {
         Player *p = &g->players[0];
         Vec3 feet = position_absolute(p->pos);
-        if (!world_refresh(&g->world, &feet, 1))
+        if (cooperative && g->player_count == 1 && campaign_phase(&g->campaign) > 0)
+            game_join(g);
+        Vec3 stream_positions[SC_PLAYERS];
+        for (int i = 0; i < g->player_count; i++)
+            stream_positions[i] = position_absolute(g->players[i].pos);
+        if (!world_refresh(&g->world, stream_positions, g->player_count))
             break;
         /* Session owns the sole streaming budget for this fixed tick. */
         Cell cell = world_cell(feet);
@@ -260,11 +290,13 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
             printf("{\"event\":\"cell\",\"t\":%.3f,\"cell\":[%d,%d,%d],\"owner\":[%d,%d,%d],"
                    "\"layer\":%u,\"theme\":%u,\"district\":%u,\"form\":%u,\"volume\":%u,"
                    "\"weather\":%u,\"ecology\":%u,\"pace\":%u,\"challenge\":%u,"
-                   "\"reveal\":%u,\"country\":%u,\"court\":%u,\"height\":%.1f}\n",
+                   "\"reveal\":%u,\"country\":%u,\"court\":%u,\"height\":%.1f,\"journey_family\":%"
+                   "u,\"condition\":%u}\n",
                    g->time, cell.x, cell.y, cell.z, s.cell.x, s.cell.y, s.cell.z,
                    campaign_layer(cell), s.theme, s.district, s.habitat.form, s.habitat.volume,
                    s.habitat.atmosphere, s.habitat.ecology, s.habitat.pace, s.habitat.challenge,
-                   s.habitat.reveal, politics_owner(g, cell), s.habitat.court, s.height);
+                   s.habitat.reveal, politics_owner(g, cell), s.habitat.court, s.height,
+                   s.journey.family, s.journey.condition);
             previous_cell = cell;
             nav_until = 0;
             if (campaign_layer(cell) > m.max_layer)
@@ -288,10 +320,33 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
                    g->time, g->campaign.defeated, p->level);
             campaign_journal(g, 0);
             unsigned choice = profile == 2 && campaign_phase(&g->campaign) % 2 ? 1 : profile + 1;
-            if (!campaign_choose(g, 0, choice)) {
+            if (specialist) {
+                /* Deliberate, legal reward routes read from these seeds' offers:
+                   beam then Focus on 713; Capacitor then mech on 8675309. */
+                static const unsigned conduit[] = {1, 1, 1, 2, 3};
+                static const unsigned bastion[] = {1, 1, 1, 3, 2};
+                choice =
+                    (specialist == BUILD_FOCUS ? conduit : bastion)[campaign_phase(&g->campaign)];
+            }
+            if (starter || (review && run % 3 == 2)) {
+                GameCommand close = {.kind = CMD_CLOSE_INTERACTION, .player = game_player_id(g, 0)};
+                if (!session_command(&session, &close))
+                    abort();
+                printf("{\"event\":\"reward_deferred\",\"t\":%.3f,\"starter\":%s}\n", g->time,
+                       starter ? "true" : "false");
+                if (!starter)
+                    campaign_journal(g, 0);
+            }
+            if (!starter && !campaign_choose(g, 0, choice)) {
                 fprintf(stderr, "Reward refused at %.3f\n", g->time);
                 break;
             }
+            printf("{\"event\":\"reward\",\"t\":%.3f,\"choice\":%u,\"claimed\":%u,\"guns\":[%u,%u],"
+                   "\"powers\":%u,\"rigs\":%u,\"modules\":%u,\"branch\":%u}\n",
+                   g->time, starter ? 0 : choice, g->campaign.profiles[0].claimed,
+                   g->campaign.profiles[0].guns[0], g->campaign.profiles[0].guns[1],
+                   g->campaign.profiles[0].powers, g->campaign.profiles[0].rigs,
+                   g->campaign.profiles[0].modules, g->campaign.profiles[0].module);
             PLAYER_VIEW(g, p).journal = false;
             previous_defeated = g->campaign.defeated;
             if (campaign_phase(&g->campaign) == 4)
@@ -333,10 +388,22 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
             printf("{\"event\":\"dispatch_end\",\"t\":%.3f,\"kind\":%u}\n", g->time, director_kind);
         director_kind = g->director.kind;
         int guardian = -1;
-        for (unsigned i = 0; i < SC_GUARDIANS; i++)
+        for (unsigned i = 0; i < SC_GUARDIANS; i++) {
             if (g->campaign.attempts[i].active)
                 guardian = (int)i;
+            const GuardianAttempt *attempt_state = &g->campaign.attempts[i];
+            unsigned state = attempt_state->active ? 1 + (unsigned)attempt_state->stage : 0;
+            if (state != guardian_states[i]) {
+                printf("{\"event\":\"guardian_stage\",\"t\":%.3f,\"guardian\":%u,"
+                       "\"active\":%s,\"stage\":%u}\n",
+                       g->time, i, attempt_state->active ? "true" : "false",
+                       (unsigned)attempt_state->stage);
+                guardian_states[i] = state;
+            }
+        }
         bool arena = room && room->frontier_active;
+        if (!arena)
+            retreating = false;
         bool fighting = guardian >= 0 || arena;
         if (fighting && fight_guardian == SC_GUARDIANS && fight_cell.x == 9999) {
             fight_guardian = guardian >= 0 ? (unsigned)guardian : SC_GUARDIANS;
@@ -399,6 +466,15 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
                        optional_kind);
                 m.skipped++;
                 detour = false;
+                if (arena) {
+                    /* A declined optional fight must actually release its
+                       circling policy so ordinary movement can leave it. */
+                    retreating = true;
+                    stage++;
+                    stage_at = g->time;
+                    nav_until = 0;
+                    printf("{\"event\":\"detour_retreat\",\"t\":%.3f}\n", g->time);
+                }
                 goal = exploration_goal(run, stage);
                 next_optional = g->time + 160;
             }
@@ -425,12 +501,12 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
             Vec3 center = world_center(campaign_site((unsigned)guardian));
             waypoint = vadd(center, v3(sin(g->time * .65) * 10, 0, cos(g->time * .65) * 10));
             m.guardian_frames++;
-        } else if (arena) {
+        } else if (arena && !retreating) {
             Vec3 center = world_center(room->cell);
             waypoint = vadd(center, v3(sin(g->time * .6) * 5, 0, 2 + cos(g->time * .6) * 3));
             if (room->habitat.challenge == CH_CIRCUIT && room->circuit != 3)
                 waypoint = frontier_pylon(room, room->circuit & 1 ? 1 : 0);
-            if (profile == 2) {
+            if (profile == 2 && !starter) {
                 if (room->habitat.challenge == CH_AERIE && campaign_power(g, 0, PSI_FLIGHT)) {
                     if (p->flight <= 0 && p->energy >= 20)
                         game_psionic(g, 0, PSI_FLIGHT);
@@ -441,7 +517,8 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
                     game_psionic(g, 0, PSI_NOVA);
             }
         }
-        if (profile == 2 && here && optional_kind == 1 && detour && !tools_prepared && !arena) {
+        if (!starter && !specialist && profile == 2 && here && optional_kind == 1 && detour &&
+            !tools_prepared && !arena) {
             prepare_tools(g, room->habitat.challenge);
             tools_prepared = true;
         }
@@ -452,8 +529,10 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
                 game_rig_toggle(g, 0, rig);
         }
         if (arena && profile == 2 && !p->riding && frame % 120 == 0 &&
-            (room->habitat.challenge == CH_SIEGE || room->habitat.challenge == CH_CIRCUIT)) {
-            RigKind rig = room->habitat.challenge == CH_SIEGE ? MECH : WAGON;
+            (specialist == BUILD_CAPACITOR || room->habitat.challenge == CH_SIEGE ||
+             room->habitat.challenge == CH_CIRCUIT)) {
+            RigKind rig =
+                specialist == BUILD_CAPACITOR || room->habitat.challenge == CH_SIEGE ? MECH : WAGON;
             if (campaign_rig(g, 0, rig)) {
                 game_rig_toggle(g, 0, rig);
                 game_rig_interact(g, 0);
@@ -555,9 +634,13 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
                         break;
                     }
             }
-            select_weapon(g, weapon);
+            if (specialist == BUILD_FOCUS && second >= 16 && second <= 18)
+                weapon = second;
+            select_weapon(g, starter ? 0 : weapon);
             last_weapon = g->time;
         }
+        if (resource_aware && p->weapon && p->energy < sc_weapons[p->weapon].cost * 2)
+            select_weapon(g, 0);
         if (target != aim_target) {
             aim_target = target;
             reaction = reactions[profile];
@@ -639,11 +722,60 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
         }
         float hp = p->health, sh = p->shield, ar = p->armor;
         unsigned rank = p->level, shots = g->shots;
+        blocked_shots += actions[0].fire && p->energy < game_gun(p)->cost;
+        if (g->player_count == 2) {
+            Player *other = &g->players[1];
+            Vec3 other_feet = position_absolute(other->pos);
+            if (frame % 30 == 0)
+                game_navigation_to(g, 1, (Cell){-4, 1, 4}, &partner_nav);
+            Vec3 move = vsub(partner_nav.point, other_feet);
+            move.y = 0;
+            if (partner_nav.kind == NAV_LIFT && vlen(move) < 1.4 && !other->lift_latched) {
+                actions[1].lift_up = world_cell(other_feet).y < 1;
+                actions[1].lift_down = world_cell(other_feet).y > 1;
+            }
+            if (vlen(move) > .8) {
+                Vec3 direction = vnorm(move);
+                actions[1].forward =
+                    (float)vdot(direction, v3(sin(other->yaw), 0, cos(other->yaw)));
+                actions[1].strafe =
+                    (float)vdot(direction, v3(cos(other->yaw), 0, -sin(other->yaw)));
+            }
+            actions[1].crouch =
+                world_describe_version(seed, g->world.generator, world_cell(other_feet)).height < 2;
+            Cell current = world_cell(other_feet);
+            if (!cell_equal(current, partner_previous)) {
+                partner_cells++;
+                partner_previous = current;
+            }
+            partner_distance = fmax(partner_distance, vlen(vsub(feet, other_feet)));
+        }
         session_sync(&session);
         for (unsigned i = 0; i < g->player_count; i++)
             if (!session_input(&session, game_player_id(g, (int)i), &actions[i]))
                 abort();
         session_tick(&session);
+        if (g->campaign.profiles[0].module <= 8 &&
+            game_build_active(g, 0, (BuildBranch)g->campaign.profiles[0].module))
+            branch_frames[g->campaign.profiles[0].module]++;
+        Room *resident = world_find(&g->world, world_cell(position_absolute(p->pos)));
+        if (resident && resident->journey.family <= 4)
+            family_frames[resident->journey.family]++;
+        if (frame % 60 == 0) {
+            unsigned enemies = 0, projectiles = 0, deaths = 0;
+            for (int ri = 0; ri < g->world.count; ri++)
+                for (int ei = 0; ei < g->world.rooms[ri].enemy_count; ei++)
+                    enemies += g->world.rooms[ri].enemies[ei].alive;
+            for (int i = 0; i < SC_MAX_PROJECTILES; i++)
+                projectiles += g->projectiles[i].active;
+            for (int i = 0; i < SC_MAX_DEATHS; i++)
+                deaths += g->deaths[i].active;
+            max_enemies = (unsigned)fmax(max_enemies, enemies);
+            max_projectiles = (unsigned)fmax(max_projectiles, projectiles);
+            max_deaths = (unsigned)fmax(max_deaths, deaths);
+            max_rooms = (unsigned)fmax(max_rooms, g->world.count);
+            max_chunks = (unsigned)fmax(max_chunks, g->world.chunk_count);
+        }
         for (unsigned s = 0; s < SC_SEQUENCES; s++) {
             const HiddenSequence *q = &g->rhythm.sequences[s];
             if (q->identity != sequence_ids[s] || (unsigned)q->beat != sequence_beats[s]) {
@@ -717,6 +849,10 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
             nav_until = 0;
         }
         if (frame % 1800 == 0 || frame == duration * 60 - 1) {
+            printf("{\"event\":\"build_sample\",\"t\":%.3f,\"invested\":%u,\"branch\":%u,"
+                   "\"chapter\":%u,\"world_records\":%zu,\"players\":%d}\n",
+                   g->time, player_investment(p), g->campaign.profiles[0].module, g->story.chapter,
+                   g->world.record_count, g->player_count);
             printf("{\"event\":\"sample\",\"t\":%.3f,\"cell\":[%d,%d,%d],\"mode\":%u,"
                    "\"stage\":%u,\"kills\":%u,\"deaths\":%u,\"rank\":%u,\"phase\":%u,"
                    "\"health\":%.2f,\"shield\":%.2f,\"armor\":%.2f,\"energy\":%.2f,"
@@ -790,6 +926,18 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
            max_forces, max_actors, pressure_frames[0], pressure_frames[1], pressure_frames[2],
            pressure_frames[3], factions_valid(&g->factions, 14) ? "true" : "false");
     performance();
+    printf(
+        "{\"event\":\"breadth_summary\",\"max_rooms\":%u,\"max_chunks\":%u,\"max_enemies\":%u,"
+        "\"max_projectiles\":%u,\"max_deaths\":%u,\"blocked_shot_seconds\":%.3f,\"partner_cells\":%"
+        "u,\"partner_max_distance\":%.2f,\"world_records\":%zu,\"invested\":%u,\"branch_frames\":[",
+        max_rooms, max_chunks, max_enemies, max_projectiles, max_deaths, blocked_shots / 60.0,
+        partner_cells, partner_distance, g->world.record_count, player_investment(p));
+    for (unsigned i = 0; i < 9; i++)
+        printf("%s%u", i ? "," : "", branch_frames[i]);
+    printf("],\"district_frames\":[");
+    for (unsigned i = 0; i < 5; i++)
+        printf("%s%u", i ? "," : "", family_frames[i]);
+    printf("]}\n");
     printf("{\"event\":\"sequence_summary\",\"started\":%u,\"completed\":%u,\"cancelled\":%u,"
            "\"reserved\":%u,\"budget\":%u,\"valid\":%s}\n",
            g->rhythm.next_id, g->rhythm.completed, g->rhythm.cancelled, rhythm_reserved(&g->rhythm),
@@ -802,13 +950,31 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
     return ok ? 0 : 1;
 }
 int main(int argc, char **argv) {
-    if (argc < 3 || argc > 5)
+    if (argc < 3 || argc > 9)
         return 2;
     unsigned run = (unsigned)strtoul(argv[1], NULL, 10);
-    without_director = argc == 5 && !strcmp(argv[4], "--no-director");
+    for (int i = 4; i < argc; i++) {
+        if (!strcmp(argv[i], "--no-director"))
+            without_director = true;
+        else if (!strcmp(argv[i], "--review"))
+            review = true;
+        else if (!strcmp(argv[i], "--starter"))
+            starter = true;
+        else if (!strcmp(argv[i], "--coop"))
+            cooperative = true;
+        else if (!strcmp(argv[i], "--resource-aware"))
+            resource_aware = true;
+        else if (!strcmp(argv[i], "--conduit"))
+            specialist = BUILD_FOCUS;
+        else if (!strcmp(argv[i], "--bastion"))
+            specialist = BUILD_CAPACITOR;
+        else
+            return 2;
+    }
     mkdir(argv[2], 0755);
     unsigned duration = argc >= 4 ? (unsigned)strtoul(argv[3], NULL, 10) : 3600;
-    if (run >= 12 || !duration || duration > 7200)
+    if (run >= 12 || !duration || duration > 7200 || (specialist && starter) ||
+        (specialist == BUILD_FOCUS && run != 0) || (specialist == BUILD_CAPACITOR && run != 11))
         return 2;
     return journey(run, argv[2], duration);
 }

@@ -164,6 +164,40 @@ static void claims(void) {
     g->players[0].points = 999;
     campaign_grant(g, 0, (CampaignReward){REWARD_MODULE, BUILD_FIELD});
     CHECK(g->players[0].credits == 1000000 && g->players[0].points == 1000);
+    /* A participant who has left split screen still receives their stored award. */
+    g->player_count = 1;
+    g->campaign.attempts[0].participants = 3;
+    g->players[0].points = 999;
+    g->players[1].points = 7;
+    campaign_defeat(g, 0);
+    CHECK(g->players[0].points == 1000 && g->players[1].points == 11);
+    campaign_defeat(g, 0);
+    CHECK(g->players[0].points == 1000 && g->players[1].points == 11);
+    g->campaign.version = 1;
+    g->campaign.attempts[1].participants = 3;
+    campaign_defeat(g, 1);
+    CHECK(g->players[1].points == 11);
+    finish(g);
+}
+static void reward_bounds(void) {
+    Game *g = fresh(), *copy = fresh();
+    Player *p = &g->players[0];
+    p->points = 999;
+    p->credits = 999999;
+    g->mission_kills = 12;
+    game_progression_step(g, .02);
+    CHECK(p->points == 1000 && p->credits == 1000000 && (g->contracts & 1));
+    CHECK(game_save(g, "bounded-rewards.sav") && game_load(copy, "bounded-rewards.sav"));
+    CHECK(copy->players[0].points == 1000 && copy->players[0].credits == 1000000);
+    player_add_salvage(p, UINT32_MAX);
+    player_add_points(p, UINT32_MAX);
+    CHECK(p->points == 1000 && p->credits == 1000000);
+    p->rules = 0;
+    player_add_salvage(p, 1);
+    player_add_points(p, 1);
+    CHECK(p->points == 1001 && p->credits == 1000001);
+    remove("bounded-rewards.sav");
+    finish(copy);
     finish(g);
 }
 static void effects(void) {
@@ -408,6 +442,7 @@ static void recipes(void) {
 int main(void) {
     rules();
     claims();
+    reward_bounds();
     effects();
     recipes();
     puts("PASS coherent growth, legacy saves, branch gates, relays, decoys, charge and snapshots");

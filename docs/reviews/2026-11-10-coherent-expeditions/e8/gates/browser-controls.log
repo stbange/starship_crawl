@@ -1,0 +1,15 @@
+browser / controls: 4 tests: test_foundation_browser.py, test_guidance_browser.py, test_phases_browser.py, test_onboarding_browser.py
+RUN test_foundation_browser.py
+PASS foundation desktop: persisted settings, import/new-ship independence, cached split targets, gamepad ownership and focus
+PASS foundation traversal: actual keyboard stair/ramp ascent and split-screen lift, safe IndexedDB ride snapshot and round trip
+PASS foundation mobile: rotation/cancellation clear held touches and fresh input/settings and touch lifts remain usable
+PASS test_foundation_browser.py (266.6s)
+RUN test_guidance_browser.py
+PASS navigation WebGL: held lift, release and return, independent co-op, bounded maps and responsive HUD
+PASS test_guidance_browser.py (108.5s)
+RUN test_phases_browser.py
+PASS phased WebGL: fresh builds, keyboard routes/rewards/refit, retry, phase map, legacy/new ship and mobile reward persistence
+PASS test_phases_browser.py (247.7s)
+RUN test_onboarding_browser.py
+PASS staged onboarding WebGL: progressive controls, optional saved guidance, earned safe matrix link, legacy and touch
+PASS test_onboarding_browser.py (168.5s)

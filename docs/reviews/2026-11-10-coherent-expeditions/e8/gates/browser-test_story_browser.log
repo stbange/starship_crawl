@@ -1,0 +1,3 @@
+RUN test_story_browser.py
+PASS narrative browser: four briefings, physical origin discovery, dossier, map lead, old/new IndexedDB saves, direct and containment decisions, mobile locked/prepared choices
+PASS test_story_browser.py (403.2s)

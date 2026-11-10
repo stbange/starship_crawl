@@ -2,7 +2,7 @@ Starship Crawl is a first-person, procedurally generated space dungeon crawler w
 
 This document records the agreed direction and the longer-term implementation plan. The README describes the implemented prototype and its current validation status.
 
-## Current next plan: coherent expeditions — 2026-11-10
+## Coherent expeditions — implementation 2026-11-10
 
 The ten accepted design proposals now form one experience: **discover a district,
 understand its problem, choose a challenge, earn a distinctive capability, prepare,
@@ -12,7 +12,13 @@ environmental rules, recurring individuals, hidden conflicts and meaningful rewa
 The existing four phases ease the player from exploration and shooting into the
 deeper combinations. New ships still start fresh characters.
 
-This is the active implementation plan; **E1–E8 are not implemented yet**.
+E1–E8 gameplay is implemented. The
+[integrated review](docs/reviews/2026-11-10-coherent-expeditions/e8/README.md)
+records balance comparisons, automated platform checks and the remaining human
+and physical-device validation.
+The [playable behavior](COHERENT_EXPEDITIONS.md) and
+[implementation evidence](docs/reviews/2026-11-10-coherent-expeditions/README.md)
+describe the shipped mechanics and distinguish automated checks from human review.
 The [full design](openspec/changes/coherent-expedition-experience/design.md)
 contains the player journey, content limits, dependencies, compatibility strategy
 and playtest criteria. The [OpenSpec proposal](openspec/changes/coherent-expedition-experience/proposal.md),
@@ -29,12 +35,13 @@ make the work reviewable and trackable.
 | E5. A useful home | Optional meals, bounded expedition projects, safe respec and recovered keepsakes |
 | E6. An expedition rhythm | Conditional anticipation-to-aftermath director sequences; the complete integrated slice checkpoint |
 | E7. Ships worth replaying | Three ship conditions, four district families, eight specialization branches and four guardian patterns across the existing phases |
-| E8. Balance and release evidence | Long comparative simulations, human playtests, performance/readability tuning and platform checks |
+| E8. Balance and release evidence | Comparative simulations, growth/reward tuning, measured frame times, platform checks and a human playtest protocol with unavailable sessions explicitly listed |
 
-Implement in this order, keeping tests, saves and controls alongside each milestone.
-The first six milestones prove one complete district before expanding its
-combinations. Existing expeditions keep their rules; implementation assigns new
-versions as needed. Solo, optional local co-op, Linux, Windows, ordinary web/mobile
+The milestones were implemented in this order, keeping tests, saves and controls
+alongside each feature. The first six established the Drowned Foundry slice before
+expanding its combinations. New expeditions use generator 16, campaign 2 and save
+17; live snapshots use schema version 2. Existing expeditions keep their rules.
+Solo, optional local co-op, Linux, Windows, ordinary web/mobile
 and the isolated Quest target remain supported. Human and device evidence is
 reported separately from automation.
 
@@ -78,8 +85,8 @@ and a controlled navigation comparison. Its proposed next priorities are growth
 and recovery tuning, stronger finales, clearer patrol consequences and rewards
 that remain useful. The approved coherent-expedition plan above now incorporates
 growth/recovery tuning, stronger guardians and useful preparation rewards. Those
-changes remain planned. The faction/director correction below records its already
-completed implementation and supplies the foundation for E4 and E6.
+changes are now implemented. The faction/director correction below records the
+earlier implementation that supplies the foundation for E4 and E6.
 
 ## Hidden factions and invisible director — implementation 2026-11-08
 
