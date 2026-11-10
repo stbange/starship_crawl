@@ -224,7 +224,7 @@ static void quest_menu(void) {
             game_story_line(&app.game, i, line, sizeof(line));
             quest_line(line);
         }
-        game_story_entry(&app.game, PLAYER_VIEW(&app.game, p).story_reading, line, sizeof(line));
+        game_story_entry_for(&app.game, 0, PLAYER_VIEW(&app.game, p).story_reading, line, sizeof(line));
         quest_line(line);
         quest_add(81, "TRACK NEXT STORY LEAD");
         quest_add(83, "READ NEXT FIELD RECORD");
@@ -233,7 +233,9 @@ static void quest_menu(void) {
                 snprintf(line, sizeof(line), "%u: %s", i, game_story_choice_for(&app.game, 0, i));
                 quest_line(line);
                 if (i == 3 && !game_story_choice_ready(&app.game, 0))
-                    quest_line(PLAYER_INTERACTION(&app.game, p).decision_scene >= SC_STORY_SCENES
+                    quest_line(PLAYER_INTERACTION(&app.game, p).decision_scene >= PREP_MEALS_SCENE
+                                  ? "REVIEW COSTS AND REQUIRED DISCOVERIES / EQUIPMENT"
+                                  : PLAYER_INTERACTION(&app.game, p).decision_scene >= SC_STORY_SCENES
                                    ? "REQUIRES 60 SALVAGE OR RESTORED POWER"
                                    : "THIRD OUTCOME REQUIRES OPTIONAL PREPARATION");
                 quest_add(89 + (int)i, line);

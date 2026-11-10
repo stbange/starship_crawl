@@ -63,7 +63,7 @@ bool game_save(const Game *g, const char *path) {
         if (players[i].lift_active && players[i].riding)
             rigs[i][players[i].riding - 1].pos = players[i].lift_from;
     memcpy(flares, g->flares, sizeof(flares));
-    sc_save_equipment(&s, players, rigs, flares, false);
+    sc_save_equipment(&s, players, rigs, flares, false, g->world.generator >= 16);
     Story story = g->story;
     sc_save_narrative(&s, &story, false, 10);
     sc_save_aftermath(&s, &story, players, g->world.records, g->world.record_count, false, 10);
@@ -110,6 +110,8 @@ bool game_save(const Game *g, const char *path) {
     if (g->world.generator >= 16) {
         Chronicle chronicle = g->chronicle;
         sc_save_chronicle(&s, &chronicle, false);
+        Home home = g->home;
+        sc_save_preparation(&s, &home, false);
         hash = s.hash;
     }
     sc_save_number(&s, hash, false);

@@ -237,6 +237,7 @@ void game_attach_flare(Game *g, int owner, Vec3 point, Vec3 direction) {
                               .power = 2.5f + .75f * p->flare_strength,
                               .owner = (uint32_t)owner,
                               .active = true};
+    preparation_flare(g, owner, (unsigned)slot);
     g->dirty = true;
 }
 void game_equipment_step(Game *g, double dt) {

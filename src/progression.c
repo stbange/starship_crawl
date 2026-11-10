@@ -61,8 +61,9 @@ static void hurt(Game *g, int player, float damage, uint32_t flags, bool hostile
         (!campaign_engaged(g, player) &&
          (game_story_safe(g, position_absolute(p->pos)) || matrix_protected(g, player))))
         return;
+    damage = preparation_damage(g, player, damage, flags);
     if (flags & CHILL)
-        p->slow = 2;
+        p->slow = g->world.generator >= 16 && g->home.personal[player].meal == MEAL_WARM ? 1 : 2;
     if (flags & DRAIN)
         p->energy = fmaxf(0, p->energy - damage);
     float shield = fminf(damage, p->shield);
@@ -136,7 +137,7 @@ void game_interact(Game *g, int player) {
         return;
     }
     Player *p = &g->players[player];
-    if (chronicle_interact(g, player) || district_interact(g, player))
+    if (preparation_interact(g, player) || chronicle_interact(g, player) || district_interact(g, player))
         return;
     if (game_rig_interact(g, player))
         return;

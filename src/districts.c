@@ -299,6 +299,7 @@ void district_step(Game *g, double dt) {
                     game_message(
                         g, "DROWNED FOUNDRY / FOLLOW THE SUSPENDED REACTOR / POWER WAKES MACHINES");
                 }
+                preparation_observe(g, r);
             }
         float before = r->district_arc;
         r->district_arc = fmaxf(0, before - (float)dt);
@@ -308,7 +309,7 @@ void district_step(Game *g, double dt) {
             if (!g->players[p].sheltered && !g->matrix.divers[p].active &&
                 district_wet(r, position_absolute(g->players[p].pos)) &&
                 position_absolute(g->players[p].pos).x < world_center(r->cell).x)
-                game_hurt(g, p, (float)dt * 14, 0);
+                game_hurt(g, p, (float)dt * 14, HURT_ELECTRIC);
         for (int e = 0; e < r->enemy_count; e++)
             if (r->enemies[e].alive && district_wet(r, position_absolute(r->enemies[e].pos)) &&
                 r->district_owner &&

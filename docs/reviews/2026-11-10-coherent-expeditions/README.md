@@ -218,3 +218,35 @@ Both generator-15 and generator-16 rejection paths are checked transactionally.
 [touch choice](captures/coherent-mobile-refuge.png),
 [Quest emulation](captures/coherent-refuge-stereo.png).
 Human judgments about emotional impact and physical Quest testing remain pending.
+
+## E5 — sanctuary preparation
+
+The three optional meals, shared refit/calibration/research projects and six
+keepsake shelves are implemented. Tests exercise zero-resource bed/medical/stew
+recovery, personal replacement and paused timers, safe point conservation,
+unchanged equipment eligibility, stale co-op quotes, calibrated flare attachment,
+actual-presence observation, overflow field records, new-ship clearing and
+transactional persistence. This adds no mandatory maintenance to shelter visits.
+
+The native Mesa fixture shows the locker-side project bench; WebGL checks use
+real keyboard, controller and touch actions. Quest checks import a labelled
+post-guardian fixture, use the grip/menu controls and draw both eyes. These are
+automated fixtures, not physical-headset or human usability results. The paired
+inhabitant revisit and guardian gameplay tests also pass (22.89 seconds wall).
+
+Final E5 gate: 42 unit CTests pass; unit-only coverage is **12,572/12,831
+(98.0%)**, with every executable source >=95%. The preparation logic and its
+checkpoint appendix both measure 100%. Strict specifications, snapshot schema,
+CI inventory and tooling checks pass. The ordinary WebGL facility suite passes
+in 75.2 seconds and isolated Quest emulation in 13.4 seconds. Native capture
+uses the explicit `home2` inspection scene; an earlier smoke invocation with a
+save directory deliberately skipped loading because smoke mode disables saves,
+and is not counted as facility evidence. The browser harness now accepts the
+existing save-import confirmation.
+
+[Zero-resource choices](captures/coherent-home-zero.png),
+[prepared meal](captures/coherent-home-meal.png),
+[project research](captures/coherent-home-projects.png),
+[native bench](captures/coherent-home-projects-native.png),
+[touch](captures/coherent-home-mobile.png),
+[Quest emulation](captures/coherent-home-meals-stereo.png).

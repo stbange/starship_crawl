@@ -14,6 +14,8 @@ Inside, approach a facility and press **G / USE**:
 | Medical station, ahead right | Restores health and repairs armor immediately. |
 | Kitchen, on the left | Cooks stocked stargrain stew, heals 30% of maximum health, and adds 3 health per second to normal recovery for 120 seconds. |
 | Network workstation, near the entrance on the right | After recovering a matrix interface, C or G enters the local ship matrix while your body remains safe. Disconnect returns to the same sanctuary position; see [HACKING.md](HACKING.md). |
+| Dining place | Optional 30-salvage meals: electrical resistance, cold resistance or energy recovery for five minutes outside. |
+| Locker-side project bench | Shared refit bench, flare calibrator and observed-condition research; priced choices before purchase. |
 | Interior doorway, behind the arrival point | Returns you to the ship at your own entry position and restores your camera orientation. |
 
 The pantry is stocked; food does not require ingredients and there is no hunger penalty. Recovery stays within your upgraded capacities. Weapons are holstered inside. Enemies and their projectiles remain in the ship, and sanctuary occupants cannot collect outside caches. The network workstation can remotely complete mapped preparation and system operations through the matrix; final physical story decisions stay at their targets.
@@ -25,3 +27,5 @@ You can save inside and resume there safely. Format 10 stores the doorway, inter
 For inspection, `--scene shelter --no-save` opens the sanctuary without writing a save. Add `--split` to see a second character outside the door. Automated unit, campaign, browser, and native render checks are described in [TESTING.md](TESTING.md).
 
 The medical station also repairs both of your fold rigs, whether parked or packed. Dismount before deploying the shelter. See [EQUIPMENT.md](EQUIPMENT.md).
+
+Generator-16 expeditions add optional preparation and six outcome keepsakes; free recovery remains unchanged. See [current preparation rules](COHERENT_EXPEDITIONS.md#e5--useful-shelter-preparation). These additions use checkpoint format 17.

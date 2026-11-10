@@ -107,6 +107,10 @@ bool game_story_prepared(const Game *g) {
            (g->story.version >= 3 && g->story.council == 3);
 }
 const char *game_story_title(const Game *g, unsigned scene) {
+    if (g->world.generator >= 16 && scene >= PREP_MEALS_SCENE && scene <= PREP_RECORD_SCENE)
+        return scene == PREP_MEALS_SCENE ? "THE FOLD / OPTIONAL MEALS"
+               : scene == PREP_PROJECTS_SCENE ? "THE FOLD / EXPEDITION PROJECTS"
+                                              : "DISTRICT OUTCOME RECORD";
     if (g->world.generator >= 16 && scene >= SC_STORY_SCENES &&
         scene < SC_STORY_SCENES + g->chronicle.count)
         return chronicle_name(&g->chronicle.people[scene - SC_STORY_SCENES]);
@@ -451,6 +455,9 @@ static const char *primary_choice(const Game *g, unsigned choice) {
 }
 const char *game_story_choice_for(const Game *g, int player, unsigned choice) {
     if (player >= 0 && player < g->player_count &&
+        g->interactions[player].decision_scene >= PREP_MEALS_SCENE)
+        return preparation_option(g, player, choice);
+    if (player >= 0 && player < g->player_count &&
         g->interactions[player].decision_scene >= SC_STORY_SCENES)
         return chronicle_option(g, player, choice);
     if (g->story.version >= 3 && player >= 0 && player < g->player_count &&
@@ -464,6 +471,9 @@ const char *game_story_choice(const Game *g, unsigned choice) {
 }
 bool game_story_choice_ready(const Game *g, int player) {
     if (player >= 0 && player < g->player_count &&
+        g->interactions[player].decision_scene >= PREP_MEALS_SCENE)
+        return preparation_ready(g, player);
+    if (player >= 0 && player < g->player_count &&
         g->interactions[player].decision_scene >= SC_STORY_SCENES)
         return chronicle_ready(g, player);
     if (g->story.version >= 3 && player >= 0 && player < g->player_count &&
@@ -475,6 +485,8 @@ bool game_story_choice_ready(const Game *g, int player) {
 bool game_story_choose(Game *g, int player, unsigned choice) {
     if (player < 0 || player >= g->player_count)
         return false;
+    if (g->interactions[player].decision_scene >= PREP_MEALS_SCENE)
+        return preparation_choose(g, player, choice);
     if (g->interactions[player].decision_scene >= SC_STORY_SCENES)
         return chronicle_choose(g, player, choice);
     unsigned scene = game_story_near(g, player);
@@ -515,8 +527,16 @@ void game_story_read(Game *g, int player) {
         return;
     Player *p = &g->players[player];
     unsigned count = SC_STORY_SCENES + (g->world.generator >= 16 ? g->chronicle.count : 0);
+    if (PLAYER_VIEW(g, p).story_reading == PREP_RECORD_SCENE) {
+        if (preparation_next_record(g, player, false))
+            return;
+        PLAYER_VIEW(g, p).story_reading = (uint8_t)(count - 1);
+    } else if (PLAYER_VIEW(g, p).story_reading >= count - 1 && preparation_next_record(g, player, true))
+        return;
     for (unsigned n = 1; n <= count; n++) {
         unsigned at = (PLAYER_VIEW(g, p).story_reading + n) % count;
+        if (at == 0 && n > 1 && preparation_next_record(g, player, true))
+            return;
         if (at < SC_STORY_SCENES ? (g->story.seen & BIT(at)) != 0
                                 : (g->chronicle.people[at - SC_STORY_SCENES].knowledge & PERSON_SEEN) != 0) {
             PLAYER_VIEW(g, p).story_reading = (uint8_t)at;
@@ -525,6 +545,13 @@ void game_story_read(Game *g, int player) {
     }
 }
 void game_story_entry(const Game *g, unsigned scene, char *text, size_t size) {
+    game_story_entry_for(g, 0, scene, text, size);
+}
+void game_story_entry_for(const Game *g, int player, unsigned scene, char *text, size_t size) {
+    if (g->world.generator >= 16 && scene >= PREP_MEALS_SCENE && scene <= PREP_RECORD_SCENE) {
+        preparation_entry(g, player >= 0 && player < g->player_count ? player : 0, scene, text, size);
+        return;
+    }
     if (g->world.generator >= 16 && scene >= SC_STORY_SCENES) {
         chronicle_entry(g, scene - SC_STORY_SCENES, text, size);
         return;

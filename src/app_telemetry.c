@@ -388,5 +388,12 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              near_person >= 0 ? (unsigned)app.game.chronicle.people[near_person].fate : 0,
              near_person >= 0 ? app.game.chronicle.people[near_person].knowledge : 0,
              app.game.interactions[0].decision_open ? "true" : "false");
+    used = strlen(result) - 1;
+    snprintf(result + used, sizeof(result) - used,
+             ",\"meal\":%u,\"meal_seconds\":%.2f,\"home_projects\":%u,\"home_research\":%u,"
+             "\"keepsakes\":%u,\"flare_prepared\":%s}",
+             (unsigned)app.game.home.personal[0].meal, app.game.home.personal[0].remaining,
+             app.game.home.projects, app.game.home.researched, app.game.home.keepsake_count,
+             app.game.home.personal[0].flare_charge ? "true" : "false");
     return result;
 }

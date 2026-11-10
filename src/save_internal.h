@@ -21,7 +21,7 @@ void sc_save_profile(Stream *s, Player *p, bool read, unsigned version);
 void sc_save_sanctuary(Stream *s, Shelter *shelter, Player *players, bool read);
 void sc_save_powers(Stream *s, Player *players, bool read);
 void sc_save_equipment(Stream *s, Player *players, Rig rigs[SC_LEGACY_PLAYERS][2], Flare *flares,
-                       bool read);
+                       bool read, bool coherent);
 void sc_save_narrative(Stream *s, Story *story, bool read, unsigned version);
 void sc_save_aftermath(Stream *s, Story *story, Player *players, RoomRecord *records, size_t count,
                        bool read, unsigned version);
@@ -30,6 +30,7 @@ void sc_save_campaign_stream(Stream *s, Campaign *c, bool read);
 void sc_save_politics_stream(Stream *s, Politics *p, Director *d, bool read);
 void sc_save_factions_stream(Stream *s, Factions *f, bool read);
 void sc_save_chronicle(Stream *s, Chronicle *c, bool read);
+void sc_save_preparation(Stream *s, Home *h, bool read);
 typedef struct {
     World *world;
     MatrixState *matrix;
@@ -40,6 +41,7 @@ typedef struct {
     Shelter shelter;
     Story story;
     Chronicle chronicle;
+    Home home;
     Campaign campaign;
     FrontierProgress frontier;
     Politics politics;

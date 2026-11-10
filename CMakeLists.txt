@@ -277,6 +277,10 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME coherent_districts COMMAND sc_district_tests)
   set_tests_properties(coherent_districts PROPERTIES LABELS "unit" TIMEOUT 120)
   add_executable(sc_chronicle_tests tests/test_chronicle.c)
+  add_executable(sc_preparation_tests tests/test_preparation.c)
+  target_link_libraries(sc_preparation_tests PRIVATE sc_core)
+  add_test(NAME shelter_preparation COMMAND sc_preparation_tests)
+  set_tests_properties(shelter_preparation PROPERTIES LABELS "unit" TIMEOUT 120)
   target_link_libraries(sc_chronicle_tests PRIVATE sc_core)
   add_test(NAME continuing_inhabitants COMMAND sc_chronicle_tests)
   set_tests_properties(continuing_inhabitants PROPERTIES LABELS "unit" TIMEOUT 120)
@@ -364,6 +368,7 @@ set(SC_APP_SOURCES
   src/render_matrix_scene.c
   src/render_campaign_scene.c
   src/render_districts.c
+  src/render_preparation.c
   src/render_navigation.c
   src/render_encounters.c
   src/render_politics.c

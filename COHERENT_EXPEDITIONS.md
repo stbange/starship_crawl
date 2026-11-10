@@ -139,3 +139,31 @@ interrupts production. A repair crew returns independently. Existing physical
 combat, distant travel, ownership, wreckage and damaged/repaired machinery show
 these outcomes; no strategy-management interface is added. Both physical and
 matrix power operations update the same faction resource facts.
+
+## E5 — useful shelter preparation
+
+The earned fold keeps its free bed, medicine and basic stew. Use G at the dining
+place for optional meals, or the locker-side bench for projects. Each meal costs
+30 salvage and lasts five minutes outside the fold: insulated broth halves
+conductive electrical damage, ember stew halves cold damage and slowing duration,
+and charged tea restores six additional energy per second. Only one meal is
+active per character; replacing it is a deliberate purchase. Shelter time pauses
+its duration. An identical active meal cannot charge again.
+
+The shared refit bench costs 250 salvage to build. A personal refit then costs 25,
+returns every invested attribute point and clamps resources to their new
+capacities, without healing or unlocking equipment. The shared flare calibrator
+costs 200 and requires an earned flare cannon. Subsequent personal preparations
+cost 75: the next successfully attached flare lasts twice as long and shines 50%
+more strongly, with the existing light count and radius limits. A miss retains
+the preparation. Research costs 100 per physically observed ship condition and
+records its counterplay. Unknown conditions cannot be researched. Shared projects
+charge only their purchaser; a partner with an outdated menu must review the
+updated choices before confirming.
+
+Six fixed shelves recall actual district outcomes. Repeated visits update the
+same keepsake, without rewards; additional outcomes remain in the I/L field
+records. Projects, meals, preparations, research and keepsakes belong to the
+current expedition and survive save/import, then clear with a new ship.
+`home0`, `home1` and `home2` are explicitly earned visual fixtures for free
+recovery, optional meals and late-expedition preparation.

@@ -15,6 +15,8 @@ bool sc_snapshot_valid(const Game *g) {
         return false;
     if (!chronicle_valid(&g->chronicle, w->seed, w->generator))
         return false;
+    if (!preparation_valid(&g->home, w, g->players))
+        return false;
     if (g->campaign.version >= 2)
         for (unsigned id = 0; id < 8; id++) {
             const GuardianAttempt *a = &g->campaign.attempts[id];

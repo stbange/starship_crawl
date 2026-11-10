@@ -362,6 +362,7 @@ static void fold_door(Renderer *r, Vec3 feet, double yaw) {
                        .9f);
 }
 void sc_render_fold_interior(Renderer *r, const Game *g, int viewer) {
+    sc_render_preparation_scene(r, g, viewer);
     Color stone = rgb(.23f, .25f, .27f), wood = rgb(.4f, .27f, .17f);
     sc_render_block(r, v3(0, -.2, 0), v3(18.4, .4, 16.4), stone, 0);
     sc_render_block(r, v3(0, 4.7, 0), v3(18.4, .4, 16.4), rgb(.13f, .18f, .23f), 0);

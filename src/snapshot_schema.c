@@ -313,8 +313,9 @@ static const SnapshotField fields_Player[] = {
 static const SnapshotSchema schema_Player = SCHEMA(Player);
 
 static const SnapshotField fields_InteractionState[] = {
-    FIELD(InteractionState, decision_scene, uint8_t, SW_U8, NULL, 0, SC_STORY_SCENES+SC_RECURRING-1),
+    FIELD(InteractionState, decision_scene, uint8_t, SW_U8, NULL, 0, PREP_RECORD_SCENE),
     FIELD(InteractionState, decision_open, _Bool, SW_BOOL, NULL, 0, 1),
+    FIELD(InteractionState, prep_quote, uint32_t, SW_U32, NULL, 0, 127),
 };
 static const SnapshotSchema schema_InteractionState = SCHEMA(InteractionState);
 
@@ -413,6 +414,32 @@ static const SnapshotField fields_Chronicle[] = {
 };
 static const SnapshotSchema schema_Chronicle = SCHEMA(Chronicle);
 
+static const SnapshotField fields_PersonalPreparation[] = {
+    FIELD(PersonalPreparation, meal, MealKind, SW_I32, NULL, 0, MEAL_CHARGED),
+    FIELD(PersonalPreparation, remaining, float, SW_FLOAT, NULL, 0, 300),
+    FIELD(PersonalPreparation, flare_charge, _Bool, SW_BOOL, NULL, 0, 1),
+};
+static const SnapshotSchema schema_PersonalPreparation = SCHEMA(PersonalPreparation);
+
+static const SnapshotField fields_Keepsake[] = {
+    FIELD(Keepsake, anchor, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(Keepsake, identity, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(Keepsake, family, uint32_t, SW_U32, NULL, 0, 4),
+    FIELD(Keepsake, condition, uint32_t, SW_U32, NULL, 0, 3),
+    FIELD(Keepsake, facts, uint32_t, SW_U32, NULL, 0, SC_DISTRICT_STATE_MASK),
+};
+static const SnapshotSchema schema_Keepsake = SCHEMA(Keepsake);
+
+static const SnapshotField fields_Home[] = {
+    FIELD(Home, projects, uint32_t, SW_U32, NULL, 0, 7),
+    FIELD(Home, observed, uint32_t, SW_U32, NULL, 0, 14),
+    FIELD(Home, researched, uint32_t, SW_U32, NULL, 0, 14),
+    FIELD(Home, keepsake_count, uint32_t, SW_U32, NULL, 0, SC_KEEPSAKES),
+    FIELD(Home, personal, PersonalPreparation, SW_STRUCT, &schema_PersonalPreparation, 0, 0),
+    FIELD(Home, keepsakes, Keepsake, SW_STRUCT, &schema_Keepsake, 0, 0),
+};
+static const SnapshotSchema schema_Home = SCHEMA(Home);
+
 static const SnapshotField fields_Shelter[] = {
     FIELD(Shelter, door, Position, SW_STRUCT, &schema_Position, 0, 0),
     FIELD(Shelter, yaw, double, SW_DOUBLE, NULL, -1e15, 1e15),
@@ -447,9 +474,9 @@ static const SnapshotSchema schema_BuildEffects = SCHEMA(BuildEffects);
 static const SnapshotField fields_Flare[] = {
     FIELD(Flare, pos, Position, SW_STRUCT, &schema_Position, 0, 0),
     FIELD(Flare, normal, Vec3, SW_STRUCT, &schema_Vec3, 0, 0),
-    FIELD(Flare, life, float, SW_FLOAT, NULL, -1e15, 1e15),
+    FIELD(Flare, life, float, SW_FLOAT, NULL, 0, 210),
     FIELD(Flare, radius, float, SW_FLOAT, NULL, -1e15, 1e15),
-    FIELD(Flare, power, float, SW_FLOAT, NULL, -1e15, 1e15),
+    FIELD(Flare, power, float, SW_FLOAT, NULL, 0, 9.375),
     FIELD(Flare, owner, uint32_t, SW_U32, NULL, 0, SC_PLAYERS-1),
     FIELD(Flare, active, _Bool, SW_BOOL, NULL, 0, 1),
 };
@@ -845,6 +872,7 @@ static const SnapshotField fields_Game[] = {
     FIELD(Game, contracts, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(Game, story, Story, SW_STRUCT, &schema_Story, 0, 0),
     FIELD(Game, chronicle, Chronicle, SW_STRUCT, &schema_Chronicle, 0, 0),
+    FIELD(Game, home, Home, SW_STRUCT, &schema_Home, 0, 0),
     FIELD(Game, shelter, Shelter, SW_STRUCT, &schema_Shelter, 0, 0),
     FIELD(Game, rigs, Rig, SW_STRUCT, &schema_Rig, 0, 0),
     FIELD(Game, beams, Beam, SW_STRUCT, &schema_Beam, 0, 0),
@@ -902,7 +930,7 @@ const SnapshotSchema sc_snapshot_box = SCHEMA(Box);
 const SnapshotSchema sc_snapshot_room_record = SCHEMA(RoomRecord);
 const SnapshotSchema sc_snapshot_matrix_record = SCHEMA(MatrixRecord);
 const SnapshotSchema sc_snapshot_faction_region = SCHEMA(FactionRegion);
-const uint32_t sc_snapshot_schema_id = UINT32_C(0xc551a746);
+const uint32_t sc_snapshot_schema_id = UINT32_C(0xdac9842c);
 #undef FIELD
 #undef SCHEMA
 // clang-format on

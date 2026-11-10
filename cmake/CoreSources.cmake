@@ -38,6 +38,8 @@ set(SC_CORE_SOURCES
   src/chronicle.c
   src/chronicle_campaigns.c
   src/save_chronicle.c
+  src/preparation.c
+  src/save_preparation.c
   src/encounters.c
   src/alien.c
   src/onboarding.c

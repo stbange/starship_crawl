@@ -55,12 +55,12 @@ and update save/snapshot validation alongside each feature that introduces it.
 
 ## 5. E5 — A useful home
 
-- [ ] 5.1 Implement three optional salvage-funded meals with one active benefit per character; verify costs, replacement, duration, save/resume and free existing recovery at zero salvage.
-- [ ] 5.2 Implement the shared refit-bench project and personal safe attribute redistribution; verify total spent points are conserved, capacities remain valid, eligibility is respected and failed/duplicate purchases charge nothing.
-- [ ] 5.3 Implement bounded flare-calibration and observed-condition research projects; test prerequisite locks, limited preparation charges, recurring salvage usefulness and personal/shared purchase accounting.
-- [ ] 5.4 Add up to six fixed keepsake displays derived from real district outcomes, retaining excess discoveries in the journal; verify collision/interaction access, no duplicate reward and fresh-ship clearing.
-- [ ] 5.5 Exercise shelter entry/exit, two occupants, a partner outside, matrix access, save/import and paused clocks with the new facilities; verify sanctuary safety and exact return anchors.
-- [ ] 5.6 Run the E5 gate and native/browser facility checks; update shelter controls and preparation documentation, with a zero-resource recovery checkpoint and a late-expedition useful-salvage checkpoint.
+- [x] 5.1 Implement three optional salvage-funded meals with one active benefit per character; verify costs, replacement, duration, save/resume and free existing recovery at zero salvage.
+- [x] 5.2 Implement the shared refit-bench project and personal safe attribute redistribution; verify total spent points are conserved, capacities remain valid, eligibility is respected and failed/duplicate purchases charge nothing.
+- [x] 5.3 Implement bounded flare-calibration and observed-condition research projects; test prerequisite locks, limited preparation charges, recurring salvage usefulness and personal/shared purchase accounting.
+- [x] 5.4 Add up to six fixed keepsake displays derived from real district outcomes, retaining excess discoveries in the journal; verify collision/interaction access, no duplicate reward and fresh-ship clearing.
+- [x] 5.5 Exercise shelter entry/exit, two occupants, a partner outside, matrix access, save/import and paused clocks with the new facilities; verify sanctuary safety and exact return anchors.
+- [x] 5.6 Run the E5 gate and native/browser facility checks; update shelter controls and preparation documentation, with a zero-resource recovery checkpoint and a late-expedition useful-salvage checkpoint.
 
 ## 6. E6 — An expedition rhythm
 

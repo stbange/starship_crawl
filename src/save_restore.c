@@ -29,6 +29,7 @@ void sc_save_restore(Game *g, const SavedExpedition *checkpoint) {
     g->contracts = checkpoint->contracts;
     g->story = checkpoint->story;
     g->chronicle = checkpoint->chronicle;
+    g->home = checkpoint->home;
     g->campaign = checkpoint->campaign;
     g->frontier = checkpoint->frontier;
     g->politics = checkpoint->politics;

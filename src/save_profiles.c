@@ -103,7 +103,7 @@ void sc_save_powers(Stream *s, Player *players, bool read) {
     }
 }
 void sc_save_equipment(Stream *s, Player *players, Rig rigs[SC_LEGACY_PLAYERS][2], Flare *flares,
-                       bool read) {
+                       bool read, bool coherent) {
     for (int p = 0; p < SC_LEGACY_PLAYERS; p++) {
         Player *v = &players[p];
         v->riding = sc_save_number(s, v->riding, read);
@@ -153,9 +153,9 @@ void sc_save_equipment(Stream *s, Player *players, Rig rigs[SC_LEGACY_PLAYERS][2
         f->owner = sc_save_number(s, f->owner, read);
         f->active = true;
         if (!sc_save_valid_vector(f->normal) || fabs(vlen(f->normal) - 1) > .01 ||
-            !isfinite(f->life) || f->life <= 0 || f->life > 105 || !isfinite(f->radius) ||
+            !isfinite(f->life) || f->life <= 0 || f->life > (coherent ? 210 : 105) || !isfinite(f->radius) ||
             f->radius < 12 || f->radius > 22 || !isfinite(f->power) || f->power < 2.5 ||
-            f->power > 6.25 || f->owner >= SC_LEGACY_PLAYERS)
+            f->power > (coherent ? 9.375 : 6.25) || f->owner >= SC_LEGACY_PLAYERS)
             s->ok = false;
     }
 }

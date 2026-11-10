@@ -33,7 +33,8 @@
             "test_story_browser.py",
             "test_aftermath_browser.py",
             "test_matrix_browser.py",
-            "test_chronicle_browser.py"
+            "test_chronicle_browser.py",
+            "test_preparation_browser.py"
         ]
     },
     "instrumented": {

@@ -32,7 +32,7 @@ typedef struct {
     bool running, paused, started, touch, debug, new_armed, no_save, failed, mouse_fire;
     bool demo_encounter, inspect_shelter, inspect_matrix, inspect_tentacles, inspect_static;
     int frame, smoke_frames, inspect_form, inspect_rig, inspect_alien, inspect_build,
-        inspect_guardian, inspect_district, inspect_person;
+        inspect_guardian, inspect_district, inspect_person, inspect_home;
     bool options;
     int option_player, option_row;
     double last, fps, autosave, audio_time;

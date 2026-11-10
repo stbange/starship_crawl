@@ -1,6 +1,29 @@
 #include "app_internal.h"
 
 void app_inspect_frame(void) {
+    if (app.inspect_home && world_ready(&app.game.world, (Cell){0})) {
+        Game *g = &app.game;
+        unsigned mode = (unsigned)app.inspect_home - 1;
+        g->campaign.defeated = g->campaign.eligible[0] = 1;
+        Room won = {.cell = campaign_site(0), .record = SIZE_MAX, .enemy_count = 1};
+        world_kill(&g->world, &won, 0);
+        campaign_sync(g);
+        Player *p = &g->players[0];
+        p->pos = position_from(v3(0, .02, 12));
+        p->yaw = p->pitch = 0;
+        game_summon(g, 0);
+        game_shelter_interact(g, 0);
+        p->shelter_pos = preparation_station(mode == 2 ? PREP_PROJECTS_SCENE : PREP_MEALS_SCENE);
+        p->yaw = mode == 2 ? 2.8 : 0;
+        if (mode) {
+            p->credits = 3000;
+            campaign_grant(g, 0, (CampaignReward){REWARD_GUN, SC_FLARE_CANNON});
+            g->home.observed = 2;
+        }
+        app.inspect_home = 0;
+        app.inspect_static = app.paused = true;
+        g->message_time = 0;
+    }
     if (app.inspect_person) {
         RecurringPerson *person = &app.game.chronicle.people[app.inspect_person - 1];
         if (world_ready(&app.game.world, person->site)) {
@@ -246,6 +269,8 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
             !strncmp(scene, "foundry", 7) && scene[7] >= '0' && scene[7] <= '4' && !scene[8];
         bool person_scene =
             !strncmp(scene, "person", 6) && (scene[6] == '0' || scene[6] == '1') && !scene[7];
+        bool home_scene =
+            !strncmp(scene, "home", 4) && scene[4] >= '0' && scene[4] <= '2' && !scene[5];
         bool court_scene = !strncmp(scene, "court", 5) || !strncmp(scene, "conduit", 7) ||
                            !strncmp(scene, "crown", 5);
         bool frontier_scene = !strncmp(scene, "front", 5) || !strncmp(scene, "deep", 4) ||
@@ -262,7 +287,7 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
         if (strcmp(scene, "guardian") && !guardian_scene && !district_scene && !person_scene &&
-            !build_scene && !exterior_scene && !traversal_scene && !habitat_scene &&
+            !home_scene && !build_scene && !exterior_scene && !traversal_scene && !habitat_scene &&
             !encounter_scene && !frontier_scene && !court_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
@@ -279,6 +304,10 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
         politics_init(&app.game);
         app.game.message_time = 0;
         Cell c = {0, 0, 0};
+        if (home_scene) {
+            app.inspect_home = scene[4] - '0' + 1;
+            app.no_save = true;
+        }
         if (court_scene) {
             unsigned role = !strncmp(scene, "court", 5)     ? COURT_AUDIENCE
                             : !strncmp(scene, "conduit", 7) ? COURT_CONDUIT

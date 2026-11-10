@@ -184,7 +184,7 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
     snprintf(text, sizeof(text), "FIELD RECORD / L NEXT / %s",
              game_story_title(g, PLAYER_VIEW(g, p).story_reading));
     sc_render_text_at(r, x, y + 231 * s, .9f * s, text, gold);
-    game_story_entry(g, PLAYER_VIEW(g, p).story_reading, text, sizeof(text));
+    game_story_entry_for(g, player, PLAYER_VIEW(g, p).story_reading, text, sizeof(text));
     sc_render_wrapped(r, x, y + 250 * s, .95f * s, 760 * s, text, ink);
     sc_render_text_at(r, x, y + 294 * s, .9f * s, "UNRESOLVED LEADS / U TRACKS THE NEXT KNOWN SITE",
                       gold);
@@ -212,6 +212,8 @@ static void story_journal(Renderer *r, const Game *g, int player, float w, float
         sc_render_text_at(
             r, x, y + 472 * s, .85f * s,
             prepared ? "ALL THREE OUTCOMES AVAILABLE / ENTER LEAVES UNDECIDED"
+                     : PLAYER_INTERACTION(g, p).decision_scene >= PREP_MEALS_SCENE
+                         ? "REVIEW THE COSTS AND REQUIREMENTS / ENTER LEAVES UNDECIDED"
                      : PLAYER_INTERACTION(g, p).decision_scene >= SC_STORY_SCENES
                          ? "THIRD CHOICE NEEDS 60 SALVAGE OR RESTORED POWER / ENTER LEAVES UNDECIDED"
                      : "THIRD CHOICE NEEDS THE OPTIONAL OPERATION / ENTER LEAVES UNDECIDED",
@@ -539,6 +541,7 @@ void sc_render_hud(Renderer *r, Game *g, int player, int width, int height, bool
         sc_render_centered(r, w * .5f, h * .63f, 1.1f * s,
                            game_rig_near(g, player) == MECH ? "G / BOARD MECH" : "G / RIDE WAGON",
                            mint);
+    sc_render_preparation_hud(r, g, player, w, h, s);
     ShelterUse use = game_shelter_near(g, player);
     if (use != SHELTER_NONE) {
         const char *prompts[] = {"",

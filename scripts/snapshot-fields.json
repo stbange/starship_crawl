@@ -298,7 +298,7 @@
     ],
     "InteractionState.decision_scene": [
       "0",
-      "SC_STORY_SCENES+SC_RECURRING-1"
+      "PREP_RECORD_SCENE"
     ],
     "MatrixBox.tag": [
       "0",
@@ -663,6 +663,50 @@
     "ContinuingCampaign.clock": [
       "0",
       "30"
+    ],
+    "InteractionState.prep_quote": [
+      "0",
+      "127"
+    ],
+    "Home.projects": [
+      "0",
+      "7"
+    ],
+    "Home.observed": [
+      "0",
+      "14"
+    ],
+    "Home.researched": [
+      "0",
+      "14"
+    ],
+    "Home.keepsake_count": [
+      "0",
+      "SC_KEEPSAKES"
+    ],
+    "PersonalPreparation.remaining": [
+      "0",
+      "300"
+    ],
+    "Keepsake.family": [
+      "0",
+      "4"
+    ],
+    "Keepsake.condition": [
+      "0",
+      "3"
+    ],
+    "Keepsake.facts": [
+      "0",
+      "SC_DISTRICT_STATE_MASK"
+    ],
+    "Flare.life": [
+      "0",
+      "210"
+    ],
+    "Flare.power": [
+      "0",
+      "9.375"
     ]
   }
 }

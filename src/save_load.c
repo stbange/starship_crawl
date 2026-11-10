@@ -60,7 +60,7 @@ bool game_load(Game *g, const char *path) {
     Rig rigs[SC_LEGACY_PLAYERS][2] = {0};
     Flare flares[SC_MAX_FLARES] = {0};
     if (version >= 6)
-        sc_save_equipment(&s, players, rigs, flares, true);
+        sc_save_equipment(&s, players, rigs, flares, true, version >= 17);
     else
         for (int p = 0; p < SC_LEGACY_PLAYERS; p++) {
             players[p].weapons |= SC_NEW_WEAPONS;
@@ -141,8 +141,10 @@ bool game_load(Game *g, const char *path) {
                 s.ok = false;
         }
     Chronicle chronicle = {0};
+    Home home = {0};
     if (version >= 17) {
         sc_save_chronicle(&s, &chronicle, true);
+        sc_save_preparation(&s, &home, true);
         if (!chronicle_valid(&chronicle, seed, generator))
             s.ok = false;
     }
@@ -200,7 +202,7 @@ bool game_load(Game *g, const char *path) {
         !politics_world_valid(&politics, &director, replacement) || !matrix_index(matrix) ||
         !matrix_rehydrate(matrix, seed, replacement->generator) ||
         !matrix_valid(matrix, seed, replacement->generator, players, &shelter) ||
-        !world_index_records(replacement) || !world_refresh(replacement, &start, 1)) {
+        !world_index_records(replacement) || !preparation_valid(&home, replacement, players) || !world_refresh(replacement, &start, 1)) {
         factions_destroy(factions);
         free(factions);
         matrix_destroy(matrix);
@@ -219,6 +221,7 @@ bool game_load(Game *g, const char *path) {
         .shelter = shelter,
         .story = story,
         .chronicle = chronicle,
+        .home = home,
         .campaign = campaign,
         .frontier = frontier,
         .politics = politics,

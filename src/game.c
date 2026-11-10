@@ -1022,6 +1022,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     factions_forces_sync(g, true);
     game_equipment_step(g, dt);
     game_builds_step(g, dt);
+    preparation_step(g, dt);
     g->message_time = fmaxf(0, g->message_time - (float)dt);
     for (int i = 0; i < g->player_count; i++)
         g->views[i].message_time = fmaxf(0, g->views[i].message_time - (float)dt);

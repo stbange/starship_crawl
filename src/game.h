@@ -7,6 +7,7 @@
 #include "campaign.h"
 #include "districts.h"
 #include "chronicle.h"
+#include "preparation.h"
 #include "onboarding.h"
 #include "encounters.h"
 #include "frontier.h"
@@ -48,12 +49,14 @@ typedef struct {
     bool journal, map_open, matrix_map;
     unsigned loadout_slot, country_reading, branch_preview; /* preview stores branch + 1 */
     Cell map_center;
+    size_t district_reading;
     char message[128];
     float message_time;
 } PlayerView;
 typedef struct {
     uint8_t decision_scene;
     bool decision_open;
+    uint32_t prep_quote;
 } InteractionState;
 typedef struct Player {
     Position pos, checkpoint;
@@ -175,6 +178,7 @@ typedef struct Game {
     uint32_t mission, mission_kills, mission_loot, contracts;
     Story story;
     Chronicle chronicle;
+    Home home;
     Shelter shelter;
     Rig rigs[SC_PLAYERS][2];
     Beam beams[SC_PLAYERS];
@@ -278,6 +282,7 @@ void game_story_read(Game *g, int player);
 bool game_story_available(const Game *g, unsigned scene);
 unsigned game_story_near(const Game *g, int player);
 void game_story_entry(const Game *g, unsigned scene, char *text, size_t size);
+void game_story_entry_for(const Game *g, int player, unsigned scene, char *text, size_t size);
 void game_story_line(const Game *g, int line, char *text, size_t size);
 const char *game_story_choice(const Game *g, unsigned choice);
 const char *game_story_choice_for(const Game *g, int player, unsigned choice);
