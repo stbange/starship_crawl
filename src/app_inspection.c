@@ -1,6 +1,87 @@
 #include "app_internal.h"
 
 void app_inspect_frame(void) {
+    if (app.inspect_guardian) {
+        unsigned id = (unsigned)(app.inspect_guardian - 1) / 3;
+        unsigned state = (unsigned)(app.inspect_guardian - 1) % 3;
+        Room *room = world_find(&app.game.world, campaign_site(id));
+        if (room && room->ready) {
+            Game *g = &app.game;
+            Player *p = &g->players[0];
+            p->pos = position_from(game_terminal(room->cell));
+            campaign_interact(g, 0);
+            p->pos = position_from(vadd(world_center(room->cell), v3(-4, .02, -15)));
+            Vec3 toward = vsub(enemy_center(&room->enemies[1]), player_eye(p));
+            p->yaw = atan2(toward.x, toward.z);
+            p->pitch = asin(vnorm(toward).y);
+            if (state == 1)
+                game_damage_enemy(g, room, 1, 0, 1000000, 0);
+            else if (state == 2)
+                game_damage_enemy(g, room, 0, 0, 1000000, 0);
+            else {
+                room->enemies[0].windup = 1;
+                g->campaign.attempts[id].aim = player_eye(p);
+            }
+            g->campaign.tracked = id;
+            app.inspect_guardian = 0;
+            app.inspect_static = true;
+            app.paused = true;
+            g->message_time = 0;
+        }
+    }
+    /* Explicit earned-build inspection fixtures; ordinary expeditions never enter this path. */
+    if (app.inspect_build && world_ready(&app.game.world, (Cell){0})) {
+        Game *g = &app.game;
+        Player *p = &g->players[0];
+        Room *room = world_find(&g->world, (Cell){0});
+        for (int i = 0; i < g->world.count; i++)
+            g->world.rooms[i].enemy_count = 0;
+        room->enemy_count = 3;
+        for (unsigned i = 0; i < 3; i++)
+            room->enemies[i] = (Enemy){.kind = 1,
+                                       .id = (uint8_t)i,
+                                       .health = 200,
+                                       .alive = true,
+                                       .pos = position_from(v3(i ? 3 : -3, .02, 20 + i * 2)),
+                                       .normal = {0, 1, 0},
+                                       .heading = {0, 0, -1}};
+        p->pos = position_from(v3(0, .02, 12));
+        p->kills = 3;
+        p->weapons |= 2;
+        p->yaw = 0;
+        p->pitch = 0;
+        campaign_grant(g, 0, (CampaignReward){REWARD_MODULE, 1 + 2 * (app.inspect_build - 1)});
+        if (app.inspect_build == 1) {
+            campaign_grant(g, 0, (CampaignReward){REWARD_GUN, 16});
+            campaign_grant(g, 0, (CampaignReward){REWARD_GUN, 19});
+            g->campaign.profiles[0].guns[0] = p->weapon = 16;
+            game_attach_flare(g, 0, v3(0, .001, 19), v3(0, -1, 0));
+            Vec3 origin = vadd(player_eye(p), v3(.16, -.13, 0));
+            Vec3 aim = vsub(position_absolute(g->flares[0].pos), origin);
+            p->yaw = atan2(aim.x, aim.z);
+            p->pitch = atan2(aim.y, hypot(aim.x, aim.z));
+        } else if (app.inspect_build == 2) {
+            campaign_grant(g, 0, (CampaignReward){REWARD_POWER, PSI_VEIL});
+            game_psionic(g, 0, PSI_VEIL);
+        } else {
+            campaign_grant(g, 0, (CampaignReward){REWARD_RIG, MECH});
+            game_rig_toggle(g, 0, MECH);
+            game_rig_interact(g, 0);
+            p->shield = 0;
+            game_hostile_hit(g, 0, 100, 0);
+        }
+        Actions input[SC_PLAYERS] = {0};
+        input[0].fire = app.inspect_build != 3;
+        game_step(g, input, SC_TICK_SECONDS);
+        if (app.inspect_build == 2) {
+            position_move(&p->pos, v3(2, 0, -3));
+            p->yaw = -.35;
+        }
+        game_message(g, "EARNED BUILD INSPECTION / F10 READ BRANCH REQUIREMENTS");
+        app.inspect_build = 0;
+        app.inspect_static = true;
+        app.paused = true;
+    }
     if (app.inspect_tentacles && !app.game.world.pending) {
         Player *p = &app.game.players[0];
         Cell focus = world_cell(position_absolute(p->pos));
@@ -110,6 +191,12 @@ void app_inspect_frame(void) {
 }
 void app_inspect_scene(const char *scene, uint32_t seed) {
     if (scene) {
+        bool build_scene =
+            !strncmp(scene, "build", 5) && scene[5] >= '1' && scene[5] <= '3' && !scene[6];
+        bool guardian_scene = !strncmp(scene, "guardian", 8) &&
+                              (scene[8] == '0' || scene[8] == '1') &&
+                              (!strcmp(scene + 9, "warn") || !strcmp(scene + 9, "break") ||
+                               !strcmp(scene + 9, "breach"));
         bool court_scene = !strncmp(scene, "court", 5) || !strncmp(scene, "conduit", 7) ||
                            !strncmp(scene, "crown", 5);
         bool frontier_scene = !strncmp(scene, "front", 5) || !strncmp(scene, "deep", 4) ||
@@ -125,15 +212,17 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
                               !strcmp(scene, "hull");
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
-        if (strcmp(scene, "guardian") && !exterior_scene && !traversal_scene && !habitat_scene &&
-            !encounter_scene && !frontier_scene && !court_scene) {
+        if (strcmp(scene, "guardian") && !guardian_scene && !build_scene && !exterior_scene && !traversal_scene &&
+            !habitat_scene && !encounter_scene && !frontier_scene && !court_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
             app.game.world.generator = 6;
             app.game.campaign = (Campaign){0};
-            for (int i = 0; i < SC_PLAYERS; i++)
+            for (int i = 0; i < SC_PLAYERS; i++) {
                 app.game.players[i].weapons = SC_START_WEAPONS;
+                app.game.players[i].rules = 0;
+            }
         }
         if (court_scene)
             app.game.world.generator = 13;
@@ -152,6 +241,13 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
         }
         if (!strcmp(scene, "guardian")) {
             c = campaign_site(0);
+            app.no_save = true;
+        }
+        if (guardian_scene) {
+            unsigned id = (unsigned)(scene[8] - '0');
+            c = campaign_site(id);
+            app.inspect_guardian = (int)(id * 3 + 1 + (!strcmp(scene + 9, "break") ? 1 :
+                                                       !strcmp(scene + 9, "breach") ? 2 : 0));
             app.no_save = true;
         }
         if (!strcmp(scene, "hall"))
@@ -411,6 +507,11 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
                 p->yaw = .9;
                 p->pitch = .75;
             }
+            app.no_save = true;
+        }
+        if (build_scene) {
+            app.inspect_build = scene[5] - '0';
+            app.game.players[0].pos = position_from(v3(0, .02, 12));
             app.no_save = true;
         }
         politics_init(&app.game);

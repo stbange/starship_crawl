@@ -4,7 +4,8 @@
     "District": "DISTRICT_TYPES-1",
     "DressingKind": "SCRAP",
     "NavKind": "NAV_BLOCKED",
-    "RoomType": "ROOM_TYPES-1"
+    "RoomType": "ROOM_TYPES-1",
+    "GuardianStage": "GUARDIAN_OVERRUN"
   },
   "exclude": {
     "ActorId": [
@@ -57,7 +58,7 @@
     ],
     "CampaignProfile.module": [
       "0",
-      "SC_SPECIALIZATIONS"
+      "SC_BUILD_BRANCHES"
     ],
     "CampaignProfile.power_slots": [
       "0",
@@ -578,6 +579,26 @@
     "World.record_count": [
       "0",
       "SC_SNAPSHOT_RECORDS"
+    ],
+    "BuildEffects.echo_life": [
+      "0",
+      "3"
+    ],
+    "BuildEffects.charge": [
+      "0",
+      "120"
+    ],
+    "Player.rules": [
+      "0",
+      "2"
+    ],
+    "Room.recipe": [
+      "0",
+      "6"
+    ],
+    "GuardianAttempt.broken": [
+      "0",
+      "3"
     ]
   }
 }

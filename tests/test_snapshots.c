@@ -18,6 +18,10 @@ static Game *fresh(void) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
     game_init(g, 713);
+    /* Keep the original campaign/snapshot regression on its published rules.
+       test_builds.c covers the new revision and default new-ship boundary. */
+    g->world.generator = 15;
+    campaign_init(g);
     return g;
 }
 static void destroy(Game *g) {

@@ -1,7 +1,7 @@
 #ifndef SC_SNAPSHOT_H
 #define SC_SNAPSHOT_H
 #include "game.h"
-#define SC_SNAPSHOT_VERSION 1u
+#define SC_SNAPSHOT_VERSION 2u
 #define SC_SNAPSHOT_LIMIT (32u * 1024u * 1024u)
 #define SC_SNAPSHOT_RECORDS 65536u
 /* Caller frees *data. Checkpoints and snapshots have distinct wire contracts.

@@ -60,6 +60,7 @@ static unsigned behavior(unsigned kind) {
     return ALIEN_NONE;
 }
 void encounter_populate(World *w, Room *r) {
+    r->recipe = 0;
     if (campaign_guardian(r->cell) >= 0)
         return;
     if (r->habitat.pace == PACE_QUIET)
@@ -69,11 +70,14 @@ void encounter_populate(World *w, Room *r) {
     if (r->habitat.pace == PACE_FRONTIER) {
         bool machine = r->habitat.ecology == MECHANICAL;
         const unsigned kinds[] = {machine ? 29u : 9u, 4, 1, 0};
+        static const unsigned recipes[3][4] = {{9, 3, 3, 22}, {10, 7, 11, 21}, {29, 16, 2, 25}};
+        if (w->generator >= 16 && !r->habitat.challenge)
+            r->recipe = machine ? 3 : (uint8_t)(1 + (r->hash >> 8) % 2);
         const Vec3 offsets[] = {{0, .02, 14}, {-2, .02, 7}, {0, .02, 25}, {2, .02, 7}};
         r->enemy_count = 4;
         for (int i = 0; i < 4; i++) {
             Enemy *e = &r->enemies[i];
-            e->kind = (uint8_t)kinds[i];
+            e->kind = (uint8_t)(r->recipe ? recipes[r->recipe - 1][i] : kinds[i]);
             e->pos = position_from(vadd(world_center(r->cell), offsets[i]));
             e->health = (i ? sc_enemies[e->kind].health : 160) +
                         (float)fmin(campaign_layer(r->cell), 8) * (i ? 6 : 10);
@@ -89,6 +93,10 @@ void encounter_populate(World *w, Room *r) {
     (void)w;
 }
 const char *encounter_name(const Room *r) {
+    static const char *recipes[] = {"", "SHIELDED SWARM / CEILING PURSUIT",
+                                    "SUPPRESSOR / FLANKING PACK", "MACHINE RELAY / DENIAL LINE"};
+    if (r->recipe && r->recipe <= 3)
+        return recipes[r->recipe];
     if (r->habitat.challenge)
         return frontier_name(r->habitat.challenge);
     return r->habitat.ecology == MECHANICAL ? "CHOIR RELAY" : "NEST CONDUCTOR";
@@ -121,6 +129,8 @@ CampaignReward encounter_reward(const Game *g, int player, const Room *r) {
                                                              {REWARD_MODULE, MOD_SABOTEUR}};
         CampaignReward tool =
             onboarding_reward(g, tools[r->habitat.challenge - 1], campaign_layer(r->cell) - 1);
+        if (g->campaign.version >= 2 && tool.kind == REWARD_MODULE)
+            tool.item = BUILD_RELAY;
         if (!campaign_owns(g, player, tool))
             return tool;
     }
@@ -142,10 +152,16 @@ CampaignReward encounter_reward(const Game *g, int player, const Room *r) {
     for (unsigned i = 0; i < 7; i++) {
         CampaignReward reward =
             onboarding_reward(g, rewards[row][(start + i) % 7], campaign_layer(r->cell) - 1);
+        if (g->campaign.version >= 2 && reward.kind == REWARD_MODULE)
+            reward.item = row ? BUILD_CAPACITOR : BUILD_ECHO;
         if (!campaign_owns(g, player, reward))
             return reward;
     }
-    return onboarding_reward(g, rewards[row][start], campaign_layer(r->cell) - 1);
+    CampaignReward fallback =
+        onboarding_reward(g, rewards[row][start], campaign_layer(r->cell) - 1);
+    if (g->campaign.version >= 2 && fallback.kind == REWARD_MODULE)
+        fallback.item = row ? BUILD_CAPACITOR : BUILD_ECHO;
+    return fallback;
 }
 void encounter_reward_name(const Game *g, int player, const Room *r, char *text, size_t size) {
     CampaignReward reward = encounter_reward(g, player, r);
@@ -153,7 +169,7 @@ void encounter_reward_name(const Game *g, int player, const Room *r, char *text,
                        : reward.kind == REWARD_POWER ? sc_psionic_names[reward.item]
                        : reward.kind == REWARD_RIG
                            ? (reward.item == MECH ? "FOLD MECH" : "FOLD WAGON")
-                           : campaign_module_name(reward.item);
+                           : campaign_build_name(g, reward.item);
     snprintf(text, size, "%s%s", name,
              campaign_owns(g, player, reward) ? " / +2 POINTS +100 SALVAGE" : "");
 }

@@ -89,6 +89,8 @@ bool onboarding_action(const Game *g, int player, int action) {
         return (caps & OB_UPGRADES) && (action < 23 || (caps & OB_FULL_STATS));
     if (action >= CLIENT_BUILD && action <= CLIENT_REFIT_NEXT)
         return (caps & OB_BUILD) != 0;
+    if (action == CLIENT_EQUIP_BRANCH)
+        return g->campaign.version >= 2 && g->views[player].branch_preview != 0;
     if (action >= CLIENT_REWARD_FIRST && action <= 228)
         return g->campaign.choice[player] != 0;
     if (action == CLIENT_MATRIX_LINK)

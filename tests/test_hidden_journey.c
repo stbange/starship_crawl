@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include "game.h"
+#include "session.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -216,6 +217,8 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
         return 2;
     unsigned seed = seeds[run], profile = run % 3, nation = (run / 3) % 3;
     game_init(g, seed);
+    Session session;
+    session_init(&session, g);
     Metrics m = {.min_health = g->players[0].health,
                  .min_health_ratio = 1,
                  .min_shield = g->players[0].shield,
@@ -247,7 +250,7 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
         Vec3 feet = position_absolute(p->pos);
         if (!world_refresh(&g->world, &feet, 1))
             break;
-        world_stream(&g->world, SC_STREAM_BUDGET);
+        /* Session owns the sole streaming budget for this fixed tick. */
         Cell cell = world_cell(feet);
         Room *room = world_find(&g->world, cell);
         if (!cell_equal(cell, previous_cell)) {
@@ -634,7 +637,11 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
         }
         float hp = p->health, sh = p->shield, ar = p->armor;
         unsigned rank = p->level, shots = g->shots;
-        game_step(g, actions, 1.0 / 60);
+        session_sync(&session);
+        for (unsigned i = 0; i < g->player_count; i++)
+            if (!session_input(&session, game_player_id(g, (int)i), &actions[i]))
+                abort();
+        session_tick(&session);
         pressure_frames[g->factions.director.pace[0]]++;
         unsigned force_count = 0, actor_count = 0;
         for (unsigned i = 0; i < SC_FACTION_FORCES; i++) {

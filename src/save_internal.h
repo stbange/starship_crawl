@@ -1,6 +1,6 @@
 #ifndef SC_SAVE_INTERNAL_H
 #define SC_SAVE_INTERNAL_H
-/* Private checkpoint format 1-16 codecs. They never encode a live simulation. */
+/* Private checkpoint format 1-17 codecs. They never encode a live simulation. */
 #include "game.h"
 #include <stdio.h>
 #include <stdlib.h>

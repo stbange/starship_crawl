@@ -399,6 +399,7 @@ void sc_render_hud(Renderer *r, Game *g, int player, int width, int height, bool
     }
     const Enemy *aimed = NULL;
     int aimed_guardian = -1;
+    int aimed_system = -1;
     double nearest = 55;
     Vec3 eye = player_eye(p), aim = facing(p->yaw, p->pitch);
     for (int j = 0; !p->sheltered && j < g->world.count; j++)
@@ -409,8 +410,9 @@ void sc_render_hud(Renderer *r, Game *g, int player, int width, int height, bool
             if (e->alive && distance < nearest && vdot(vnorm(delta), aim) > .985 &&
                 world_raycast(&g->world, eye, vnorm(delta), distance) >= distance - .1) {
                 aimed = e;
-                aimed_guardian =
-                    g->campaign.version && i == 0 ? campaign_guardian(g->world.rooms[j].cell) : -1;
+                aimed_guardian = g->campaign.version ? campaign_guardian(g->world.rooms[j].cell) : -1;
+                aimed_system = g->campaign.version >= 2 && aimed_guardian >= 0 &&
+                                       aimed_guardian < 8 && i > 0 ? i - 1 : -1;
                 nearest = distance;
             }
         }
@@ -422,9 +424,12 @@ void sc_render_hud(Renderer *r, Game *g, int player, int width, int height, bool
                      politics_reputation(g, aimed->country, player) < 0 ? "HOSTILE PATROL"
                                                                         : "NEUTRAL PATROL",
                      aimed->health);
+        else if (aimed_system >= 0)
+            snprintf(label, sizeof(label), "%s / %.0f",
+                     guardian_system_name((unsigned)aimed_guardian, (unsigned)aimed_system), aimed->health);
         else if (aimed_guardian >= 0)
             snprintf(label, sizeof(label), "%s / %.0f",
-                     campaign_guardian_name(g->world.seed, (unsigned)aimed_guardian),
+                     guardian_name(g, (unsigned)aimed_guardian),
                      aimed->health);
         else if (aimed->behavior == ALIEN_CONDUCTOR)
             snprintf(label, sizeof(label), "SUPPORT / BREAK THE LINKS / %.0f", aimed->health);
@@ -453,7 +458,7 @@ void sc_render_hud(Renderer *r, Game *g, int player, int width, int height, bool
         sc_render_text_at(r, w - 260 * s, by, 1.3f * s,
                           p->sheltered ? "WEAPONS HOLSTERED" : game_gun(p)->name, ink);
         snprintf(label, sizeof(label), "DMG %.0f  ENERGY %.0f  CORE %u",
-                 game_gun(p)->damage * (1 + .35f * p->power), p->energy, p->points);
+                 game_gun(p)->damage * (1 + .35f * player_rank(p, p->power)), p->energy, p->points);
         sc_render_text_at(r, w - 260 * s, by + 19 * s, 1.1f * s, label, gold);
         sc_render_text_at(r, w - 260 * s, by + 36 * s, 1 * s,
                           p->flashlight ? "F LAMP ON / F5 SAVE / ESC PAUSE"
@@ -710,7 +715,7 @@ void sc_render_hud(Renderer *r, Game *g, int player, int width, int height, bool
                 continue;
             unsigned level = *player_attribute(p, i);
             snprintf(label, sizeof(label), "%d %s %u / COST %u", (i + 1) % 10, sc_attributes[i],
-                     level, 60 + level * 25);
+                     level, game_upgrade_cost(p, level));
             sc_render_text_at(r, px + 18 * s + (i / 5) * pw * .5f, py + (64 + (i % 5) * 20) * s, s,
                               label, mint);
         }

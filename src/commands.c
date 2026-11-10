@@ -1,6 +1,11 @@
 #include "game.h"
 /* Stable semantic commands. Numeric browser actions are translated by the client adapter. */
 const CommandDefinition sc_commands[CMD_COUNT] = {
+    [CMD_CAMPAIGN_BRANCH] = {"Equip previewed branch",
+                             0,
+                             SC_BUILD_BRANCHES,
+                             {"G IN BUILD", "A IN BUILD", "MENU / EQUIP PREVIEW",
+                              "Y / EQUIP PREVIEW"}},
     [CMD_LOOK] = {"Look", 0, 0, {"MOUSE", "RIGHT STICK", "LOOK PAD", "HEAD"}},
     [CMD_AIM] = {"Tracked look", 0, 0, {"MOUSE", "RIGHT STICK", "LOOK PAD", "HEAD"}},
     [CMD_UPGRADE] = {"Upgrade attribute",
@@ -190,10 +195,13 @@ bool game_command(Game *g, const GameCommand *c) {
         onboarding_dismiss(g, i);
         break;
     case CMD_CLOSE_INTERACTION:
+        g->views[i].branch_preview = 0;
         g->interactions[i].decision_open = false;
         g->politics.audience[i] = 0;
         g->matrix.divers[i].choice = false;
         break;
+    case CMD_CAMPAIGN_BRANCH:
+        return game_build_equip(g, i, (unsigned)c->argument);
     case CMD_COUNT:
         return false;
     }

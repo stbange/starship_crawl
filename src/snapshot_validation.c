@@ -9,6 +9,22 @@ bool sc_snapshot_valid(const Game *g) {
         (g->matrix.count && !g->matrix.records) || g->factions.count > SC_SNAPSHOT_RECORDS ||
         (g->factions.count && !g->factions.regions))
         return false;
+    if (g->campaign.version >= 2 && !campaign_valid(&g->campaign, g->players, w))
+        return false;
+    if (w->generator >= 16 && g->campaign.version != 2)
+        return false;
+    if (g->campaign.version >= 2)
+        for (unsigned id = 0; id < 8; id++) {
+            const GuardianAttempt *a = &g->campaign.attempts[id];
+            if (!a->active)
+                continue;
+            const Room *r = world_find((World *)w, campaign_site(id));
+            if (!a->stage || !r || !r->ready || r->enemy_count != 3)
+                return false;
+            for (unsigned part = 0; part < 2; part++)
+                if (r->enemies[part + 1].alive == ((a->broken & (1u << part)) != 0))
+                    return false;
+        }
     size_t boxes = 0;
     int chunks = 0;
     for (int i = 0; i < SC_MAX_CHUNKS; i++) {

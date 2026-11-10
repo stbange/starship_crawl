@@ -266,12 +266,13 @@ static void quest_menu(void) {
                      profile->rig == MECH    ? "MECH"
                      : profile->rig == WAGON ? "WAGON"
                                              : "NONE",
-                     campaign_module_name(profile->module));
+                     campaign_build_name(&app.game, profile->module));
             quest_line(line);
+            quest_line(campaign_build_hint(&app.game, profile->module));
             unsigned id = c->choice[0]                ? c->choice[0] - 1
                           : c->tracked < SC_GUARDIANS ? c->tracked
                                                       : 0;
-            quest_line(campaign_guardian_name(app.game.world.seed, id));
+            quest_line(guardian_name(&app.game, id));
             for (unsigned i = 0; i < 3; i++) {
                 campaign_reward_name(&app.game, 0, id, i, line, sizeof(line));
                 quest_line(line);
@@ -283,6 +284,12 @@ static void quest_menu(void) {
             quest_add(222, "NEXT LOADOUT SLOT");
             quest_add(223, "REFIT PREVIOUS ITEM");
             quest_add(224, "REFIT NEXT ITEM");
+            if (app.game.views[0].branch_preview) {
+                unsigned branch = app.game.views[0].branch_preview - 1;
+                quest_line(campaign_build_name(&app.game, branch));
+                quest_line(campaign_build_hint(&app.game, branch));
+                quest_add(229, "EQUIP PREVIEWED BRANCH");
+            }
             quest_add(8, "ACTIVATE NEARBY STAGING");
         }
     } else if (xr.page == XR_CHARACTER) {

@@ -56,6 +56,11 @@ static void validation(void) {
 }
 static void allocation(void) {
     Game *g = fixture(42);
+    /* The byte-offset corruption cases below target the published format 16. */
+    g->world.generator = 15;
+    g->campaign.version = 1;
+    for (int i = 0; i < SC_PLAYERS; i++)
+        g->players[i].rules = 0;
     Cell site = ordinary(g, (Cell){8, 0, 8});
     sc_fail_allocation = 0;
     CHECK(!factions_record(g, site));

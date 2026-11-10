@@ -11,6 +11,7 @@ static void legacy_game_init(Game *g, uint32_t seed) {
     factions_init(g); /* Legacy fixtures must not retain new-ship simulation flags. */
     g->campaign = (Campaign){0};
     for (int p = 0; p < SC_PLAYERS; p++) {
+        g->players[p].rules = 0;
         g->players[p].weapons = SC_START_WEAPONS;
         g->matrix.profiles[p].programs = 7;
         g->matrix.profiles[p].slots[1] = MX_INTERRUPT;

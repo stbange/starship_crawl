@@ -43,7 +43,7 @@ def run():
             page.on('dialog', lambda dialog: dialog.accept())
             page.goto(base + '?seed=713')
             wait_ready(page)
-            expect(page, 's.generator === 15 && s.weapons === 1 && s.programs === 1 && s.capabilities === 0')
+            expect(page, 's.generator === 16 && s.weapons === 1 && s.programs === 1 && s.capabilities === 0')
             start_play(page)
             # Retain five simulated seconds even when several software-rendered suites share the CPU.
             expect(page, 's.lesson === 1 && s.time > 5', timeout=90000)

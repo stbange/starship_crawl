@@ -4,7 +4,7 @@
 #include "identity.h"
 #include <stdbool.h>
 #include <stddef.h>
-#define SC_GENERATOR_VERSION 15u
+#define SC_GENERATOR_VERSION 16u
 #define SC_OLDEST_GENERATOR 3u
 #define SC_CELL 96.0
 #define SC_DECK 64.0
@@ -246,6 +246,7 @@ typedef struct {
     int enemy_count;
     Enemy enemies[SC_MAX_ENEMIES];
     bool frontier_active;
+    uint8_t recipe; /* 0 keeps older encounters; 1..6 are authored role combinations. */
     uint8_t frontier_attacker;
     float frontier_timer, frontier_disrupt;
     float hazard_time, circuit_time, alarm_time;

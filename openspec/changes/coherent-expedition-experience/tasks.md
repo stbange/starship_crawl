@@ -14,25 +14,25 @@ and update save/snapshot validation alongside each feature that introduces it.
 
 ## 1. E1 — Combat and build identity
 
-- [ ] 1.1 Capture matched starter, middle and late earned-build baselines through existing command/session APIs; retain seeds, build/resource curves, encounter traces and guardian timings in a reproducible review artifact.
-- [ ] 1.2 Introduce the new expedition gameplay revision and branch ownership/equip state in campaign, save and live-snapshot boundaries; verify old fixtures retain their rules, new-ship reset clears both profiles, and corrupt or unknown state fails transactionally.
-- [ ] 1.3 Tune point supply, marginal growth and declared level-up recovery; remove purchase-triggered full recovery in the new rules, and verify resource bounds, resuming old expeditions and matched progression curves.
-- [ ] 1.4 Implement the prerequisite-gated beam/flare relay prototype; test bounded target selection, walls, finite energy/effects, no recursive relay and observable native/browser beam paths.
-- [ ] 1.5 Implement the cloak-break decoy prototype; test lifetime, enemy response, player attribution, no decoy loot/rewards and consistent pause/snapshot behavior.
-- [ ] 1.6 Implement absorbed-attack mech charge; test hostile-source eligibility, charge caps, discharge, rig packing, shelter isolation and earned-tool locks.
-- [ ] 1.7 Add the three encounter recipes with role compatibility and staggered commitments; verify actor budgets, readable support disruption, valid movement responses and starter/middle/late victories without stat changes during engagement.
-- [ ] 1.8 Add branch previews, equip/refit actions and useful duplicate/deferred reward handling through shared commands and all existing input adapters; verify mutual exclusion, invalid-action rejection and per-player exactly-once claims.
-- [ ] 1.9 Run the E1 gate, onboarding and save/snapshot regressions; update implemented behavior docs and publish rendered comparison checkpoints showing three distinct build actions and the unchanged fresh-character opening.
+- [x] 1.1 Capture matched starter, middle and late earned-build baselines through existing command/session APIs; retain seeds, build/resource curves, encounter traces and guardian timings in a reproducible review artifact.
+- [x] 1.2 Introduce the new expedition gameplay revision and branch ownership/equip state in campaign, save and live-snapshot boundaries; verify old fixtures retain their rules, new-ship reset clears both profiles, and corrupt or unknown state fails transactionally.
+- [x] 1.3 Tune point supply, marginal growth and declared level-up recovery; remove purchase-triggered full recovery in the new rules, and verify resource bounds, resuming old expeditions and matched progression curves.
+- [x] 1.4 Implement the prerequisite-gated beam/flare relay prototype; test bounded target selection, walls, finite energy/effects, no recursive relay and observable native/browser beam paths.
+- [x] 1.5 Implement the cloak-break decoy prototype; test lifetime, enemy response, player attribution, no decoy loot/rewards and consistent pause/snapshot behavior.
+- [x] 1.6 Implement absorbed-attack mech charge; test hostile-source eligibility, charge caps, discharge, rig packing, shelter isolation and earned-tool locks.
+- [x] 1.7 Add the three encounter recipes with role compatibility and staggered commitments; verify actor budgets, readable support disruption, valid movement responses and starter/middle/late victories without stat changes during engagement.
+- [x] 1.8 Add branch previews, equip/refit actions and useful duplicate/deferred reward handling through shared commands and all existing input adapters; verify mutual exclusion, invalid-action rejection and per-player exactly-once claims.
+- [x] 1.9 Run the E1 gate, onboarding and save/snapshot regressions; update implemented behavior docs and publish rendered comparison checkpoints showing three distinct build actions and the unchanged fresh-character opening.
 
 ## 2. E2 — Memorable guardians
 
-- [ ] 2.1 Add typed guardian subsystem and stage state with clear attempt-local versus durable preparation ownership; verify validation, checkpoint staging resets and exact active live-snapshot round trips.
-- [ ] 2.2 Implement the suspended-machine pattern with at least two actionable assemblies and two attack stages; verify destroying each system changes the declared attack and strong legal damage is accepted without hidden scaling.
-- [ ] 2.3 Implement the infested-relay pattern with a different movement/priority problem; verify its warnings, support openings and starter-kit path in a reproducible encounter fixture.
-- [ ] 2.4 Add staged arena machinery, collision-safe transitions and a visible victory breach; test every occupied platform/route transition for solo, co-op and earned rigs, including interruption and failed readiness.
-- [ ] 2.5 Bind physical preparation and an optional earned matrix alternative to the same subsystem facts; test prepared and unprepared victories, no early matrix access and no duplicated advantage or reward.
-- [ ] 2.6 Exercise defeat, retreat, all-player shelter, one partner remaining, checkpoint resume and live-snapshot continuation; verify attempt reset, preparation retention and participation/claim accounting.
-- [ ] 2.7 Run the E2 gate and render/browser checks; document the two fights and retain warning, system-destruction and breach captures for human readability review.
+- [x] 2.1 Add typed guardian subsystem and stage state with clear attempt-local versus durable preparation ownership; verify validation, checkpoint staging resets and exact active live-snapshot round trips.
+- [x] 2.2 Implement the suspended-machine pattern with at least two actionable assemblies and two attack stages; verify destroying each system changes the declared attack and strong legal damage is accepted without hidden scaling.
+- [x] 2.3 Implement the infested-relay pattern with a different movement/priority problem; verify its warnings, support openings and starter-kit path in a reproducible encounter fixture.
+- [x] 2.4 Add staged arena machinery, collision-safe transitions and a visible victory breach; test every occupied platform/route transition for solo, co-op and earned rigs, including interruption and failed readiness.
+- [x] 2.5 Bind physical preparation and an optional earned matrix alternative to the same subsystem facts; test prepared and unprepared victories, no early matrix access and no duplicated advantage or reward.
+- [x] 2.6 Exercise defeat, retreat, all-player shelter, one partner remaining, checkpoint resume and live-snapshot continuation; verify attempt reset, preparation retention and participation/claim accounting.
+- [x] 2.7 Run the E2 gate and render/browser checks; document the two fights and retain warning, system-destruction and breach captures for human readability review.
 
 ## 3. E3 — A coherent district
 

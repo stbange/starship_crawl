@@ -9,11 +9,11 @@ bool game_load(Game *g, const char *path) {
     uint32_t magic = sc_save_number(&s, 0, true), version = sc_save_number(&s, 0, true),
              seed = sc_save_number(&s, 0, true);
     uint32_t generator = version >= 2 ? sc_save_number(&s, 0, true) : 1;
-    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 16) ||
+    if (magic != UINT32_C(0x5343524c) || (version < 1 || version > 17) ||
         (version == 2 && generator != 2) || (version < 11 && generator > 6) ||
         (version < 12 && generator > 10) || (version < 13 && generator > 11) ||
         (version < 14 && generator > 12) || (version < 15 && generator > 13) ||
-        (version < 16 && generator > 14) ||
+        (version < 16 && generator > 14) || (version < 17 && generator > 15) ||
         (version >= 3 && (generator < SC_OLDEST_GENERATOR || generator > SC_GENERATOR_VERSION)))
         s.ok = false;
     Player players[SC_LEGACY_PLAYERS];
@@ -131,6 +131,9 @@ bool game_load(Game *g, const char *path) {
                 (matrix && matrix->divers[p].active && !(players[p].intro & INTRO_INTERFACE)))
                 s.ok = false;
         }
+    if (version >= 17)
+        for (int p = 0; p < SC_LEGACY_PLAYERS; p++)
+            players[p].rules = sc_save_number(&s, 0, true);
     uint32_t expected = s.hash, actual = sc_save_number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;

@@ -95,7 +95,7 @@ bool game_alien_step(Game *g, Room *r, int index, int player, bool attack, doubl
             if (!e->attack_done && vlen(hit) < 1.9 &&
                 world_raycast(&g->world, enemy_center(e), vnorm(hit), vlen(hit)) >=
                     vlen(hit) - .1) {
-                game_hurt(g, player, sc_enemies[e->kind].damage, sc_enemies[e->kind].flags);
+                game_hostile_hit(g, player, sc_enemies[e->kind].damage, sc_enemies[e->kind].flags);
                 e->attack_done = true;
             }
         }

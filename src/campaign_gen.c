@@ -107,6 +107,7 @@ void campaign_populate(World *w, Room *r) {
         e->kind = bodies[campaign_family(w->seed, (unsigned)guardian)];
         e->health = campaign_guardian_health((unsigned)guardian, 1);
         e->pos = position_from(vadd(world_center(r->cell), v3(0, .02, 22)));
+        guardian_populate(w, r, (unsigned)guardian);
         return;
     }
     ShipTraits t = campaign_traits(w->seed, r->cell);

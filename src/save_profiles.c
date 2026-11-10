@@ -1,5 +1,7 @@
 #include "save_internal.h"
 void sc_save_profile(Stream *s, Player *p, bool read, unsigned version) {
+    if (read)
+        p->rules = version >= 17 ? 2 : 0;
     bool legacy = version == 1;
     p->pos = sc_save_location(s, p->pos, read, legacy);
     p->checkpoint = sc_save_location(s, p->checkpoint, read, legacy);
@@ -49,10 +51,10 @@ void sc_save_profile(Stream *s, Player *p, bool read, unsigned version) {
     if (read) {
         if (!sc_save_valid_vector(position_absolute(p->pos)) ||
             !sc_save_valid_vector(position_absolute(p->checkpoint)) || !isfinite(p->yaw) ||
-            !isfinite(p->pitch) || p->level < 1 || p->level > 1000 || p->xp > 100000 ||
-            p->points > 1000 || p->power > 50 || p->vitality > 50 || p->haste > 50 ||
-            !isfinite(p->health) || p->health <= 0 || p->health > player_max_health(p) ||
-            fabs(p->pitch) > 1.5 || fabs(p->yaw) > SC_PI + 1e-6)
+            !isfinite(p->pitch) || p->level < 1 || p->level > 1000 ||
+            p->xp > (version >= 17 ? 1000000000u : 100000u) || p->points > 1000 || p->power > 50 ||
+            p->vitality > 50 || p->haste > 50 || !isfinite(p->health) || p->health <= 0 ||
+            p->health > player_max_health(p) || fabs(p->pitch) > 1.5 || fabs(p->yaw) > SC_PI + 1e-6)
             s->ok = false;
         p->crouched = true;
         p->flashlight = true;

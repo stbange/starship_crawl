@@ -18,6 +18,7 @@ void sc_save_restore(Game *g, const SavedExpedition *checkpoint) {
     memcpy(g->rigs, checkpoint->rigs, sizeof(g->rigs));
     memcpy(g->flares, checkpoint->flares, sizeof(g->flares));
     memset(g->beams, 0, sizeof(g->beams));
+    memset(g->builds, 0, sizeof(g->builds));
     g->player_count = 1;
     game_identity_reset(g);
     memset(g->projectiles, 0, sizeof(g->projectiles));

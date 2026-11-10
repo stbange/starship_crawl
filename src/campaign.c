@@ -14,9 +14,10 @@ void campaign_sync(Game *g) {
 }
 void campaign_init(Game *g) {
     memset(&g->campaign, 0, sizeof(g->campaign));
-    g->campaign.version = 1;
+    g->campaign.version = g->world.generator >= 16 ? 2 : 1;
     for (int i = 0; i < SC_PLAYERS; i++) {
         g->players[i].weapons = g->world.generator >= 15 ? 1 : 3;
+        g->players[i].rules = g->world.generator >= 16 ? 2 : 0;
         g->campaign.profiles[i] =
             (CampaignProfile){.guns = {0, g->world.generator >= 15 ? SC_EMPTY_GUN : 1},
                               .power_slots = {SC_EMPTY_POWER, SC_EMPTY_POWER}};
@@ -67,8 +68,13 @@ bool campaign_refit(Game *g, int player, unsigned slot, int delta) {
                    : slot < 4  ? &c->power_slots[slot - 2]
                    : slot == 4 ? &c->rig
                                : &c->module;
-    unsigned count = slot < 2 ? SC_WEAPONS : slot < 4 ? 5 : slot == 4 ? 3 : 5;
-    unsigned next = *at;
+    unsigned count = slot < 2                   ? SC_WEAPONS
+                     : slot < 4                 ? 5
+                     : slot == 4                ? 3
+                     : g->campaign.version >= 2 ? SC_BUILD_BRANCHES + 1
+                                                : 5;
+    unsigned next =
+        slot == 5 && g->views[player].branch_preview ? g->views[player].branch_preview - 1 : *at;
     for (unsigned i = 0; i < count; i++) {
         next = (next + (delta < 0 ? count - 1 : 1)) % count;
         bool valid = slot < 2    ? (p->weapons & (1u << next)) && c->guns[slot ^ 1] != next
@@ -78,7 +84,14 @@ bool campaign_refit(Game *g, int player, unsigned slot, int delta) {
                                  : !next || (c->modules & (1u << (next - 1)));
         if (!valid)
             continue;
+        if (slot == 5 && g->campaign.version >= 2) {
+            g->views[player].branch_preview = next + 1;
+            game_player_message(g, game_player_id(g, player),
+                                "BRANCH PREVIEW / G OR PAD A TO EQUIP / ENTER CANCELS");
+            return true;
+        }
         *at = next;
+        g->builds[player] = (BuildEffects){0};
         if (slot < 2)
             p->weapon = next;
         if (slot >= 2 && slot < 4) {
@@ -131,6 +144,7 @@ bool campaign_objective(const Game *g, Cell *cell) {
 void campaign_journal(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
+    g->views[player].branch_preview = 0;
     Player *p = &g->players[player];
     PLAYER_VIEW(g, p).journal = true;
     PLAYER_VIEW(g, p).journal_page = 5;
@@ -171,6 +185,8 @@ CampaignReward campaign_reward(uint32_t seed, unsigned id, unsigned choice) {
 CampaignReward campaign_offer(const Game *g, unsigned id, unsigned choice) {
     unsigned tier = id == 8 ? 0 : id / 2;
     CampaignReward r = campaign_reward(g->world.seed, id, choice);
+    if (g->campaign.version >= 2 && r.kind == REWARD_MODULE)
+        r.item = 1 + 2 * ((r.item - 1) % 3);
     if (onboarding_active(g) && choice == 1 && tier)
         r = tier == 1
                 ? (CampaignReward){REWARD_POWER, campaign_family(g->world.seed, id) % SC_PSIONICS}
@@ -191,7 +207,15 @@ void campaign_reward_name(const Game *g, int player, unsigned id, unsigned choic
     const char *name = r.kind == REWARD_GUN     ? sc_weapons[r.item].name
                        : r.kind == REWARD_POWER ? sc_psionic_names[r.item]
                        : r.kind == REWARD_RIG   ? (r.item == MECH ? "FOLD MECH" : "FOLD WAGON")
-                                                : campaign_module_name(r.item);
+                                                : campaign_build_name(g, r.item);
+    if (g->campaign.version >= 2 && r.kind == REWARD_MODULE && !campaign_owns(g, player, r)) {
+        const char *requirement = r.item <= BUILD_FOCUS    ? "BEAM / RELAY ALSO NEEDS FLARE"
+                                  : r.item <= BUILD_AMBUSH ? "VEIL"
+                                  : r.item <= BUILD_BRACE  ? "MECH"
+                                                           : "JUMP OR FLIGHT";
+        snprintf(text, size, "%s / REQUIRES %s", name, requirement);
+        return;
+    }
     snprintf(text, size, "%s%s", name,
              campaign_owns(g, player, r) ? " / OWNED: +2 POINTS +100 SALVAGE" : "");
 }
@@ -284,6 +308,7 @@ bool campaign_interact(Game *g, int player) {
                 g->players[p].checkpoint = position_from(game_terminal(site));
             }
         r->enemies[0].health = campaign_guardian_health(id, a->participants);
+        guardian_begin(g, r, id);
         g->dirty = true;
         game_message(g, "GUARDIAN ENGAGED / DODGE THE WARNING / ATTACK WHEN ITS CORE OPENS");
         return true;
@@ -297,6 +322,10 @@ void campaign_defeat(Game *g, unsigned id) {
     c->defeated |= 1u << id;
     c->eligible[id] = c->attempts[id].participants;
     c->attempts[id] = (GuardianAttempt){0};
+    Room *room = world_find(&g->world, campaign_site(id));
+    if (c->version >= 2 && id != 8 && room)
+        for (int i = 1; i < room->enemy_count; i++)
+            room->enemies[i].alive = false;
     for (int shot = 0; shot < SC_MAX_PROJECTILES; shot++)
         if (g->projectiles[shot].guardian == id + 1)
             g->projectiles[shot].active = false;
@@ -338,7 +367,7 @@ void campaign_step(Game *g, double dt) {
     }
 }
 float campaign_attack_bonus(const Game *g, int player) {
-    if (!g->campaign.version)
+    if (!g->campaign.version || g->campaign.version >= 2)
         return 1;
     const Player *p = &g->players[player];
     unsigned module = g->campaign.profiles[player].module;
@@ -362,7 +391,7 @@ float campaign_damage(Game *g, const Room *r, int index, int owner, float damage
     GuardianAttempt *a = &g->campaign.attempts[id];
     if (!a->active || !(a->participants & (1u << owner)) || !in_arena(g, owner, (unsigned)id))
         return 0;
-    return damage * (a->opening > 0 ? 1.6f : .55f);
+    return damage * (a->opening > 0 ? 1.6f : g->campaign.version >= 2 ? 1 : .55f);
 }
 void campaign_resume(Game *g) {
     for (unsigned i = 0; i < SC_GUARDIANS; i++) {
@@ -387,14 +416,18 @@ bool campaign_valid(const Campaign *c, const Player *players, const World *w) {
         Campaign empty = {0};
         return w->generator < 7 && memcmp(c, &empty, sizeof(empty)) == 0;
     }
-    if (c->version != 1 || w->generator < 7 || w->generator > SC_GENERATOR_VERSION ||
-        c->defeated >= (1u << SC_GUARDIANS) ||
+    if (c->version != (w->generator >= 16 ? 2u : 1u) || w->generator < 7 ||
+        w->generator > SC_GENERATOR_VERSION || c->defeated >= (1u << SC_GUARDIANS) ||
         c->tracked > SC_GUARDIANS)
         return false;
     unsigned phase = campaign_phase(c);
     for (unsigned i = 0; i < SC_GUARDIANS; i++) {
         bool done = (c->defeated & (1u << i)) != 0;
         const GuardianAttempt *a = &c->attempts[i];
+        if (a->broken > 3 || (unsigned)a->stage > GUARDIAN_OVERRUN ||
+            (!a->active && (a->broken || a->stage)) ||
+            (c->version < 2 && (a->broken || a->stage)))
+            return false;
         if (c->eligible[i] > SC_PLAYER_MASK || done != (c->eligible[i] != 0) ||
             a->participants > SC_PLAYER_MASK || a->active != (a->participants != 0) ||
             (done && a->active) || (i < 8 && i / 2 > phase && (done || a->active)))
@@ -409,6 +442,13 @@ bool campaign_valid(const Campaign *c, const Player *players, const World *w) {
     for (int i = 0; i < SC_PLAYERS; i++) {
         const CampaignProfile *p = &c->profiles[i];
         Player profile = players[i];
+        if (profile.rules != (w->generator >= 16 ? 2u : 0u))
+            return false;
+        if (c->version >= 2 && (profile.health > player_max_health(&profile) ||
+                                profile.shield > player_max_shield(&profile) ||
+                                profile.armor > player_max_armor(&profile) ||
+                                profile.energy > player_max_energy(&profile)))
+            return false;
         for (int s = 0; s < SC_ATTRIBUTES; s++)
             if (*player_attribute(&profile, s) > 12)
                 return false;
@@ -421,13 +461,14 @@ bool campaign_valid(const Campaign *c, const Player *players, const World *w) {
             (profile.leap > 0 && !(equipped & (1u << PSI_LEAP))) ||
             (profile.nova > 0 && !(equipped & (1u << PSI_NOVA))))
             return false;
-        if (p->powers >= 16 || p->rigs >= 4 || p->modules >= 16 || p->claimed & ~c->defeated ||
-            p->guns[0] >= SC_WEAPONS || p->guns[1] > SC_EMPTY_GUN ||
+        unsigned branches = c->version >= 2 ? SC_BUILD_BRANCHES : SC_SPECIALIZATIONS;
+        if (p->powers >= 16 || p->rigs >= 4 || p->modules >= (1u << branches) ||
+            p->claimed & ~c->defeated || p->guns[0] >= SC_WEAPONS || p->guns[1] > SC_EMPTY_GUN ||
             (p->guns[1] == SC_EMPTY_GUN && w->generator < 15) || p->guns[0] == p->guns[1] ||
             !(players[i].weapons & (1u << p->guns[0])) ||
             (p->guns[1] != SC_EMPTY_GUN && !(players[i].weapons & (1u << p->guns[1]))) ||
             (players[i].weapon != p->guns[0] && players[i].weapon != p->guns[1]) || p->rig > 2 ||
-            (p->rig && !(p->rigs & (1u << (p->rig - 1)))) || p->module > 4 ||
+            (p->rig && !(p->rigs & (1u << (p->rig - 1)))) || p->module > branches ||
             (p->module && !(p->modules & (1u << (p->module - 1)))) ||
             (players[i].riding && players[i].riding != p->rig))
             return false;

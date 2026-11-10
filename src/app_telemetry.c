@@ -203,13 +203,15 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
                              i, offers[i], sizeof(offers[i]));
     snprintf(result + used, sizeof(result) - used,
              "],\"campaign\":%u,\"phase\":%u,\"defeated\":%u,\"guardian\":%u,"
-             "\"guardian_active\":%s,\"guardian_health\":%.2f,\"reward_pending\":%u,"
+             "\"guardian_active\":%s,\"guardian_health\":%.2f,\"guardian_stage\":%u,"
+             "\"guardian_broken\":%u,\"reward_pending\":%u,"
              "\"powers_owned\":%u,\"rigs_owned\":%u,\"modules_owned\":%u,\"claimed\":%u,"
              "\"gun_slots\":[%u,%u],\"power_slots\":[%u,%u],\"rig_slot\":%u,\"module\":%u,"
              "\"build_slot\":%u,\"offer1\":\"%s\",\"offer2\":\"%s\",\"offer3\":\"%s\"}",
              campaign->version, campaign_phase(campaign), campaign->defeated, campaign->tracked,
              campaign->attempts[selected].active ? "true" : "false",
              guardian_room && guardian_room->ready ? guardian_room->enemies[0].health : 0,
+             campaign->attempts[selected].stage, campaign->attempts[selected].broken,
              campaign->choice[0], build->powers, build->rigs, build->modules, build->claimed,
              build->guns[0], build->guns[1], build->power_slots[0], build->power_slots[1],
              build->rig, build->module, app.game.views[0].loadout_slot, offers[0], offers[1],
@@ -355,5 +357,14 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
     }
     used = strlen(result);
     snprintf(result + used, sizeof(result) - used, "]}");
+    used = strlen(result) - 1;
+    unsigned relays = 0;
+    for (unsigned i = 0; i < 3; i++)
+        relays += app.game.builds[0].relays[i].life > 0;
+    snprintf(result + used, sizeof(result) - used,
+             ",\"rules\":%u,\"invested\":%u,\"relays\":%u,\"echo_life\":%.3f,\"mech_charge\":%.2f,"
+             "\"branch_preview\":%u}",
+             p->rules, player_investment(p), relays, app.game.builds[0].echo_life,
+             app.game.builds[0].charge, app.game.views[0].branch_preview);
     return result;
 }

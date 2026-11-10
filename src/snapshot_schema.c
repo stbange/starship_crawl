@@ -120,6 +120,7 @@ static const SnapshotField fields_Room[] = {
     FIELD(Room, enemy_count, int, SW_I32, NULL, 0, SC_MAX_ENEMIES),
     FIELD(Room, enemies, Enemy, SW_STRUCT, &schema_Enemy, 0, 0),
     FIELD(Room, frontier_active, _Bool, SW_BOOL, NULL, 0, 1),
+    FIELD(Room, recipe, uint8_t, SW_U8, NULL, 0, 6),
     FIELD(Room, frontier_attacker, uint8_t, SW_U8, NULL, 0, 255),
     FIELD(Room, frontier_timer, float, SW_FLOAT, NULL, -1e15, 1e15),
     FIELD(Room, frontier_disrupt, float, SW_FLOAT, NULL, -1e15, 1e15),
@@ -256,6 +257,7 @@ static const SnapshotField fields_Player[] = {
     FIELD(Player, vitality, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(Player, haste, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(Player, tint, uint32_t, SW_U32, NULL, 0, 2),
+    FIELD(Player, rules, uint32_t, SW_U32, NULL, 0, 2),
     FIELD(Player, mods, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(Player, weapons, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(Player, weapon, uint32_t, SW_U32, NULL, 0, SC_WEAPONS-1),
@@ -382,6 +384,14 @@ static const SnapshotField fields_Beam[] = {
     FIELD(Beam, life, float, SW_FLOAT, NULL, -1e15, 1e15),
 };
 static const SnapshotSchema schema_Beam = SCHEMA(Beam);
+
+static const SnapshotField fields_BuildEffects[] = {
+    FIELD(BuildEffects, echo, Position, SW_STRUCT, &schema_Position, 0, 0),
+    FIELD(BuildEffects, echo_life, float, SW_FLOAT, NULL, 0, 3),
+    FIELD(BuildEffects, charge, float, SW_FLOAT, NULL, 0, 120),
+    FIELD(BuildEffects, relays, Beam, SW_STRUCT, &schema_Beam, 0, 0),
+};
+static const SnapshotSchema schema_BuildEffects = SCHEMA(BuildEffects);
 
 static const SnapshotField fields_Flare[] = {
     FIELD(Flare, pos, Position, SW_STRUCT, &schema_Position, 0, 0),
@@ -568,7 +578,7 @@ static const SnapshotField fields_CampaignProfile[] = {
     FIELD(CampaignProfile, guns, uint32_t, SW_U32, NULL, 0, SC_EMPTY_GUN),
     FIELD(CampaignProfile, power_slots, uint32_t, SW_U32, NULL, 0, SC_EMPTY_POWER),
     FIELD(CampaignProfile, rig, uint32_t, SW_U32, NULL, 0, WAGON),
-    FIELD(CampaignProfile, module, uint32_t, SW_U32, NULL, 0, SC_SPECIALIZATIONS),
+    FIELD(CampaignProfile, module, uint32_t, SW_U32, NULL, 0, SC_BUILD_BRANCHES),
 };
 static const SnapshotSchema schema_CampaignProfile = SCHEMA(CampaignProfile);
 
@@ -579,6 +589,8 @@ static const SnapshotField fields_GuardianAttempt[] = {
     FIELD(GuardianAttempt, opening, float, SW_FLOAT, NULL, -1e15, 1e15),
     FIELD(GuardianAttempt, attack, unsigned, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(GuardianAttempt, aim, Vec3, SW_STRUCT, &schema_Vec3, 0, 0),
+    FIELD(GuardianAttempt, stage, GuardianStage, SW_I32, NULL, 0, GUARDIAN_OVERRUN),
+    FIELD(GuardianAttempt, broken, uint32_t, SW_U32, NULL, 0, 3),
 };
 static const SnapshotSchema schema_GuardianAttempt = SCHEMA(GuardianAttempt);
 
@@ -784,6 +796,7 @@ static const SnapshotField fields_Game[] = {
     FIELD(Game, shelter, Shelter, SW_STRUCT, &schema_Shelter, 0, 0),
     FIELD(Game, rigs, Rig, SW_STRUCT, &schema_Rig, 0, 0),
     FIELD(Game, beams, Beam, SW_STRUCT, &schema_Beam, 0, 0),
+    FIELD(Game, builds, BuildEffects, SW_STRUCT, &schema_BuildEffects, 0, 0),
     FIELD(Game, flares, Flare, SW_STRUCT, &schema_Flare, 0, 0),
     FIELD(Game, deaths, EnemyDeath, SW_STRUCT, &schema_EnemyDeath, 0, 0),
     FIELD(Game, death_hazards, DeathHazard, SW_STRUCT, &schema_DeathHazard, 0, 0),
@@ -836,7 +849,7 @@ const SnapshotSchema sc_snapshot_box = SCHEMA(Box);
 const SnapshotSchema sc_snapshot_room_record = SCHEMA(RoomRecord);
 const SnapshotSchema sc_snapshot_matrix_record = SCHEMA(MatrixRecord);
 const SnapshotSchema sc_snapshot_faction_region = SCHEMA(FactionRegion);
-const uint32_t sc_snapshot_schema_id = UINT32_C(0x06b2fd2f);
+const uint32_t sc_snapshot_schema_id = UINT32_C(0x19feee2c);
 #undef FIELD
 #undef SCHEMA
 // clang-format on

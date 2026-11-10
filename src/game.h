@@ -44,7 +44,7 @@ typedef struct {
     unsigned guide_mode, guide_device, lesson;
     float guide_quiet, lesson_time;
     bool journal, map_open, matrix_map;
-    unsigned loadout_slot, country_reading;
+    unsigned loadout_slot, country_reading, branch_preview; /* preview stores branch + 1 */
     Cell map_center;
     char message[128];
     float message_time;
@@ -66,6 +66,7 @@ typedef struct Player {
     double yaw, pitch;
     float health, cooldown, hurt, muzzle, lift_cooldown;
     uint32_t xp, level, kills, points, power, vitality, haste, tint;
+    uint32_t rules; /* 0: legacy attributes; 2: coherent expedition growth. */
     uint32_t mods[7], weapons, weapon, credits, logs, victories, pickups;
     float shield, armor, energy, slow;
     uint32_t career[SC_OUTCOMES];
@@ -131,6 +132,11 @@ typedef struct {
     float life;
 } Beam;
 typedef struct {
+    Position echo;
+    float echo_life, charge;
+    Beam relays[3];
+} BuildEffects;
+typedef struct {
     Position pos;
     Vec3 normal;
     float life, radius, power;
@@ -169,6 +175,7 @@ typedef struct Game {
     Shelter shelter;
     Rig rigs[SC_PLAYERS][2];
     Beam beams[SC_PLAYERS];
+    BuildEffects builds[SC_PLAYERS];
     Flare flares[SC_MAX_FLARES];
     EnemyDeath deaths[SC_MAX_DEATHS];
     DeathHazard death_hazards[SC_MAX_DEATH_HAZARDS];
@@ -247,6 +254,16 @@ void game_progression_step(Game *g, double dt);
 void game_weapon(Game *g, int player, int delta);
 void game_interact(Game *g, int player);
 void game_hurt(Game *g, int player, float damage, uint32_t flags);
+void game_hostile_hit(Game *g, int player, float damage, uint32_t flags);
+float player_rank(const Player *p, unsigned rank);
+unsigned player_investment(const Player *p);
+unsigned game_upgrade_cost(const Player *p, unsigned rank);
+bool game_build_active(const Game *g, int player, BuildBranch branch);
+bool game_build_equip(Game *g, int player, unsigned branch);
+void game_build_shot(Game *g, int player, WeaponDef *shot);
+void game_build_relay(Game *g, int player, Vec3 from, Vec3 to, float damage);
+bool game_build_echo(Game *g, Enemy *enemy, double dt);
+void game_builds_step(Game *g, double dt);
 bool game_objective(const Game *g, Cell *cell);
 const char *game_mission(const Game *g);
 Vec3 game_terminal(Cell cell);

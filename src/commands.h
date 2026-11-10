@@ -29,6 +29,7 @@ typedef enum {
     CMD_TINT,
     CMD_DISMISS_HINT,
     CMD_CLOSE_INTERACTION,
+    CMD_CAMPAIGN_BRANCH,
     CMD_COUNT
 } CommandKind;
 typedef struct {

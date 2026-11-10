@@ -14,7 +14,9 @@
         "combat": [
             "test_politics_browser.py",
             "test_regional_browser.py",
-            "test_deaths_browser.py"
+            "test_deaths_browser.py",
+            "test_builds_browser.py",
+            "test_guardians_browser.py"
         ],
         "world": [
             "test_frontier_browser.py",

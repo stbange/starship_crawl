@@ -364,7 +364,7 @@ static void test_combat(void) {
 
     game_new_ship(g, 999);
     CHECK(g->world.seed == 999);
-    CHECK(p->level == 1 && p->weapons == 1 && g->campaign.version == 1);
+    CHECK(p->level == 1 && p->weapons == 1 && g->campaign.version == 2);
     CHECK(position_absolute(p->pos).z < 0);
     game_destroy(g);
     free(g);

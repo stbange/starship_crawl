@@ -220,3 +220,11 @@ No progression, health, enemies or positions are injected. The same run complete
 its first power restoration, all four phases and extraction in 975.10 simulated
 seconds, with 119 kills and zero deaths. This is automated execution, not a
 human difficulty assessment. SHA-256: `54912eb25c0d05a953b644e28b0b172353dd4ee489b1a81efb568070a663bc63`.
+
+
+`coherent-guardian0.sav` and `coherent-guardian1.sav` are explicit current-revision
+starter-character staging fixtures for the furnace and infested relay. They are
+not completed journeys and grant no equipment or attributes. Generate with the
+current native core: from this directory run
+`../../build/sc_guardian_tests --fixtures`. Regenerate while unpublished format 17
+evolves; published legacy fixtures are retained unchanged.

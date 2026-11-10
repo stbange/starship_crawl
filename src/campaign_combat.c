@@ -33,6 +33,8 @@ static void guardian_shot(Game *g, Vec3 origin, Vec3 direction, unsigned family,
         }
 }
 bool campaign_enemy_step(Game *g, Room *room, int index, double dt) {
+    if (guardian_step(g, room, index, dt))
+        return true;
     if (!g->campaign.version || index != 0)
         return false;
     int id = campaign_guardian(room->cell);
@@ -121,7 +123,7 @@ bool campaign_enemy_step(Game *g, Room *room, int index, double dt) {
         }
         move_guardian(g, e, vmul(direction, speed * dt * (e->slow > 0 ? .5 : 1)));
         if (closest < 2.6 && a->opening > 0 && a->timer > 3.5) {
-            game_hurt(g, target, 22 + phase * 5.f, 0);
+            game_hostile_hit(g, target, 22 + phase * 5.f, 0);
             a->timer = 3.4f;
         }
     }

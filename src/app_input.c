@@ -174,6 +174,12 @@ void events(void) {
                     }
                     if (PLAYER_VIEW(&app.game, p).journal &&
                         PLAYER_VIEW(&app.game, p).journal_page == 5) {
+                        if (mb == SDL_GAMEPAD_BUTTON_SOUTH &&
+                            app.game.views[player].branch_preview) {
+                            app_command(player, CMD_CAMPAIGN_BRANCH,
+                                        app.game.views[player].branch_preview - 1, 0);
+                            continue;
+                        }
                         if (mb == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER ||
                             mb == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
                             app.game.views[player].loadout_slot =
@@ -451,6 +457,10 @@ void events(void) {
                 }
                 if (PLAYER_VIEW(&app.game, p).journal &&
                     PLAYER_VIEW(&app.game, p).journal_page == 5) {
+                    if (key == SDLK_G) {
+                        sc_web_action(CLIENT_EQUIP_BRANCH);
+                        break;
+                    }
                     if (key == SDLK_Q || key == SDLK_E) {
                         sc_web_action(key == SDLK_Q ? 221 : 222);
                         break;

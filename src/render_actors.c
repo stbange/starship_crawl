@@ -523,6 +523,9 @@ void sc_render_actors(Renderer *r, Game *g, int viewer) {
     Cell cell = world_cell(eye);
     for (int j = 0; j < g->world.count; j++)
         for (int i = 0; i < g->world.rooms[j].enemy_count; i++) {
+            int guardian = campaign_guardian(g->world.rooms[j].cell);
+            if (g->campaign.version >= 2 && guardian >= 0 && guardian < 8 && i > 0)
+                continue; /* Shootable assemblies have their own machinery mesh. */
             Enemy *e = &g->world.rooms[j].enemies[i];
             double distance = vlen(vsub(enemy_center(e), eye));
             if (!e->alive || distance > 130 ||
@@ -631,9 +634,10 @@ void sc_render_actors(Renderer *r, Game *g, int viewer) {
             if (world_cell(at).y == cell.y && vlen(vsub(at, eye)) < 130)
                 rig_mesh(r, rig, (RigKind)(k + 1), g->time);
         }
-    for (int i = 0; i < SC_PLAYERS; i++) {
-        const Beam *beam = &g->beams[i];
-        if (beam->life <= 0 || g->players[i].sheltered)
+    for (int i = 0; i < SC_PLAYERS * 4; i++) {
+        int owner = i / 4;
+        const Beam *beam = i % 4 ? &g->builds[owner].relays[i % 4 - 1] : &g->beams[owner];
+        if (beam->life <= 0 || g->players[owner].sheltered)
             continue;
         Vec3 from = position_absolute(beam->from), to = position_absolute(beam->to);
         if (vlen(vsub(from, eye)) < 150) {
@@ -641,6 +645,16 @@ void sc_render_actors(Renderer *r, Game *g, int viewer) {
             sc_render_tube(r, from, to, .014, .014, rgb(.9f, .95f, 1), 3);
             sc_render_octahedron(r, to, .1, beam->color, 2);
         }
+    }
+    for (int i = 0; i < SC_PLAYERS; i++) {
+        const BuildEffects *b = &g->builds[i];
+        Vec3 at = position_absolute(b->echo);
+        if (b->echo_life <= 0 || g->players[i].sheltered || vlen(vsub(at, eye)) > 100 ||
+            vlen(vsub(vadd(at, v3(0, .9, 0)), eye)) < 1.2)
+            continue;
+        Color glow = rgb(.25f, .55f, .85f);
+        sc_render_tube(r, vadd(at, v3(0, .2, 0)), vadd(at, v3(0, 1.2, 0)), .22, .3, glow, 1);
+        sc_render_octahedron(r, vadd(at, v3(0, 1.5, 0)), .22, glow, 2);
     }
     for (int i = 0; i < SC_MAX_FLARES; i++) {
         const Flare *f = &g->flares[i];

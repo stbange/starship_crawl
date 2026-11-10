@@ -20,7 +20,12 @@ bool game_save(const Game *g, const char *path) {
     }
     Stream s = {f, UINT32_C(2166136261), true};
     sc_save_number(&s, UINT32_C(0x5343524c), false);
-    sc_save_number(&s, g->world.generator >= 15 ? 16 : g->world.generator >= 14 ? 15 : 14, false);
+    sc_save_number(&s,
+                   g->world.generator >= 16   ? 17
+                   : g->world.generator >= 15 ? 16
+                   : g->world.generator >= 14 ? 15
+                                              : 14,
+                   false);
     sc_save_number(&s, g->world.seed, false);
     sc_save_number(&s, g->world.generator, false);
     /* A saved session always opens in solo; the other profile remains available. */
@@ -95,6 +100,9 @@ bool game_save(const Game *g, const char *path) {
             sc_save_number(&s, g->players[p].intro, false);
             sc_save_number(&s, g->players[p].lessons, false);
         }
+    if (g->world.generator >= 16)
+        for (int p = 0; p < SC_LEGACY_PLAYERS; p++)
+            sc_save_number(&s, g->players[p].rules, false);
     uint32_t hash = s.hash;
     sc_save_number(&s, hash, false);
     if (fflush(f) != 0)

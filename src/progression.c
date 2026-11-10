@@ -1,13 +1,25 @@
 #include "game.h"
 #include <stdio.h>
 float player_max_shield(const Player *p) {
-    return 50 + 15.0f * p->mods[1];
+    return 50 + 15.0f * player_rank(p, p->mods[1]);
 }
 float player_max_armor(const Player *p) {
-    return 40 + 12.0f * p->mods[0];
+    return 40 + 12.0f * player_rank(p, p->mods[0]);
 }
 float player_max_energy(const Player *p) {
-    return 100 + 20.0f * p->mods[5];
+    return 100 + 20.0f * player_rank(p, p->mods[5]);
+}
+float player_rank(const Player *p, unsigned rank) {
+    return p->rules == 2 && rank > 4 ? 4 + (rank - 4) * .5f : (float)rank;
+}
+unsigned player_investment(const Player *p) {
+    unsigned total = p->power + p->vitality + p->haste;
+    for (unsigned i = 0; i < 7; i++)
+        total += p->mods[i];
+    return total;
+}
+unsigned game_upgrade_cost(const Player *p, unsigned rank) {
+    return p->rules == 2 ? 200 + 60 * player_investment(p) + 40 * rank : 60 + rank * 25;
 }
 uint32_t *player_attribute(Player *p, int attribute) {
     if (attribute == 0)
@@ -41,7 +53,7 @@ void game_weapon(Game *g, int player, int delta) {
         p->lessons |= 1u << LESSON_WEAPON;
     game_message(g, sc_weapons[p->weapon].name);
 }
-void game_hurt(Game *g, int player, float damage, uint32_t flags) {
+static void hurt(Game *g, int player, float damage, uint32_t flags, bool hostile) {
     if (player < 0 || player >= g->player_count || !isfinite(damage) || damage <= 0)
         return;
     Player *p = &g->players[player];
@@ -56,7 +68,11 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags) {
     float shield = fminf(damage, p->shield);
     p->shield -= shield;
     damage -= shield;
+    float before = damage;
+    bool charging = hostile && p->riding == MECH && game_build_active(g, player, BUILD_CAPACITOR);
     game_rig_damage(g, player, &damage);
+    if (charging && p->riding == MECH)
+        g->builds[player].charge = fminf(120, g->builds[player].charge + before - damage);
     float absorb = fminf(p->armor, damage * fminf(.65f, .3f + .008f * p->mods[0]));
     p->armor -= absorb * .5f;
     damage -= absorb;
@@ -94,7 +110,7 @@ const char *game_mission(const Game *g) {
     if (politics_objective(g, &target))
         return politics_goal(g);
     if (campaign_objective(g, &target))
-        return campaign_guardian_name(g->world.seed, (unsigned)campaign_guardian(target));
+        return guardian_name(g, (unsigned)campaign_guardian(target));
     if (g->story.version)
         return !game_story_available(g, g->story.tracked) && g->mission == 6
                    ? "EXPEDITION COMPLETE / YOUR CHOICE ENDURES"
@@ -103,6 +119,12 @@ const char *game_mission(const Game *g) {
 }
 Vec3 game_terminal(Cell cell) {
     return vadd(world_lift(cell), v3(0, 0, 5));
+}
+void game_hurt(Game *g, int player, float damage, uint32_t flags) {
+    hurt(g, player, damage, flags, false);
+}
+void game_hostile_hit(Game *g, int player, float damage, uint32_t flags) {
+    hurt(g, player, damage, flags, true);
 }
 void game_interact(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
@@ -117,6 +139,8 @@ void game_interact(Game *g, int player) {
     if (game_rig_interact(g, player))
         return;
     if (game_shelter_interact(g, player))
+        return;
+    if (guardian_prepare(g, player))
         return;
     if (onboarding_interact(g, player))
         return;

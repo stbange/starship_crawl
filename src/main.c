@@ -94,6 +94,8 @@ void frame(void *unused) {
 #ifdef __EMSCRIPTEN__
     draw_pause = app.paused && app.started;
 #endif
+    if (app.inspect_static)
+        draw_pause = false;
     renderer_draw(&app.renderer, &app.game, &app.session.views, w, h, draw_pause, app.touch,
                   app.debug, app.fps, app.save_status);
     if (app.options)

@@ -15,6 +15,8 @@ void sc_render_campaign_journal_draw(Renderer *r, const Game *g, int player, flo
     char text[150];
     const Campaign *c = &g->campaign;
     const CampaignProfile *p = &c->profiles[player];
+    unsigned preview = g->views[player].branch_preview;
+    unsigned branch = preview ? preview - 1 : p->module;
     unsigned phase = campaign_phase(c);
     snprintf(text, sizeof(text), "EXPEDITION / %s / PHASE %u OF 4", campaign_phase_name(phase),
              phase < 4 ? phase + 1 : 4);
@@ -38,7 +40,7 @@ void sc_render_campaign_journal_draw(Renderer *r, const Game *g, int player, flo
                                               : 0;
     Cell site = campaign_site(id);
     bool story_guidance = !c->choice[player] && c->tracked == SC_GUARDIANS;
-    snprintf(text, sizeof(text), "%s / [%d,%d,%d] / %s", campaign_guardian_name(g->world.seed, id),
+    snprintf(text, sizeof(text), "%s / [%d,%d,%d] / %s", guardian_name(g, id),
              site.x, site.y, site.z, c->choice[player] ? "CLAIM ONE REWARD" : "U CHANGES ROUTE");
     cursor = sc_render_wrapped(
                  r, left, cursor, s, width,
@@ -81,22 +83,20 @@ void sc_render_campaign_journal_draw(Renderer *r, const Game *g, int player, flo
             : i == 4 ? (p->rig == MECH    ? "FOLD MECH"
                         : p->rig == WAGON ? "FOLD WAGON"
                                           : "EMPTY")
-                     : campaign_module_name(p->module);
+                     : campaign_build_name(g, branch);
         snprintf(text, sizeof(text), "%c %-14s %s", g->views[player].loadout_slot == i ? '>' : ' ',
                  labels[i], value);
         cursor = sc_render_wrapped(r, left, cursor, s, width, text,
                                    g->views[player].loadout_slot == i ? gold : ink) +
                  1;
     }
-    static const char *effects[] = {"EARN SPECIALIZATIONS FROM GUARDIANS",
-                                    "MOBILE STORM / +60% WEAPON AND NOVA DAMAGE WHILE FLYING",
-                                    "SIEGE ENGINEER / +50% MECH WEAPON DAMAGE",
-                                    "SILENT HUNTER / +150% DAMAGE ON THE SHOT THAT BREAKS VEIL",
-                                    "SYSTEMS SABOTEUR / +60% DAMAGE IN SECURITY-SILENCED ROOMS"};
-    if (!onboarding_active(g) || p->module)
-        cursor = sc_render_wrapped(r, left, cursor + gap, s, width, effects[p->module], mint) + gap;
+    if (!onboarding_active(g) || p->module || preview)
+        cursor = sc_render_wrapped(r, left, cursor + gap, s, width, campaign_build_hint(g, branch),
+                                   mint) +
+                 gap;
     cursor = sc_render_wrapped(r, left, cursor, s, width,
-                               campaign_safe_refit(g, player)
+                               preview ? "PREVIEW / G OR PAD A EQUIPS / ENTER CANCELS"
+                               : campaign_safe_refit(g, player)
                                    ? "REFIT READY / Q E SLOT / Z X CHANGE ITEM"
                                    : "REFIT AT BAY, SHELTER OR A DEFEATED GUARDIAN'S CONSOLE",
                                gold) +
@@ -116,15 +116,28 @@ void sc_render_campaign_hud(Renderer *r, const Game *g, int player, float w, flo
         return;
     const Player *p = &g->players[player];
     char label[160];
+    if (p->riding == MECH && game_build_active(g, player, BUILD_CAPACITOR)) {
+        snprintf(label, sizeof(label), "CAPACITOR %.0f / 120 / NEXT AUTOCANNON SHOT",
+                 g->builds[player].charge);
+        sc_render_centered(r, w * .5f, h - 105 * s, .85f * s, label, rgb(.3f, .8f, 1));
+    }
     for (unsigned id = 0; id < SC_GUARDIANS; id++) {
         const GuardianAttempt *a = &g->campaign.attempts[id];
+        if (g->campaign.version >= 2 && id < 8 && !a->active &&
+            !(g->campaign.defeated & (1u << id)))
+            for (unsigned part = 0; part < 2; part++)
+                if (vlen(vsub(position_absolute(p->pos), guardian_console(id, part))) < 3) {
+                    snprintf(label, sizeof(label), "G / BYPASS %s / OPTIONAL PREPARATION",
+                             part ? "WEAPONS FEED" : "COOLANT");
+                    sc_render_centered(r, w * .5f, h * .63f, .85f * s, label, rgb(.3f, .85f, 1));
+                }
         if (a->active && (a->participants & (1u << player))) {
             Room *room = world_find((World *)&g->world, campaign_site(id));
             if (!room || !room->ready)
                 continue;
             const Enemy *e = &room->enemies[0];
             snprintf(label, sizeof(label), "%s / %s / %.0f",
-                     campaign_guardian_name(g->world.seed, id),
+                     guardian_name(g, id),
                      e->windup > 0    ? "MOVE / ATTACK INCOMING"
                      : a->opening > 0 ? "CORE EXPOSED"
                                       : "ARMORED",
@@ -135,6 +148,12 @@ void sc_render_campaign_hud(Renderer *r, const Game *g, int player, float w, flo
                            w * .4f * fmaxf(0, e->health) /
                                campaign_guardian_health(id, a->participants),
                            4 * s, c);
+            if (g->campaign.version >= 2 && id < 8) {
+                snprintf(label, sizeof(label), "STAGE %u / %s %s / SHOOT LIT ASSEMBLIES TO EXPOSE CORE",
+                         a->stage, (a->broken & 1) ? "RING OFF" : "RING LIVE",
+                         (a->broken & 2) ? "FAN OFF" : "FAN LIVE");
+                sc_render_centered(r, w * .5f, 165 * s, .65f * s, label, c);
+            }
         } else if (vlen(vsub(position_absolute(p->pos), game_terminal(campaign_site(id)))) < 4) {
             sc_render_centered(r, w * .5f, h * .63f, s,
                                (g->campaign.defeated & (1u << id))

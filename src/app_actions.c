@@ -55,6 +55,11 @@ EMSCRIPTEN_KEEPALIVE void sc_web_action(int action) {
     }
     if (!onboarding_action(&app.game, 0, action))
         return;
+    if (action == CLIENT_EQUIP_BRANCH) {
+        if (app.game.views[0].branch_preview)
+            app_command(0, CMD_CAMPAIGN_BRANCH, app.game.views[0].branch_preview - 1, 0);
+        return;
+    }
     MatrixDiver *d = &app.game.matrix.divers[0];
     if (action >= CLIENT_COURTS && action <= CLIENT_TRACK_COURT) {
         if (!app.game.politics.version)

@@ -319,7 +319,9 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Stereo WebGL, controller gameplay, lifecycle and save isolation
         if: inputs.extended_tests
-        run: python scripts/run-browser-test.py tests/test_quest_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/
+        run: |
+          python scripts/run-browser-test.py tests/test_quest_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/
+          python scripts/run-browser-test.py tests/test_guardians_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/ --quest
       - name: Retain Quest captures and test results
         if: always() && inputs.extended_tests
         uses: actions/upload-artifact@v4

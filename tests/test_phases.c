@@ -14,6 +14,10 @@ static Game *fresh(unsigned seed) {
     Game *g = calloc(1, sizeof(*g));
     CHECK(g);
     game_init(g, seed);
+    /* Keep the original campaign/snapshot regression on its published rules.
+       test_builds.c covers the new revision and default new-ship boundary. */
+    g->world.generator = 15;
+    campaign_init(g);
     return g;
 }
 static void destroy(Game *g) {
@@ -49,8 +53,7 @@ static void win(Game *g, unsigned id) {
 }
 static void fresh_characters(void) {
     Game *g = fresh(713);
-    CHECK(g->world.generator == SC_GENERATOR_VERSION && g->campaign.version == 1 &&
-          g->world.open_layer == 1);
+    CHECK(g->world.generator == 15 && g->campaign.version == 1 && g->world.open_layer == 1);
     for (int i = 0; i < 2; i++) {
         CHECK(g->players[i].weapons == 1 && g->players[i].level == 1);
         CHECK(!g->campaign.profiles[i].powers && !g->campaign.profiles[i].rigs);
@@ -386,7 +389,7 @@ static void phases_and_persistence(void) {
     CHECK(!campaign_choose(g, 0, 1));
     CHECK(!campaign_refit(g, 0, 0, 1));
     game_new_ship(g, 42);
-    CHECK(g->campaign.version == 1 && g->players[0].weapons == 1);
+    CHECK(g->campaign.version == 2 && g->players[0].weapons == 1);
     destroy(g);
     remove("phase-unit.sav");
     remove("phase-attempt.sav");

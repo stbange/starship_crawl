@@ -4,9 +4,11 @@
 #include <string.h>
 
 float player_max_health(const Player *p) {
-    return 100.0f + 25.0f * p->vitality;
+    return 100.0f + 25.0f * player_rank(p, p->vitality);
 }
 unsigned player_next_level(const Player *p) {
+    if (p->rules == 2)
+        return 80 + 80 * (p->level - 1) + 10 * (p->level - 1) * (p->level - 1);
     return 80 + 40 * (p->level - 1);
 }
 Vec3 player_eye(const Player *p) {
@@ -158,7 +160,7 @@ bool game_upgrade(Game *g, int player, int upgrade) {
     if (!(caps & OB_UPGRADES) || (upgrade >= 3 && !(caps & OB_FULL_STATS)))
         return false;
     uint32_t *attribute = player_attribute(p, upgrade);
-    unsigned cost = 60 + *attribute * 25;
+    unsigned cost = game_upgrade_cost(p, *attribute);
     if (!p->points && p->credits < cost)
         return false;
     if (*attribute >= (g->campaign.version ? 12u : 50u))
@@ -168,11 +170,13 @@ bool game_upgrade(Game *g, int player, int upgrade) {
         p->points--;
     else
         p->credits -= cost;
-    p->health = player_max_health(p);
     g->dirty = true;
-    p->shield = player_max_shield(p);
-    p->armor = player_max_armor(p);
-    p->energy = player_max_energy(p);
+    if (p->rules != 2) {
+        p->health = player_max_health(p);
+        p->shield = player_max_shield(p);
+        p->armor = player_max_armor(p);
+        p->energy = player_max_energy(p);
+    }
     game_player_message(g, game_player_id(g, player), sc_attributes[upgrade]);
     return true;
 }
@@ -180,16 +184,17 @@ static void award(Game *g, Player *p, unsigned xp) {
     p->kills++;
     g->mission_kills++;
     p->credits += 5 + 2 * p->mods[6];
-    p->xp += xp;
+    p->xp = p->rules == 2 ? (uint32_t)fmin(1000000000, (double)p->xp + xp) : p->xp + xp;
     while (p->xp >= player_next_level(p) && p->level < 1000) {
         p->xp -= player_next_level(p);
         p->level++;
-        p->points++;
-        p->health = player_max_health(p);
-        p->shield = player_max_shield(p);
-        p->armor = player_max_armor(p);
-        p->energy = player_max_energy(p);
-        game_message(g, "ASCENSION / CHARACTER UPGRADE AVAILABLE");
+        p->points = p->rules == 2 ? (uint32_t)fmin(1000, p->points + 1) : p->points + 1;
+        p->health = fminf(player_max_health(p), p->rules == 2 ? p->health + 15 : 1e6f);
+        p->shield = fminf(player_max_shield(p), p->rules == 2 ? p->shield + 10 : 1e6f);
+        p->armor = fminf(player_max_armor(p), p->rules == 2 ? p->armor : 1e6f);
+        p->energy = fminf(player_max_energy(p), p->rules == 2 ? p->energy + 10 : 1e6f);
+        game_message(g, p->rules == 2 ? "ASCENSION / +1 POINT / +15 HEALTH +10 SHIELD +10 ENERGY"
+                                      : "ASCENSION / CHARACTER UPGRADE AVAILABLE");
     }
     g->dirty = true;
 }
@@ -203,6 +208,8 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
         return;
     Enemy *e = &room->enemies[index];
     if (!e->alive || e->allegiance == 2)
+        return;
+    if (guardian_component_damage(g, room, index, owner, damage))
         return;
     damage = encounter_damage(g, room, index, damage, flags);
     damage = campaign_damage(g, room, index, owner, damage);
@@ -285,8 +292,8 @@ void game_nova(Game *g, int player) {
     Player *p = &g->players[player];
     unsigned rank = g->frontier.ranks[player][RELIC_CHAOS], before = g->hits;
     blast_enemies(g, player_eye(p), player,
-                  14 * (1 + .2f * p->power) * campaign_attack_bonus(g, player), rank >= 2 ? 9 : 7,
-                  rank ? W_CHILL : 0);
+                  14 * (1 + .2f * player_rank(p, p->power)) * campaign_attack_bonus(g, player),
+                  rank >= 2 ? 9 : 7, rank ? W_CHILL : 0);
     if (rank >= 3 && g->hits > before && p->relic_cooldown <= 0) {
         p->energy = fminf(player_max_energy(p), p->energy + 5);
         p->relic_cooldown = 1;
@@ -338,7 +345,8 @@ static void shoot(Game *g, Player *p
         return;
     }
     p->energy -= w->cost;
-    p->cooldown = w->interval / (1 + .10f * p->haste);
+    game_build_shot(g, player, &shot);
+    p->cooldown = w->interval / (1 + .10f * player_rank(p, p->haste));
     p->muzzle = .075f;
     p->cloaked = false;
     g->shots++;
@@ -368,7 +376,7 @@ static void shoot(Game *g, Player *p
         Vec3 dir = facing(p->yaw + ((int)(hash % 2001) - 1000) * spread / 1000,
                           p->pitch + ((int)((hash >> 12) % 2001) - 1000) * spread / 1000);
 #endif
-        float damage = w->damage * (1 + .35f * p->power);
+        float damage = w->damage * (1 + .35f * player_rank(p, p->power));
         if (hash % 100 < 3 + p->mods[3] * 2)
             damage *= 1.75f;
         while (g->projectiles[slot].active)
@@ -619,7 +627,8 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
         end = vadd(ray, vmul(dir, nearest));
         if (target < 0)
             break;
-        game_damage_enemy(g, room, target, owner, w->damage * (1 + .35f * p->power), w->flags);
+        game_damage_enemy(g, room, target, owner, w->damage * (1 + .35f * player_rank(p, p->power)),
+                          w->flags);
         int at = history.hit_count++;
         history.hit_actors[at] = game_actor_id(g, room, &room->enemies[target]);
         left -= nearest + .01;
@@ -635,6 +644,7 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
         muzzle = origin;
 #endif
     g->beams[owner] = (Beam){position_from(muzzle), position_from(end), w->color, .14f};
+    game_build_relay(g, owner, origin, end, w->damage * (1 + .35f * player_rank(p, p->power)));
 }
 static void projectiles_step(Game *g, double dt) {
     for (int i = 0; i < SC_MAX_PROJECTILES; i++) {
@@ -690,7 +700,7 @@ static void projectiles_step(Game *g, double dt) {
             if (shot->owner >= 0 && (shot->flags & W_FLARE) && wall < travel)
                 game_attach_flare(g, shot->owner, position_absolute(shot->pos), dir);
             if (player >= 0) {
-                game_hurt(g, player, shot->damage, shot->flags);
+                game_hostile_hit(g, player, shot->damage, shot->flags);
                 g->projectile_hits++;
             }
             if (target >= 0 && (shot->owner < 0 || !(shot->flags & W_BLAST))) {
@@ -841,6 +851,8 @@ static void enemies_step(Game *g, double dt) {
                 e->windup = 0;
                 continue;
             }
+            if (game_build_echo(g, e, dt))
+                continue;
             const EnemyDef *def = &sc_enemies[e->kind];
             e->flash = fmaxf(0, e->flash - (float)dt);
             e->cooldown = fmaxf(0, e->cooldown - (float)dt);
@@ -938,7 +950,8 @@ static void enemies_step(Game *g, double dt) {
                         game_enemy_shot(g, room, e);
                         e->cooldown = def->interval;
                     }
-                } else if (best < (e->kind == 7 ? 48 : 30) && best > 3 && e->cooldown <= 0 &&
+                } else if ((!room->recipe || encounter_attack(room, i)) &&
+                           best < (e->kind == 7 ? 48 : 30) && best > 3 && e->cooldown <= 0 &&
                            sight) {
                     e->aim = player_eye(target);
                     e->windup = .8f;
@@ -955,7 +968,8 @@ static void enemies_step(Game *g, double dt) {
                             .42, 1.25, NULL);
                 }
             } else {
-                if ((def->flags & CHARGE) && best > 4 && best < 24 && sight && e->special <= 0) {
+                if ((!room->recipe || encounter_attack(room, i)) && (def->flags & CHARGE) &&
+                    best > 4 && best < 24 && sight && e->special <= 0) {
                     e->aim = direction;
                     e->windup = .6f;
                     e->special = 4;
@@ -983,8 +997,9 @@ static void enemies_step(Game *g, double dt) {
                 }
                 if ((def->flags & DETONATE) && best < 3 && sight) {
                     game_damage_enemy(g, room, i, (int)(target - g->players), 10000, 0);
-                } else if (best < (def->role == 2 ? 2.8 : 1.7) && e->cooldown <= 0 && sight) {
-                    game_hurt(g, (int)(target - g->players), def->damage, def->flags);
+                } else if ((!room->recipe || encounter_attack(room, i)) &&
+                           best < (def->role == 2 ? 2.8 : 1.7) && e->cooldown <= 0 && sight) {
+                    game_hostile_hit(g, (int)(target - g->players), def->damage, def->flags);
                     e->cooldown = def->interval;
                 }
             }
@@ -997,6 +1012,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     g->time += dt;
     factions_forces_sync(g, true);
     game_equipment_step(g, dt);
+    game_builds_step(g, dt);
     g->message_time = fmaxf(0, g->message_time - (float)dt);
     for (int i = 0; i < g->player_count; i++)
         g->views[i].message_time = fmaxf(0, g->views[i].message_time - (float)dt);
