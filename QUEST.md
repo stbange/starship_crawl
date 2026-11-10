@@ -131,8 +131,10 @@ Artifacts are `starship_crawl_quest.html`, `.js` and `.wasm`. The packager produ
 builds, and refuses to overwrite an ordinary web root. Serve the packaged
 directory over HTTPS; remote plain HTTP and opening the files directly do not
 provide a usable immersive WebXR origin. GitHub Actions retains a downloadable
-**quest-webxr** artifact and publishes the tested page under `/quest/` after all
-quality, native, ordinary-web and Quest checks pass.
+**quest-webxr** artifact and publishes the page under `/quest/` after the required
+target builds and fast checks pass. The full Quest browser suite is optional:
+enable **Run extended tests** in a manual workflow run. Selected extended tests
+must also pass before that run publishes.
 
 `SC_BUILD_QUEST` defaults to **OFF** and is accepted only for an Emscripten game
 build. The `SC_WEBXR` definition belongs to `sc_quest_core` and its application;

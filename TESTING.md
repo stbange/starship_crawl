@@ -1,9 +1,13 @@
-The quality gates combine strict OpenSpec validation, component unit tests, deterministic campaign simulations, native rendering checks, and actual WASM/WebGL browser tests. Pages deployment waits for all required native, instrumented, browser, Quest and quality jobs together.
+The quality gates combine strict OpenSpec validation, component unit tests,
+deterministic campaign simulations, native rendering checks and actual WASM/WebGL
+browser tests. Normal CI builds all targets with fast checks. Long verification
+suites are optional through the **Run extended tests** manual workflow input;
+when selected, they must pass before that run publishes Pages.
 
 **Session architecture (R1–R7).**
 
-The default native build registers 51 tests (30 unit, 20 gameplay and one SDL
-platform check). The headless Quest configuration has 37 unit tests. Final
+Local native builds with default CMake options register 51 tests (30 unit,
+20 gameplay and one SDL platform check). The headless Quest configuration has 37 unit tests. Final
 unit-only coverage is **98.1% (11,204/11,420 lines)**, with every measured
 source above 95%. Renderer and platform integration remain outside this metric.
 The ordinary-control replay retains the pre-refactor checkpoint bytes exactly.
@@ -51,19 +55,32 @@ JavaScript and platform adapters remain outside that unit coverage percentage.
 keyboard/controller help, dismissal, saved guidance across new ships/imports,
 mobile layouts and the earned first link. The Quest suite covers guidance menus
 and repeats that first link with actual WebXR API inputs supplied by the virtual
-device; `--intro-only` selects that case during development. The complete native,
-ordinary-web and Quest workflow remains required before Pages deployment.
+device; `--intro-only` selects that case during development. The manual extended
+workflow includes these native, ordinary-web and Quest checks and requires them
+to pass before its Pages deployment.
 Physical Quest hardware and first-time human comprehension are not established
 by these automated checks. [Onboarding evidence](docs/reviews/2026-11-09-onboarding/README.md).
 
 
-**CI scheduling.** Every main push still runs the complete publication gates.
-The ordinary web application is compiled and packaged once; six isolated browser
-jobs download that exact artifact and run all 19 suites. Each runner uses one
-browser test at a time. The browser launcher streams progress immediately and
+**CI scheduling.** Pushes to main, pull requests and manual runs default to target
+builds plus fast checks. Linux and Windows configure with `BUILD_TESTING=OFF`,
+build the game and upload downloadable executables. The ordinary web and isolated
+Quest packages are also built and uploaded. Strict specifications, snapshot schema
+and tooling self-tests, browser-inventory validation, Quest packaging checks and
+a ten-frame Linux startup smoke check remain automatic. Main publishes both web
+targets when those required jobs pass; other branches and pull requests do not
+publish. No coverage, sanitizer, full native/gameplay/rendering or browser session
+is started by default.
+
+To run the complete verification, open **Actions → Build, test, and publish →
+Run workflow**, choose the branch, and enable **Run extended tests**. The input is
+off by default and does not change later pushes. In this mode native builds also
+build/run their full CTest suites and extended Linux render scenes; Quest runs its
+browser suite. Six ordinary browser jobs download the exact ordinary web artifact
+and run all 19 suites. Each runner uses one browser test at a time. The launcher
 retains full logs plus per-suite timing/exit-status JSON in its capture artifact.
 
-Coverage is measured from the 37 unit tests alone, at the same 95% overall
+The optional coverage job measures the 37 unit tests alone, at the same 95% overall
 and per-file threshold. Afterwards, six separate jobs run all instrumented
 campaign cases from the coverage build, and six run all address/undefined-behavior/
 leak sanitizer cases. `SC_SPLIT_CAMPAIGN_TESTS=ON` registers the existing two phase
@@ -74,8 +91,11 @@ filesystems so journeys with the same temporary save filename cannot collide.
 
 `tests/ci-suites.json` assigns the groups. The runner rejects missing, duplicate,
 stale or empty assignments before executing them; newly added CTests go into the
-required remainder group. Pages requires all groups, the native platforms, strict
-specifications, unit coverage and Quest checks. A failed group cannot publish.
+required remainder group. The publication condition explicitly accepts skipped
+optional jobs in a normal run. In an extended run every selected group must
+succeed; failures, cancellation or unexpected skips block publication. Required
+build/fast-check failures always block publication. Local validation commands and
+coverage thresholds are unchanged.
 
 ```sh
 python3 -m unittest discover -s tests -p 'test_ci_tools.py'
@@ -97,7 +117,7 @@ reproduces the slow-renderer scheduling gap without changing the simulation.
 byte-for-byte saved-expedition comparison between ordinary and Quest cores.
 `python3 scripts/check-coverage.py --quest` measures both variants and explicitly
 requires `quest.c` in the unchanged 95% overall/per-file unit-only gate. The
-ordinary coverage command and target defaults are unchanged. CI also runs the
+ordinary coverage command and target defaults are unchanged. Extended CI also runs the
 Quest tests under address/undefined-behavior/leak sanitizers.
 
 Package both pages at their production-relative paths before testing:
@@ -118,7 +138,7 @@ legacy facilities, session permission/tracking/visibility/context loss,
 re-entry, and same-origin save isolation. No emulated device or gameplay grants
 are shipped in the application. Results and stereo captures are retained in
 `build-quest/test-artifacts/` and CI's `quest-test-captures` artifact. The normal
-browser suites remain separate required gates. Physical Quest 3 frame rate,
+browser suites remain separate gates when extended tests are selected. Physical Quest 3 frame rate,
 comfort, input and audio checks remain [explicitly pending](docs/playtests/QUEST3_CHECKLIST.md).
 
 The Quest suite also starts with a missing controller, null or emulated hand

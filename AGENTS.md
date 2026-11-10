@@ -2,8 +2,14 @@
 
 Work directly on `main` and push completed, validated work to `origin/main` unless
 the user explicitly requests another branch. Keep `main` tracking `origin/main`.
-Every push to `main` triggers the complete checks and publishes GitHub Pages after
-they pass; do not skip the publishing checks for documentation-only changes.
+Every push to `main` builds Linux, Windows, web and Quest, runs fast specification,
+tooling, packaging and Linux startup checks, and publishes GitHub Pages after they
+pass. Keep these builds and publishing checks for documentation-only changes too.
+Long native/render, coverage, sanitizer, gameplay and browser suites are opt-in:
+use Actions -> Build, test, and publish -> Run workflow -> Run extended tests.
+Selected extended tests must pass before that run can publish. Do not enable them
+automatically for documentation-only changes; use them when the requested work or
+affected behavior needs the broader verification. Local checks below still apply.
 
 If a required GitHub operation is blocked by permissions or unavailable access,
 ask the user for help with the exact GitHub URL and specific clicks or commands

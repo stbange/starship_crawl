@@ -77,10 +77,23 @@ python3 -m http.server --directory build-web 8000
 
 Open `starship_crawl.html` through the HTTP server. Keep the HTML, JavaScript, and WASM files together. WebGL 2 is required; the build uses a single browser thread and does not require COOP/COEP headers. A click or tap starts play and unlocks audio. Mobile controls are intended primarily for landscape orientation.
 
-**GitHub Pages deployment.** Work directly on `main`. Every push to `main`, including documentation and configuration changes, starts the `Build, test, and publish` workflow. It builds the web game, stages `index.html` with its JavaScript and WASM files, and exercises the complete browser suite under `/starship_crawl/`. A separate job builds and tests Quest VR under `/starship_crawl/quest/`; the Pages assembly preserves the ordinary root package and adds that subdirectory. Once the quality, native, ordinary-web and Quest checks pass, the tested site publishes automatically through the official GitHub Pages actions. Pull requests build and test without deploying. In repository Settings → Pages, set the publishing source to **GitHub Actions** once. The expected project address is `https://stbange.github.io/starship_crawl/`; the Actions deployment result confirms when it is live.
+**GitHub Pages deployment.** Work directly on `main`. Every push to `main`, including
+documentation and configuration changes, starts the `Build, test, and publish`
+workflow. By default it builds Linux, Windows, ordinary web and Quest, uploads
+downloadable artifacts, and runs fast specification/tooling checks, Quest packaging
+checks and a short Linux startup check. It stages the ordinary site at
+`/starship_crawl/` and Quest at `/starship_crawl/quest/`, then publishes through the
+official GitHub Pages actions once the required jobs pass. Pull requests build
+without deploying. In Settings → Pages, use **GitHub Actions** as the source.
+The expected address is `https://stbange.github.io/starship_crawl/`; the Actions
+deployment result confirms publication.
 
 For a manual publication, open **Actions → Build, test, and publish → Run workflow**
-and select **main**. Other branches can pass every test while their Pages job is
+and select **main**. Leave **Run extended tests** unchecked for the normal build
+and publication path. Check it to also run full native unit/gameplay tests,
+the extended rendering scenes, 95% unit coverage, sanitizer campaigns, all ordinary
+browser suites and Quest browser tests. Selected tests must pass before that run
+publishes. Other branches can pass their checks while their Pages job is
 skipped. Merge the desired changes into `main` first; the push also starts
 publication automatically. The run title and web job summary state whether that
 run will publish. [Approach screenshots](docs/screenshots/README.md) show the
@@ -153,7 +166,13 @@ Start at the gold-marked console beside the loading bay's lift with **G**. Explo
 
 Autosaves occur every 20 seconds of active play. Save explicitly before closing a tab; asynchronous browser writes cannot be guaranteed during tab shutdown. Imported saves with an unsupported version or corrupt payload leave the running expedition unchanged.
 
-**Specifications and automated quality.** OpenSpec 1.16.0 and Codex workflows are checked in, with validated specifications under `openspec/specs`. Native unit tests measure **at least 95% core line coverage** and enforce **95% overall and in every measured source file**. Automated campaigns finish all nine generated outcomes and the three-seed legacy route; separate journeys exercise the shelter and equipment. Nine browser suites test the compiled WASM/WebGL game, input, saves, and mobile controls. Coverage reports and browser captures are retained in CI, and Pages requires all quality, native, and web jobs to pass. See [TESTING.md](TESTING.md) for commands, scope, reports, and the specification workflow.
+**Specifications and automated quality.** OpenSpec 1.16.0 and Codex workflows are
+checked in, with validated specifications under `openspec/specs`. The optional
+extended CI run retains the **95% overall and per-source core unit coverage**
+threshold, automated expeditions, native rendering checks, 19 ordinary browser
+suites and separate Quest browser tests. Coverage reports and browser captures
+are retained when those checks run, and a selected failing check blocks Pages.
+See [TESTING.md](TESTING.md) for commands, scope, reports and the two CI modes.
 
 **Development commands**
 

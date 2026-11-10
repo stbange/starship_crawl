@@ -1,22 +1,26 @@
 name: Build, test, and publish
 run-name: >-
-  ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && 'Build, test, and publish Pages' || 'Build and test only (Pages requires main)' }} — ${{ github.ref_name }}
+  ${{ inputs.extended_tests && 'Build with extended tests' || 'Build' }} — ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && 'publish Pages' || 'no Pages (requires main)' }} — ${{ github.ref_name }}
 on:
-  # Every push to main runs the full checks and publishes after they pass.
+  # Every push builds all targets and publishes after the fast checks pass.
   # Keep this unfiltered by paths so documentation/configuration commits run too.
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      extended_tests:
+        description: Run extended tests (coverage, sanitizers, gameplay, browsers)
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
 jobs:
   quality:
-    name: Specifications and 95% unit coverage
+    name: Fast specifications and tooling checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    outputs:
-      shards: ${{ steps.test-matrix.outputs.shards }}
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,13 +32,23 @@ jobs:
         env:
           OPENSPEC_TELEMETRY: '0'
         run: npm run spec:validate
-      - run: python -m pip install -r tests/requirements.txt
+      - run: python -m pip install pycparser==3.0
       - name: Coverage and CI gate self-tests
         run: |
           python scripts/generate-snapshot-schema.py --check
           python -m unittest discover -s tests -p 'test_quality_tools.py'
           python -m unittest discover -s tests -p 'test_ci_tools.py'
           python scripts/run-ci-tests.py browser --check
+  coverage:
+    name: Extended 95% unit coverage
+    if: github.event_name == 'workflow_dispatch' && inputs.extended_tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      shards: ${{ steps.test-matrix.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install -r tests/requirements.txt
       - name: Unit-only coverage gate
         run: python scripts/check-coverage.py --quest --split-campaigns
       - name: Retain unit-only coverage reports
@@ -58,6 +72,7 @@ jobs:
           retention-days: 7
   sanitizer-build:
     name: Build core sanitizer tests
+    if: github.event_name == 'workflow_dispatch' && inputs.extended_tests
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -76,7 +91,8 @@ jobs:
           retention-days: 7
   instrumented:
     name: ${{ matrix.mode }} / ${{ matrix.shard }}
-    needs: [quality, sanitizer-build]
+    if: github.event_name == 'workflow_dispatch' && inputs.extended_tests
+    needs: [coverage, sanitizer-build]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     strategy:
@@ -84,7 +100,7 @@ jobs:
       max-parallel: 8
       matrix:
         mode: [coverage, sanitize]
-        shard: ${{ fromJSON(needs.quality.outputs.shards) }}
+        shard: ${{ fromJSON(needs.coverage.outputs.shards) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -110,6 +126,7 @@ jobs:
             build-${{ matrix.mode }}/Testing/Temporary/LastTestsFailed.log
           if-no-files-found: ignore
   native:
+    name: Native / ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -119,11 +136,14 @@ jobs:
       - name: Linux graphics dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libgl1-mesa-dev libegl1-mesa-dev
-      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Configure target and optional test executables
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=${{ inputs.extended_tests && 'ON' || 'OFF' }}
       - run: cmake --build build --config Release --parallel 4
-      - run: ctest --test-dir build -C Release --output-on-failure --output-junit native-tests.xml
+      - name: Full native unit and gameplay tests
+        if: inputs.extended_tests
+        run: ctest --test-dir build -C Release --output-on-failure --output-junit native-tests.xml
       - name: Report native test failures
-        if: failure()
+        if: failure() && inputs.extended_tests
         shell: python
         run: |
           from pathlib import Path
@@ -135,14 +155,20 @@ jobs:
                       detail = case.get('name', 'Native test') + '\n' + (case.findtext('system-out') or '')[-10000:]
                       detail = detail.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
                       print('::error title=Native test failure::' + detail)
-      - name: Linux render smoke test
+      - name: Linux startup smoke test
         if: runner.os == 'Linux'
         env:
           SDL_VIDEODRIVER: offscreen
           SDL_AUDIODRIVER: dummy
           EGL_PLATFORM: surfaceless
+        run: ./build/starship_crawl --seed 713 --smoke 10 --no-save
+      - name: Extended Linux rendering scenes
+        if: runner.os == 'Linux' && inputs.extended_tests
+        env:
+          SDL_VIDEODRIVER: offscreen
+          SDL_AUDIODRIVER: dummy
+          EGL_PLATFORM: surfaceless
         run: |
-          ./build/starship_crawl --seed 713 --smoke 10 --no-save
           ./build/starship_crawl --seed 713 --scene volume1 --smoke 60 --no-save
           ./build/starship_crawl --seed 713 --scene volume2 --split --smoke 60 --no-save
           ./build/starship_crawl --seed 713 --scene biome1 --split --smoke 60 --no-save
@@ -191,12 +217,14 @@ jobs:
         env:
           SC_EVENT_NAME: ${{ github.event_name }}
           SC_REF: ${{ github.ref }}
+          SC_EXTENDED_TESTS: ${{ inputs.extended_tests || false }}
         run: |
           if [[ "$SC_EVENT_NAME" != "pull_request" && "$SC_REF" == "refs/heads/main" ]]; then
-            echo 'Pages publishes after all native, instrumented, browser and Quest checks pass.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Pages publishes after all target builds, fast tooling checks and any selected extended tests pass.' >> "$GITHUB_STEP_SUMMARY"
           else
-            echo 'This branch is fully tested. Pages publishes from main only.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'All targets build on this branch. Pages publishes from main only.' >> "$GITHUB_STEP_SUMMARY"
           fi
+          echo "Extended tests selected: $SC_EXTENDED_TESTS. Enable them with Run workflow → Run extended tests." >> "$GITHUB_STEP_SUMMARY"
       - name: Pinned Emscripten SDK
         run: |
           git clone --depth 1 --branch 4.0.23 https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
@@ -223,6 +251,7 @@ jobs:
           include-hidden-files: true
   web-browser:
     name: Web browser / ${{ matrix.suite }}
+    if: github.event_name == 'workflow_dispatch' && inputs.extended_tests
     needs: web
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -284,13 +313,15 @@ jobs:
       - name: Packaging isolation checks
         run: python -m unittest discover -s tests -p 'test_quest_packaging.py'
       - name: Browser tooling
+        if: inputs.extended_tests
         run: |
           python -m pip install -r tests/requirements-quest.txt
           python -m playwright install --with-deps chromium
       - name: Stereo WebGL, controller gameplay, lifecycle and save isolation
+        if: inputs.extended_tests
         run: python scripts/run-browser-test.py tests/test_quest_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/
       - name: Retain Quest captures and test results
-        if: always()
+        if: always() && inputs.extended_tests
         uses: actions/upload-artifact@v4
         with:
           name: quest-test-captures
@@ -310,9 +341,9 @@ jobs:
           path: build-quest-preview/starship_crawl/quest
           include-hidden-files: true
   pages:
-    name: Assemble both tested web targets
+    name: Assemble both web targets
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: [web-browser, quest]
+    needs: [web, quest]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
@@ -328,8 +359,16 @@ jobs:
           path: site
   deploy:
     name: Publish GitHub Pages
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: [pages, native, quality, instrumented]
+    # Explicit status handling permits skipped optional jobs, but never a failed
+    # build or a skipped/failed extended check that was requested for this run.
+    if: >-
+      ${{ !cancelled() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' &&
+          needs.pages.result == 'success' && needs.native.result == 'success' && needs.quality.result == 'success' &&
+          ((!inputs.extended_tests && needs.coverage.result == 'skipped' && needs.sanitizer-build.result == 'skipped' &&
+            needs.instrumented.result == 'skipped' && needs.web-browser.result == 'skipped') ||
+           (inputs.extended_tests && needs.coverage.result == 'success' && needs.sanitizer-build.result == 'success' &&
+            needs.instrumented.result == 'success' && needs.web-browser.result == 'success')) }}
+    needs: [pages, native, quality, coverage, sanitizer-build, instrumented, web-browser]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -344,6 +383,6 @@ jobs:
     steps:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Deploy the tested game
+      - name: Deploy the built game
         id: deployment
         uses: actions/deploy-pages@v4

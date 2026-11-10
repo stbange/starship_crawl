@@ -30,7 +30,7 @@ def validate_partition(groups, inventory):
 
 
 def browser_groups(config, inventory):
-    # Quest has its own required build/browser job and a different launch path.
+    # Quest has its own build and optional browser checks with a different launch path.
     ordinary = set(inventory) - {"test_quest_browser.py"}
     if "test_quest_browser.py" not in inventory:
         raise ValueError("The separately tested Quest suite is missing")

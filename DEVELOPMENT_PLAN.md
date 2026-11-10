@@ -38,6 +38,16 @@ versions as needed. Solo, optional local co-op, Linux, Windows, ordinary web/mob
 and the isolated Quest target remain supported. Human and device evidence is
 reported separately from automation.
 
+## Optional extended CI — 2026-11-10
+
+Normal pushes build Linux, Windows, ordinary web and Quest, retain downloadable
+artifacts, run short specification/tooling/packaging/startup checks, and publish
+Pages from main. Long native/render, coverage, sanitizer, gameplay and browser
+checks are available through **Actions → Build, test, and publish → Run workflow
+→ Run extended tests**. That input defaults off; selected checks must pass before
+the same run publishes. Coverage thresholds and local feature-validation rules
+remain unchanged. See [CI modes and commands](TESTING.md).
+
 ## Staged opening and optional guidance — 2026-11-09
 
 Implemented the approved introduction: one starting gun, early earned shotgun,

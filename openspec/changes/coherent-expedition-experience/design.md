@@ -397,8 +397,11 @@ correctness and reproducibility; it does not establish fun or headset comfort.
 4. Expose the new rules only when creating a new ship. Existing save/resume and
    browser import/export retain the current expedition and local device settings.
    New-ship confirmation continues to explain the fresh-character reset.
-5. Ship reviewable increments on main after their tests. Full CI and Pages remain
-   required for every push. Report implemented content separately from this plan.
+5. Ship reviewable increments on main after their tests. Target builds, fast CI
+   checks and Pages remain required for every push. Select the optional extended
+   workflow when the affected gameplay needs the full verification described
+   above; documentation-only commits use the normal build path. Report
+   implemented content separately from this plan.
    On a faulty release, stop selecting the new revision for new ships and repair
    it while retaining its reader; do not silently downgrade or overwrite newer
    saves with an older binary. Preserve exportable saves before any rollback.
