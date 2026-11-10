@@ -599,6 +599,34 @@
     "GuardianAttempt.broken": [
       "0",
       "3"
+    ],
+    "DistrictMark.family": [
+      "0",
+      "4"
+    ],
+    "DistrictMark.condition": [
+      "0",
+      "3"
+    ],
+    "DistrictMark.role": [
+      "0",
+      "15"
+    ],
+    "RoomRecord.district_state": [
+      "0",
+      "SC_DISTRICT_STATE_MASK"
+    ],
+    "Room.district_warning": [
+      "0",
+      "2"
+    ],
+    "Room.district_arc": [
+      "0",
+      "7"
+    ],
+    "Room.district_owner": [
+      "0",
+      "SC_PLAYERS"
     ]
   }
 }

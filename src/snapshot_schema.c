@@ -29,6 +29,15 @@ static const SnapshotField fields_Habitat[] = {
 };
 static const SnapshotSchema schema_Habitat = SCHEMA(Habitat);
 
+static const SnapshotField fields_DistrictMark[] = {
+    FIELD(DistrictMark, anchor, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(DistrictMark, identity, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(DistrictMark, family, uint8_t, SW_U8, NULL, 0, 4),
+    FIELD(DistrictMark, condition, uint8_t, SW_U8, NULL, 0, 3),
+    FIELD(DistrictMark, role, uint8_t, SW_U8, NULL, 0, 15),
+};
+static const SnapshotSchema schema_DistrictMark = SCHEMA(DistrictMark);
+
 static const SnapshotField fields_Vec3[] = {
     FIELD(Vec3, x, double, SW_DOUBLE, NULL, -1e9, 1e9),
     FIELD(Vec3, y, double, SW_DOUBLE, NULL, -1e9, 1e9),
@@ -108,6 +117,7 @@ static const SnapshotField fields_Room[] = {
     FIELD(Room, span_x, uint8_t, SW_U8, NULL, 0, SC_REGION),
     FIELD(Room, span_z, uint8_t, SW_U8, NULL, 0, SC_REGION),
     FIELD(Room, habitat, Habitat, SW_STRUCT, &schema_Habitat, 0, 0),
+    FIELD(Room, journey, DistrictMark, SW_STRUCT, &schema_DistrictMark, 0, 0),
     FIELD(Room, width, double, SW_DOUBLE, NULL, 0, SC_CELL*SC_REGION),
     FIELD(Room, depth, double, SW_DOUBLE, NULL, 0, SC_CELL*SC_REGION),
     FIELD(Room, height, double, SW_DOUBLE, NULL, 0, SC_DECK*2),
@@ -130,6 +140,10 @@ static const SnapshotField fields_Room[] = {
     FIELD(Room, circuit, uint8_t, SW_U8, NULL, 0, UINT8_MAX),
     FIELD(Room, hazard_stage, uint8_t, SW_U8, NULL, 0, UINT8_MAX),
     FIELD(Room, faction_edit, uint8_t, SW_U8, NULL, 0, UINT8_MAX),
+    FIELD(Room, district_warning, float, SW_FLOAT, NULL, 0, 2),
+    FIELD(Room, district_arc, float, SW_FLOAT, NULL, 0, 7),
+    FIELD(Room, district_owner, uint8_t, SW_U8, NULL, 0, SC_PLAYERS),
+    FIELD(Room, district_powered, _Bool, SW_BOOL, NULL, 0, 1),
 };
 static const SnapshotSchema schema_Room = SCHEMA(Room);
 
@@ -815,6 +829,7 @@ static const SnapshotField fields_RoomRecord[] = {
     FIELD(RoomRecord, collected, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(RoomRecord, systems, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(RoomRecord, local, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(RoomRecord, district_state, uint32_t, SW_U32, NULL, 0, SC_DISTRICT_STATE_MASK),
 };
 
 static const SnapshotField fields_MatrixRecord[] = {
@@ -849,7 +864,7 @@ const SnapshotSchema sc_snapshot_box = SCHEMA(Box);
 const SnapshotSchema sc_snapshot_room_record = SCHEMA(RoomRecord);
 const SnapshotSchema sc_snapshot_matrix_record = SCHEMA(MatrixRecord);
 const SnapshotSchema sc_snapshot_faction_region = SCHEMA(FactionRegion);
-const uint32_t sc_snapshot_schema_id = UINT32_C(0x19feee2c);
+const uint32_t sc_snapshot_schema_id = UINT32_C(0x5404888f);
 #undef FIELD
 #undef SCHEMA
 // clang-format on

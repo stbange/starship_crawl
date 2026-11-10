@@ -134,6 +134,12 @@ bool game_load(Game *g, const char *path) {
     if (version >= 17)
         for (int p = 0; p < SC_LEGACY_PLAYERS; p++)
             players[p].rules = sc_save_number(&s, 0, true);
+    if (version >= 17)
+        for (size_t i = 0; i < count; i++) {
+            records[i].district_state = sc_save_number(&s, 0, true);
+            if (records[i].district_state & ~SC_DISTRICT_STATE_MASK)
+                s.ok = false;
+        }
     uint32_t expected = s.hash, actual = sc_save_number(&s, 0, true);
     if (actual != expected || fgetc(f) != EOF)
         s.ok = false;

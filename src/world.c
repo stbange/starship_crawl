@@ -2,6 +2,7 @@
 #include "habitat.h"
 #include "exterior.h"
 #include "campaign.h"
+#include "districts.h"
 #include "onboarding.h"
 #include "encounters.h"
 #include "frontier.h"
@@ -631,6 +632,7 @@ static Room *room_create(World *w, RoomSpec spec) {
     r->span_x = spec.span_x;
     r->span_z = spec.span_z;
     r->habitat = spec.habitat;
+    r->journey = spec.journey;
     r->width = spec.width;
     r->depth = spec.depth;
     r->height = spec.height;
@@ -939,6 +941,30 @@ bool world_set_systems(World *w, Cell cell, uint32_t systems) {
     for (int i = 0; i < w->count; i++)
         if (cell_equal(w->rooms[i].cell, owner))
             w->rooms[i].record = index;
+    return true;
+}
+uint32_t world_record_systems(const World *w, Cell owner) {
+    if (!w->index_cap || !w->record_count)
+        return 0;
+    size_t index = w->record_index[record_slot(w, owner)];
+    return index ? w->records[index - 1].systems : 0;
+}
+uint32_t world_district_state(const World *w, Cell owner) {
+    if (!w->index_cap || !w->record_count)
+        return 0;
+    size_t index = w->record_index[record_slot(w, owner)];
+    return index ? w->records[index - 1].district_state : 0;
+}
+bool world_set_district_state(World *w, Cell owner, uint32_t state) {
+    if (w->generator < 16 || (state & ~SC_DISTRICT_STATE_MASK) || owner.z < 0)
+        return false;
+    size_t i = record_for(w, owner, true);
+    if (i == SIZE_MAX || w->failed)
+        return false;
+    w->records[i].district_state = state;
+    for (int j = 0; j < w->count; j++)
+        if (cell_equal(w->rooms[j].cell, owner))
+            w->rooms[j].record = i;
     return true;
 }
 void world_kill(World *w, Room *r, int i) {

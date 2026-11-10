@@ -97,6 +97,17 @@ typedef struct {
     uint8_t challenge, reveal, contract; /* Generator 12; zero retains older behavior. */
     uint8_t country, court; /* Generator 13; political ownership never changes geometry. */
 } Habitat;
+enum { JOURNEY_VISTA = 1, JOURNEY_PUMP = 2, JOURNEY_REFUGE = 4, JOURNEY_COMPACT = 8 };
+typedef struct {
+    Cell anchor;
+    uint32_t identity;
+    uint8_t family, condition, role;
+} DistrictMark;
+typedef struct {
+    Cell anchor, preparation, refuge;
+    uint32_t identity;
+    uint8_t family, condition, reservations;
+} DistrictContract;
 typedef struct {
     Cell cell;
     RoomType type;
@@ -104,6 +115,7 @@ typedef struct {
     uint8_t theme, layout, incident, intensity, landmark, history_role;
     uint8_t span_x, span_z;
     Habitat habitat;
+    DistrictMark journey;
     double width, depth, height;
     uint32_t hash;
 } RoomSpec;
@@ -113,6 +125,7 @@ typedef struct {
     RoomSpec rooms[SC_REGION_CELLS];
     uint8_t owner[SC_REGION_CELLS], doors[SC_REGION_CELLS];
     int count;
+    DistrictContract journey;
 } RegionPlan;
 typedef struct {
     Vec3 min, max;
@@ -122,7 +135,7 @@ typedef struct {
 } Box;
 typedef struct {
     Cell cell;
-    uint32_t killed, collected, systems, local;
+    uint32_t killed, collected, systems, local, district_state;
 } RoomRecord;
 #define SC_LOCAL_STATE_MASK                                                                        \
     (3u | ((SC_PLAYER_MASK & 3u) << 2) | ((SC_PLAYER_MASK & 3u) << 4) |                            \
@@ -236,6 +249,7 @@ typedef struct {
     uint8_t theme, layout, incident, intensity, landmark, history_role;
     uint8_t span_x, span_z;
     Habitat habitat;
+    DistrictMark journey;
     double width, depth, height;
     uint32_t hash;
     uint64_t residency;
@@ -252,6 +266,9 @@ typedef struct {
     float hazard_time, circuit_time, alarm_time;
     uint8_t circuit, hazard_stage;
     uint8_t faction_edit; /* Applied once per streamed room; durable decision lives in Factions. */
+    float district_warning, district_arc;
+    uint8_t district_owner;
+    bool district_powered;
 } Room;
 /* Geometry is relative to its integer chunk coordinate, never a distant camera. */
 /* A thin sloped slab, optionally quantized into 32 physical stair treads. */
@@ -354,6 +371,10 @@ double world_raycast(const World *w, Vec3 origin, Vec3 direction, double limit);
 void world_kill(World *w, Room *room, int enemy);
 uint32_t world_systems(const World *w, Cell cell);
 bool world_set_systems(World *w, Cell cell, uint32_t systems);
+/* Exact owner keys: bounded district queries must not recursively regenerate plans. */
+uint32_t world_record_systems(const World *w, Cell owner);
+uint32_t world_district_state(const World *w, Cell owner);
+bool world_set_district_state(World *w, Cell owner, uint32_t state);
 uint32_t world_local_state(const World *w, const Room *room);
 bool world_mark_local(World *w, Room *room, uint32_t bits);
 void world_collect(World *w, Room *room, int pickup);

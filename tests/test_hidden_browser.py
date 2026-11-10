@@ -38,7 +38,7 @@ def run():
             wait_ready(page)
             start_play(page)
             s = state(page)
-            assert s['generator'] == 15 and s['simulation'] == 1 and s['politics'] == 0, s
+            assert s['generator'] == 16 and s['simulation'] == 1 and s['politics'] == 0, s
             assert s['director_kind'] == 0 and s['political_goal'] == 0, s
             page.keyboard.press('F6')
             expect(page, '!s.paused && !s.journal')

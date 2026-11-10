@@ -136,6 +136,8 @@ void game_interact(Game *g, int player) {
         return;
     }
     Player *p = &g->players[player];
+    if (district_interact(g, player))
+        return;
     if (game_rig_interact(g, player))
         return;
     if (game_shelter_interact(g, player))

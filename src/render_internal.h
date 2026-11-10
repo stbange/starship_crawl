@@ -30,6 +30,8 @@ void sc_render_camera(float *matrix, Vec3 eye, double yaw, double pitch, double 
 void sc_render_campaign_hud(Renderer *r, const Game *g, int player, float w, float h, float s);
 void sc_render_campaign_journal_draw(Renderer *r, const Game *g, int player, float w, float h);
 void sc_render_campaign_scene(Renderer *r, const Game *g, int player);
+void sc_render_district_scene(Renderer *r, const Game *g, int player);
+void sc_render_district_hud(Renderer *r, const Game *g, int player, float w, float h, float s);
 void sc_render_centered(Renderer *r, float x, float y, float s, const char *text, Color c);
 void sc_render_cube(Mesh *m, Vec3 center, Vec3 sx, Vec3 sy, Vec3 sz, Color col, float glow);
 void sc_render_deck_map(Renderer *r, Game *g, int player, float x, float y, float size, bool large);

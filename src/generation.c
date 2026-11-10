@@ -3,6 +3,7 @@
 #include "frontier.h"
 #include "encounters.h"
 #include "campaign.h"
+#include "districts.h"
 #include "onboarding.h"
 #include "politics.h"
 #include "factions.h"
@@ -173,6 +174,7 @@ static void history(RegionPlan *p, uint32_t hash, int preferred, unsigned incide
         }
 }
 void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPlan *p) {
+    bool coherent = generator >= 16;
     bool opening = generator >= 15;
     if (opening)
         generator = 14; /* Preserve the ship architecture, vary introductory encounters. */
@@ -401,6 +403,8 @@ void world_plan_version(uint32_t seed, uint32_t generator, Cell region, RegionPl
         factions_plan(seed, p);
     if (opening)
         onboarding_plan(p);
+    if (coherent)
+        district_plan(seed, p);
 }
 RoomSpec world_describe_version(uint32_t seed, uint32_t generator, Cell c) {
     RegionPlan p;
@@ -467,12 +471,20 @@ uint32_t world_fingerprint_version(uint32_t seed, uint32_t generator, Cell regio
                              r->habitat.pace,
                              r->habitat.challenge,
                              r->habitat.reveal,
-                             r->habitat.contract};
+                             r->habitat.contract,
+                             (uint32_t)r->journey.anchor.x,
+                             (uint32_t)r->journey.anchor.y,
+                             (uint32_t)r->journey.anchor.z,
+                             r->journey.identity,
+                             r->journey.family,
+                             r->journey.condition,
+                             r->journey.role};
         for (size_t j = 0; j < (generator == 3    ? 13
                                 : generator == 4  ? 17
                                 : generator < 10  ? 18
                                 : generator == 10 ? 24
                                 : generator == 11 ? 25
+                                : generator < 16  ? 28
                                                   : sizeof(values) / sizeof(values[0]));
              j++)
             for (int byte = 0; byte < 4; byte++) {

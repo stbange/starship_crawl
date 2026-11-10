@@ -103,6 +103,9 @@ bool game_save(const Game *g, const char *path) {
     if (g->world.generator >= 16)
         for (int p = 0; p < SC_LEGACY_PLAYERS; p++)
             sc_save_number(&s, g->players[p].rules, false);
+    if (g->world.generator >= 16)
+        for (size_t i = 0; i < g->world.record_count; i++)
+            sc_save_number(&s, g->world.records[i].district_state, false);
     uint32_t hash = s.hash;
     sc_save_number(&s, hash, false);
     if (fflush(f) != 0)

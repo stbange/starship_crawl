@@ -1,5 +1,6 @@
 #include "interior.h"
 #include "campaign.h"
+#include "districts.h"
 
 typedef struct {
     Builder *builder;
@@ -395,6 +396,13 @@ static void history_furnishings(Alcove *a, const Room *r) {
     prop(a, 0, 2, -1.15, 3.3, 1.6, .06, rgb(.32f, .6f, .5f), .45f, false);
 }
 void interior_build(Builder *b, const Room *r) {
+    if (r->journey.role) {
+        district_build(b, r);
+        if (campaign_guardian(r->cell) < 0) {
+            lighting(b, r);
+            return;
+        }
+    }
     if (b->world->generator >= 7 && campaign_guardian(r->cell) >= 0) {
         Vec3 c = world_center(r->cell);
         for (int x = -1; x <= 1; x += 2)

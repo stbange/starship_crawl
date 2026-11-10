@@ -112,6 +112,7 @@ void sc_render_campaign_journal_draw(Renderer *r, const Game *g, int player, flo
                       ink);
 }
 void sc_render_campaign_hud(Renderer *r, const Game *g, int player, float w, float h, float s) {
+    sc_render_district_hud(r, g, player, w, h, s);
     if (!g->campaign.version || g->players[player].sheltered)
         return;
     const Player *p = &g->players[player];

@@ -1,6 +1,40 @@
 #include "app_internal.h"
 
 void app_inspect_frame(void) {
+    if (app.inspect_district) {
+        Game *g = &app.game;
+        unsigned scene = (unsigned)app.inspect_district - 1;
+        DistrictContract district =
+            district_contract(g->world.seed, g->world.generator, campaign_site(0));
+        Cell cell = scene == 4 ? district.preparation : district.anchor;
+        Room *room = world_find(&g->world, cell);
+        if (room && room->ready) {
+            Player *p = &g->players[0];
+            Vec3 c = world_center(cell);
+            p->pos = position_from(vadd(c, scene == 1 || scene == 2 ? v3(-23, 3.02, 20)
+                                           : scene == 3             ? v3(-24, .02, -26)
+                                                                    : v3(0, .02, -35)));
+            p->yaw = scene == 1 ? .9 : 0;
+            p->pitch = scene == 0 ? .3 : scene == 1 ? .25 : 0;
+            if (scene == 2) {
+                world_set_systems(&g->world, cell, SYSTEM_POWER);
+                district_step(g, .02);
+                Vec3 source = vadd(district_control(cell, DISTRICT_SOURCE_CONTROL), v3(0, .75, 0));
+                district_shot(g, 0, source);
+                Vec3 to = vsub(source, player_eye(p));
+                p->yaw = atan2(to.x, to.z);
+                p->pitch = asin(vnorm(to).y);
+            } else if (scene == 3) {
+                district_victory(g, cell);
+            } else if (scene == 4) {
+                p->pos = position_from(vadd(district_control(cell, JOURNEY_PUMP), v3(0, 0, -2)));
+            }
+            app.inspect_district = 0;
+            app.inspect_static = true;
+            app.paused = true;
+            g->message_time = 0;
+        }
+    }
     if (app.inspect_guardian) {
         unsigned id = (unsigned)(app.inspect_guardian - 1) / 3;
         unsigned state = (unsigned)(app.inspect_guardian - 1) % 3;
@@ -197,6 +231,8 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
                               (scene[8] == '0' || scene[8] == '1') &&
                               (!strcmp(scene + 9, "warn") || !strcmp(scene + 9, "break") ||
                                !strcmp(scene + 9, "breach"));
+        bool district_scene =
+            !strncmp(scene, "foundry", 7) && scene[7] >= '0' && scene[7] <= '4' && !scene[8];
         bool court_scene = !strncmp(scene, "court", 5) || !strncmp(scene, "conduit", 7) ||
                            !strncmp(scene, "crown", 5);
         bool frontier_scene = !strncmp(scene, "front", 5) || !strncmp(scene, "deep", 4) ||
@@ -212,8 +248,9 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
                               !strcmp(scene, "hull");
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
-        if (strcmp(scene, "guardian") && !guardian_scene && !build_scene && !exterior_scene && !traversal_scene &&
-            !habitat_scene && !encounter_scene && !frontier_scene && !court_scene) {
+        if (strcmp(scene, "guardian") && !guardian_scene && !district_scene && !build_scene &&
+            !exterior_scene && !traversal_scene && !habitat_scene && !encounter_scene &&
+            !frontier_scene && !court_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -246,8 +283,18 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
         if (guardian_scene) {
             unsigned id = (unsigned)(scene[8] - '0');
             c = campaign_site(id);
-            app.inspect_guardian = (int)(id * 3 + 1 + (!strcmp(scene + 9, "break") ? 1 :
-                                                       !strcmp(scene + 9, "breach") ? 2 : 0));
+            app.inspect_guardian = (int)(id * 3 + 1 +
+                                         (!strcmp(scene + 9, "break")    ? 1
+                                          : !strcmp(scene + 9, "breach") ? 2
+                                                                         : 0));
+            app.no_save = true;
+        }
+        if (district_scene) {
+            unsigned mode = (unsigned)(scene[7] - '0');
+            DistrictContract district =
+                district_contract(seed, app.game.world.generator, campaign_site(0));
+            c = mode == 4 ? district.preparation : district.anchor;
+            app.inspect_district = (int)mode + 1;
             app.no_save = true;
         }
         if (!strcmp(scene, "hall"))

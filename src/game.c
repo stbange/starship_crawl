@@ -216,6 +216,8 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
     damage = frontier_damage(g, room, index, owner, damage);
     if (damage <= 0)
         return;
+    if (g->world.generator >= 16 && room->journey.family)
+        room->alarm_time = 4;
     politics_attack(g, e, owner);
     const EnemyDef *def = &sc_enemies[e->kind];
     if (def->flags & ARMORED)
@@ -626,6 +628,8 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
             }
         end = vadd(ray, vmul(dir, nearest));
         if (target < 0)
+            district_shot(g, owner, end);
+        if (target < 0)
             break;
         game_damage_enemy(g, room, target, owner, w->damage * (1 + .35f * player_rank(p, p->power)),
                           w->flags);
@@ -697,6 +701,8 @@ static void projectiles_step(Game *g, double dt) {
             }
             position_move(&shot->pos, vmul(dir, nearest));
             bool impact = wall < travel || player >= 0 || target >= 0;
+            if (shot->owner >= 0 && impact && target < 0)
+                district_shot(g, shot->owner, position_absolute(shot->pos));
             if (shot->owner >= 0 && (shot->flags & W_FLARE) && wall < travel)
                 game_attach_flare(g, shot->owner, position_absolute(shot->pos), dir);
             if (player >= 0) {
@@ -840,6 +846,8 @@ static void enemies_step(Game *g, double dt) {
                 continue;
             e->warning_sound = fmaxf(0, e->warning_sound - (float)dt);
             if (encounter_passive(room, i))
+                continue;
+            if (district_inert(g, room, e))
                 continue;
             if (campaign_enemy_step(g, room, i, dt))
                 continue;
@@ -1070,6 +1078,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
     game_progression_step(g, dt);
     game_story_step(g);
     campaign_step(g, dt);
+    district_step(g, dt);
     game_encounters_step(g, dt);
     politics_step(g, dt);
     director_step(g, dt);

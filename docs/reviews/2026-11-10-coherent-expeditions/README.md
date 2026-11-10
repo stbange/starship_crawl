@@ -149,3 +149,34 @@ stereo eye views. This is emulated WebXR with real WebGL, not a physical Quest r
 Strict specifications, browser-inventory validation and CI-tooling tests pass.
 The two new browser suites remain in opt-in extended CI; target builds and Pages
 retain the lighter default workflow.
+
+
+## E3 — deterministic Foundry slice
+
+Forty unit CTests pass. Unit-only core coverage is **11,905 / 12,144 (98.0%)**;
+every executable source is at least 95%, including `districts.c` at 239/251
+(95.22%). The separate fresh-character staged journey passes in 47.63 seconds
+wall time. Tests sample 120 regional contracts, 24 populated first vistas, six
+reverse loading pairs and eight actual basic-character stair traversals. They
+also exercise earned rig return travel, live/checkpoint persistence, eviction,
+shared power, conductor shooting, warning duration and disconnected safe water.
+
+Native/WASM fingerprints agree with district identities included. The packaged
+WebGL suite uses real movement and G input to operate the pump and reopened
+return conduit. Native Mesa captures cover the vista, raised approach, conductive
+warning and open return frame. Fixed caps remain: two chunk jobs/tick and two
+uploads/frame, 20 room actors, six chunk lights, 32 sprites, 32 dressing elements
+and 512 boxes. Required cross passages and history reservations survive fallback.
+The implementation caught and fixed stairs encroaching on the central cross
+passage and an inconsistent sprite atmosphere tag before this gate passed.
+
+Captures: [entrance](captures/coherent-foundry0.png),
+[raised route](captures/coherent-foundry1.png),
+[conductor warning](captures/coherent-foundry2.png),
+[return conduit](captures/coherent-foundry3.png),
+[pump](captures/coherent-foundry-pump.png).
+These are explicitly staged inspection fixtures, not human play sessions.
+
+The updated district geometry also passes both imported guardian encounters in
+the isolated Quest build, including actual grip input and stereo captures.
+Physical Quest performance and human route/readability reviews remain pending.

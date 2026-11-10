@@ -34,6 +34,7 @@ set(SC_CORE_SOURCES
   src/campaign_combat.c
   src/builds.c
     src/guardians.c
+    src/districts.c
   src/encounters.c
   src/alien.c
   src/onboarding.c

@@ -5,6 +5,7 @@
 #include "story.h"
 #include "matrix.h"
 #include "campaign.h"
+#include "districts.h"
 #include "onboarding.h"
 #include "encounters.h"
 #include "frontier.h"

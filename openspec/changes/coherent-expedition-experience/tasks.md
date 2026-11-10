@@ -36,13 +36,13 @@ and update save/snapshot validation alongside each feature that introduces it.
 
 ## 3. E3 — A coherent district
 
-- [ ] 3.1 Add deterministic district identity and route/content contracts to regional planning, with explicit generator compatibility; verify native/WASM fingerprints, reverse load order, reciprocal boundaries and unchanged old generators.
-- [ ] 3.2 Add the awakening-machine ship condition and durable power transitions; verify matching generation, enemy responses and reserved mission opportunities, with cues before harmful activation.
-- [ ] 3.3 Implement bounded conductive surfaces and machine-routing interactions shared by physical controls, weapons and optional matrix effects; test affected actors, warning duration, disconnected surfaces and a basic avoidance route.
-- [ ] 3.4 Build Drowned Foundry geometry with a reactor vista, scale cues, raised/lower approaches, preparation site and return shortcut; verify collision, basic-route reachability and valid alternate earned-tool routes across a retained seed set.
-- [ ] 3.5 Connect encounter recipes, a guardian, condition state and persistent aftermath to the district contract; verify bypasses, victory and backtracking after cache eviction and save/resume.
-- [ ] 3.6 Add reservation/fallback and bounded-work cases; prove maximum room actors, chunk lights/dressing/sprites, generation/upload limits and objective access with incompatible optional content.
-- [ ] 3.7 Run the E3 gate, including a fresh-character journey and separately labelled earned-build fixture; update world-generation docs and capture the entrance vista, narrow route, warning surface and reopened shortcut.
+- [x] 3.1 Add deterministic district identity and route/content contracts to regional planning, with explicit generator compatibility; verify native/WASM fingerprints, reverse load order, reciprocal boundaries and unchanged old generators.
+- [x] 3.2 Add the awakening-machine ship condition and durable power transitions; verify matching generation, enemy responses and reserved mission opportunities, with cues before harmful activation.
+- [x] 3.3 Implement bounded conductive surfaces and machine-routing interactions shared by physical controls, weapons and optional matrix effects; test affected actors, warning duration, disconnected surfaces and a basic avoidance route.
+- [x] 3.4 Build Drowned Foundry geometry with a reactor vista, scale cues, raised/lower approaches, preparation site and return shortcut; verify collision, basic-route reachability and valid alternate earned-tool routes across a retained seed set.
+- [x] 3.5 Connect encounter recipes, a guardian, condition state and persistent aftermath to the district contract; verify bypasses, victory and backtracking after cache eviction and save/resume.
+- [x] 3.6 Add reservation/fallback and bounded-work cases; prove maximum room actors, chunk lights/dressing/sprites, generation/upload limits and objective access with incompatible optional content.
+- [x] 3.7 Run the E3 gate, including a fresh-character journey and separately labelled earned-build fixture; update world-generation docs and capture the entrance vista, narrow route, warning surface and reopened shortcut.
 
 ## 4. E4 — Inhabitants with a continuing story
 

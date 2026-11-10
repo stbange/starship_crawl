@@ -366,5 +366,19 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              "\"branch_preview\":%u}",
              p->rules, player_investment(p), relays, app.game.builds[0].echo_life,
              app.game.builds[0].charge, app.game.views[0].branch_preview);
+    used = strlen(result) - 1;
+    const Room *district_room = world_find(&app.game.world, world_cell(position_absolute(p->pos)));
+    snprintf(result + used, sizeof(result) - used,
+             ",\"district_family\":%u,\"district_condition\":%u,\"district_role\":%u,"
+             "\"district_power\":%s,\"district_warning\":%.3f,\"district_arc\":%.3f,\"district_"
+             "facts\":%u}",
+             district_room ? district_room->journey.family : 0,
+             district_room ? district_room->journey.condition : 0,
+             district_room ? district_room->journey.role : 0,
+             district_room && district_room->district_powered ? "true" : "false",
+             district_room ? district_room->district_warning : 0,
+             district_room ? district_room->district_arc : 0,
+             district_room ? world_district_state(&app.game.world, district_room->journey.anchor)
+                           : 0);
     return result;
 }

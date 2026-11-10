@@ -320,6 +320,7 @@ void campaign_defeat(Game *g, unsigned id) {
         return;
     Campaign *c = &g->campaign;
     c->defeated |= 1u << id;
+    district_victory(g, campaign_site(id));
     c->eligible[id] = c->attempts[id].participants;
     c->attempts[id] = (GuardianAttempt){0};
     Room *room = world_find(&g->world, campaign_site(id));

@@ -83,3 +83,28 @@ remain fixed throughout, including under vehicles and both co-op players.
 scenes are explicit render inspection fixtures. They are not fresh-character
 journeys or evidence of human readability. The guardian journeys use Session
 input with only the starting carbine and no in-fight stat edits.
+
+
+## E3 — the Drowned Foundry
+
+Generator 16 reserves a regional vista, a preparation control and a workers’
+refuge in the existing connected room graph. The Foundry hangs a reactor above
+small homes, with flooded lower ground, a normal-gravity stair and catwalk route,
+and a sealed return conduit. Optional incompatible content yields to existing
+mission and passage reservations; small compatible rooms use a compact version.
+The opening remains an introductory exploration/shooting route.
+
+Use **G / interact** at the pump to restore district power. Amber indicators give
+two seconds’ warning before ordinary dormant robots wake. Guardian assemblies,
+faction forces and already engaged enemies retain their own behavior. Power
+opens a dry center channel; the raised path is always usable without a power.
+Shoot the marked conductor to warn, then electrify only its connected left pool
+for five seconds. The opposite pool and high ground remain safe. Existing matrix
+Power operations set the same durable power fact after matrix access is earned.
+A severed conductor stays severed through saving, eviction and backtracking.
+
+Victory opens the local return conduit across the vista. It checks destination
+readiness, collision and support before moving either a walker or an earned rig.
+No floor or required exit disappears. District identity and outcomes persist;
+active electrical warnings are exact in live snapshots and reset at a checkpoint.
+`foundry0` through `foundry4` are explicitly prepared visual inspection scenes.

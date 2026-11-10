@@ -272,6 +272,10 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_executable(sc_guardian_tests tests/test_guardians.c)
   target_link_libraries(sc_guardian_tests PRIVATE sc_core)
   add_test(NAME guardian_systems COMMAND sc_guardian_tests)
+  add_executable(sc_district_tests tests/test_districts.c)
+  target_link_libraries(sc_district_tests PRIVATE sc_core)
+  add_test(NAME coherent_districts COMMAND sc_district_tests)
+  set_tests_properties(coherent_districts PROPERTIES LABELS "unit" TIMEOUT 120)
   set_tests_properties(guardian_systems PROPERTIES LABELS "unit" TIMEOUT 120)
   add_test(NAME guardian_journeys COMMAND sc_guardian_tests --journey)
   set_tests_properties(guardian_journeys PROPERTIES LABELS "gameplay" TIMEOUT 240)
@@ -351,6 +355,7 @@ set(SC_APP_SOURCES
   src/render_alien.c
   src/render_matrix_scene.c
   src/render_campaign_scene.c
+  src/render_districts.c
   src/render_navigation.c
   src/render_encounters.c
   src/render_politics.c
