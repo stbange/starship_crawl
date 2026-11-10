@@ -142,9 +142,18 @@ bool game_load(Game *g, const char *path) {
         }
     Chronicle chronicle = {0};
     Home home = {0};
+    Rhythm rhythm = {0};
     if (version >= 17) {
         sc_save_chronicle(&s, &chronicle, true);
         sc_save_preparation(&s, &home, true);
+        sc_save_rhythm(&s, &rhythm, true);
+        for (size_t i = 0; i < count; i++) {
+            records[i].rhythm_state = sc_save_number(&s, 0, true);
+            if (records[i].rhythm_state > 255)
+                s.ok = false;
+        }
+        if (!rhythm_valid(&rhythm, factions ? factions->director.budget : 0))
+            s.ok = false;
         if (!chronicle_valid(&chronicle, seed, generator))
             s.ok = false;
     }
@@ -222,6 +231,7 @@ bool game_load(Game *g, const char *path) {
         .story = story,
         .chronicle = chronicle,
         .home = home,
+        .rhythm = rhythm,
         .campaign = campaign,
         .frontier = frontier,
         .politics = politics,

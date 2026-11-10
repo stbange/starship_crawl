@@ -53,6 +53,8 @@ set(SC_CORE_SOURCES
   src/faction_forces.c
   src/faction_orders.c
   src/hidden_director.c
+  src/rhythm.c
+  src/save_rhythm.c
   src/identity.c
   src/commands.c
   src/session.c

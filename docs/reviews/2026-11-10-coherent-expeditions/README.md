@@ -250,3 +250,64 @@ existing save-import confirmation.
 [native bench](captures/coherent-home-projects-native.png),
 [touch](captures/coherent-home-mobile.png),
 [Quest emulation](captures/coherent-home-meals-stereo.png).
+
+## E6 — integrated slice and conditional pacing
+
+The hidden director now reserves from its original budget and runs at most two
+persistent sequences. All four templates use real existing opportunities. No
+actor is regenerated or given new statistics to complete a beat. Core cases cover
+both views, a partner outdoors, matrix/shelter pauses, unload/reload, exact save
+and live snapshots, early death/retreat, cancellation refunds and once-only
+supplies. Generator-15 automatic intervention tests are retained alongside the
+new rules. Physical cues and understated ambience are presentation only.
+
+The first four paired 30-minute simulated runs showed many reservations on other
+decks. Selection was tightened to nearby rooms on the player's deck, and the
+known-room check was corrected to cover the actual room footprint rather than its
+entire 4x4 region. A second matched set repeats both seeds/directions with that
+change. The tests use Session movement, aim, fire and shared commands; the
+comparison disables only hidden_director_step through a test-executable linker
+wrapper. No disable switch or fault hook is added to the shipped core.
+
+The separately run fresh onboarding, guardian and continuing-inhabitant journeys
+all pass (83.35 seconds wall time together under concurrent load). This is the
+integrated Drowned Foundry checkpoint: basic routes and earned unlocks, subsystem
+fights, power/water, recurring choices, return visits and sanctuary preparation
+have connected automated coverage. Advanced toys remain explicitly earned-build
+fixtures. Human sessions assessing clue recognition, emotional consequences,
+shelter usefulness and retry appeal are unavailable and remain pending. Physical
+Quest comfort and performance are also pending.
+
+Both rounds contain four **1,800-second simulations**, seeds 713 inward and 4
+downward, each with the director enabled/disabled. The refined selection changes
+observed sequences from **0 to 5** inward and **2 to 4** downward, while reducing
+starts from 28 to 22 and 23 to 14. It completes one and two sequences respectively;
+bypassed sequences refund or retain their already committed cost correctly.
+All eight runs complete, validate budgets, reach phase four and survive save/resume.
+Main-route kills, deaths and stall maxima match their controls: 252/180 kills,
+zero deaths, and a 5.017-second maximum stall. Expensive-weapon energy starvation
+remains 116.8 seconds on the downward route and is retained for E8 investigation.
+These numbers support continuity and improved opportunity placement, not a claim
+that automated actors appreciate suspense or that difficulty has increased.
+
+The [first traces](e6-first/summary.json), [refined traces](e6-refined/summary.json)
+and [sequence comparison](e6-sequence-comparison.json) retain events, checkpoint
+samples, simulated/wall durations and executable hashes. Wall durations span
+80.5–129.5 seconds per run under varying concurrent load; they are not game frame
+percentiles. The [frozen Linux replay binaries](e6-replay-linux-x86_64.tar.gz)
+reproduce these private format-17 development checkpoints; later appendices may
+require those original binaries. Invoke either binary as `BINARY RUN OUTPUT_DIR
+1800 [--no-director]`, with RUN 0 or 4 and an existing output directory.
+
+Final E6 gate: **43 unit CTests pass**, unit-only coverage remains above 95%
+overall and for every executable core source, and all three separate gameplay
+checks pass. Strict current/archived specifications, snapshot schema, CI inventory
+and five tooling checks pass. Native Mesa, WebGL (44.8 seconds) and isolated Quest
+stereo (29.0 seconds) cue checks pass. Initial browser images still contained the
+HTML start panel; the retained final images dismiss it before inspection.
+
+[Hunter traces](captures/coherent-rhythm0.png),
+[spent siege shells](captures/coherent-rhythm1.png),
+[machine feed](captures/coherent-rhythm2.png),
+[field supplies](captures/coherent-rhythm3.png),
+[Quest emulation](captures/coherent-rhythm-stereo.png).

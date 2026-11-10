@@ -301,6 +301,7 @@ void renderer_draw(Renderer *r, Game *g, const ViewBindings *views, int width, i
             sc_render_actors(r, g, p);
             sc_render_campaign_scene(r, g, p);
             sc_render_district_scene(r, g, p);
+            sc_render_rhythm(r, g, p);
             if (!outside)
                 sc_render_navigation_scene(r, g, p);
             if (!outside)

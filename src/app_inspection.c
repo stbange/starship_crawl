@@ -1,6 +1,22 @@
 #include "app_internal.h"
 
 void app_inspect_frame(void) {
+    if (app.inspect_rhythm) {
+        Game *g = &app.game;
+        Cell site = world_cell(position_absolute(g->players[0].pos));
+        Room *room = world_find(&g->world, site);
+        if (room && room->ready) {
+            unsigned kind = (unsigned)app.inspect_rhythm;
+            world_set_rhythm_state(&g->world, room->cell, 1u << (kind - 1));
+            g->players[0].pos =
+                position_from(vadd(rhythm_trace(room->cell, kind), v3(0, -.06, -4)));
+            g->players[0].yaw = 0;
+            g->players[0].pitch = -.25;
+            app.inspect_rhythm = 0;
+            app.inspect_static = app.paused = true;
+            g->message_time = 0;
+        }
+    }
     if (app.inspect_home && world_ready(&app.game.world, (Cell){0})) {
         Game *g = &app.game;
         unsigned mode = (unsigned)app.inspect_home - 1;
@@ -271,6 +287,8 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
             !strncmp(scene, "person", 6) && (scene[6] == '0' || scene[6] == '1') && !scene[7];
         bool home_scene =
             !strncmp(scene, "home", 4) && scene[4] >= '0' && scene[4] <= '2' && !scene[5];
+        bool rhythm_scene =
+            !strncmp(scene, "rhythm", 6) && scene[6] >= '0' && scene[6] <= '3' && !scene[7];
         bool court_scene = !strncmp(scene, "court", 5) || !strncmp(scene, "conduit", 7) ||
                            !strncmp(scene, "crown", 5);
         bool frontier_scene = !strncmp(scene, "front", 5) || !strncmp(scene, "deep", 4) ||
@@ -287,8 +305,8 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
         /* Historical inspection scenes are reproducible generator-6 sandboxes.
            The guardian preview and ordinary new games use the phased ruleset. */
         if (strcmp(scene, "guardian") && !guardian_scene && !district_scene && !person_scene &&
-            !home_scene && !build_scene && !exterior_scene && !traversal_scene && !habitat_scene &&
-            !encounter_scene && !frontier_scene && !court_scene) {
+            !home_scene && !rhythm_scene && !build_scene && !exterior_scene && !traversal_scene &&
+            !habitat_scene && !encounter_scene && !frontier_scene && !court_scene) {
             game_new_ship(&app.game, seed);
             world_destroy(&app.game.world);
             world_init(&app.game.world, seed);
@@ -304,6 +322,17 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
         politics_init(&app.game);
         app.game.message_time = 0;
         Cell c = {0, 0, 0};
+        if (rhythm_scene) {
+            for (int x = 8; x < 24; x++) {
+                RoomSpec room = world_describe_version(seed, 16, (Cell){x, 0, 8});
+                if (!factions_required(&app.game, room.cell) && room.height >= 5) {
+                    c = room.cell;
+                    break;
+                }
+            }
+            app.inspect_rhythm = scene[6] - '0' + 1;
+            app.no_save = true;
+        }
         if (home_scene) {
             app.inspect_home = scene[4] - '0' + 1;
             app.no_save = true;

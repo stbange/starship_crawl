@@ -80,6 +80,7 @@ GLuint sc_render_shader(GLenum type, const char *source);
 void sc_render_ship_sign(Renderer *r, Vec3 at, const char *label, Color color, Vec3 eye);
 void sc_render_world_label(Renderer *r, Vec3 at, const char *label, Color color, Vec3 eye, double pixel);
 void sc_render_preparation_scene(Renderer *r, const Game *g, int player);
+void sc_render_rhythm(Renderer *r, const Game *g, int player);
 void sc_render_preparation_hud(Renderer *r, const Game *g, int player, float w, float h, float scale);
 void sc_render_starfield(Renderer *r, const Player *player);
 void sc_render_tentacle_mesh(Renderer *r, Vec3 root, Vec3 axis, Vec3 bend, double length,

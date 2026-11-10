@@ -22,7 +22,8 @@
             "test_frontier_browser.py",
             "test_hidden_browser.py",
             "test_equipment_browser.py",
-            "test_districts_browser.py"
+            "test_districts_browser.py",
+            "test_rhythm_browser.py"
         ],
         "atmosphere": [
             "test_habitat_browser.py",

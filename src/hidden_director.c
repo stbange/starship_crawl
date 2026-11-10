@@ -45,6 +45,10 @@ static bool avoided(const Game *g, int player, unsigned country, uint32_t force)
     return false;
 }
 static bool eligible(Game *g, Cell site, unsigned kind, uint32_t force) {
+    bool pressure =
+        kind == EDIT_NEST || kind == EDIT_SCOUT || kind == EDIT_SUBSTITUTE || kind == EDIT_ROUTE;
+    if (rhythm_blocks(g, site, pressure))
+        return false;
     if ((kind == EDIT_CANCEL ? factions_required(g, site) : factions_safe(g, site)) ||
         (g->world.open_layer && campaign_layer(site) > g->world.open_layer) ||
         factions_observed(g, vadd(world_center(site), v3(0, 1, 0)), 70))
@@ -256,9 +260,11 @@ void hidden_director_step(Game *g, double dt) {
     d->recharge += (float)dt;
     if (d->recharge >= 50) {
         d->recharge -= 50;
-        d->budget = d->budget < 3 ? d->budget + 1 : 3;
+        unsigned limit = 3 - rhythm_reserved(&g->rhythm);
+        d->budget = d->budget < limit ? d->budget + 1 : limit;
     }
     d->cooldown = fmaxf(0, d->cooldown - (float)dt);
+    rhythm_step(g, dt);
     DirectionProposal *proposal = &d->proposal;
     if (proposal->phase) {
         proposal->remaining = fmaxf(0, proposal->remaining - (float)dt);
@@ -297,6 +303,10 @@ void hidden_director_step(Game *g, double dt) {
             player = p;
     if (player < 0)
         return;
+    if (g->world.generator >= 16) {
+        rhythm_select(g, player);
+        return;
+    }
     bool recovery = d->pace[player] == PACE_RECOVERY;
     if (d->pace[player] == PACE_PRESSURE)
         return;

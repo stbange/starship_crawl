@@ -106,6 +106,10 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME autonomous_politics COMMAND sc_faction_order_tests)
   set_tests_properties(autonomous_politics PROPERTIES LABELS "unit" TIMEOUT 180)
   add_executable(sc_hidden_director_tests tests/test_hidden_director.c)
+  add_executable(sc_rhythm_tests tests/test_rhythm.c)
+  target_link_libraries(sc_rhythm_tests PRIVATE sc_core)
+  add_test(NAME expedition_rhythm COMMAND sc_rhythm_tests)
+  set_tests_properties(expedition_rhythm PROPERTIES LABELS "unit" TIMEOUT 120)
   target_link_libraries(sc_hidden_director_tests PRIVATE sc_core)
   add_test(NAME hidden_director COMMAND sc_hidden_director_tests)
   set_tests_properties(hidden_director PROPERTIES LABELS "unit" TIMEOUT 180)
@@ -369,6 +373,7 @@ set(SC_APP_SOURCES
   src/render_campaign_scene.c
   src/render_districts.c
   src/render_preparation.c
+  src/render_rhythm.c
   src/render_navigation.c
   src/render_encounters.c
   src/render_politics.c

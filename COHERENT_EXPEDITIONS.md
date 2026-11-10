@@ -167,3 +167,29 @@ records. Projects, meals, preparations, research and keepsakes belong to the
 current expedition and survive save/import, then clear with a new ship.
 `home0`, `home1` and `home2` are explicitly earned visual fixtures for free
 recovery, optional meals and late-expedition preparation.
+
+## E6 — hidden expedition rhythm
+
+Generator 16 connects existing opportunities into at most two concurrent
+sequences: a stalking creature, an approaching formation, a dormant machine and
+a recovery supply trail. Scratches, spent shells, maintenance indicators and
+field-kit lamps provide physical clues. Existing creatures retain their identity,
+health and commitments. The machine sequence follows actual restored power; it
+does not secretly bypass the pump. Supplies use the existing field-kit claim.
+Ambient intensity changes subtly with locally witnessed anticipation and aftermath.
+
+Reservation costs come from the existing three-point director budget. Before a
+commitment, departure for 30 active seconds or recovery cancels the reservation
+and refunds it once. Known clues remain in room records. A defeated creature or
+retreating formation leads to aftermath instead of a replacement encounter.
+Aftermath withholds new directed pressure for 45 active seconds; autonomous
+creatures and wars continue their existing simulation. Both players' views,
+engagements, required objectives and already observed rooms protect content.
+Selection favors nearby rooms on the player's deck; it never generates rooms.
+
+Only actual exploration and simulation advance these sequences. Map inspection
+and rendering are read-only; all-player shelter, matrix-only exploration and
+session suspension pause their clocks. Checkpoints preserve sequence and budget
+state, and live snapshots preserve the exact active state. The normal interface
+has no sequence stages, pressure scores or director controls. `rhythm0` through
+`rhythm3` are labelled cue-inspection fixtures, not gameplay evidence.

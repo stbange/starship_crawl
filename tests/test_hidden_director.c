@@ -1,4 +1,17 @@
 #include "faction_fixture.h"
+static bool legacy_rules;
+static Game *director_fixture(unsigned seed) {
+    Game *g = fixture(seed);
+    if (legacy_rules) {
+        g->world.generator = 15;
+        g->campaign.version = 1;
+        g->chronicle = (Chronicle){0};
+        for (int p = 0; p < SC_PLAYERS; p++)
+            g->players[p].rules = 0;
+    }
+    return g;
+}
+#define fixture(seed) director_fixture(seed)
 static void step(Game *g, unsigned frames) {
     for (unsigned i = 0; i < frames; i++)
         hidden_director_step(g, .05);
@@ -125,7 +138,9 @@ static void safety_and_pressure(void) {
     CHECK(g->factions.director.recovery[0] == recovery);
     g->players[0].sheltered = false;
     step(g, 1100);
-    CHECK(g->factions.director.budget + g->factions.director.accepted > 0);
+    CHECK(g->factions.director.budget + g->factions.director.accepted +
+              rhythm_reserved(&g->rhythm) >
+          0);
     CHECK(factions_valid(&g->factions, 14));
     finish(g);
 }
@@ -230,11 +245,38 @@ static void guardian_footprint(void) {
     CHECK(!factions_at(&g->factions, alias));
     finish(g);
 }
+static void legacy_automatic_routes(void) {
+    bool old = legacy_rules;
+    legacy_rules = true;
+    for (unsigned mode = 0; mode < 3; mode++) {
+        Game *g = fixture(713);
+        Cell start = ordinary(g, (Cell){20, 0, 20}), source = ordinary(g, (Cell){22, 0, 20});
+        load_area(g, start);
+        empty_actors(g);
+        g->players[0].yaw = SC_PI;
+        CHECK(factions_launch(g, 1, ORDER_PATROL, source, source));
+        g->factions.tick = mode;
+        g->factions.director.cooldown = 0;
+        if (mode)
+            g->players[0].health = 10;
+        hidden_director_step(g, .05);
+        CHECK(g->factions.director.proposal.phase == 1);
+        CHECK(g->factions.director.proposal.kind == (mode == 0   ? EDIT_ROUTE
+                                                     : mode == 1 ? EDIT_WITHDRAW
+                                                                 : EDIT_DELAY));
+        finish(g);
+    }
+    legacy_rules = old;
+}
 int main(void) {
-    interventions();
-    safety_and_pressure();
-    experience_and_cancellation();
-    avoid_and_repeat();
-    guardian_footprint();
+    for (unsigned revision = 0; revision < 2; revision++) {
+        legacy_rules = revision != 0;
+        interventions();
+        safety_and_pressure();
+        experience_and_cancellation();
+        avoid_and_repeat();
+        guardian_footprint();
+    }
+    legacy_automatic_routes();
     puts("PASS hidden intervention lifecycle, real content, shared cameras, recovery and claims");
 }

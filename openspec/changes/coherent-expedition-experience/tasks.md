@@ -64,12 +64,12 @@ and update save/snapshot validation alongside each feature that introduces it.
 
 ## 6. E6 — An expedition rhythm
 
-- [ ] 6.1 Add bounded persistent sequence state and reservations to the existing hidden director; verify at most two active sequences, one shared pressure budget, deterministic resume and valid cancellation accounting.
-- [ ] 6.2 Implement stalking-hunter and approaching-siege sequences using established actors and campaigns; test early threat death, ignored clues, player departure and retreat without resurrection or forced replacement.
-- [ ] 6.3 Implement awakening-machine and recovery/discovery sequences; test observed-state protection, genuine quiet windows and progression based on exploration rather than cache generation or map browsing.
-- [ ] 6.4 Bind physical sound/light cues and restrained ambient intensity to sequence facts; inspect native/browser captures for identifiable anticipation without visible director state or compulsory dialogue.
-- [ ] 6.5 Stress both players' observations, separated exploration, shelter, matrix, pause/suspension and snapshot restoration; verify no unseen-to-one-player rewrite of the other's active scene and no resume burst.
-- [ ] 6.6 Run paired director-on/off gameplay comparisons and the E6 gate; publish the complete Drowned Foundry slice report, current human-review findings or explicitly pending sessions, and tune demonstrated contradictions before breadth expansion.
+- [x] 6.1 Add bounded persistent sequence state and reservations to the existing hidden director; verify at most two active sequences, one shared pressure budget, deterministic resume and valid cancellation accounting.
+- [x] 6.2 Implement stalking-hunter and approaching-siege sequences using established actors and campaigns; test early threat death, ignored clues, player departure and retreat without resurrection or forced replacement.
+- [x] 6.3 Implement awakening-machine and recovery/discovery sequences; test observed-state protection, genuine quiet windows and progression based on exploration rather than cache generation or map browsing.
+- [x] 6.4 Bind physical sound/light cues and restrained ambient intensity to sequence facts; inspect native/browser captures for identifiable anticipation without visible director state or compulsory dialogue.
+- [x] 6.5 Stress both players' observations, separated exploration, shelter, matrix, pause/suspension and snapshot restoration; verify no unseen-to-one-player rewrite of the other's active scene and no resume burst.
+- [x] 6.6 Run paired director-on/off gameplay comparisons and the E6 gate; publish the complete Drowned Foundry slice report, current human-review findings or explicitly pending sessions, and tune demonstrated contradictions before breadth expansion.
 
 ## 7. E7 — Ships worth replaying
 

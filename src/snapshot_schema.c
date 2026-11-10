@@ -440,6 +440,31 @@ static const SnapshotField fields_Home[] = {
 };
 static const SnapshotSchema schema_Home = SCHEMA(Home);
 
+static const SnapshotField fields_HiddenSequence[] = {
+    FIELD(HiddenSequence, identity, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(HiddenSequence, player, uint32_t, SW_U32, NULL, 0, SC_PLAYERS-1),
+    FIELD(HiddenSequence, member, uint32_t, SW_U32, NULL, 0, SC_MAX_ENEMIES-1),
+    FIELD(HiddenSequence, force, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(HiddenSequence, site, Cell, SW_STRUCT, &schema_Cell, 0, 0),
+    FIELD(HiddenSequence, kind, SequenceKind, SW_I32, NULL, 0, SEQUENCE_DISCOVERY),
+    FIELD(HiddenSequence, beat, SequenceBeat, SW_I32, NULL, 0, BEAT_QUIET),
+    FIELD(HiddenSequence, clock, float, SW_FLOAT, NULL, 0, 45),
+    FIELD(HiddenSequence, away, float, SW_FLOAT, NULL, 0, 30),
+    FIELD(HiddenSequence, reserved, _Bool, SW_BOOL, NULL, 0, 1),
+    FIELD(HiddenSequence, witnessed, _Bool, SW_BOOL, NULL, 0, 1),
+};
+static const SnapshotSchema schema_HiddenSequence = SCHEMA(HiddenSequence);
+
+static const SnapshotField fields_Rhythm[] = {
+    FIELD(Rhythm, sequences, HiddenSequence, SW_STRUCT, &schema_HiddenSequence, 0, 0),
+    FIELD(Rhythm, next_id, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(Rhythm, completed, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(Rhythm, cancelled, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(Rhythm, cursor, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
+    FIELD(Rhythm, quiet, float, SW_FLOAT, NULL, 0, 45),
+};
+static const SnapshotSchema schema_Rhythm = SCHEMA(Rhythm);
+
 static const SnapshotField fields_Shelter[] = {
     FIELD(Shelter, door, Position, SW_STRUCT, &schema_Position, 0, 0),
     FIELD(Shelter, yaw, double, SW_DOUBLE, NULL, -1e15, 1e15),
@@ -873,6 +898,7 @@ static const SnapshotField fields_Game[] = {
     FIELD(Game, story, Story, SW_STRUCT, &schema_Story, 0, 0),
     FIELD(Game, chronicle, Chronicle, SW_STRUCT, &schema_Chronicle, 0, 0),
     FIELD(Game, home, Home, SW_STRUCT, &schema_Home, 0, 0),
+    FIELD(Game, rhythm, Rhythm, SW_STRUCT, &schema_Rhythm, 0, 0),
     FIELD(Game, shelter, Shelter, SW_STRUCT, &schema_Shelter, 0, 0),
     FIELD(Game, rigs, Rig, SW_STRUCT, &schema_Rig, 0, 0),
     FIELD(Game, beams, Beam, SW_STRUCT, &schema_Beam, 0, 0),
@@ -896,6 +922,7 @@ static const SnapshotField fields_RoomRecord[] = {
     FIELD(RoomRecord, systems, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(RoomRecord, local, uint32_t, SW_U32, NULL, 0, UINT32_MAX),
     FIELD(RoomRecord, district_state, uint32_t, SW_U32, NULL, 0, SC_DISTRICT_STATE_MASK),
+    FIELD(RoomRecord, rhythm_state, uint32_t, SW_U32, NULL, 0, 255),
 };
 
 static const SnapshotField fields_MatrixRecord[] = {
@@ -930,7 +957,7 @@ const SnapshotSchema sc_snapshot_box = SCHEMA(Box);
 const SnapshotSchema sc_snapshot_room_record = SCHEMA(RoomRecord);
 const SnapshotSchema sc_snapshot_matrix_record = SCHEMA(MatrixRecord);
 const SnapshotSchema sc_snapshot_faction_region = SCHEMA(FactionRegion);
-const uint32_t sc_snapshot_schema_id = UINT32_C(0xdac9842c);
+const uint32_t sc_snapshot_schema_id = UINT32_C(0x6683627c);
 #undef FIELD
 #undef SCHEMA
 // clang-format on

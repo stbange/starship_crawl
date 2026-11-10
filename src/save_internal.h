@@ -31,6 +31,7 @@ void sc_save_politics_stream(Stream *s, Politics *p, Director *d, bool read);
 void sc_save_factions_stream(Stream *s, Factions *f, bool read);
 void sc_save_chronicle(Stream *s, Chronicle *c, bool read);
 void sc_save_preparation(Stream *s, Home *h, bool read);
+void sc_save_rhythm(Stream *s, Rhythm *r, bool read);
 typedef struct {
     World *world;
     MatrixState *matrix;
@@ -42,6 +43,7 @@ typedef struct {
     Story story;
     Chronicle chronicle;
     Home home;
+    Rhythm rhythm;
     Campaign campaign;
     FrontierProgress frontier;
     Politics politics;

@@ -8,6 +8,7 @@
 #include "districts.h"
 #include "chronicle.h"
 #include "preparation.h"
+#include "rhythm.h"
 #include "onboarding.h"
 #include "encounters.h"
 #include "frontier.h"
@@ -179,6 +180,7 @@ typedef struct Game {
     Story story;
     Chronicle chronicle;
     Home home;
+    Rhythm rhythm;
     Shelter shelter;
     Rig rigs[SC_PLAYERS][2];
     Beam beams[SC_PLAYERS];

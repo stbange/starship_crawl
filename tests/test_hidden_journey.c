@@ -235,6 +235,8 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
     unsigned director_sequence = 0, director_kind = 0, fight_guardian = SC_GUARDIANS;
     unsigned captured_forms = 0, last_event = 0, captured_evidence = 0;
     unsigned pressure_frames[4] = {0}, max_forces = 0, max_actors = 0;
+    uint32_t sequence_ids[SC_SEQUENCES] = {0};
+    unsigned sequence_beats[SC_SEQUENCES] = {0};
     Cell previous_cell = {9999, 9999, 9999}, previous_owner = previous_cell;
     Cell optional = {0}, nav_goal = previous_cell, fight_cell = previous_cell;
     bool detour = false, returned = false, tools_prepared = false, resumed = false;
@@ -642,6 +644,17 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
             if (!session_input(&session, game_player_id(g, (int)i), &actions[i]))
                 abort();
         session_tick(&session);
+        for (unsigned s = 0; s < SC_SEQUENCES; s++) {
+            const HiddenSequence *q = &g->rhythm.sequences[s];
+            if (q->identity != sequence_ids[s] || (unsigned)q->beat != sequence_beats[s]) {
+                printf("{\"event\":\"sequence\",\"t\":%.3f,\"slot\":%u,\"id\":%u,\"kind\":%u,"
+                       "\"beat\":%u,\"site\":[%d,%d,%d],\"reserved\":%s}\n",
+                       g->time, s, q->identity, (unsigned)q->kind, (unsigned)q->beat, q->site.x,
+                       q->site.y, q->site.z, q->reserved ? "true" : "false");
+                sequence_ids[s] = q->identity;
+                sequence_beats[s] = (unsigned)q->beat;
+            }
+        }
         pressure_frames[g->factions.director.pace[0]]++;
         unsigned force_count = 0, actor_count = 0;
         for (unsigned i = 0; i < SC_FACTION_FORCES; i++) {
@@ -777,6 +790,11 @@ static int journey(unsigned run, const char *directory, unsigned duration) {
            max_forces, max_actors, pressure_frames[0], pressure_frames[1], pressure_frames[2],
            pressure_frames[3], factions_valid(&g->factions, 14) ? "true" : "false");
     performance();
+    printf("{\"event\":\"sequence_summary\",\"started\":%u,\"completed\":%u,\"cancelled\":%u,"
+           "\"reserved\":%u,\"budget\":%u,\"valid\":%s}\n",
+           g->rhythm.next_id, g->rhythm.completed, g->rhythm.cancelled, rhythm_reserved(&g->rhythm),
+           g->factions.director.budget,
+           rhythm_valid(&g->rhythm, g->factions.director.budget) ? "true" : "false");
     bool ok = frame == duration * 60 && !g->world.failed && !m.save_failures &&
               factions_valid(&g->factions, 14);
     game_destroy(g);

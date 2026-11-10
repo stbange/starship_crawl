@@ -135,7 +135,7 @@ typedef struct {
 } Box;
 typedef struct {
     Cell cell;
-    uint32_t killed, collected, systems, local, district_state;
+    uint32_t killed, collected, systems, local, district_state, rhythm_state;
 } RoomRecord;
 #define SC_LOCAL_STATE_MASK                                                                        \
     (3u | ((SC_PLAYER_MASK & 3u) << 2) | ((SC_PLAYER_MASK & 3u) << 4) |                            \
@@ -374,6 +374,8 @@ bool world_set_systems(World *w, Cell cell, uint32_t systems);
 /* Exact owner keys: bounded district queries must not recursively regenerate plans. */
 uint32_t world_record_systems(const World *w, Cell owner);
 uint32_t world_district_state(const World *w, Cell owner);
+uint32_t world_rhythm_state(const World *w, Cell owner);
+bool world_set_rhythm_state(World *w, Cell owner, uint32_t state);
 bool world_set_district_state(World *w, Cell owner, uint32_t state);
 uint32_t world_local_state(const World *w, const Room *room);
 bool world_mark_local(World *w, Room *room, uint32_t bits);

@@ -707,6 +707,30 @@
     "Flare.power": [
       "0",
       "9.375"
+    ],
+    "Rhythm.quiet": [
+      "0",
+      "45"
+    ],
+    "HiddenSequence.player": [
+      "0",
+      "SC_PLAYERS-1"
+    ],
+    "HiddenSequence.member": [
+      "0",
+      "SC_MAX_ENEMIES-1"
+    ],
+    "HiddenSequence.clock": [
+      "0",
+      "45"
+    ],
+    "HiddenSequence.away": [
+      "0",
+      "30"
+    ],
+    "RoomRecord.rhythm_state": [
+      "0",
+      "255"
     ]
   }
 }

@@ -395,5 +395,11 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
              (unsigned)app.game.home.personal[0].meal, app.game.home.personal[0].remaining,
              app.game.home.projects, app.game.home.researched, app.game.home.keepsake_count,
              app.game.home.personal[0].flare_charge ? "true" : "false");
+    used = strlen(result) - 1;
+    snprintf(
+        result + used, sizeof(result) - used,
+        ",\"rhythm_facts\":%u,\"rhythm_started\":%u,\"rhythm_completed\":%u,\"rhythm_quiet\":%.2f}",
+        district_room ? world_rhythm_state(&app.game.world, district_room->cell) : 0,
+        app.game.rhythm.next_id, app.game.rhythm.completed, app.game.rhythm.quiet);
     return result;
 }

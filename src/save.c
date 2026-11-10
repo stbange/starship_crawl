@@ -112,6 +112,10 @@ bool game_save(const Game *g, const char *path) {
         sc_save_chronicle(&s, &chronicle, false);
         Home home = g->home;
         sc_save_preparation(&s, &home, false);
+        Rhythm rhythm = g->rhythm;
+        sc_save_rhythm(&s, &rhythm, false);
+        for (size_t i = 0; i < g->world.record_count; i++)
+            sc_save_number(&s, g->world.records[i].rhythm_state, false);
         hash = s.hash;
     }
     sc_save_number(&s, hash, false);

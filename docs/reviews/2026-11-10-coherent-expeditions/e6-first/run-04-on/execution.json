@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/workspace/starship_crawl/build-e6-matched/sc_hidden_journey",
+    "4",
+    "/tmp/coherent-e6-pairs/run-04-on",
+    "1800"
+  ],
+  "sha256": "f80169701440dade23a5a68743e3d886f577d91737375b28c2b1c4085fb62b61",
+  "simulated_seconds": 1800,
+  "director_disabled": false,
+  "generator": 16,
+  "save": 17,
+  "campaign": 2,
+  "returncode": 0,
+  "wall_seconds": 96.504
+}

@@ -955,6 +955,21 @@ uint32_t world_district_state(const World *w, Cell owner) {
     size_t index = w->record_index[record_slot(w, owner)];
     return index ? w->records[index - 1].district_state : 0;
 }
+uint32_t world_rhythm_state(const World *w, Cell owner) {
+    if (!w->index_cap || !w->record_count)
+        return 0;
+    size_t index = w->record_index[record_slot(w, owner)];
+    return index ? w->records[index - 1].rhythm_state : 0;
+}
+bool world_set_rhythm_state(World *w, Cell owner, uint32_t state) {
+    if (w->generator < 16 || state > 255 || owner.z < 0)
+        return false;
+    size_t i = record_for(w, owner, true);
+    if (i == SIZE_MAX || w->failed)
+        return false;
+    w->records[i].rhythm_state = state;
+    return true;
+}
 bool world_set_district_state(World *w, Cell owner, uint32_t state) {
     if (w->generator < 16 || (state & ~SC_DISTRICT_STATE_MASK) || owner.z < 0)
         return false;

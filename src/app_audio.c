@@ -64,6 +64,9 @@ void audio_frame(void) {
             }
         }
     int queued = SDL_GetAudioStreamQueued(app.audio);
+    double intensity = 0;
+    for (int p = 0; p < app.game.player_count; p++)
+        intensity += rhythm_intensity(&app.game, p) / app.game.player_count;
     for (int block = 0; block < 4 && queued < 16384; block++) {
         float samples[1024];
         for (int i = 0; i < 512; i++) {
@@ -82,6 +85,9 @@ void audio_frame(void) {
                     (sin(t * SC_PI * 2 * (42 + d * 5)) + .25 * sin(t * SC_PI * 2 * (84 + d * 7))) *
                     .007;
             double cues[2] = {0};
+            ambient *= 1 + intensity * .35;
+            ambient +=
+                fmax(0, intensity) * .005 * sin(t * SC_PI * 62) * pow(fmax(0, sin(t * 2)), 4);
             for (int k = 1; k < ALIEN_BEHAVIORS; k++)
                 if (warning[k][0] > 0 || warning[k][1] > 0) {
                     double pulse = pow(fmax(0, sin(t * (k == ALIEN_MACHINE ? 28 : 12 + k))), 6);
