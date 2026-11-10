@@ -64,7 +64,7 @@ void sc_render_district_scene(Renderer *renderer, const Game *g, int player) {
                                                : .1f;
                 bool clear_center = r->district_powered || r->journey.condition >= 2;
                 double width = clear_center ? 13 : 17, x = clear_center ? 10.5 : 8.5;
-                double far = fmin(37, r->depth * .5 - 4), depth = far - 9;
+                double water_end = fmin(37, r->depth * .5 - 4), depth = water_end - 9;
                 sc_render_block(renderer, vadd(center, v3(side * x, .035, 9 + depth * .5)),
                                 v3(width, .015, depth), water, glow);
                 for (int ripple = 0; ripple < 9; ripple++) {
