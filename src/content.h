@@ -75,7 +75,9 @@ enum {
     W_LEECH = 16,
     W_CHAIN = 32,
     W_BEAM = 64,
-    W_FLARE = 128
+    W_FLARE = 128,
+    W_BUILD = 256,
+    W_MARK = 512
 };
 typedef struct {
     const char *name;

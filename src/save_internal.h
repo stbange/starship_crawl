@@ -44,6 +44,7 @@ typedef struct {
     Chronicle chronicle;
     Home home;
     Rhythm rhythm;
+    float condition_clock;
     Campaign campaign;
     FrontierProgress frontier;
     Politics politics;

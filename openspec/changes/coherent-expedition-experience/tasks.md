@@ -73,14 +73,14 @@ and update save/snapshot validation alongside each feature that introduces it.
 
 ## 7. E7 — Ships worth replaying
 
-- [ ] 7.1 Add predictable freeze/vent cycles and conduit-linked infestation as the other two dominant conditions; verify each rule's physical cues, basic counterplay, persistence and effect on enemies/rewards/motivation.
-- [ ] 7.2 Add the frozen luxury terrace, command reliquary and infested transit garden district families; verify landmarks, routes, local stories and shortcuts against the same bounded district contracts.
-- [ ] 7.3 Complete four specialization families with the eight branches specified in the design; verify each branch's exclusive effects, prerequisite gates, limits and different useful action in matched earned-build fixtures.
-- [ ] 7.4 Expand to six encounter recipes and four guardian patterns across four phases and alternative sites; test distinct responses, starter-route viability, optional preparation and no mandatory randomized tool dependency.
-- [ ] 7.5 Expand to six recurring roles and bind all four motivations to compatible districts and conditions; verify selection of two or three individuals, established alternatives and coherent consequences through extraction.
-- [ ] 7.6 Build a documented compatibility matrix in which every condition supports multiple district families and every family multiple conditions; test seeded directional expressions, deterministic fallbacks and actual travel along both ends of each axis.
-- [ ] 7.7 Exercise post-finale exploration, repeated commissions, capped build rewards, record compaction and new-ship reset; verify continuing useful choices without duplicated unique individuals, claims or victories.
-- [ ] 7.8 Run the E7 gate and publish the implemented content inventory plus two contrasting ship/build walkthroughs; verify documentation counts match generated content and keep human judgments separate from automated coverage.
+- [x] 7.1 Add predictable freeze/vent cycles and conduit-linked infestation as the other two dominant conditions; verify each rule's physical cues, basic counterplay, persistence and effect on enemies/rewards/motivation.
+- [x] 7.2 Add the frozen luxury terrace, command reliquary and infested transit garden district families; verify landmarks, routes, local stories and shortcuts against the same bounded district contracts.
+- [x] 7.3 Complete four specialization families with the eight branches specified in the design; verify each branch's exclusive effects, prerequisite gates, limits and different useful action in matched earned-build fixtures.
+- [x] 7.4 Expand to six encounter recipes and four guardian patterns across four phases and alternative sites; test distinct responses, starter-route viability, optional preparation and no mandatory randomized tool dependency.
+- [x] 7.5 Expand to six recurring roles and bind all four motivations to compatible districts and conditions; verify selection of two or three individuals, established alternatives and coherent consequences through extraction.
+- [x] 7.6 Build a documented compatibility matrix in which every condition supports multiple district families and every family multiple conditions; test seeded directional expressions, deterministic fallbacks and actual travel along both ends of each axis.
+- [x] 7.7 Exercise post-finale exploration, repeated commissions, capped build rewards, record compaction and new-ship reset; verify continuing useful choices without duplicated unique individuals, claims or victories.
+- [x] 7.8 Run the E7 gate and publish the implemented content inventory plus two contrasting ship/build walkthroughs; verify documentation counts match generated content and keep human judgments separate from automated coverage.
 
 ## 8. E8 — Balance and release evidence
 

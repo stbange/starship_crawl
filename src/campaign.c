@@ -186,7 +186,8 @@ CampaignReward campaign_offer(const Game *g, unsigned id, unsigned choice) {
     unsigned tier = id == 8 ? 0 : id / 2;
     CampaignReward r = campaign_reward(g->world.seed, id, choice);
     if (g->campaign.version >= 2 && r.kind == REWARD_MODULE)
-        r.item = 1 + 2 * ((r.item - 1) % 3);
+        r.item = 1 + (world_hash(g->world.seed, campaign_site(id), 0x4252414eu + choice) %
+                      SC_BUILD_BRANCHES);
     if (onboarding_active(g) && choice == 1 && tier)
         r = tier == 1
                 ? (CampaignReward){REWARD_POWER, campaign_family(g->world.seed, id) % SC_PSIONICS}
@@ -224,7 +225,8 @@ void campaign_grant(Game *g, int player, CampaignReward r) {
     Player *p = &g->players[player];
     if (campaign_owns(g, player, r)) {
         p->points = (uint32_t)fmin(1000, p->points + 2);
-        p->credits += 100;
+        p->credits =
+            g->campaign.version >= 2 ? (uint32_t)fmin(1000000, p->credits + 100) : p->credits + 100;
     } else if (r.kind == REWARD_GUN) {
         p->weapons |= 1u << r.item;
         build->guns[1] = p->weapon = r.item;
@@ -426,8 +428,7 @@ bool campaign_valid(const Campaign *c, const Player *players, const World *w) {
         bool done = (c->defeated & (1u << i)) != 0;
         const GuardianAttempt *a = &c->attempts[i];
         if (a->broken > 3 || (unsigned)a->stage > GUARDIAN_OVERRUN ||
-            (!a->active && (a->broken || a->stage)) ||
-            (c->version < 2 && (a->broken || a->stage)))
+            (!a->active && (a->broken || a->stage)) || (c->version < 2 && (a->broken || a->stage)))
             return false;
         if (c->eligible[i] > SC_PLAYER_MASK || done != (c->eligible[i] != 0) ||
             a->participants > SC_PLAYER_MASK || a->active != (a->participants != 0) ||

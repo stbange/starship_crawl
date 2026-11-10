@@ -11,10 +11,22 @@
             exit(1);                                                                               \
         }                                                                                          \
     } while (0)
+static bool coherent;
 static Game *create(unsigned seed) {
     Game *g = malloc(sizeof(*g));
     CHECK(g);
-    legacy_game_init(g, seed);
+    if (!coherent)
+        legacy_game_init(g, seed);
+    else {
+        game_init(g, seed);
+        for (unsigned id = 0; id < 8; id += 2) {
+            Room won = {.cell = campaign_site(id), .record = SIZE_MAX, .enemy_count = 1};
+            world_kill(&g->world, &won, 0);
+            g->campaign.defeated |= 1u << id;
+            g->campaign.eligible[id] = 1;
+        }
+        campaign_sync(g);
+    }
     return g;
 }
 static void destroy(Game *g) {
@@ -109,6 +121,7 @@ static void test_arcs(void) {
             inspect(g);
             motives |= BIT(story_motivation(seed));
             Story fresh = g->story;
+            Chronicle cast = g->chronicle;
             MapView map;
             CHECK(game_map_build(g, 0, (Cell){200, 2, 300}, 4, &map));
             world_stream(&g->world, 2);
@@ -172,6 +185,13 @@ static void test_arcs(void) {
                 valid(g);
                 inspect(g);
                 reload(g);
+                if (coherent) {
+                    CHECK(cast.count == g->chronicle.count);
+                    for (unsigned i = 0; i < cast.count; i++) {
+                        CHECK(cast.people[i].identity == g->chronicle.people[i].identity);
+                        CHECK(cast.people[i].role == g->chronicle.people[i].role);
+                    }
+                }
                 use(g, STORY_CONTACT);
                 CHECK(game_story_available(g, STORY_RELAY) &&
                       game_story_available(g, STORY_RESOLUTION));
@@ -433,6 +453,9 @@ static void test_validation(void) {
 }
 int main(void) {
     test_arcs();
+    coherent = true;
+    test_arcs();
+    coherent = false;
     test_physical_effects();
     test_validation();
     puts("PASS reactive aftermath: councils, power, wards, controllers, all chapter "

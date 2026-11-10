@@ -63,10 +63,17 @@ void app_inspect_frame(void) {
             Vec3 c = world_center(cell);
             p->pos = position_from(vadd(c, scene == 1 || scene == 2 ? v3(-23, 3.02, 20)
                                            : scene == 3             ? v3(-24, .02, -26)
-                                                                    : v3(0, .02, -35)));
+                                                                    : v3(-14, .02, -35)));
             p->yaw = scene == 1 ? .9 : 0;
             p->pitch = scene == 0 ? .3 : scene == 1 ? .25 : 0;
-            if (scene == 2) {
+            if (scene >= 5) {
+                world_set_systems(&g->world, cell, SYSTEM_POWER);
+                district_step(g, .02);
+                g->condition_clock = fmodf(
+                    24 + (scene == 5 ? 1 : 5) - (float)((room->journey.identity >> 8) % 3) * 4, 24);
+                p->pos = position_from(vadd(c, v3(0, .02, 5)));
+                p->pitch = -.15;
+            } else if (scene == 2) {
                 world_set_systems(&g->world, cell, SYSTEM_POWER);
                 district_step(g, .02);
                 Vec3 source = vadd(district_control(cell, DISTRICT_SOURCE_CONTROL), v3(0, .75, 0));
@@ -134,7 +141,10 @@ void app_inspect_frame(void) {
         p->weapons |= 2;
         p->yaw = 0;
         p->pitch = 0;
-        campaign_grant(g, 0, (CampaignReward){REWARD_MODULE, 1 + 2 * (app.inspect_build - 1)});
+        static const unsigned branches[] = {BUILD_RELAY,   BUILD_ECHO,   BUILD_CAPACITOR,
+                                            BUILD_FOCUS,   BUILD_AMBUSH, BUILD_BRACE,
+                                            BUILD_LANDING, BUILD_FIELD};
+        campaign_grant(g, 0, (CampaignReward){REWARD_MODULE, branches[app.inspect_build - 1]});
         if (app.inspect_build == 1) {
             campaign_grant(g, 0, (CampaignReward){REWARD_GUN, 16});
             campaign_grant(g, 0, (CampaignReward){REWARD_GUN, 19});
@@ -147,15 +157,42 @@ void app_inspect_frame(void) {
         } else if (app.inspect_build == 2) {
             campaign_grant(g, 0, (CampaignReward){REWARD_POWER, PSI_VEIL});
             game_psionic(g, 0, PSI_VEIL);
-        } else {
+        } else if (app.inspect_build == 3 || app.inspect_build == 6) {
             campaign_grant(g, 0, (CampaignReward){REWARD_RIG, MECH});
             game_rig_toggle(g, 0, MECH);
             game_rig_interact(g, 0);
             p->shield = 0;
             game_hostile_hit(g, 0, 100, 0);
+            if (app.inspect_build == 6) {
+                p->grounded = true;
+                for (int tick = 0; tick < 4; tick++)
+                    game_build_branches_step(g, .25);
+                game_hostile_hit_from(g, 0, 100, 0, vadd(player_eye(p), v3(0, 0, 10)));
+            }
+        } else if (app.inspect_build == 4) {
+            campaign_grant(g, 0, (CampaignReward){REWARD_GUN, 16});
+            for (int tick = 0; tick < 15; tick++) {
+                g->time += .1;
+                game_build_contact(g, room, 0, 0, 10);
+            }
+        } else if (app.inspect_build == 5) {
+            campaign_grant(g, 0, (CampaignReward){REWARD_POWER, PSI_VEIL});
+            p->cloaked = true;
+            WeaponDef shot = sc_weapons[0];
+            game_build_shot(g, 0, &shot);
+            game_damage_enemy(g, room, 0, 0, 1, shot.flags);
+            p->cloaked = false;
+        } else if (app.inspect_build == 7) {
+            campaign_grant(g, 0, (CampaignReward){REWARD_POWER, PSI_LEAP});
+            g->builds[0].landing_armed = p->grounded = true;
+            game_build_branches_step(g, .01);
+        } else if (app.inspect_build == 8) {
+            campaign_grant(g, 0, (CampaignReward){REWARD_POWER, PSI_FLIGHT});
+            p->flight = 10;
+            game_build_branches_step(g, .01);
         }
         Actions input[SC_PLAYERS] = {0};
-        input[0].fire = app.inspect_build != 3;
+        input[0].fire = app.inspect_build < 3;
         game_step(g, input, SC_TICK_SECONDS);
         if (app.inspect_build == 2) {
             position_move(&p->pos, v3(2, 0, -3));
@@ -276,13 +313,13 @@ void app_inspect_frame(void) {
 void app_inspect_scene(const char *scene, uint32_t seed) {
     if (scene) {
         bool build_scene =
-            !strncmp(scene, "build", 5) && scene[5] >= '1' && scene[5] <= '3' && !scene[6];
+            !strncmp(scene, "build", 5) && scene[5] >= '1' && scene[5] <= '8' && !scene[6];
         bool guardian_scene = !strncmp(scene, "guardian", 8) &&
-                              (scene[8] == '0' || scene[8] == '1') &&
+                              (scene[8] >= '0' && scene[8] <= '7') &&
                               (!strcmp(scene + 9, "warn") || !strcmp(scene + 9, "break") ||
                                !strcmp(scene + 9, "breach"));
         bool district_scene =
-            !strncmp(scene, "foundry", 7) && scene[7] >= '0' && scene[7] <= '4' && !scene[8];
+            !strncmp(scene, "foundry", 7) && scene[7] >= '0' && scene[7] <= '6' && !scene[8];
         bool person_scene =
             !strncmp(scene, "person", 6) && (scene[6] == '0' || scene[6] == '1') && !scene[7];
         bool home_scene =
@@ -353,6 +390,13 @@ void app_inspect_scene(const char *scene, uint32_t seed) {
         }
         if (guardian_scene) {
             unsigned id = (unsigned)(scene[8] - '0');
+            for (unsigned prior = 0; prior < id / 2; prior++) {
+                Room won = {.cell = campaign_site(prior * 2), .record = SIZE_MAX, .enemy_count = 1};
+                world_kill(&app.game.world, &won, 0);
+                app.game.campaign.defeated |= 1u << (prior * 2);
+                app.game.campaign.eligible[prior * 2] = 1;
+            }
+            campaign_sync(&app.game);
             c = campaign_site(id);
             app.inspect_guardian = (int)(id * 3 + 1 +
                                          (!strcmp(scene + 9, "break")    ? 1

@@ -28,8 +28,8 @@ server-independent command validates ownership and safety again at confirmation.
 Only the selected branch operates. Guardians and faction formations keep their
 own commitments rather than being erased by a decoy. Echoes freeze when everyone
 is sheltered and resume without a catch-up burst. Checkpoints clear transient
-combat effects; live snapshots preserve them. Other branch names reserve the
-approved E7 content and are not offered by E1 rewards.
+combat effects; live snapshots preserve them. E7 completes the remaining branches
+listed below; reward selection covers all eight.
 
 Attributes still have twelve ranks each. For the new rules, ranks above four
 contribute half as much to damage, firing cadence and health/shield/armor/energy
@@ -41,7 +41,7 @@ does not restore armor. Supplies, free sanctuary recovery and forgiving checkpoi
 death remain available. Duplicate challenge rewards grant two points and 100
 salvage, once per eligible participant, with deferred claims retained.
 
-Three optional encounter combinations use the existing support-link warnings and
+The initial three optional encounter combinations use the existing support-link warnings and
 recovery windows: shielded swarm with ceiling pursuit, suppressor with flankers,
 and machine support with slow area denial. They occupy four actor slots and retain
 the room's twenty-actor limit. Destroying support collapses its visible links;
@@ -53,7 +53,7 @@ for matched simulated runs, isolated earned-build fixtures, captures and test sc
 
 ## E2 — guardian systems
 
-New ships use two initial patterns. The suspended furnace projects slow cyan
+The first two patterns establish the common rules. The suspended furnace projects slow cyan
 rings from its coolant assembly and orange fans from its gun platform. The
 infested relay circles the player while its root heart is intact; its spore lung
 creates a second firing origin. Shoot the lit assemblies or concentrate legal
@@ -193,3 +193,67 @@ session suspension pause their clocks. Checkpoints preserve sequence and budget
 state, and live snapshots preserve the exact active state. The normal interface
 has no sequence stages, pressure scores or director controls. `rhythm0` through
 `rhythm3` are labelled cue-inspection fixtures, not gameplay evidence.
+
+## E7 — ships worth replaying
+
+A new seed selects one dominant condition. Its identity and 24-second cycle are
+shared by districts and survive checkpoints; time pauses when nobody is outside
+in the physical ship. Region offsets are deterministic, so rooms have distinct
+phases without changing their rule. The center strip and raised approaches remain
+usable with starting movement and weapons.
+
+| Condition | Rule and ordinary counterplay |
+|---|---|
+| Awakening machines | Restoring power warns for two seconds, wakes robots and drains the center route. Shooting the powered conductor warns for two seconds, then electrifies the left pool for five. Use dry ground. |
+| Freeze / vent cycle | Three seconds of flashing amber precede a five-second frost sweep; sixteen seconds remain clear. Exposed floor deals 12 damage/second and slows creatures. Shoot the vent feed, isolate it through earned matrix access, or use the permanent safe strip. |
+| Living conduits | Powered growth warns for four seconds, feeds for eight, then rests for twelve. Exposed floor drains the player at 10 damage/second; resident organic creatures recover 8 health/second, within their existing natural maximum. Burning creatures, robots, guardians and travelling forces receive no regeneration. Cut the powered living feed, isolate it, or take the safe route. |
+
+| District family | Machines | Vents | Conduits | Landmark |
+|---|---|---|---|---|
+| Drowned Foundry | Yes | — | Yes | Suspended reactor above workers' homes |
+| Frozen Terrace | Yes | Yes | — | Tiered chandelier over abandoned luxury cabins |
+| Command Reliquary | Yes | Yes | Yes | Archive fins, towering shelves and a suspended reliquary |
+| Transit Garden | — | Yes | Yes | Overgrown transit frames, hanging cloth and fungal growth |
+
+Directional order, heat and seeded variation choose compatible families. A
+fixed fallback preserves required connections when a preferred family does not
+fit. Compact rooms combine the preparation/refuge contracts; incompatible small
+rooms omit the optional district. The existing chunk, actor, sprite and light
+budgets remain unchanged. One existing overhead lamp reveals the landmark.
+
+| Additional branch | Requirement | Behavior and limit |
+|---|---|---|
+| Conduit / Focus | Equipped beam | Maintain contact with one target for 1.2 seconds; spend 12 energy for a double-damage piercing pulse through at most three aligned hostiles. Changing targets or missing the firing window loses focus. Walls bound the lane. |
+| Veil / Ambush | Equipped Veil | The first hit from a cloaked shot marks one creature for six seconds. Its defeat releases one 8 m burst, up to eight visible hostiles, for 70 plus 8 per effective power rank. No recursive bursts. |
+| Bastion / Brace | Equipped mech | Stand grounded and still for 0.75 seconds: frontal hostile damage is halved and stores up to 100 counterwave charge. Firing with at least 20 charge releases it within 6 m ahead. Moving or packing clears it; protected refuges cannot charge it. |
+| Rift / Landing | Equipped long jump | A committed powered jump arms one landing pulse: 65 damage within 7 m, at most eight visible hostiles. Ordinary walking/falling, flight and rigs do not arm it. |
+| Rift / Field | Equipped flight | While flying, spend 2 extra energy every quarter-second for an 8-damage field within 3.5 m, at most eight visible hostiles. Insufficient energy ends flight. |
+
+Only one branch operates at a time. Pulses cannot damage allies or creatures
+through walls. Live snapshots rebind marked/focused actor identities; checkpoint
+loads clear these attempt-local effects. Inspection scenes `build1`–`build8`
+explicitly grant earned equipment and are not fresh-character progression.
+
+The three additional four-actor encounters are **cold mirror / brittle pack**,
+**root colony / carrion wave**, and **listeners / return fire**. Cold districts
+favor brittle and suppressor compositions; conduit districts favor colonies and
+listeners. Destroy support first, break a brittle creature's commitment, interrupt
+a colony, or stop firing while repositioning against return-fire specialists.
+Existing staggered attacks and support openings remain in force.
+
+Four guardian patterns cover the four primary phases; alternate sites rotate the
+pattern. The **Cryo Processional** projects a rotating, warned cross from its vent
+array and a second fan from its shard mirror. Destroy the array to remove the
+cross or the mirror to remove cross-fire. The **Garden Locomotive** commits to a
+locked charge after its warning, with a drain shot and seed mortar. Destroy its
+root drive to stop charges, or its mortar to remove the second firing origin.
+Both retain two stages, physical preparation, starter-carbine viability and
+persistent victory breaches.
+
+Each ship selects two or three unique recurring individuals from six roles:
+engineer, archivist, caretaker, deserter, pilgrim and scavenger. Their needs,
+condition advice and four motivation-specific route alternatives share the same
+power, refuge and fate facts. Individuals keep their names and identities through
+later meetings, repeated commissions and extraction; a new ship clears them.
+Compacted event histories retain outcome totals and current facts. Duplicate
+branch rewards cap points at 1,000 and salvage at 1,000,000, without a repeat claim.

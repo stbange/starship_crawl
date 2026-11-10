@@ -15,6 +15,16 @@ static Game *fresh(unsigned id, unsigned players) {
     CHECK(g);
     game_init(g, 713);
     g->player_count = (int)players;
+    for (unsigned previous = 0; previous < id / 2; previous++) {
+        Cell site = campaign_site(previous * 2);
+        CHECK(world_set_systems(&g->world, site, 0));
+        for (size_t n = 0; n < g->world.record_count; n++)
+            if (cell_equal(g->world.records[n].cell, site))
+                g->world.records[n].killed |= 1;
+        g->campaign.defeated |= 1u << (previous * 2);
+        g->campaign.eligible[previous * 2] = 1;
+    }
+    campaign_sync(g);
     Vec3 positions[SC_PLAYERS];
     for (unsigned p = 0; p < players; p++) {
         g->players[p].pos = position_from(game_terminal(campaign_site(id)));
@@ -42,12 +52,12 @@ static void start(Game *g, unsigned id) {
     CHECK(g->campaign.attempts[id].active && g->campaign.attempts[id].stage == GUARDIAN_CYCLE);
 }
 static void systems(void) {
-    for (unsigned id = 0; id < 2; id++) {
+    for (unsigned id = 0; id < 8; id++) {
         Game *g = fresh(id, 2), *copy = fresh(id, 2);
         Room *r = room(g, id);
         CHECK(strlen(guardian_name(g, id)) && strlen(guardian_name(g, 8)));
         CHECK(strlen(guardian_system_name(id, 0)) && strlen(guardian_system_name(id, 1)));
-        CHECK(guardian_pattern(id) == id);
+        CHECK(guardian_pattern(id) == (id / 2 + id % 2) % 4);
         float hp = r->enemies[1].health;
         game_damage_enemy(g, r, 1, 0, 40, 0);
         CHECK(r->enemies[1].health == hp); /* Staging cannot be farmed. */
@@ -147,7 +157,7 @@ static void systems(void) {
     remove("guardian-victory.sav");
 }
 static void attacks(void) {
-    for (unsigned id = 0; id < 2; id++) {
+    for (unsigned id = 0; id < 8; id++) {
         Game *g = fresh(id, 1);
         Room *r = room(g, id);
         start(g, id);
@@ -171,9 +181,9 @@ static void attacks(void) {
             unsigned before = g->enemy_shots;
             guardian_step(g, r, 0, .8);
             unsigned count = g->enemy_shots - before;
-            CHECK(count >= 3 && a->opening > 0 && a->attack);
+            CHECK(count >= 1 && a->opening > 0 && a->attack);
             if (broken == 3)
-                CHECK(count < previous);
+                CHECK(guardian_pattern(id) == 3 ? count == previous : count < previous);
             previous = count;
             guardian_step(g, r, 0, .1);
         }
@@ -197,7 +207,7 @@ static void attacks(void) {
     }
 }
 static void platforms(void) {
-    for (unsigned id = 0; id < 2; id++) {
+    for (unsigned id = 0; id < 8; id++) {
         Game *g = fresh(id, 2);
         Room *r = room(g, id);
         r->ready = false;
@@ -233,7 +243,8 @@ static void platforms(void) {
             } else
                 game_damage_enemy(g, r, 0, 0, 1000000, 0);
         }
-        CHECK(campaign_phase(&g->campaign) == 1 && g->world.open_layer == 2);
+        CHECK(campaign_phase(&g->campaign) == id / 2 + 1 &&
+              g->world.open_layer == (id / 2 == 3 ? 0 : id / 2 + 2));
         destroy(g);
     }
 }
@@ -280,7 +291,7 @@ static void matrix_preparation(void) {
     destroy(g);
 }
 static void journey(void) {
-    for (unsigned id = 0; id < 2; id++)
+    for (unsigned id = 0; id < 8; id++)
         for (unsigned prepared = 0; prepared < 2; prepared++) {
             Game *g = fresh(id, 1);
             Room *r = room(g, id);
@@ -322,7 +333,7 @@ static void journey(void) {
 }
 int main(int argc, char **argv) {
     if (argc > 1 && !strcmp(argv[1], "--fixtures")) {
-        for (unsigned id = 0; id < 2; id++) {
+        for (unsigned id = 0; id < 8; id++) {
             Game *g = fresh(id, 1);
             g->campaign.tracked = id;
             char path[48];

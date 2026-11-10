@@ -20,13 +20,13 @@ const char *campaign_build_hint(const Game *g, unsigned branch) {
     static const char *hints[] = {
         "ONE BRANCH ACTIVE / REFIT AT A SAFE STATION",
         "REQUIRES EQUIPPED BEAM + FLARE CANNON / HIT FLARE / 3 RELAYS / 3 ENERGY EACH",
-        "REQUIRES BEAM / SUSTAIN CONTACT TO CHARGE A PIERCING PULSE",
+        "REQUIRES BEAM / HOLD SAME TARGET 1.2S / PIERCING PULSE COSTS 12 ENERGY",
         "REQUIRES VEIL / FIRING LEAVES A 3 SECOND LURE / NO BONUS DAMAGE",
-        "REQUIRES VEIL / CLOAK SHOT MARKS A FOE / ITS DEATH BURSTS",
+        "REQUIRES VEIL / CLOAK SHOT MARKS FOR 6S / DEATH BURSTS 8M / UP TO 8 FOES",
         "REQUIRES MECH / HOSTILE HITS CHARGE NEXT CANNON / PACKING CLEARS CHARGE",
-        "REQUIRES MECH / STATIONARY BRACE PROTECTS FRONT / COUNTERWAVE",
-        "REQUIRES LONG JUMP / LANDING RELEASES A LOCAL PULSE",
-        "REQUIRES FLIGHT / CLOSE DAMAGE FIELD / EXTRA ENERGY DRAIN"};
+        "REQUIRES MECH / BRACE .75S / HALF FRONTAL DAMAGE / 100 MAX COUNTERWAVE",
+        "REQUIRES LONG JUMP / COMMITTED LANDING PULSES 7M / UP TO 8 FOES",
+        "REQUIRES FLIGHT / 3.5M CLOSE FIELD / 8 EXTRA ENERGY PER SECOND"};
     return g->campaign.version < 2 ? legacy[branch <= 4 ? branch : 0]
                                    : hints[branch <= SC_BUILD_BRANCHES ? branch : 0];
 }
@@ -70,6 +70,15 @@ bool game_build_equip(Game *g, int player, unsigned branch) {
 void game_build_shot(Game *g, int player, WeaponDef *shot) {
     Player *p = &g->players[player];
     BuildEffects *b = &g->builds[player];
+    if (p->cloaked && game_build_active(g, player, BUILD_AMBUSH)) {
+        b->mark_armed = true;
+        shot->flags |= W_MARK;
+    }
+    if (p->riding == MECH && game_build_active(g, player, BUILD_BRACE) && b->brace_charge >= 20) {
+        float damage = b->brace_charge;
+        b->brace_charge = b->brace_time = 0;
+        game_build_wave(g, player, player_eye(p), 6, damage, true);
+    }
     if (p->cloaked && game_build_active(g, player, BUILD_ECHO)) {
         b->echo = p->pos;
         b->echo_life = 3;
@@ -156,6 +165,7 @@ bool game_build_echo(Game *g, Enemy *enemy, double dt) {
     return false;
 }
 void game_builds_step(Game *g, double dt) {
+    game_build_branches_step(g, dt);
     bool outside = false;
     for (int i = 0; i < g->player_count; i++)
         outside |= !g->players[i].sheltered;

@@ -98,16 +98,18 @@ void preparation_entry(const Game *g, int player, unsigned scene, char *text, si
         const char *note = g->home.researched & 2 ? "POWER: 2S WARNING; LEFT WATER LIVE FOR 5S. "
                                                     "HIGH GROUND AND THE DRY CENTER ARE SAFE. "
                                                   : "";
-        snprintf(text, size,
-                 "SHARED FACILITIES / PERSONAL PREPARATION. %s%s%s%sREFITTING CONSERVES YOUR "
-                 "POINTS; IT DOES NOT GRANT EQUIPMENT OR HEAL YOU.",
-                 note,
-                 g->home.researched & 4
-                     ? "FREEZE: VENTS WARN BEFORE THE COLD SWEEP; USE THE RAISED SHELTERED ROUTE. "
-                     : "",
-                 g->home.researched & 8 ? "CONDUITS: ISOLATE THE LIVE FEED BEFORE CROSSING GROWTH. "
-                                        : "",
-                 p->flare_charge ? "ONE CALIBRATED FLARE READY. " : "");
+        snprintf(
+            text, size,
+            "SHARED FACILITIES / PERSONAL PREPARATION. %s%s%s%sREFITTING CONSERVES YOUR "
+            "POINTS; IT DOES NOT GRANT EQUIPMENT OR HEAL YOU.",
+            note,
+            g->home.researched & 4 ? "FREEZE: 24S CYCLE / 3S WARNING, 5S SWEEP, 16S CLEAR. USE THE "
+                                     "RAISED ROUTE OR CENTER. SHOOT THE VENT FEED TO ISOLATE IT. "
+                                   : "",
+            g->home.researched & 8 ? "CONDUITS: POWERED 24S CYCLE / 4S WARNING, 8S GROWTH, 12S "
+                                     "CLEAR. GROWTH FEEDS ORGANICS. SHOOT OR SILENCE THE FEED. "
+                                   : "",
+            p->flare_charge ? "ONE CALIBRATED FLARE READY. " : "");
     }
 }
 bool preparation_choose(Game *g, int player, unsigned choice) {

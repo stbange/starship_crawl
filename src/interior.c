@@ -321,7 +321,15 @@ static void lighting(Builder *b, const Room *r) {
         float power = r->incident == BLACKOUT ? .28f : .85f;
         Color color = incident_colors[r->incident];
         float radius = 23;
-        if (r->landmark && i == 5) {
+        if ((r->journey.role & JOURNEY_VISTA) && i == 5) {
+            p = vadd(vsub(world_center(r->cell), b->origin), v3(0, 15, 20));
+            color = r->journey.condition == 2   ? rgb(.3f, .6f, .9f)
+                    : r->journey.condition == 3 ? rgb(.65f, .2f, .55f)
+                                                : rgb(.65f, .4f, .15f);
+            phase = 0;
+            power = 1.15f;
+            radius = 42;
+        } else if (r->landmark && i == 5) {
             /* A weak overhead fixture reveals the hall's silhouette without
                increasing the light budget or washing out the dark side rooms. */
             Vec3 center = vsub(world_room_center(r), b->origin);

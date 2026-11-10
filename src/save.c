@@ -116,6 +116,7 @@ bool game_save(const Game *g, const char *path) {
         sc_save_rhythm(&s, &rhythm, false);
         for (size_t i = 0; i < g->world.record_count; i++)
             sc_save_number(&s, g->world.records[i].rhythm_state, false);
+        sc_save_real(&s, g->condition_clock, false);
         hash = s.hash;
     }
     sc_save_number(&s, hash, false);

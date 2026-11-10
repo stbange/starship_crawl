@@ -363,9 +363,13 @@ EMSCRIPTEN_KEEPALIVE const char *sc_web_state(void) {
         relays += app.game.builds[0].relays[i].life > 0;
     snprintf(result + used, sizeof(result) - used,
              ",\"rules\":%u,\"invested\":%u,\"relays\":%u,\"echo_life\":%.3f,\"mech_charge\":%.2f,"
-             "\"branch_preview\":%u}",
+             "\"branch_preview\":%u,\"mark_life\":%.3f,\"focus\":%.3f,\"brace_charge\":%.3f,"
+             "\"build_pulse\":%.3f,\"condition_clock\":%.3f}",
              p->rules, player_investment(p), relays, app.game.builds[0].echo_life,
-             app.game.builds[0].charge, app.game.views[0].branch_preview);
+             app.game.builds[0].charge, app.game.views[0].branch_preview,
+             app.game.builds[0].mark_life, app.game.builds[0].focus,
+             app.game.builds[0].brace_charge, app.game.builds[0].pulse_life,
+             app.game.condition_clock);
     used = strlen(result) - 1;
     const Room *district_room = world_find(&app.game.world, world_cell(position_absolute(p->pos)));
     snprintf(result + used, sizeof(result) - used,

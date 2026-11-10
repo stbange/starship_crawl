@@ -32,7 +32,7 @@ def run():
             page.on('pageerror', lambda error: errors.append(str(error)))
             if args.quest:
                 page.add_init_script(path=str(ROOT / 'tests/quest_device.js'))
-                for pattern in range(2):
+                for pattern in (0, 1, 4, 6):
                     page.goto(base + '?seed=713')
                     xr_ready(page)
                     page.locator('#import').set_input_files(str(ROOT / f'tests/fixtures/coherent-guardian{pattern}.sav'))
@@ -44,7 +44,7 @@ def run():
                     capture(page, f'coherent-guardian{pattern}-stereo')
                     assert xr_state(page)['active'] and not errors
             else:
-                for pattern in range(2):
+                for pattern in (0, 1, 4, 6):
                     page.goto(base + f'?seed=713&scene=guardian{pattern}warn')
                     wait_ready(page)
                     expect(page, 's.guardian_active && s.guardian_stage === 1 && s.guardian_broken === 0')
@@ -59,7 +59,7 @@ def run():
                     assert state(page)['kills'] == 0 and not errors
                     page.goto(base + f'?seed=713&scene=guardian{pattern}breach')
                     wait_ready(page)
-                    expect(page, f'!s.guardian_active && (s.defeated & {1 << pattern}) !== 0 && s.phase === 1')
+                    expect(page, f'!s.guardian_active && (s.defeated & {1 << pattern}) !== 0 && s.phase === {pattern // 2 + 1}')
                     start_play(page)
                     page.screenshot(path=str(ARTIFACTS / f'coherent-guardian{pattern}-breach.png'))
             browser.close()

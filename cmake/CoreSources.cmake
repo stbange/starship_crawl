@@ -33,8 +33,10 @@ set(SC_CORE_SOURCES
   src/campaign_gen.c
   src/campaign_combat.c
   src/builds.c
+  src/build_branches.c
     src/guardians.c
     src/districts.c
+  src/conditions.c
   src/chronicle.c
   src/chronicle_campaigns.c
   src/save_chronicle.c

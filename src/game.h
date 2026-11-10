@@ -76,7 +76,7 @@ typedef struct Player {
     uint32_t mods[7], weapons, weapon, credits, logs, victories, pickups;
     float shield, armor, energy, slow;
     uint32_t career[SC_OUTCOMES];
-    uint32_t intro, lessons;                   /* Save 16: earned interface and lesson receipts. */
+    uint32_t intro, lessons; /* Save 16: earned interface and lesson receipts. */
     bool grounded, crouched, flashlight;
     bool sheltered;
     Vec3 shelter_pos;
@@ -141,6 +141,11 @@ typedef struct {
     Position echo;
     float echo_life, charge;
     Beam relays[3];
+    ActorId focus_target, mark_target;
+    float focus, contact_time, mark_life, brace_time, brace_charge, field_tick;
+    bool mark_armed, landing_armed;
+    Position pulse;
+    float pulse_life, pulse_radius;
 } BuildEffects;
 typedef struct {
     Position pos;
@@ -181,6 +186,7 @@ typedef struct Game {
     Chronicle chronicle;
     Home home;
     Rhythm rhythm;
+    float condition_clock;
     Shelter shelter;
     Rig rigs[SC_PLAYERS][2];
     Beam beams[SC_PLAYERS];
@@ -273,6 +279,12 @@ void game_build_shot(Game *g, int player, WeaponDef *shot);
 void game_build_relay(Game *g, int player, Vec3 from, Vec3 to, float damage);
 bool game_build_echo(Game *g, Enemy *enemy, double dt);
 void game_builds_step(Game *g, double dt);
+void game_build_contact(Game *g, Room *room, int index, int owner, float damage);
+void game_build_hit(Game *g, Room *room, int index, int owner, uint32_t flags);
+void game_build_kill(Game *g, Room *room, int index, int owner);
+void game_build_wave(Game *g, int owner, Vec3 origin, float radius, float damage, bool frontal);
+void game_build_branches_step(Game *g, double dt);
+void game_hostile_hit_from(Game *g, int player, float damage, uint32_t flags, Vec3 from);
 bool game_objective(const Game *g, Cell *cell);
 const char *game_mission(const Game *g);
 Vec3 game_terminal(Cell cell);

@@ -649,6 +649,21 @@ void sc_render_actors(Renderer *r, Game *g, int viewer) {
     }
     for (int i = 0; i < SC_PLAYERS; i++) {
         const BuildEffects *b = &g->builds[i];
+        if (b->pulse_life > 0 && !g->players[i].sheltered) {
+            Vec3 center = position_absolute(b->pulse);
+            double radius = b->pulse_radius * (1 - b->pulse_life / .4);
+            if (vlen(vsub(center, eye)) < 100)
+                for (int segment = 0; segment < 24; segment++) {
+                    double a = segment * SC_PI / 12, next = (segment + 1) * SC_PI / 12;
+                    sc_render_tube(r, vadd(center, v3(sin(a) * radius, -.5, cos(a) * radius)),
+                                   vadd(center, v3(sin(next) * radius, -.5, cos(next) * radius)),
+                                   .04, .03, rgb(.5f, .3f, 1), 1.5f);
+                }
+        }
+        const Enemy *marked = b->mark_life > 0 ? game_actor((Game *)g, b->mark_target) : NULL;
+        if (marked && vlen(vsub(enemy_center(marked), eye)) < 100)
+            sc_render_octahedron(r, vadd(enemy_center(marked), v3(0, 1.1, 0)), .22,
+                                 rgb(.8f, .2f, .7f), 1.7f);
         Vec3 at = position_absolute(b->echo);
         if (b->echo_life <= 0 || g->players[i].sheltered || vlen(vsub(at, eye)) > 100 ||
             vlen(vsub(vadd(at, v3(0, .9, 0)), eye)) < 1.2)

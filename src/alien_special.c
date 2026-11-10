@@ -80,7 +80,8 @@ static void strike(Game *g, Enemy *e, int player, Vec3 from) {
     Player *p = &g->players[player];
     if (!e->attack_done && vlen(vsub(player_eye(p), from)) < 2.1 &&
         visible(&g->world, from, player_eye(p))) {
-        game_hostile_hit(g, player, sc_enemies[e->kind].damage, sc_enemies[e->kind].flags);
+        game_hostile_hit_from(g, player, sc_enemies[e->kind].damage, sc_enemies[e->kind].flags,
+                              from);
         e->attack_done = true;
     }
 }

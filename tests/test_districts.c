@@ -75,7 +75,8 @@ static void planning(void) {
         Room *r = vista(g);
         CHECK(r->height >= 32 && r->width >= 80);
         DistrictContract c = district_contract(seed, 16, r->cell);
-        CHECK(c.family == 1 && c.condition == 1 && c.reservations == 7 &&
+        CHECK(district_compatible(c.family, c.condition) &&
+              c.condition == district_condition(seed) && c.reservations == 7 &&
               cell_equal(c.anchor, r->cell));
         size_t records = g->world.record_count;
         (void)district_contract(seed, 16, (Cell){100, 5, 100});
@@ -233,7 +234,9 @@ static void power_and_water(void) {
     destroy(g);
 }
 static void routes(void) {
-    for (unsigned seed = 1; seed <= 8; seed++) {
+    const unsigned seeds[] = {1, 2, 3, 6, 7, 13, 27, 713};
+    for (unsigned index = 0; index < 8; index++) {
+        unsigned seed = seeds[index];
         Game *g = fresh(seed);
         Room *r = vista(g);
         Vec3 c = world_center(r->cell);

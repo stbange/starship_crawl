@@ -25,4 +25,10 @@ void district_shot(struct Game *game, int player, Vec3 impact);
 void district_victory(struct Game *game, Cell owner);
 Vec3 district_control(Cell owner, unsigned role);
 bool district_wet(const Room *room, Vec3 at);
+unsigned district_condition(uint32_t seed);
+bool district_compatible(unsigned family, unsigned condition);
+float condition_phase(const struct Game *game, const DistrictMark *mark);
+bool condition_live(const struct Game *game, const Room *room);
+bool condition_surface(const Room *room, Vec3 at);
+void condition_step(struct Game *game, double dt);
 #endif

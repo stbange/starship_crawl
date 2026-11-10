@@ -1,0 +1,17 @@
+guardian 0 prepared 0 frames 1365 hp 100.0 deaths 0 core -4.5 broken 0
+guardian 0 prepared 1 frames 1199 hp 100.0 deaths 0 core -30.7 broken 0
+guardian 1 prepared 0 frames 885 hp 100.0 deaths 0 core -41.0 broken 0
+guardian 1 prepared 1 frames 875 hp 100.0 deaths 0 core -39.6 broken 0
+guardian 2 prepared 0 frames 1541 hp 100.0 deaths 0 core -0.0 broken 0
+guardian 2 prepared 1 frames 1464 hp 100.0 deaths 0 core -0.0 broken 0
+guardian 3 prepared 0 frames 2094 hp 100.0 deaths 0 core -24.3 broken 0
+guardian 3 prepared 1 frames 1512 hp 100.0 deaths 0 core -63.5 broken 0
+guardian 4 prepared 0 frames 2225 hp 100.0 deaths 0 core -30.7 broken 0
+guardian 4 prepared 1 frames 2148 hp 100.0 deaths 0 core -2.3 broken 0
+guardian 5 prepared 0 frames 2213 hp 100.0 deaths 0 core -40.1 broken 0
+guardian 5 prepared 1 frames 2148 hp 100.0 deaths 0 core -26.6 broken 0
+guardian 6 prepared 0 frames 2799 hp 100.0 deaths 0 core -22.1 broken 0
+guardian 6 prepared 1 frames 2855 hp 100.0 deaths 0 core -0.5 broken 0
+guardian 7 prepared 0 frames 3868 hp 100.0 deaths 0 core -31.2 broken 0
+guardian 7 prepared 1 frames 3983 hp 100.0 deaths 0 core -4.9 broken 0
+PASS guardian systems, preparation, warnings, stages and retry boundaries

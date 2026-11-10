@@ -1,5 +1,6 @@
 #include "game.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 const char *district_name(unsigned family) {
     static const char *names[] = {"UNSURVEYED", "DROWNED FOUNDRY", "FROZEN TERRACE",
@@ -31,12 +32,27 @@ void district_plan(uint32_t seed, RegionPlan *plan) {
         return; /* No compatible floor: retain the original routes and objectives. */
     RoomSpec *landmark = &plan->rooms[vista];
     uint32_t id = world_hash(seed, plan->origin, 0x44495354u);
+    unsigned condition = district_condition(seed);
+    unsigned family = 1; /* E7 families share the same connection contract. */
+    ShipTraits traits = campaign_traits(seed, landmark->cell);
+    if (traits.heat <= -2 || (id >> 4) % 4 == 1)
+        family = 2;
+    else if (traits.order >= 2)
+        family = 3;
+    else if (traits.order <= -2 || (id >> 4) % 4 == 3)
+        family = 4;
+    else if ((id >> 4) % 4 == 2)
+        family = 3;
+    if (!district_compatible(family, condition))
+        family = condition == 1 ? 1 : condition == 2 ? 2 + (id % 3) : 4;
+    if (campaign_guardian(landmark->cell) == 0 && condition == 1)
+        family = 1;
     plan->journey = (DistrictContract){.anchor = landmark->cell,
                                        .preparation = landmark->cell,
                                        .refuge = landmark->cell,
                                        .identity = id,
-                                       .family = 1,
-                                       .condition = 1,
+                                       .family = (uint8_t)family,
+                                       .condition = (uint8_t)condition,
                                        .reservations = 7};
     /* Roles are selected from the existing connected plan. No portal or owner
        table is rewritten, and historical/introductory rooms keep their content. */
@@ -45,7 +61,7 @@ void district_plan(uint32_t seed, RegionPlan *plan) {
         RoomSpec *r = &plan->rooms[i];
         if (r->type == BAY || (onboarding_opening(r->cell) && i != vista))
             continue;
-        r->journey = (DistrictMark){landmark->cell, id, 1, 1, 0};
+        r->journey = (DistrictMark){landmark->cell, id, (uint8_t)family, (uint8_t)condition, 0};
         if (i == vista || r->history_role || !compatible(r) || next_role > JOURNEY_REFUGE)
             continue;
         r->journey.role = (uint8_t)next_role;
@@ -65,8 +81,12 @@ void district_plan(uint32_t seed, RegionPlan *plan) {
     if (landmark->width < 80 || landmark->depth < 80)
         landmark->journey.role |= JOURNEY_COMPACT;
     landmark->height = fmax(landmark->height, 32);
-    landmark->habitat.atmosphere = FLOODED;
-    landmark->habitat.ecology = MECHANICAL;
+    landmark->habitat.atmosphere = condition == 2   ? FROZEN_RUNOFF
+                                   : condition == 3 ? VOID_GLOW
+                                                    : FLOODED;
+    landmark->habitat.ecology = condition == 2   ? CRYOPHILE
+                                : condition == 3 ? BROOD_NEST
+                                                 : MECHANICAL;
     /* A non-guardian vista still has an optional support encounter. */
     if (campaign_guardian(landmark->cell) < 0 && !landmark->history_role) {
         landmark->habitat.pace = PACE_FRONTIER;
@@ -112,13 +132,48 @@ void district_build(Builder *b, const Room *r) {
         bool compact = (r->journey.role & JOURNEY_COMPACT) != 0;
         /* The reactor hangs above tiny homes. The cross routes and lift reserve
            remain clear; the lower route is ordinary supported floor. */
-        piece(b, vadd(c, compact ? v3(0, 14, 12) : v3(0, 21, 24)),
-              compact ? v3(14, 6, 10) : v3(24, 8, 18), metal, .06f, false);
+        unsigned family = r->journey.family;
+        if (family == 1)
+            piece(b, vadd(c, compact ? v3(0, 14, 12) : v3(0, 21, 24)),
+                  compact ? v3(14, 6, 10) : v3(24, 8, 18), metal, .06f, false);
+        else if (family == 2) {
+            for (int tier = 0; tier < 4; tier++) {
+                piece(b, vadd(c, v3(0, 13 + tier * 3, 20)), v3(18 - tier * 3, .3, 10 - tier * 2),
+                      rgb(.35f, .5f, .65f), .15f, false);
+                for (int strand = -3; strand <= 3; strand++)
+                    piece(b, vadd(c, v3(strand * 2, 11 + tier * 3, 20)), v3(.1, 3, .1), blue, .35f,
+                          false);
+            }
+        } else if (family == 3) {
+            for (int rib = -3; rib <= 3; rib++)
+                piece(b, vadd(c, v3(rib * 3, 16 + abs(rib), 22)), v3(.4, 9, 12), copper, .25f,
+                      false);
+            piece(b, vadd(c, v3(0, 12, 22)), v3(13, 2, 9), rgb(.15f, .12f, .22f), .25f, false);
+            sprite(b, r, SPR_GLYPH, v3(0, 15, 15), 10, 8);
+        } else {
+            for (int span = 0; span < 5; span++)
+                piece(b, vadd(c, v3((span & 1) ? -4 : 4, 12 + span * 3, 20)), v3(23, .8, 3),
+                      rgb(.12f, .2f, .13f), .03f, false);
+            sprite(b, r, SPR_FUNGUS, v3(0, 14, 20), 13, 16);
+        }
         for (int x = -1; x <= 1; x += 2) {
             piece(b, vadd(c, v3(x * 10, 28, 24)), v3(.5, 12, .5), copper, .1f, false);
             for (int z = 0; z < 3; z++) {
                 double home_x = x * (compact ? 22 : 29), home_z = 6 + z * (compact ? 7 : 10);
-                piece(b, vadd(c, v3(home_x, 2, home_z)), v3(7, 4, 7), metal, 0, true);
+                if (family <= 2)
+                    piece(b, vadd(c, v3(home_x, 2, home_z)), v3(7, 4, 7),
+                          family == 1 ? metal : rgb(.26f, .24f, .3f), 0, true);
+                else if (family == 3) {
+                    piece(b, vadd(c, v3(home_x, 7, home_z)), v3(2, 14, 2), copper, .06f, true);
+                    for (int shelf = 0; shelf < 4; shelf++)
+                        piece(b, vadd(c, v3(home_x, 1 + shelf * 1.8, home_z)), v3(5, .4, 5), metal,
+                              .12f, false);
+                } else {
+                    piece(b, vadd(c, v3(home_x, 2, home_z)), v3(4, 4, 5), rgb(.12f, .18f, .1f),
+                          .05f, true);
+                    sprite(b, r, SPR_FUNGUS, v3(home_x, 4, home_z), 4, 7);
+                    sprite(b, r, SPR_CLOTH, v3(home_x, 8, home_z), 2, 9);
+                }
                 for (int window = -1; window <= 1; window++)
                     piece(b, vadd(c, v3(home_x - x * 3.6, 2.5, home_z + window * 1.5)),
                           v3(.08, .5, .7), blue, .45f, false);
@@ -139,7 +194,11 @@ void district_build(Builder *b, const Room *r) {
         }
         Vec3 source = district_control(r->cell, DISTRICT_SOURCE_CONTROL);
         piece(b, vadd(source, v3(0, .75, 0)), v3(1.2, 1.5, 1.2), copper, .6f, true);
-        sprite(b, r, SPR_STEAM, v3(10, 15, 24), 4, 9);
+        sprite(b, r,
+               r->journey.condition == 2 ? SPR_CRYSTAL
+               : family == 4             ? SPR_MOTE
+                                         : SPR_STEAM,
+               v3(10, 15, 24), 4, 9);
         sprite(b, r, SPR_STEAM, v3(-23, 3.5, 20), 2, 4);
         sprite(b, r, SPR_CLOTH, v3(-25, 2, 6), 2, 3);
     }
@@ -212,15 +271,24 @@ bool district_interact(Game *g, int player) {
             g->dirty |= !(old & SYSTEM_POWER);
             if (campaign_guardian(r->journey.anchor) < 0)
                 district_victory(g, r->cell);
-            game_message(g, "PUMP POWER RESTORED / AMBER WARNING: DORMANT MACHINES WILL WAKE / DRY "
-                            "STAIRS REMAIN");
+            game_message(
+                g, r->journey.condition == 2
+                       ? "PUMP RESTORED / VENTS KEEP CYCLING / CENTER AND STAIRS REMAIN SAFE"
+                   : r->journey.condition == 3
+                       ? "PUMP RESTORED / AMBER WARNING: CONDUITS FEED GROWTH / CUT THE LIVING FEED"
+                       : "PUMP POWER RESTORED / AMBER WARNING: DORMANT MACHINES WILL WAKE / DRY "
+                         "STAIRS REMAIN");
         }
         return true;
     }
     if ((r->journey.role & JOURNEY_REFUGE) &&
         vlen(vsub(at, district_control(r->cell, JOURNEY_REFUGE))) < 2.5) {
-        game_message(g,
-                     "WORKERS' REFUGE / POWER FEEDS BOTH SHELTER LIGHTS AND THE FOUNDRY MACHINES");
+        game_message(
+            g, r->journey.condition == 2
+                   ? "REFUGE / AMBER VENTS WARN FOR 3 SECONDS / CENTER AND RAISED ROUTES STAY CLEAR"
+               : r->journey.condition == 3
+                   ? "REFUGE / POWER FEEDS THE GROWTH / SEVER ITS FEED TO ISOLATE THE FLOOR"
+                   : "WORKERS' REFUGE / POWER FEEDS BOTH SHELTER LIGHTS AND THE FOUNDRY MACHINES");
         return true;
     }
     if (!(r->journey.role & JOURNEY_VISTA) || (r->journey.role & JOURNEY_COMPACT))
@@ -263,13 +331,18 @@ void district_shot(Game *g, int player, Vec3 impact) {
                   vadd(district_control(r->cell, DISTRICT_SOURCE_CONTROL), v3(0, .75, 0)))) > 1.6)
         return;
     uint32_t state = world_district_state(&g->world, r->journey.anchor);
-    if ((state & DISTRICT_CONDUCTOR) || !district_powered(&g->world, &r->journey))
+    if ((state & DISTRICT_CONDUCTOR) ||
+        (r->journey.condition != 2 && !district_powered(&g->world, &r->journey)))
         return;
     if (!world_set_district_state(&g->world, r->journey.anchor, state | DISTRICT_CONDUCTOR))
         return;
-    r->district_arc = 7;
+    r->district_arc = r->journey.condition == 1 ? 7 : 0;
     r->district_owner = (uint8_t)(player + 1);
-    game_message(g, "CONDUCTOR BROKEN / WATER FLASHING / TWO SECONDS TO REACH DRY GROUND");
+    game_message(g, r->journey.condition == 1
+                        ? "CONDUCTOR BROKEN / WATER FLASHING / TWO SECONDS TO REACH DRY GROUND"
+                    : r->journey.condition == 2
+                        ? "VENT FEED SEVERED / FROST SWEEP ISOLATED / CYCLE CONTINUES ELSEWHERE"
+                        : "LIVING CONDUIT ISOLATED / GROWTH NO LONGER FEEDS THIS FLOOR");
     g->dirty = true;
 }
 void district_step(Game *g, double dt) {
@@ -285,7 +358,7 @@ void district_step(Game *g, double dt) {
         if (!r->ready || !r->journey.family)
             continue;
         bool powered = district_powered(&g->world, &r->journey);
-        if (powered && !r->district_powered)
+        if (powered && !r->district_powered && r->journey.condition == 1)
             r->district_warning = 2;
         r->district_powered = powered;
         r->district_warning = fmaxf(0, r->district_warning - (float)dt);
@@ -296,8 +369,12 @@ void district_step(Game *g, double dt) {
                 if (!(state & DISTRICT_SEEN) &&
                     world_set_district_state(&g->world, r->journey.anchor, state | DISTRICT_SEEN)) {
                     g->dirty = true;
-                    game_message(
-                        g, "DROWNED FOUNDRY / FOLLOW THE SUSPENDED REACTOR / POWER WAKES MACHINES");
+                    char notice[128];
+                    snprintf(notice, sizeof(notice),
+                             "%s / %s / CENTER CROSS AND RAISED ROUTE STAY SAFE",
+                             district_name(r->journey.family),
+                             district_condition_name(r->journey.condition));
+                    game_message(g, notice);
                 }
                 preparation_observe(g, r);
             }
@@ -316,4 +393,5 @@ void district_step(Game *g, double dt) {
                 position_absolute(r->enemies[e].pos).x < world_center(r->cell).x)
                 game_damage_enemy(g, r, e, r->district_owner - 1, (float)dt * 22, 0);
     }
+    condition_step(g, dt);
 }

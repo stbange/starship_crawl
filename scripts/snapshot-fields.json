@@ -731,6 +731,42 @@
     "RoomRecord.rhythm_state": [
       "0",
       "255"
+    ],
+    "Game.condition_clock": [
+      "0",
+      "24"
+    ],
+    "BuildEffects.focus": [
+      "0",
+      "2"
+    ],
+    "BuildEffects.contact_time": [
+      "0",
+      "1000000000"
+    ],
+    "BuildEffects.mark_life": [
+      "0",
+      "6"
+    ],
+    "BuildEffects.brace_time": [
+      "0",
+      "1"
+    ],
+    "BuildEffects.brace_charge": [
+      "0",
+      "100"
+    ],
+    "BuildEffects.field_tick": [
+      "0",
+      ".25"
+    ],
+    "BuildEffects.pulse_life": [
+      "0",
+      ".4"
+    ],
+    "BuildEffects.pulse_radius": [
+      "0",
+      "8"
     ]
   }
 }

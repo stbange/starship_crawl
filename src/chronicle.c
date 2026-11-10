@@ -18,7 +18,8 @@ const char *chronicle_role(unsigned role) {
     return roles[role <= 6 ? role : 0];
 }
 Vec3 chronicle_position(const RecurringPerson *p) {
-    return vadd(district_control(p->site, JOURNEY_REFUGE), v3((p->role & 1) ? -2.5 : 2.5, 0, 0));
+    double angle = (p->identity % 8) * SC_PI * .25;
+    return vadd(district_control(p->site, JOURNEY_REFUGE), v3(sin(angle) * 5, 0, cos(angle) * 5));
 }
 void chronicle_init(Game *g) {
     memset(&g->chronicle, 0, sizeof(g->chronicle));
@@ -26,12 +27,13 @@ void chronicle_init(Game *g) {
         return;
     Chronicle *c = &g->chronicle;
     c->version = c->next_id = 1;
-    c->count = 2;
+    c->count = 2 + world_hash(g->world.seed, (Cell){0}, 0x43415354u) % 2;
+    unsigned first = story_motivation_version(g->world.seed, g->story.version) % 6;
     for (unsigned i = 0; i < c->count; i++) {
         RecurringPerson *p = &c->people[i];
         DistrictContract d = district_contract(g->world.seed, g->world.generator, campaign_site(i));
         p->identity = person_identity(g->world.seed, i);
-        p->role = i + 1;
+        p->role = 1 + (first + i * 2 + (g->world.seed % 2)) % 6;
         p->home = p->site = p->previous = p->destination = d.refuge;
     }
 }
@@ -121,7 +123,11 @@ const char *chronicle_option(const Game *g, int player, unsigned choice) {
     return chronicle_ready(g, player) &&
                    district_powered(&g->world, &(DistrictMark){.family = 1, .anchor = p->site})
                ? "RESTORE THE REFUGE / EXISTING POWER MAKES THIS FREE"
-               : "RESTORE THE REFUGE / COST 60 SALVAGE / MACHINES WILL WAKE";
+           : district_condition(g->world.seed) == 1
+               ? "RESTORE THE REFUGE / COST 60 SALVAGE / MACHINES WILL WAKE"
+           : district_condition(g->world.seed) == 2
+               ? "RESTORE THE REFUGE / COST 60 SALVAGE / VENT CYCLE CONTINUES"
+               : "RESTORE THE REFUGE / COST 60 SALVAGE / POWER ALSO FEEDS GROWTH";
 }
 void chronicle_entry(const Game *g, unsigned index, char *text, size_t size) {
     if (index >= g->chronicle.count || !(g->chronicle.people[index].knowledge & PERSON_SEEN)) {
@@ -136,11 +142,22 @@ void chronicle_entry(const Game *g, unsigned index, char *text, size_t size) {
         : p->knowledge & PERSON_HELPED
             ? "THEY REMEMBER YOUR REPAIR OF THE FIRST REFUGE."
             : "THE REFUGE NEEDS POWER. STRIPPING IT FOR SALVAGE FORCES THEM OUT.";
-    snprintf(
-        text, size, "%s / %s. %s %s", chronicle_name(p), chronicle_role(p->role), fact,
-        p->role == 1
-            ? "THE PUMP WAKES ROBOTS; USE HIGH GROUND. A BASIC ROUTE NEEDS NO HACKING."
-            : "THE ARCHIVE LEAVES ROUTE MARKS; ITS MAIN RECORD DOES NOT DEPEND ON THIS MEETING.");
+    static const char *needs[] = {
+        "",
+        "A PUMP KEEPS THEIR LAST REFUGE BREATHING.",
+        "THEIR MEMORY VAULT LOSES FRAGMENTS IN EVERY BLACKOUT.",
+        "THEY KEEP A BOUNDARY BETWEEN THE REFUGE AND ITS LIVING CONDUITS.",
+        "THEY LEFT AN ARMORED COLUMN AND NOW HIDE IN SERVICE REFUGES.",
+        "THEY FOLLOW A FAILING SIGNAL THROUGH THE OLD SANCTUARIES.",
+        "THEIR SALVAGE RIG SHARES ITS LAST POWER CELL WITH THIS REFUGE."};
+    static const char *motives[] = {"THE RESCUE ROUTE REMAINS MARKED.",
+                                    "A COPY OF THE KNOWLEDGE RECORD SURVIVES ELSEWHERE.",
+                                    "THE SALVAGE TARGET HAS AN INDEPENDENT SERVICE ROUTE.",
+                                    "CONTAINMENT CAN BE REACHED THROUGH THE MAIN ACCESS."};
+    unsigned motive = story_motivation_version(g->world.seed, g->story.version);
+    snprintf(text, size, "%s / %s. %s %s %s CONDITION: %s. THE CENTER AND RAISED ROUTE STAY SAFE.",
+             chronicle_name(p), chronicle_role(p->role), needs[p->role], fact, motives[motive % 4],
+             district_condition_name(district_condition(g->world.seed)));
 }
 bool chronicle_choose(Game *g, int player, unsigned choice) {
     int i = chronicle_near(g, player);
@@ -186,7 +203,7 @@ bool chronicle_choose(Game *g, int player, unsigned choice) {
             g->interactions[n].decision_open = g->views[n].journal = false;
     g->dirty = true;
     game_message(g, already       ? "REFUGE DECISION RETAINED / THE RECORDER KEEPS THE ROUTE"
-                    : choice == 3 ? "REFUGE RESTORED / AMBER WARNING BEFORE MACHINES WAKE"
+                    : choice == 3 ? "REFUGE RESTORED / FOLLOW THE LOCAL CONDITION WARNINGS"
                     : choice == 2 ? "SALVAGE RECOVERED / REFUGE DARK / EVACUATION NOTE RETAINED"
                                   : "ROUTE RECORD COPIED / MAIN EXPEDITION REMAINS AVAILABLE");
     return true;

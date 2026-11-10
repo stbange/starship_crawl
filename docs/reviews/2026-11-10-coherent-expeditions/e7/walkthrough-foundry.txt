@@ -1,0 +1,10 @@
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], KNOWLEDGE / RECOVER A LOST STAR CHART
+Seed 713: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 18.8s
+Seed 713: phase 1, guardians 101, rank 2, 4 kills, 0 respawns at 62.9s
+Seed 713: phase 2, guardians 105, rank 5, 37 kills, 0 respawns at 246.7s
+Seed 713: phase 3, guardians 115, rank 5, 38 kills, 0 respawns at 339.4s
+Tick 24000: 1118.0 0.0 336.0 -> [13,0,1], VITALITY
+Seed 713: phase 4, guardians 155, rank 7, 77 kills, 0 respawns at 460.6s
+Tick 48000: 96.0 0.0 93.1 -> [0,0,0], HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+Phase journey 713 starboard: PASS, 818.7s, 120 kills, 0 deaths, 49124 frames
+PROFILE {"seed":713,"profile":1,"passed":true,"simulated_seconds":818.73,"reaction_seconds":0.30,"turn_rad_s":2.8,"aim_error_rad":0.025,"kills":120,"deaths":0,"shots":844,"hits":454,"min_health":100.00,"min_shield":8.00,"min_energy":100.00,"health_loss":0.00,"shield_loss":189.85,"armor_loss":0.00,"damage_frames":11,"recoveries":0,"max_stall_seconds":0.23}

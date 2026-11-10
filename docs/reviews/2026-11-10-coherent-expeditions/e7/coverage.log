@@ -1,0 +1,299 @@
++ cmake -S /workspace/starship_crawl -B /workspace/starship_crawl/build-coverage-coherent -DSC_BUILD_GAME=OFF -DSC_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DSC_SPLIT_CAMPAIGN_TESTS=OFF -DSC_QUEST_TESTS=ON
+-- Configuring done (0.0s)
+-- Generating done (0.3s)
+-- Build files have been written to: /workspace/starship_crawl/build-coverage-coherent
++ cmake --build /workspace/starship_crawl/build-coverage-coherent --parallel 4
+[  0%] Building C object CMakeFiles/sc_quest_core.dir/src/interior.c.o
+[  0%] Building C object CMakeFiles/sc_core.dir/src/interior.c.o
+[  0%] Building C object CMakeFiles/sc_core_fault.dir/src/interior.c.o
+[  0%] Building C object CMakeFiles/sc_party_core.dir/src/interior.c.o
+[  0%] Linking C static library libsc_quest_core.a
+[ 18%] Built target sc_quest_core
+[ 18%] Linking C executable sc_snapshot_quest_tests
+[ 18%] Linking C static library libsc_core.a
+[ 19%] Built target sc_snapshot_quest_tests
+[ 37%] Built target sc_core
+[ 37%] Linking C executable sc_session_quest_tests
+[ 37%] Linking C executable sc_quest_tests
+[ 37%] Linking C static library libsc_core_fault.a
+[ 38%] Linking C static library libsc_party_core.a
+[ 39%] Built target sc_session_quest_tests
+[ 39%] Linking C executable sc_quest_legacy_tests
+[ 40%] Built target sc_quest_tests
+[ 57%] Built target sc_core_fault
+[ 57%] Linking C executable sc_flat_parity
+[ 57%] Linking C executable sc_quest_parity
+[ 74%] Built target sc_party_core
+[ 74%] Linking C executable sc_snapshot_core_tests
+[ 75%] Built target sc_quest_legacy_tests
+[ 75%] Linking C executable sc_session_core_tests
+[ 75%] Built target sc_snapshot_core_tests
+[ 76%] Built target sc_flat_parity
+[ 76%] Built target sc_quest_parity
+[ 76%] Linking C executable sc_session_party_core_tests
+[ 76%] Linking C executable sc_snapshot_party_core_tests
+[ 76%] Linking C executable sc_faction_tests
+[ 77%] Built target sc_session_core_tests
+[ 77%] Linking C executable sc_force_tests
+[ 77%] Built target sc_snapshot_party_core_tests
+[ 77%] Linking C executable sc_faction_order_tests
+[ 77%] Built target sc_faction_tests
+[ 77%] Built target sc_session_party_core_tests
+[ 78%] Linking C executable sc_hidden_director_tests
+[ 78%] Linking C executable sc_rhythm_tests
+[ 78%] Built target sc_force_tests
+[ 78%] Linking C executable sc_faction_journey
+[ 79%] Built target sc_faction_order_tests
+[ 79%] Built target sc_hidden_director_tests
+[ 79%] Linking C executable sc_hidden_journey
+[ 79%] Linking C executable sc_politics_tests
+[ 79%] Built target sc_rhythm_tests
+[ 79%] Built target sc_hidden_journey
+[ 79%] Linking C executable sc_politics_journey
+[ 79%] Built target sc_faction_journey
+[ 80%] Built target sc_politics_tests
+[ 80%] Linking C executable sc_frontier_journey
+[ 80%] Linking C executable sc_frontier_tests
+[ 80%] Linking C executable sc_regional_journey
+[ 80%] Built target sc_regional_journey
+[ 80%] Built target sc_frontier_tests
+[ 81%] Built target sc_frontier_journey
+[ 81%] Linking C executable sc_regional_tests
+[ 81%] Built target sc_politics_journey
+[ 81%] Linking C executable sc_tests
+[ 81%] Linking C executable sc_habitat_tests
+[ 82%] Linking C executable sc_interior_tests
+[ 83%] Built target sc_tests
+[ 83%] Linking C executable sc_snapshot_fault_tests
+[ 84%] Built target sc_regional_tests
+[ 85%] Built target sc_habitat_tests
+[ 85%] Linking C executable sc_edge_tests
+[ 86%] Linking C executable sc_faction_fault_tests
+[ 86%] Built target sc_interior_tests
+[ 87%] Built target sc_snapshot_fault_tests
+[ 87%] Linking C executable sc_navigation_tests
+[ 87%] Linking C executable sc_onboarding_tests
+[ 87%] Built target sc_faction_fault_tests
+[ 87%] Built target sc_edge_tests
+[ 87%] Linking C executable sc_guidance_tests
+[ 87%] Linking C executable sc_navigation_recovery
+[ 88%] Built target sc_onboarding_tests
+[ 89%] Linking C executable sc_shelter_tests
+[ 89%] Built target sc_guidance_tests
+[ 89%] Built target sc_navigation_tests
+[ 89%] Linking C executable sc_equipment_tests
+[ 89%] Linking C executable sc_campaign_tests
+[ 90%] Built target sc_navigation_recovery
+[ 90%] Building C object CMakeFiles/sc_expedition_tests.dir/tests/test_expedition.c.o
+[ 91%] Built target sc_equipment_tests
+[ 91%] Linking C executable sc_story_tests
+[ 91%] Built target sc_shelter_tests
+[ 91%] Built target sc_campaign_tests
+[ 91%] Linking C executable sc_death_tests
+[ 91%] Linking C executable sc_matrix_tests
+[ 91%] Built target sc_story_tests
+[ 91%] Linking C executable sc_matrix_fault_tests
+[ 91%] Linking C executable sc_expedition_tests
+[ 92%] Built target sc_death_tests
+[ 92%] Built target sc_matrix_tests
+[ 92%] Built target sc_matrix_fault_tests
+[ 93%] Linking C executable sc_phase_tests
+[ 92%] Linking C executable sc_matrix_journey
+[ 94%] Linking C executable sc_build_tests
+[ 94%] Built target sc_expedition_tests
+[ 94%] Linking C executable sc_breadth_tests
+[ 94%] Built target sc_build_tests
+[ 95%] Built target sc_matrix_journey
+[ 95%] Linking C executable sc_guardian_tests
+[ 95%] Built target sc_phase_tests
+[ 95%] Building C object CMakeFiles/sc_district_tests.dir/tests/test_districts.c.o
+[ 95%] Built target sc_breadth_tests
+[ 95%] Linking C executable sc_chronicle_tests
+[ 95%] Linking C executable sc_preparation_tests
+[ 95%] Built target sc_chronicle_tests
+[ 95%] Built target sc_preparation_tests
+[ 96%] Built target sc_guardian_tests
+[ 96%] Linking C executable sc_phase_journey
+[ 97%] Linking C executable sc_traversal_tests
+[ 98%] Linking C executable sc_chronicle_journey
+[ 99%] Linking C executable sc_district_tests
+[ 99%] Built target sc_district_tests
+[ 99%] Built target sc_phase_journey
+[ 99%] Built target sc_traversal_tests
+[ 99%] Built target sc_chronicle_journey
+[ 99%] Linking C executable sc_exterior_tests
+[100%] Built target sc_exterior_tests
++ ctest --test-dir /workspace/starship_crawl/build-coverage-coherent -L unit --output-on-failure
+Internal ctest changing into directory: /workspace/starship_crawl/build-coverage-coherent
+Test project /workspace/starship_crawl/build-coverage-coherent
+      Start  1: snapshot_quest
+ 1/44 Test  #1: snapshot_quest ...................   Passed    4.60 sec
+      Start  2: session_quest
+ 2/44 Test  #2: session_quest ....................   Passed    3.79 sec
+      Start  3: quest_tracking_combat
+ 3/44 Test  #3: quest_tracking_combat ............   Passed    0.22 sec
+      Start  4: quest_ordinary_core
+ 4/44 Test  #4: quest_ordinary_core ..............   Passed   16.67 sec
+      Start  5: quest_parity_flat
+ 5/44 Test  #5: quest_parity_flat ................   Passed    0.36 sec
+      Start  6: quest_parity_quest
+ 6/44 Test  #6: quest_parity_quest ...............   Passed    0.31 sec
+      Start  7: quest_parity_identical
+ 7/44 Test  #7: quest_parity_identical ...........   Passed    0.00 sec
+      Start  8: snapshot_core
+ 8/44 Test  #8: snapshot_core ....................   Passed    2.32 sec
+      Start  9: session_core
+ 9/44 Test  #9: session_core .....................   Passed    1.62 sec
+      Start 10: snapshot_party_core
+10/44 Test #10: snapshot_party_core ..............   Passed    4.64 sec
+      Start 11: session_party_core
+11/44 Test #11: session_party_core ...............   Passed    2.53 sec
+      Start 12: hidden_factions
+12/44 Test #12: hidden_factions ..................   Passed    0.19 sec
+      Start 13: mobile_forces
+13/44 Test #13: mobile_forces ....................   Passed    2.52 sec
+      Start 14: autonomous_politics
+14/44 Test #14: autonomous_politics ..............   Passed    1.16 sec
+      Start 15: expedition_rhythm
+15/44 Test #15: expedition_rhythm ................   Passed    0.43 sec
+      Start 16: hidden_director
+16/44 Test #16: hidden_director ..................   Passed    0.97 sec
+      Start 20: political_expeditions
+17/44 Test #20: political_expeditions ............   Passed    0.73 sec
+      Start 23: deep_frontiers
+18/44 Test #23: deep_frontiers ...................   Passed    2.07 sec
+      Start 25: regional_encounters
+19/44 Test #25: regional_encounters ..............   Passed    2.31 sec
+      Start 26: core
+20/44 Test #26: core .............................   Passed   12.73 sec
+      Start 27: living_ship
+21/44 Test #27: living_ship ......................   Passed    5.33 sec
+      Start 29: generated_interiors
+22/44 Test #29: generated_interiors ..............   Passed    4.68 sec
+      Start 30: snapshot_faults
+23/44 Test #30: snapshot_faults ..................   Passed    3.31 sec
+      Start 31: faction_faults
+24/44 Test #31: faction_faults ...................   Passed    0.01 sec
+      Start 32: edge_cases
+25/44 Test #32: edge_cases .......................   Passed    0.13 sec
+      Start 33: staged_onboarding
+26/44 Test #33: staged_onboarding ................   Passed    0.22 sec
+      Start 34: exploration_guidance
+27/44 Test #34: exploration_guidance .............   Passed    1.33 sec
+      Start 36: navigation_psionics
+28/44 Test #36: navigation_psionics ..............   Passed    0.19 sec
+      Start 37: shelter
+29/44 Test #37: shelter ..........................   Passed    0.08 sec
+      Start 39: equipment
+30/44 Test #39: equipment ........................   Passed    0.09 sec
+      Start 45: reactive_aftermath
+31/44 Test #45: reactive_aftermath ...............   Passed   31.50 sec
+      Start 46: narrative
+32/44 Test #46: narrative ........................   Passed    5.90 sec
+      Start 47: enemy_deaths
+33/44 Test #47: enemy_deaths .....................   Passed    0.51 sec
+      Start 48: ship_matrix
+34/44 Test #48: ship_matrix ......................   Passed    0.21 sec
+      Start 49: matrix_faults
+35/44 Test #49: matrix_faults ....................   Passed    0.06 sec
+      Start 51: coherent_builds
+36/44 Test #51: coherent_builds ..................   Passed    2.02 sec
+      Start 52: coherent_breadth
+37/44 Test #52: coherent_breadth .................   Passed    0.84 sec
+      Start 53: guardian_systems
+38/44 Test #53: guardian_systems .................   Passed    2.20 sec
+      Start 54: coherent_districts
+39/44 Test #54: coherent_districts ...............   Passed    1.96 sec
+      Start 55: shelter_preparation
+40/44 Test #55: shelter_preparation ..............   Passed    0.32 sec
+      Start 56: continuing_inhabitants
+41/44 Test #56: continuing_inhabitants ...........   Passed    2.18 sec
+      Start 59: phased_expeditions
+42/44 Test #59: phased_expeditions ...............   Passed    5.91 sec
+      Start 63: vertical_traversal
+43/44 Test #63: vertical_traversal ...............   Passed    0.92 sec
+      Start 65: space_exterior
+44/44 Test #65: space_exterior ...................   Passed    0.55 sec
+
+100% tests passed, 0 tests failed out of 44
+
+Label Time Summary:
+architecture    =  22.82 sec*proc (7 tests)
+quest           =  25.96 sec*proc (7 tests)
+unit            = 130.64 sec*proc (44 tests)
+
+Total Test time (real) = 130.66 sec
++ /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m gcovr --root /workspace/starship_crawl --filter src/ --object-directory /workspace/starship_crawl/build-coverage-coherent --txt /workspace/starship_crawl/build-coverage-coherent/coverage/summary.txt --html-details /workspace/starship_crawl/build-coverage-coherent/coverage/index.html --json /workspace/starship_crawl/build-coverage-coherent/coverage/coverage.json --json-summary /workspace/starship_crawl/build-coverage-coherent/coverage/summary.json --cobertura /workspace/starship_crawl/build-coverage-coherent/coverage/coverage.xml --print-summary --fail-under-line 95 /workspace/starship_crawl/build-coverage-coherent
+(INFO) Reading coverage data...
+(INFO) Writing coverage report...
+lines: 98.1% (13203 out of 13458)
+functions: 99.9% (751 out of 752)
+branches: 87.4% (13526 out of 15482)
+src/actors.c: 17/17 lines (100.00%)
+src/alien.c: 138/139 lines (99.28%)
+src/alien_special.c: 182/185 lines (98.38%)
+src/build_branches.c: 110/112 lines (98.21%)
+src/builds.c: 136/136 lines (100.00%)
+src/campaign.c: 418/427 lines (97.89%)
+src/campaign_combat.c: 108/110 lines (98.18%)
+src/campaign_gen.c: 98/98 lines (100.00%)
+src/chronicle.c: 207/212 lines (97.64%)
+src/chronicle_campaigns.c: 120/121 lines (99.17%)
+src/commands.c: 117/119 lines (98.32%)
+src/conditions.c: 52/52 lines (100.00%)
+src/death.c: 90/91 lines (98.90%)
+src/director.c: 156/156 lines (100.00%)
+src/districts.c: 294/306 lines (96.08%)
+src/encounters.c: 300/309 lines (97.09%)
+src/equipment.c: 207/209 lines (99.04%)
+src/expedition.c: 518/529 lines (97.92%)
+src/exterior.c: 11/11 lines (100.00%)
+src/faction_forces.c: 567/592 lines (95.78%)
+src/faction_orders.c: 204/208 lines (98.08%)
+src/faction_sim.c: 335/352 lines (95.17%)
+src/frontier.c: 200/203 lines (98.52%)
+src/game.c: 936/953 lines (98.22%)
+src/generation.c: 396/396 lines (100.00%)
+src/guardians.c: 201/204 lines (98.53%)
+src/habitat.c: 278/278 lines (100.00%)
+src/hidden_director.c: 340/356 lines (95.51%)
+src/history.c: 35/35 lines (100.00%)
+src/identity.c: 44/44 lines (100.00%)
+src/interior.c: 368/369 lines (99.73%)
+src/math3d.h: 25/25 lines (100.00%)
+src/matrix.c: 430/446 lines (96.41%)
+src/matrix_effects.c: 397/409 lines (97.07%)
+src/matrix_gen.c: 154/155 lines (99.35%)
+src/matrix_state.c: 189/189 lines (100.00%)
+src/navigation.c: 171/173 lines (98.84%)
+src/onboarding.c: 293/294 lines (99.66%)
+src/politics.c: 309/321 lines (96.26%)
+src/politics_gen.c: 84/86 lines (97.67%)
+src/preparation.c: 225/225 lines (100.00%)
+src/presentation.c: 36/36 lines (100.00%)
+src/progression.c: 246/255 lines (96.47%)
+src/psionics.c: 54/54 lines (100.00%)
+src/quest.c: 102/102 lines (100.00%)
+src/reveals.c: 83/83 lines (100.00%)
+src/rhythm.c: 244/247 lines (98.79%)
+src/save.c: 110/112 lines (98.21%)
+src/save_campaign.c: 47/47 lines (100.00%)
+src/save_chronicle.c: 29/29 lines (100.00%)
+src/save_factions.c: 135/136 lines (99.26%)
+src/save_load.c: 199/203 lines (98.03%)
+src/save_matrix.c: 78/78 lines (100.00%)
+src/save_preparation.c: 18/18 lines (100.00%)
+src/save_profiles.c: 149/150 lines (99.33%)
+src/save_restore.c: 44/46 lines (95.65%)
+src/save_rhythm.c: 20/20 lines (100.00%)
+src/save_story.c: 49/49 lines (100.00%)
+src/save_stream.c: 61/61 lines (100.00%)
+src/session.c: 92/92 lines (100.00%)
+src/shelter.c: 138/140 lines (98.57%)
+src/snapshot.c: 197/200 lines (98.50%)
+src/snapshot_validation.c: 68/70 lines (97.14%)
+src/story.c: 580/584 lines (99.32%)
+src/traversal.c: 165/165 lines (100.00%)
+src/world.c: 793/823 lines (96.35%)
+src/world.h: 6/6 lines (100.00%)
+PASS: >= 95% unit line coverage overall and in each measured source. Report: /workspace/starship_crawl/build-coverage-coherent/coverage/index.html

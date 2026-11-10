@@ -143,6 +143,7 @@ bool game_load(Game *g, const char *path) {
     Chronicle chronicle = {0};
     Home home = {0};
     Rhythm rhythm = {0};
+    float condition_clock = 0;
     if (version >= 17) {
         sc_save_chronicle(&s, &chronicle, true);
         sc_save_preparation(&s, &home, true);
@@ -153,6 +154,9 @@ bool game_load(Game *g, const char *path) {
                 s.ok = false;
         }
         if (!rhythm_valid(&rhythm, factions ? factions->director.budget : 0))
+            s.ok = false;
+        condition_clock = (float)sc_save_real(&s, 0, true);
+        if (!isfinite(condition_clock) || condition_clock < 0 || condition_clock >= 24)
             s.ok = false;
         if (!chronicle_valid(&chronicle, seed, generator))
             s.ok = false;
@@ -211,7 +215,8 @@ bool game_load(Game *g, const char *path) {
         !politics_world_valid(&politics, &director, replacement) || !matrix_index(matrix) ||
         !matrix_rehydrate(matrix, seed, replacement->generator) ||
         !matrix_valid(matrix, seed, replacement->generator, players, &shelter) ||
-        !world_index_records(replacement) || !preparation_valid(&home, replacement, players) || !world_refresh(replacement, &start, 1)) {
+        !world_index_records(replacement) || !preparation_valid(&home, replacement, players) ||
+        !world_refresh(replacement, &start, 1)) {
         factions_destroy(factions);
         free(factions);
         matrix_destroy(matrix);
@@ -232,6 +237,7 @@ bool game_load(Game *g, const char *path) {
         .chronicle = chronicle,
         .home = home,
         .rhythm = rhythm,
+        .condition_clock = condition_clock,
         .campaign = campaign,
         .frontier = frontier,
         .politics = politics,

@@ -159,6 +159,11 @@ static void claims(void) {
         CHECK(points == g->players[i].points && credits == g->players[i].credits);
     }
     CHECK(g->campaign.profiles[0].claimed == g->campaign.profiles[1].claimed);
+    campaign_grant(g, 0, (CampaignReward){REWARD_MODULE, BUILD_FIELD});
+    g->players[0].credits = 999999;
+    g->players[0].points = 999;
+    campaign_grant(g, 0, (CampaignReward){REWARD_MODULE, BUILD_FIELD});
+    CHECK(g->players[0].credits == 1000000 && g->players[0].points == 1000);
     finish(g);
 }
 static void effects(void) {
@@ -310,7 +315,7 @@ static void effects(void) {
 }
 static void recipes(void) {
     unsigned variants = 0;
-    for (unsigned recipe = 1; recipe <= 3; recipe++)
+    for (unsigned recipe = 1; recipe <= 6; recipe++)
         for (unsigned build = 0; build < 3; build++) {
             Game *g = fresh();
             Player *p = &g->players[0];
@@ -348,6 +353,7 @@ static void recipes(void) {
             r->habitat.pace = PACE_FRONTIER;
             r->habitat.ecology = recipe == 3 ? MECHANICAL : FERAL;
             r->habitat.challenge = 0;
+            r->journey.condition = 0; /* Isolate the six composition contracts. */
             r->hash = (recipe - 1) * 256;
             r->enemy_count = 4;
             for (int i = 0; i < 4; i++)
@@ -397,7 +403,7 @@ static void recipes(void) {
             CHECK(r->enemy_count <= SC_MAX_ENEMIES && !r->enemies[0].alive);
             finish(g);
         }
-    CHECK(variants == 14);
+    CHECK(variants == 126);
 }
 int main(void) {
     rules();

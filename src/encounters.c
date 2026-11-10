@@ -70,9 +70,14 @@ void encounter_populate(World *w, Room *r) {
     if (r->habitat.pace == PACE_FRONTIER) {
         bool machine = r->habitat.ecology == MECHANICAL;
         const unsigned kinds[] = {machine ? 29u : 9u, 4, 1, 0};
-        static const unsigned recipes[3][4] = {{9, 3, 3, 22}, {10, 7, 11, 21}, {29, 16, 2, 25}};
+        static const unsigned recipes[6][4] = {{9, 3, 3, 22},   {10, 7, 11, 21}, {29, 16, 2, 25},
+                                               {27, 14, 26, 8}, {9, 34, 38, 19}, {29, 40, 37, 41}};
         if (w->generator >= 16 && !r->habitat.challenge)
-            r->recipe = machine ? 3 : (uint8_t)(1 + (r->hash >> 8) % 2);
+            r->recipe = (uint8_t)(1 + (r->hash >> 8) % 6);
+        if (w->generator >= 16 && !r->habitat.challenge && r->journey.condition == 2)
+            r->recipe = (r->hash & 1) ? 4 : 2;
+        if (w->generator >= 16 && !r->habitat.challenge && r->journey.condition == 3)
+            r->recipe = (r->hash & 1) ? 5 : 6;
         const Vec3 offsets[] = {{0, .02, 14}, {-2, .02, 7}, {0, .02, 25}, {2, .02, 7}};
         r->enemy_count = 4;
         for (int i = 0; i < 4; i++) {
@@ -89,13 +94,24 @@ void encounter_populate(World *w, Room *r) {
         e->body_heading = e->heading;
         if (!i && r->habitat.pace == PACE_FRONTIER)
             e->behavior = ALIEN_CONDUCTOR;
+        else if (r->recipe == 4)
+            e->behavior = ALIEN_BRITTLE;
+        else if (r->recipe == 5)
+            e->behavior = ALIEN_COLONY;
+        else if (r->recipe == 6)
+            e->behavior = (i & 1) ? ALIEN_LISTENER : ALIEN_REVERSER;
     }
     (void)w;
 }
 const char *encounter_name(const Room *r) {
-    static const char *recipes[] = {"", "SHIELDED SWARM / CEILING PURSUIT",
-                                    "SUPPRESSOR / FLANKING PACK", "MACHINE RELAY / DENIAL LINE"};
-    if (r->recipe && r->recipe <= 3)
+    static const char *recipes[] = {"",
+                                    "SHIELDED SWARM / CEILING PURSUIT",
+                                    "SUPPRESSOR / FLANKING PACK",
+                                    "MACHINE RELAY / DENIAL LINE",
+                                    "COLD MIRROR / BRITTLE PACK",
+                                    "ROOT COLONY / CARRION WAVE",
+                                    "LISTENERS / RETURN FIRE"};
+    if (r->recipe && r->recipe <= 6)
         return recipes[r->recipe];
     if (r->habitat.challenge)
         return frontier_name(r->habitat.challenge);
@@ -130,7 +146,7 @@ CampaignReward encounter_reward(const Game *g, int player, const Room *r) {
         CampaignReward tool =
             onboarding_reward(g, tools[r->habitat.challenge - 1], campaign_layer(r->cell) - 1);
         if (g->campaign.version >= 2 && tool.kind == REWARD_MODULE)
-            tool.item = BUILD_RELAY;
+            tool.item = 1 + (r->hash >> 16) % SC_BUILD_BRANCHES;
         if (!campaign_owns(g, player, tool))
             return tool;
     }
@@ -153,14 +169,14 @@ CampaignReward encounter_reward(const Game *g, int player, const Room *r) {
         CampaignReward reward =
             onboarding_reward(g, rewards[row][(start + i) % 7], campaign_layer(r->cell) - 1);
         if (g->campaign.version >= 2 && reward.kind == REWARD_MODULE)
-            reward.item = row ? BUILD_CAPACITOR : BUILD_ECHO;
+            reward.item = 1 + ((r->hash >> 16) + i) % SC_BUILD_BRANCHES;
         if (!campaign_owns(g, player, reward))
             return reward;
     }
     CampaignReward fallback =
         onboarding_reward(g, rewards[row][start], campaign_layer(r->cell) - 1);
     if (g->campaign.version >= 2 && fallback.kind == REWARD_MODULE)
-        fallback.item = row ? BUILD_CAPACITOR : BUILD_ECHO;
+        fallback.item = 1 + (r->hash >> 16) % SC_BUILD_BRANCHES;
     return fallback;
 }
 void encounter_reward_name(const Game *g, int player, const Room *r, char *text, size_t size) {

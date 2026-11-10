@@ -46,8 +46,24 @@ void sc_render_district_scene(Renderer *renderer, const Game *g, int player) {
             for (int side = -1; side <= 1; side += 2) {
                 bool live = side < 0 && r->district_arc > 0;
                 Color water = live ? (r->district_arc > 5 ? gold : blue) : rgb(.06f, .17f, .2f);
-                float glow = live ? .6f + .6f * (float)fabs(sin(g->time * 8)) : .1f;
-                double width = r->district_powered ? 13 : 17, x = r->district_powered ? 10.5 : 8.5;
+                float phase = condition_phase(g, &r->journey);
+                bool active = condition_live(g, r);
+                bool isolated =
+                    (state & DISTRICT_CONDUCTOR) ||
+                    (world_record_systems(&g->world, r->journey.anchor) & SYSTEM_SILENCED);
+                bool warning =
+                    !isolated && (r->journey.condition == 2 ? phase < 3
+                                                            : r->journey.condition == 3 &&
+                                                                  r->district_powered && phase < 4);
+                if (r->journey.condition == 2)
+                    water = active ? rgb(.6f, .85f, 1) : warning ? gold : rgb(.16f, .23f, .3f);
+                else if (r->journey.condition == 3)
+                    water = active ? rgb(.7f, .15f, .65f) : warning ? gold : rgb(.15f, .05f, .17f);
+                float glow = active            ? .65f
+                             : live || warning ? .6f + .6f * (float)fabs(sin(g->time * 8))
+                                               : .1f;
+                bool clear_center = r->district_powered || r->journey.condition >= 2;
+                double width = clear_center ? 13 : 17, x = clear_center ? 10.5 : 8.5;
                 double far = fmin(37, r->depth * .5 - 4), depth = far - 9;
                 sc_render_block(renderer, vadd(center, v3(side * x, .035, 9 + depth * .5)),
                                 v3(width, .015, depth), water, glow);
@@ -60,8 +76,11 @@ void sc_render_district_scene(Renderer *renderer, const Game *g, int player) {
             }
             Vec3 source = district_control(r->cell, DISTRICT_SOURCE_CONTROL);
             sc_render_ship_sign(renderer, vadd(source, v3(0, 2.5, 0)),
-                                state & DISTRICT_CONDUCTOR ? "SEVERED" : "LIVE CONDUCTOR", gold,
-                                eye);
+                                state & DISTRICT_CONDUCTOR  ? "SEVERED"
+                                : r->journey.condition == 2 ? "VENT FEED"
+                                : r->journey.condition == 3 ? "LIVING FEED"
+                                                            : "LIVE CONDUCTOR",
+                                gold, eye);
             sc_render_tube(renderer, vadd(source, v3(0, .8, 0)), vadd(center, v3(-8, .12, 22)),
                            .045, .045, state & DISTRICT_CONDUCTOR ? rgb(.15f, .2f, .2f) : gold,
                            .5f);
@@ -83,10 +102,14 @@ void sc_render_district_scene(Renderer *renderer, const Game *g, int player) {
         for (unsigned role = JOURNEY_PUMP; role <= JOURNEY_REFUGE; role <<= 1)
             if (r->journey.role & role) {
                 Vec3 at = district_control(r->cell, role);
-                sc_render_world_label(renderer, vadd(at, v3(0, 2.1, 0)),
-                                      role == JOURNEY_PUMP ? "PUMP / POWER WAKES MACHINES"
-                                                           : "WORKERS' REFUGE",
-                                      blue, eye, .018);
+                sc_render_world_label(
+                    renderer, vadd(at, v3(0, 2.1, 0)),
+                    role == JOURNEY_PUMP
+                        ? (r->journey.condition == 1   ? "PUMP / POWER WAKES MACHINES"
+                           : r->journey.condition == 2 ? "PUMP / VENTS CYCLE EVERY 24S"
+                                                       : "PUMP / POWER FEEDS GROWTH")
+                        : "WORKERS' REFUGE",
+                    blue, eye, .018);
                 sc_render_octahedron(renderer, vadd(at, v3(0, 1.5, 0)), .18,
                                      r->district_warning > 0 ? gold
                                      : r->district_powered   ? green
@@ -104,17 +127,32 @@ void sc_render_district_hud(Renderer *renderer, const Game *g, int player, float
     if (!room || !room->journey.family)
         return;
     char text[160];
-    snprintf(text, sizeof(text), "%s / %s", district_name(room->journey.family),
-             room->district_warning > 0 ? "MACHINES WAKING / AMBER WARNING"
-             : room->district_powered   ? "PUMPS ONLINE / DRY CENTER ROUTE"
-                                        : "DORMANT MACHINES / OPTIONAL PUMP");
+    snprintf(
+        text, sizeof(text), "%s / %s", district_name(room->journey.family),
+        room->journey.condition >= 2 &&
+                ((world_district_state(&g->world, room->journey.anchor) & DISTRICT_CONDUCTOR) ||
+                 (world_record_systems(&g->world, room->journey.anchor) & SYSTEM_SILENCED))
+            ? "FEED ISOLATED / FLOOR SAFE"
+        : room->journey.condition == 2
+            ? (condition_live(g, room) ? "FROST SWEEP / RAISED ROUTE OR CENTER"
+                                       : "VENT CYCLE / 3S AMBER THEN 5S FROST")
+        : room->journey.condition == 3 ? (condition_live(g, room) ? "LIVE GROWTH / CUT ITS FEED"
+                                                                  : "CONDUITS / POWER FEEDS GROWTH")
+        : room->district_warning > 0   ? "MACHINES WAKING / AMBER WARNING"
+        : room->district_powered       ? "PUMPS ONLINE / DRY CENTER ROUTE"
+                                       : "DORMANT MACHINES / OPTIONAL PUMP");
     sc_render_centered(renderer, w * .5f, 110 * s, .65f * s, text, rgb(.3f, .7f, .8f));
     for (unsigned role = JOURNEY_PUMP; role <= JOURNEY_REFUGE; role <<= 1)
         if ((room->journey.role & role) &&
             vlen(vsub(position_absolute(p->pos), district_control(room->cell, role))) < 3)
             sc_render_centered(renderer, w * .5f, h * .67f, .8f * s,
-                               role == JOURNEY_PUMP ? "G / RESTORE PUMP / MACHINES WILL WAKE"
-                                                    : "G / READ REFUGE NOTICE",
+                               role == JOURNEY_PUMP
+                                   ? (room->journey.condition == 1
+                                          ? "G / RESTORE PUMP / MACHINES WILL WAKE"
+                                      : room->journey.condition == 2
+                                          ? "G / RESTORE PUMP / VENTS KEEP CYCLING"
+                                          : "G / RESTORE PUMP / CONDUITS WILL FEED GROWTH")
+                                   : "G / READ REFUGE NOTICE",
                                rgb(.3f, .8f, 1));
     if (room->district_arc > 0 && district_wet(room, position_absolute(p->pos)))
         sc_render_centered(renderer, w * .5f, h * .7f, s,

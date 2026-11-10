@@ -150,8 +150,13 @@ static void generation(void) {
                     }
                     CHECK(e->health <= sc_enemies[e->kind].health + 80 ||
                           e->behavior == ALIEN_CONDUCTOR);
-                    if (e->kind >= 32)
-                        CHECK(e->behavior == ALIEN_LISTENER + e->kind - 32 || n == 0);
+                    if (e->kind >= 32) {
+                        unsigned expected = r->recipe == 5 ? ALIEN_COLONY
+                                            : r->recipe == 6
+                                                ? ((n & 1) ? ALIEN_LISTENER : ALIEN_REVERSER)
+                                                : ALIEN_LISTENER + e->kind - 32;
+                        CHECK(e->behavior == expected || n == 0);
+                    }
                 }
             }
             for (int i = 0; i < SC_MAX_CHUNKS; i++)

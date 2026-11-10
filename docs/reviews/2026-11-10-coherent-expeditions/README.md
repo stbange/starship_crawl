@@ -311,3 +311,61 @@ HTML start panel; the retained final images dismiss it before inspection.
 [machine feed](captures/coherent-rhythm2.png),
 [field supplies](captures/coherent-rhythm3.png),
 [Quest emulation](captures/coherent-rhythm-stereo.png).
+
+## E7 — compatible breadth
+
+The implemented inventory is **three dominant conditions, four district families,
+eight branches in four families, six encounter compositions, four guardian
+patterns across eight sites, six recurring roles and four motivations**. Ships
+select two or three recurring people. The [behavior reference](../../../COHERENT_EXPEDITIONS.md#e7--ships-worth-replaying)
+contains the actual compatibility matrix and numerical costs/counterplay.
+A 48-seed inventory exercises every supported matrix entry and all six roles;
+route fixtures walk the raised approach and use the ordinary return route across
+all four district families. Existing native traversal tests cover both deck
+transitions; the release matrix measures sustained directional exploration.
+
+New unit cases exercise finite beam focus, first-hit marks, burst target limits,
+frontal bracing, actual powered jumps, flight energy exhaustion, sanctuary safety,
+clock pauses, cold damage/slow, conduit regeneration, insulation, persistent
+isolation and exact live identities. Legacy story cases remain; the same complete
+four-motivation/three-outcome saga also runs under generator 16, with recurring
+identities checked through repeated commissions and bounded event histories.
+
+Two command-driven walkthroughs provide contrasting contexts, without claiming
+human reactions. Seed **713**, knowledge recovery with awakening machines, took
+**818.73 simulated seconds** through the starboard route, four phases and
+extraction: 120 kills, no deaths, no health loss, 0.23 s maximum navigation stall.
+Seed **42**, alien-drive salvage with vent cycles, took **1,042.62 simulated
+seconds** on the port route: 151 kills, no deaths, 28 health lost, 0.30 s maximum
+stall. Their automated reaction/aim profiles differ intentionally; this is a
+content walkthrough, not a controlled difficulty comparison. Both save/resume
+and fresh-ship reset succeed. [Foundry trace](e7/walkthrough-foundry.txt) /
+[vent-ship trace](e7/walkthrough-vents.txt).
+
+All **six compositions × three earned attribute fixtures** win using the carbine.
+All **eight guardian sites × prepared/unprepared fixtures** win with unchanged
+starter attributes and carbine, zero deaths. Durations range 14.58–66.38 simulated
+seconds. Preparation removes its declared subsystem; it does not guarantee a
+shorter fight (the final two sites take slightly longer with this driver's fixed
+assembly priority). [Exact fight results](e7/guardian-journeys.txt).
+
+The gate passes **44 unit tests**, **13,203/13,458 core lines (98.1%)**, every
+executable core source above 95%, and separate introduction, guardian and distant
+revisit gameplay checks. Branch mechanics measure 98.21%, condition rules 100%.
+Strict active/archived specifications, generated snapshot schema and tooling
+checks pass. Native Mesa and packaged WebGL inspect the new landmarks, warning
+and active surfaces, branch effects and guardian destruction/breaches. One
+existing overhead light is repositioned to reveal the district landmark; light
+budgets stay fixed. The isolated Quest test uses emulated stereo/controllers.
+Human learning, fun, readability on a physical display and Quest comfort remain
+unmeasured, and are listed in the release protocol rather than inferred from
+these passes.
+
+[Terrace / native](captures/coherent-terrace-native.png),
+[reliquary](captures/coherent-district-3-0.png),
+[garden live floor and safe center](captures/coherent-district-4-6.png),
+[cryo warning](captures/coherent-guardian4-warning.png),
+[garden aftermath](captures/coherent-guardian6-breach.png),
+[focus](captures/coherent-build4.png), [mark](captures/coherent-build5.png),
+[brace](captures/coherent-build6.png), [landing](captures/coherent-build7.png),
+[flight field](captures/coherent-build8.png).

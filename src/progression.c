@@ -127,6 +127,24 @@ void game_hurt(Game *g, int player, float damage, uint32_t flags) {
 void game_hostile_hit(Game *g, int player, float damage, uint32_t flags) {
     hurt(g, player, damage, flags, true);
 }
+void game_hostile_hit_from(Game *g, int player, float damage, uint32_t flags, Vec3 from) {
+    if (player < 0 || player >= g->player_count || !isfinite(damage) || damage <= 0)
+        return;
+    Player *p = &g->players[player];
+    BuildEffects *b = &g->builds[player];
+    if (!campaign_engaged(g, player) &&
+        (game_story_safe(g, position_absolute(p->pos)) || matrix_protected(g, player))) {
+        hurt(g, player, damage, flags, true);
+        return;
+    }
+    Vec3 direction = vnorm(vsub(from, player_eye(p))), ahead = v3(sin(p->yaw), 0, cos(p->yaw));
+    if (!p->sheltered && p->riding == MECH && b->brace_time >= .75f &&
+        game_build_active(g, player, BUILD_BRACE) && vdot(direction, ahead) > .5) {
+        b->brace_charge = fminf(100, b->brace_charge + damage * .5f);
+        damage *= .5f;
+    }
+    hurt(g, player, damage, flags, true);
+}
 void game_interact(Game *g, int player) {
     if (player < 0 || player >= g->player_count)
         return;
@@ -137,7 +155,8 @@ void game_interact(Game *g, int player) {
         return;
     }
     Player *p = &g->players[player];
-    if (preparation_interact(g, player) || chronicle_interact(g, player) || district_interact(g, player))
+    if (preparation_interact(g, player) || chronicle_interact(g, player) ||
+        district_interact(g, player))
         return;
     if (game_rig_interact(g, player))
         return;

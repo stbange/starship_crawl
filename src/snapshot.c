@@ -224,6 +224,14 @@ bool game_snapshot_decode(Game *g, const unsigned char *data, size_t size) {
         game_views_reset(replacement);
         replacement->epoch = g->epoch;
         game_identity_reset(replacement);
+        for (int p = 0; p < SC_PLAYERS; p++) {
+            if (replacement->builds[p].focus_target.force ||
+                replacement->builds[p].focus_target.residency)
+                replacement->builds[p].focus_target.epoch = replacement->epoch;
+            if (replacement->builds[p].mark_target.force ||
+                replacement->builds[p].mark_target.residency)
+                replacement->builds[p].mark_target.epoch = replacement->epoch;
+        }
         for (int i = 0; i < SC_MAX_PROJECTILES; i++)
             for (int j = 0; j < replacement->projectiles[i].hit_count; j++)
                 replacement->projectiles[i].hit_actors[j].epoch = replacement->epoch;

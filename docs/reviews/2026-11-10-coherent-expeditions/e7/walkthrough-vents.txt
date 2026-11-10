@@ -1,0 +1,10 @@
+Tick 0: 0.0 4.0 -84.0 -> [0,0,0], SALVAGE / RECOVER AN ALIEN DRIVE
+Seed 42: phase 0, guardians 100, rank 1, 1 kills, 0 respawns at 21.0s
+Seed 42: phase 1, guardians 102, rank 3, 13 kills, 0 respawns at 99.5s
+Tick 24000: -499.5 0.0 144.4 -> [-7,0,1], SALVAGE CACHE / UPGRADE CURRENCY
+Seed 42: phase 2, guardians 10a, rank 7, 83 kills, 0 respawns at 453.4s
+Seed 42: phase 3, guardians 12a, rank 7, 93 kills, 0 respawns at 556.8s
+Seed 42: phase 4, guardians 1aa, rank 8, 109 kills, 0 respawns at 694.2s
+Tick 48000: -1161.5 0.0 336.0 -> [0,0,0], HISTORICAL RECORD / ADDED TO CHARACTER ARCHIVE
+Phase journey 42 port: PASS, 1042.6s, 151 kills, 0 deaths, 62557 frames
+PROFILE {"seed":42,"profile":2,"passed":true,"simulated_seconds":1042.62,"reaction_seconds":0.55,"turn_rad_s":1.8,"aim_error_rad":0.040,"kills":151,"deaths":0,"shots":1691,"hits":562,"min_health":100.00,"min_shield":0.00,"min_energy":100.00,"health_loss":28.00,"shield_loss":298.30,"armor_loss":6.00,"damage_frames":23,"recoveries":0,"max_stall_seconds":0.30}

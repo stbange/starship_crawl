@@ -493,6 +493,19 @@ static const SnapshotField fields_BuildEffects[] = {
     FIELD(BuildEffects, echo_life, float, SW_FLOAT, NULL, 0, 3),
     FIELD(BuildEffects, charge, float, SW_FLOAT, NULL, 0, 120),
     FIELD(BuildEffects, relays, Beam, SW_STRUCT, &schema_Beam, 0, 0),
+    FIELD(BuildEffects, focus_target, ActorId, SW_STRUCT, &schema_ActorId, 0, 0),
+    FIELD(BuildEffects, mark_target, ActorId, SW_STRUCT, &schema_ActorId, 0, 0),
+    FIELD(BuildEffects, focus, float, SW_FLOAT, NULL, 0, 2),
+    FIELD(BuildEffects, contact_time, float, SW_FLOAT, NULL, 0, 1000000000),
+    FIELD(BuildEffects, mark_life, float, SW_FLOAT, NULL, 0, 6),
+    FIELD(BuildEffects, brace_time, float, SW_FLOAT, NULL, 0, 1),
+    FIELD(BuildEffects, brace_charge, float, SW_FLOAT, NULL, 0, 100),
+    FIELD(BuildEffects, field_tick, float, SW_FLOAT, NULL, 0, .25),
+    FIELD(BuildEffects, mark_armed, _Bool, SW_BOOL, NULL, 0, 1),
+    FIELD(BuildEffects, landing_armed, _Bool, SW_BOOL, NULL, 0, 1),
+    FIELD(BuildEffects, pulse, Position, SW_STRUCT, &schema_Position, 0, 0),
+    FIELD(BuildEffects, pulse_life, float, SW_FLOAT, NULL, 0, .4),
+    FIELD(BuildEffects, pulse_radius, float, SW_FLOAT, NULL, 0, 8),
 };
 static const SnapshotSchema schema_BuildEffects = SCHEMA(BuildEffects);
 
@@ -899,6 +912,7 @@ static const SnapshotField fields_Game[] = {
     FIELD(Game, chronicle, Chronicle, SW_STRUCT, &schema_Chronicle, 0, 0),
     FIELD(Game, home, Home, SW_STRUCT, &schema_Home, 0, 0),
     FIELD(Game, rhythm, Rhythm, SW_STRUCT, &schema_Rhythm, 0, 0),
+    FIELD(Game, condition_clock, float, SW_FLOAT, NULL, 0, 24),
     FIELD(Game, shelter, Shelter, SW_STRUCT, &schema_Shelter, 0, 0),
     FIELD(Game, rigs, Rig, SW_STRUCT, &schema_Rig, 0, 0),
     FIELD(Game, beams, Beam, SW_STRUCT, &schema_Beam, 0, 0),
@@ -957,7 +971,7 @@ const SnapshotSchema sc_snapshot_box = SCHEMA(Box);
 const SnapshotSchema sc_snapshot_room_record = SCHEMA(RoomRecord);
 const SnapshotSchema sc_snapshot_matrix_record = SCHEMA(MatrixRecord);
 const SnapshotSchema sc_snapshot_faction_region = SCHEMA(FactionRegion);
-const uint32_t sc_snapshot_schema_id = UINT32_C(0x6683627c);
+const uint32_t sc_snapshot_schema_id = UINT32_C(0xd11ada19);
 #undef FIELD
 #undef SCHEMA
 // clang-format on

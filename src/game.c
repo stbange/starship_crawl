@@ -217,6 +217,7 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
     damage = frontier_damage(g, room, index, owner, damage);
     if (damage <= 0)
         return;
+    game_build_hit(g, room, index, owner, flags);
     if (g->world.generator >= 16 && room->journey.family)
         room->alarm_time = 4;
     politics_attack(g, e, owner);
@@ -246,6 +247,8 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
         bool alive = e->alive;
         FactionForce *force = factions_force(g, e->force);
         factions_damage(g, room, index, damage, owner);
+        if (alive && !e->alive)
+            game_build_kill(g, room, index, owner);
         /* A finishing shot cannot claim a battle fought entirely by NPCs. */
         if (alive && !e->alive && force && force->participation[owner] >= 30)
             award(g, &g->players[owner], 20 + def->tier * 5);
@@ -262,6 +265,7 @@ void game_damage_enemy(Game *g, Room *room, int index, int owner, float damage, 
                 campaign_defeat(g, (unsigned)guardian);
         }
         game_enemy_death(g, e, owner);
+        game_build_kill(g, room, index, owner);
         award(g, &g->players[owner],
               20 + def->tier * 5 + (unsigned)fmin(world_difficulty(room->cell), 30));
     }
@@ -304,12 +308,14 @@ void game_nova(Game *g, int player) {
 }
 static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
 #ifdef SC_WEBXR
-                      , Vec3 aim, bool tracked
+                      ,
+                      Vec3 aim, bool tracked
 #endif
 );
 static void shoot(Game *g, Player *p
 #ifdef SC_WEBXR
-                  , const Actions *action
+                  ,
+                  const Actions *action
 #endif
 ) {
 #ifdef SC_WEBXR
@@ -320,8 +326,8 @@ static void shoot(Game *g, Player *p
         double reach = vlen(offset), length = vlen(direction);
         if (!isfinite(reach) || !isfinite(length) || reach > 3 || length < .01 || length > 100)
             return;
-        if (reach > .001 && world_raycast(&g->world, tracked_origin, vmul(offset, 1 / reach),
-                                          reach) < reach - .015)
+        if (reach > .001 &&
+            world_raycast(&g->world, tracked_origin, vmul(offset, 1 / reach), reach) < reach - .015)
             return;
         tracked_origin = vadd(tracked_origin, offset);
         shot_yaw = atan2(direction.x, direction.z);
@@ -465,8 +471,11 @@ static void move_player(Game *g, Player *p, const Actions *a, double dt) {
         p->velocity.z += (wish.z * speed - p->velocity.z) * blend;
         if (p->grounded) {
             p->velocity.y = 0;
-            if (!riding && a->jump && !p->crouched)
+            if (!riding && a->jump && !p->crouched) {
                 p->velocity.y = p->leap > 0 ? 13 : 7.5;
+                if (p->leap > 0 && game_build_active(g, (int)(p - g->players), BUILD_LANDING))
+                    g->builds[p - g->players].landing_armed = true;
+            }
         }
         p->velocity.y = fmax(-30, p->velocity.y - gravity * dt);
     }
@@ -599,7 +608,8 @@ static bool already_hit(const Game *g, const Projectile *shot, const Room *room,
 }
 static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
 #ifdef SC_WEBXR
-                      , Vec3 aim, bool tracked
+                      ,
+                      Vec3 aim, bool tracked
 #endif
 ) {
 #ifdef SC_WEBXR
@@ -632,6 +642,9 @@ static void beam_shot(Game *g, Player *p, const WeaponDef *w, Vec3 origin
             district_shot(g, owner, end);
         if (target < 0)
             break;
+        if (!history.hit_count)
+            game_build_contact(g, room, target, owner,
+                               w->damage * (1 + .35f * player_rank(p, p->power)));
         game_damage_enemy(g, room, target, owner, w->damage * (1 + .35f * player_rank(p, p->power)),
                           w->flags);
         int at = history.hit_count++;
@@ -707,7 +720,8 @@ static void projectiles_step(Game *g, double dt) {
             if (shot->owner >= 0 && (shot->flags & W_FLARE) && wall < travel)
                 game_attach_flare(g, shot->owner, position_absolute(shot->pos), dir);
             if (player >= 0) {
-                game_hostile_hit(g, player, shot->damage, shot->flags);
+                game_hostile_hit_from(g, player, shot->damage, shot->flags,
+                                      vsub(position_absolute(shot->pos), vmul(dir, 2)));
                 g->projectile_hits++;
             }
             if (target >= 0 && (shot->owner < 0 || !(shot->flags & W_BLAST))) {
@@ -1008,7 +1022,8 @@ static void enemies_step(Game *g, double dt) {
                     game_damage_enemy(g, room, i, (int)(target - g->players), 10000, 0);
                 } else if ((!room->recipe || encounter_attack(room, i)) &&
                            best < (def->role == 2 ? 2.8 : 1.7) && e->cooldown <= 0 && sight) {
-                    game_hostile_hit(g, (int)(target - g->players), def->damage, def->flags);
+                    game_hostile_hit_from(g, (int)(target - g->players), def->damage, def->flags,
+                                          enemy_center(e));
                     e->cooldown = def->interval;
                 }
             }
@@ -1113,6 +1128,7 @@ void game_step(Game *g, const Actions *actions, double dt) {
             p->slow = 0;
             p->cloaked = false;
             p->flight = p->leap = p->nova = p->nova_tick = p->nova_flash = 0;
+            g->builds[i] = (BuildEffects){0};
             p->crouched = true;
             for (int j = 0; j < SC_MAX_PROJECTILES; j++)
                 if (vlen(position_delta(g->projectiles[j].pos, p->pos)) < 12)

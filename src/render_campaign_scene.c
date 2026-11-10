@@ -10,10 +10,10 @@ static void assemblies(Renderer *r, const Game *g, const Room *room, unsigned id
     sc_render_block(r, canopy, v3(9, 2, 7), rgb(.13f, .16f, .18f), .1f);
     for (int rib = -3; rib <= 3; rib++)
         sc_render_block(r, vadd(canopy, v3(rib, -.9, -3.5)), v3(.1, .15, .1),
-                         a->opening > 0 || done ? cold : hot, .8f);
+                        a->opening > 0 || done ? cold : hot, .8f);
     for (int side = -1; side <= 1; side += 2)
-        sc_render_tube(r, vadd(center, v3(side * 5, 11, 22)),
-                       vadd(canopy, v3(side * 4, .8, 0)), .16, .16, quiet, .1f);
+        sc_render_tube(r, vadd(center, v3(side * 5, 11, 22)), vadd(canopy, v3(side * 4, .8, 0)),
+                       .16, .16, quiet, .1f);
     for (unsigned i = 0; i < 2; i++) {
         bool broken = done || (a->broken & (1u << i));
         Vec3 at = enemy_center(&room->enemies[i + 1]);
@@ -34,6 +34,13 @@ static void assemblies(Renderer *r, const Game *g, const Room *room, unsigned id
         sc_render_octahedron(r, vadd(console, v3(0, 1.6, 0)), .22,
                              prepared ? rgb(.3f, 1, .5f) : signal, 1);
         if (a->active && room->enemies[0].windup > 0 && !broken) {
+            if (!i && guardian_pattern(id) == 2)
+                for (unsigned spoke = 0; spoke < 4; spoke++) {
+                    double angle = spoke * SC_PI * .5 + (a->attack % 2) * SC_PI * .25;
+                    Vec3 start = v3(at.x, center.y + .12, at.z);
+                    sc_render_tube(r, start, vadd(start, v3(sin(angle) * 18, 0, cos(angle) * 18)),
+                                   .08, .06, cold, 1.8f);
+                }
             Vec3 ground = a->aim;
             ground.y = center.y + .1;
             sc_render_tube(r, at, ground, .025, .025, signal, 1.5f);
@@ -41,7 +48,7 @@ static void assemblies(Renderer *r, const Game *g, const Room *room, unsigned id
                 for (unsigned k = 0; k < 16; k++) {
                     double angle = k * SC_PI / 8;
                     sc_render_block(r, vadd(at, v3(sin(angle) * 3, -.9, cos(angle) * 3)),
-                                     v3(.25, .08, .25), signal, 1.8f);
+                                    v3(.25, .08, .25), signal, 1.8f);
                 }
         }
     }
@@ -49,10 +56,9 @@ static void assemblies(Renderer *r, const Game *g, const Room *room, unsigned id
        walkers, both co-op participants and either rig keep their support. */
     Vec3 breach = vadd(center, v3(0, 0, 39));
     for (int side = -1; side <= 1; side += 2)
-        sc_render_block(r, vadd(breach, v3(side * 4, 3, 0)), v3(.5, 6, .5),
-                         done ? cold : quiet, done ? 1 : .1f);
-    sc_render_block(r, vadd(breach, v3(0, done ? 7 : 5, 0)), v3(8, .5, .5),
-                     done ? cold : hot, 1);
+        sc_render_block(r, vadd(breach, v3(side * 4, 3, 0)), v3(.5, 6, .5), done ? cold : quiet,
+                        done ? 1 : .1f);
+    sc_render_block(r, vadd(breach, v3(0, done ? 7 : 5, 0)), v3(8, .5, .5), done ? cold : hot, 1);
 }
 void sc_render_campaign_scene(Renderer *r, const Game *g, int player) {
     if (!g->campaign.version)
