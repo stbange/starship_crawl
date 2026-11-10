@@ -1,0 +1,12 @@
+{
+  "change": "coherent-expedition-experience",
+  "schema": "spec-driven",
+  "archive": "openspec/changes/archive/2026-11-10-coherent-expedition-experience",
+  "completed_tasks": 55,
+  "total_tasks": 55,
+  "synced_capabilities": 9,
+  "synced_requirements": 16,
+  "existing_main_titles_purposes_and_requirements_preserved": true,
+  "post_archive_validation": "specifications-archive.log",
+  "human_and_physical_device_sessions": "unavailable; protocol and evidence gaps documented"
+}

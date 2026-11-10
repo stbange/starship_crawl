@@ -3,14 +3,14 @@
 This checklist records implementation of E1–E8 in order, using the
 [design](design.md) and [delta specifications](specs/). Implemented rules and
 retained evidence are documented in
-[COHERENT_EXPEDITIONS.md](../../../COHERENT_EXPEDITIONS.md) and the
-[integrated review](../../../docs/reviews/2026-11-10-coherent-expeditions/e8/README.md).
+[COHERENT_EXPEDITIONS.md](../../../../COHERENT_EXPEDITIONS.md) and the
+[integrated review](../../../../docs/reviews/2026-11-10-coherent-expeditions/e8/README.md).
 
 Each milestone gate includes `npm run spec:validate`, relevant unit CTest,
 separate gameplay CTest and `python3 scripts/check-coverage.py` with **>=95%
 overall and per executable core source**, without excluding uncovered lines.
 Run native GL, packaged browser and isolated Quest checks for affected rendering,
-input or shared behavior, following [TESTING.md](../../../TESTING.md). Keep
+input or shared behavior, following [TESTING.md](../../../../TESTING.md). Keep
 physical device and human results distinct from simulation. Version new state
 and update save/snapshot validation alongside each feature that introduces it.
 
@@ -90,8 +90,8 @@ and update save/snapshot validation alongside each feature that introduces it.
 - [x] 8.2 Compare resource/build curves, specialist responses, guardian stages, optional detours, quiet periods and navigation stalls against E1; tune demonstrated outliers and rerun the affected comparison seeds.
 - [x] 8.3 Conduct the guided/experienced two-ship human protocol and co-op/device checks where available; deliver observations on rule learning, upgrade use, causal understanding and retry appeal, clearly listing unavailable human or physical-device sessions. The protocol is retained; human participants and physical devices were unavailable, with those gaps explicit in the review.
 - [x] 8.4 Measure frame percentiles, streaming stalls, memory, effect/actor peaks and save growth on declared hardware or software rendering; resolve regressions and keep physical Quest performance/comfort status explicit.
-- [ ] 8.5 Run full strict specifications, unit/gameplay CTest, sanitizers, >=95% per-file/overall core coverage, legacy-save/native-WASM checks, native builds, packaged browser suite and isolated Quest suite; retain green results without weakening thresholds or exclusions.
-- [ ] 8.6 Update README, DEVELOPMENT_PLAN, behavior docs and a final implementation review with the ten-proposal mapping, current versions and remaining evidence gaps; push main and verify the complete GitHub Actions and Pages deployment.
+- [x] 8.5 Run full strict specifications, unit/gameplay CTest, sanitizers, >=95% per-file/overall core coverage, legacy-save/native-WASM checks, native builds, packaged browser suite and isolated Quest suite; retain green results without weakening thresholds or exclusions.
+- [x] 8.6 Update README, DEVELOPMENT_PLAN, behavior docs and a final implementation review with the ten-proposal mapping, current versions and remaining evidence gaps; push main and verify the complete GitHub Actions and Pages deployment.
 
 ## Workflow follow-up
 

@@ -8,7 +8,7 @@ what is implemented. The additional examples and numbers below remain discussion
 and playtest targets, including future vehicles, artifact variants and stat respec.
 
 This document preserves the original proposal and its historical baseline. The
-[10 November coherent-expedition plan](openspec/changes/coherent-expedition-experience/design.md)
+[10 November coherent-expedition plan](openspec/changes/archive/2026-11-10-coherent-expedition-experience/design.md)
 is now implemented, including transformative branches, growth tuning and safe
 respec; [COHERENT_EXPEDITIONS.md](COHERENT_EXPEDITIONS.md) describes the final rules.
 [ONBOARDING.md](ONBOARDING.md) describes the current

@@ -277,3 +277,14 @@ Emulated stereo/controller/framebuffer checks cannot establish Quest frame rate,
 brightness, comfort or tracking quality. Actual Windows graphics, physical
 controllers and mobile Safari also require device checks. Software rendering
 and simulated completion establish correctness and reproducibility, not fun.
+
+## Published implementation
+
+E1–E8 source and evidence are published on `main` at `c7a6c7d`. Linux, Windows,
+ordinary web and isolated Quest builds, fast quality checks and Pages deployment
+all passed in [the E8 release run](https://github.com/stbange/starship_crawl/actions/runs/42893524077).
+`gates/e8-release-ci.json` retains the observed status. Extended CI remains opt-in;
+the full local verification above supplies this release’s extended evidence.
+Start a **New ship** for generator 16 / campaign 2. Existing supported expeditions
+remain playable with their versioned rules. Human and physical-device sessions
+remain the explicitly open evidence gaps described above.

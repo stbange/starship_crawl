@@ -2,8 +2,8 @@
 
 Status: **E1–E8 gameplay implemented**, 10 November 2026. This document retains
 the approved design and initial tuning hypotheses; the
-[rules](../../../COHERENT_EXPEDITIONS.md) and
-[integrated review](../../../docs/reviews/2026-11-10-coherent-expeditions/e8/README.md)
+[rules](../../../../COHERENT_EXPEDITIONS.md) and
+[integrated review](../../../../docs/reviews/2026-11-10-coherent-expeditions/e8/README.md)
 record actual behavior, automated results and unavailable human/device sessions.
 See the [proposal](proposal.md),
 [behavior contracts](specs/) and [execution checklist](tasks.md).
@@ -14,14 +14,14 @@ The existing game already has four expedition phases, earned tools, regional
 ecologies, multi-deck landmarks, generated stories, a safe shelter, autonomous
 factions and an invisible director. The [proposal](proposal.md#why) explains the
 reason for connecting and deepening them. Current behavior is documented in
-[onboarding](../../../ONBOARDING.md), [phases](../../../PHASED_EXPEDITIONS.md),
-[the living ship](../../../LIVING_SHIP.md) and
-[hidden factions](../../../HIDDEN_FACTIONS.md).
+[onboarding](../../../../ONBOARDING.md), [phases](../../../../PHASED_EXPEDITIONS.md),
+[the living ship](../../../../LIVING_SHIP.md) and
+[hidden factions](../../../../HIDDEN_FACTIONS.md).
 
-The [7 November review](../../../docs/reviews/2026-11-07-long-expeditions/README.md)
+The [7 November review](../../../../docs/reviews/2026-11-07-long-expeditions/README.md)
 found seven of twelve main automated expeditions maxing all attributes and a
 median guardian fight of roughly five seconds. The
-[9 November plots](../../../docs/reviews/2026-11-09-expedition-plots/README.md)
+[9 November plots](../../../../docs/reviews/2026-11-09-expedition-plots/README.md)
 recorded four simulated hours with no deaths and main-story extraction between
 9:35 and 15:55. These are scripted agents, not human pacing measurements. They
 justify testing growth and encounter structure; they do not establish that human
@@ -319,7 +319,7 @@ content generator, external service or new asset pipeline.
 
 ### 9. Validate behavior and enjoyment separately
 
-Keep the commands and platform procedures in [TESTING.md](../../../TESTING.md)
+Keep the commands and platform procedures in [TESTING.md](../../../../TESTING.md)
 authoritative. For each affected milestone run strict OpenSpec validation, unit
 CTest, separate gameplay-labelled campaigns, sanitizers and unit-only coverage
 of at least **95% overall and per executable core source**, with no exclusions.

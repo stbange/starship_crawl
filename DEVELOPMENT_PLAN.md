@@ -19,11 +19,11 @@ and physical-device validation.
 The [playable behavior](COHERENT_EXPEDITIONS.md) and
 [implementation evidence](docs/reviews/2026-11-10-coherent-expeditions/README.md)
 describe the shipped mechanics and distinguish automated checks from human review.
-The [full design](openspec/changes/coherent-expedition-experience/design.md)
+The [full design](openspec/changes/archive/2026-11-10-coherent-expedition-experience/design.md)
 contains the player journey, content limits, dependencies, compatibility strategy
-and playtest criteria. The [OpenSpec proposal](openspec/changes/coherent-expedition-experience/proposal.md),
-[behavior contracts](openspec/changes/coherent-expedition-experience/specs/)
-and [task checklist](openspec/changes/coherent-expedition-experience/tasks.md)
+and playtest criteria. The [OpenSpec proposal](openspec/changes/archive/2026-11-10-coherent-expedition-experience/proposal.md),
+[behavior contracts](openspec/changes/archive/2026-11-10-coherent-expedition-experience/specs/)
+and [task checklist](openspec/changes/archive/2026-11-10-coherent-expedition-experience/tasks.md)
 make the work reviewable and trackable.
 
 | Milestone | Playable result |

@@ -1,0 +1,58 @@
+
+> starship-crawl-development@0.1.0 spec:validate
+> openspec validate --all --strict --no-interactive && openspec validate --archived --strict --no-interactive
+
+Note: OpenSpec collects anonymous usage stats. Opt out: OPENSPEC_TELEMETRY=0 or openspec config set telemetry.enabled false
+✓ spec/combat
+✓ spec/deep-frontiers
+✓ spec/equipment
+✓ spec/expedition
+✓ spec/expedition-aftermath
+✓ spec/immersive-vr
+✓ spec/matrix
+✓ spec/narrative
+✓ spec/navigation
+✓ spec/onboarding
+✓ spec/persistence
+✓ spec/phased-expeditions
+✓ spec/political-expeditions
+✓ spec/presentation-input
+✓ spec/progression
+✓ spec/psionics
+✓ spec/quality-gates
+✓ spec/reactive-expeditions
+✓ spec/regional-encounters
+✓ spec/shelter
+✓ spec/ship-generation
+✓ spec/ship-history
+✓ spec/simulation-sessions
+✓ spec/space-exterior
+✓ spec/vertical-traversal
+Totals: 25 passed, 0 failed (25 items)
+Note: OpenSpec collects anonymous usage stats. Opt out: OPENSPEC_TELEMETRY=0 or openspec config set telemetry.enabled false
+✓ change/2026-11-03-fold-rigs-beams-and-flares
+✓ change/2026-11-03-navigation-and-psionics
+✓ change/2026-11-03-quality-foundation
+✓ change/2026-11-03-richer-generated-interiors
+✓ change/2026-11-03-summonable-shelter
+✓ change/2026-11-04-enemy-deaths-and-machines
+✓ change/2026-11-04-history-shaped-expeditions
+✓ change/2026-11-04-procedural-expeditions
+✓ change/2026-11-04-reactive-expeditions-and-aftermath
+✓ change/2026-11-05-arrival-exterior
+✓ change/2026-11-05-phased-expeditions
+✓ change/2026-11-05-ship-matrix
+✓ change/2026-11-06-animated-tentacles
+✓ change/2026-11-06-foundation-traversal
+✓ change/2026-11-06-living-ship-generation
+✓ change/2026-11-07-alien-courts-director
+✓ change/2026-11-07-deep-frontiers
+✓ change/2026-11-07-regional-encounters
+✓ change/2026-11-07-reliable-exploration
+✓ change/2026-11-08-hidden-factions-and-director
+✓ change/2026-11-08-quest3-webxr-target
+✓ change/2026-11-09-session-architecture-refactor
+✓ change/2026-11-09-staged-onboarding
+✓ change/2026-11-10-coherent-expedition-experience
+✓ change/2026-11-10-optional-extended-ci
+Totals: 25 passed, 0 failed (25 items)
