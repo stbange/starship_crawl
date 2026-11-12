@@ -1,11 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: Compatible headset render targets
-Quest SHALL validate per-view render targets inside the XR callback before
-advancing gameplay. It SHALL prefer granted projection textures and retain
-base-layer compatibility otherwise, update simulation once per frame, identify
-the rendering path in diagnostics and release owned graphics storage on exit
-without deleting runtime images.
+Quest SHALL validate each projection target before advancing gameplay and use
+its runtime viewport inside the XR callback. It SHALL prefer granted projection
+layers and retain base-layer compatibility otherwise, update simulation once
+per frame, identify its rendering path in diagnostics and release owned graphics
+storage on exit without deleting runtime images.
 
 #### Scenario: Missing opaque attachments on a supported Quest
 - **WHEN** the runtime's opaque base-layer target lacks attachments but granted projection layers provide valid view textures

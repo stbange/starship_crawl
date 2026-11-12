@@ -1,0 +1,19 @@
+{
+  "commit": "06ceae4",
+  "run": "43319335160",
+  "url": "https://github.com/stbange/starship_crawl/actions/runs/43319335160",
+  "observed_utc": "2026-11-12T22:26:27.038129+00:00",
+  "jobs": {
+    "coverage": "skipped",
+    "sanitizer-build": "skipped",
+    "web": "completed successfully",
+    "native": "completed successfully",
+    "quality": "completed successfully",
+    "quest": "completed successfully",
+    "instrumented": "skipped",
+    "web-browser": "skipped",
+    "pages": "completed successfully",
+    "deploy": "completed successfully"
+  },
+  "physical_quest_tested": false
+}

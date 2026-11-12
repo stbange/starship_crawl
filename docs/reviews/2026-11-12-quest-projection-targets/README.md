@@ -66,3 +66,7 @@ assertions about safe exit and retained export/retry controls.
 ![Software-rendered projection stereo](projection-stereo.png)
 
 ![Stereo controller-recovery panel with application depth fallback](depth-recovery-stereo.png)
+
+The repair is published on `main` at `06ceae4`. All four target builds, fast
+quality checks and Pages passed in [the release run](https://github.com/stbange/starship_crawl/actions/runs/43319335160).
+The observed job states are retained in [release-ci.json](release-ci.json).
