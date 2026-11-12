@@ -143,7 +143,7 @@ python3 -m pip install -r tests/requirements-quest.txt
 python3 scripts/package-web.py --output build-pages-preview/starship_crawl
 python3 scripts/package-quest.py --output build-pages-preview/starship_crawl/quest
 python3 -m unittest discover -s tests -p 'test_quest_packaging.py'
-python3 tests/test_quest_browser.py --site-dir build-pages-preview --url-path /starship_crawl/quest/
+python3 tests/test_quest_browser.py --site-dir build-pages-preview --url-path /starship_crawl/quest/ --projection-targets
 ```
 
 The test-only `tests/quest_device.js` supplies standard WebXR APIs, valid poses,
@@ -175,6 +175,18 @@ usable save/retry controls. These cases run in `--startup-only` and the full CI
 suite. Captures and structured reports use the `framebuffer-*` / `quest-framebuffer-*`
 names in `build-quest/test-artifacts/`. This reproduces the reported error signature;
 it does not establish which operation originally failed on physical Quest hardware.
+
+The projection regression also creates a real legacy framebuffer without
+attachments to reproduce `0x8cd7`. With optional layers granted, it requires
+nonblank distinct stereo views through runtime textures, handles replacement
+images and missing depth, verifies head-only recovery, checks denied/unsupported
+layer fallback, and rejects invalid targets before simulation advances. Runtime
+images must be detached after the callback and remain owned by the runtime;
+application framebuffers and fallback depth storage must be released on exit.
+`--projection-targets` runs the full gameplay portion through projection textures;
+the opaque-target fault cases explicitly retain the legacy path. Omitting that
+flag exercises the complete base-layer gameplay path. Extended CI selects the
+projection path without enabling the optional suite on ordinary pushes.
 
 **Hidden factions (generator 14 / simulation 1 / format 15).** Five focused unit
 suites cover the shared clock and geography, persistent forces and capacity,

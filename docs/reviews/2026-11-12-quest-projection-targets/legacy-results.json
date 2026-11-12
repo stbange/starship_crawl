@@ -1,0 +1,20 @@
+{
+  "scope": "full",
+  "checks": [
+    "projection stereo with missing opaque attachments, replaced images, depth fallback, controllers, capability fallback, cleanup and invalid-target refusal",
+    "opaque framebuffer lifetime, reported setup GL error recovery, head-only stereo, re-entry, genuine incomplete/draw failures and usable exit",
+    "head-only startup/recovery images, delayed/null/emulated controller poses, vertical entry, deliberate input recovery, stalled-session timeouts and diagnostic report",
+    "session permission/setup failure, local reference fallback, stereo views and single XR frame loop",
+    "independent controller aim, held-stick snap latch and neutral release",
+    "earned-only Quest menus, optional guidance and reviewable controller field guide",
+    "paused head tracking, controller menus, objective map, wrist map, persisted comfort option",
+    "controller loss, held-fire rejection, visibility/head tracking loss, bounded leaning, deliberate recovery with no time catch-up",
+    "fresh-character approach and boarding using controller locomotion",
+    "session end/re-entry, saved position reload, export and invalid-import rollback",
+    "earned interface first link, protected power restoration and physical return with Quest grips",
+    "earned reward claim, upgrade and story decision; shelter, matrix aiming/return, mech and wagon transitions through controller actions",
+    "same-origin ordinary/Quest storage isolation and earned-current/legacy save imports",
+    "graphics-loss reload path and usable unsupported-browser launch page"
+  ],
+  "physical_headset_tested": false
+}

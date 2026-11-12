@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "projection stereo with missing opaque attachments, replaced images, depth fallback, controllers, capability fallback, cleanup and invalid-target refusal",
+    "opaque framebuffer lifetime, reported setup GL error recovery, head-only stereo, re-entry, genuine incomplete/draw failures and usable exit",
+    "head-only startup/recovery images, delayed/null/emulated controller poses, vertical entry, deliberate input recovery, stalled-session timeouts and diagnostic report"
+  ],
+  "physical_headset_tested": false
+}

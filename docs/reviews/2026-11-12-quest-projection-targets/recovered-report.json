@@ -1,0 +1,36 @@
+{
+  "build": "quest-projection-framebuffer-3",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "phase": "VR active. If paused, release controls and press A. Y opens the menu.",
+  "frames": 1,
+  "eyes": 2,
+  "poses": 31,
+  "controllers": [
+    {
+      "hand": "left",
+      "ray": "tracked-pointer",
+      "mapping": "xr-standard",
+      "profiles": []
+    },
+    {
+      "hand": "right",
+      "ray": "tracked-pointer",
+      "mapping": "xr-standard",
+      "profiles": []
+    }
+  ],
+  "visibility": "visible",
+  "frameMs": 130.2,
+  "framebuffer": "1280 \u00d7 640",
+  "graphicsStage": "Frame complete",
+  "framebufferStatus": "0x8cd5",
+  "renderTarget": "projection-textures",
+  "enabledFeatures": [
+    "local-floor",
+    "layers"
+  ],
+  "startupGlErrors": [],
+  "error": "",
+  "failurePhase": "",
+  "logs": []
+}

@@ -348,7 +348,7 @@ jobs:
       - name: Stereo WebGL, controller gameplay, lifecycle and save isolation
         if: inputs.extended_tests
         run: |
-          python scripts/run-browser-test.py tests/test_quest_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/
+          python scripts/run-browser-test.py tests/test_quest_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/ --projection-targets
           python scripts/run-browser-test.py tests/test_guardians_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/ --quest
           python scripts/run-browser-test.py tests/test_chronicle_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/ --quest
           python scripts/run-browser-test.py tests/test_preparation_browser.py --site-dir build-quest-preview --url-path /starship_crawl/quest/ --quest

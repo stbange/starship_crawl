@@ -1,0 +1,18 @@
+{
+  "build": "quest-framebuffer-recovery-2",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "phase": "Stopped with an error",
+  "frames": 0,
+  "eyes": 0,
+  "poses": 0,
+  "controllers": [],
+  "visibility": "visible",
+  "frameMs": 0,
+  "framebuffer": "1280 \u00d7 640",
+  "graphicsStage": "XR framebuffer binding",
+  "framebufferStatus": "0x8cd7",
+  "startupGlErrors": [],
+  "error": "VR stopped: The headset framebuffer is incomplete (0x8cd7).",
+  "failurePhase": "Waiting for the first headset view\u2026",
+  "logs": []
+}

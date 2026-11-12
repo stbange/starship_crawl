@@ -6,13 +6,15 @@
   const prefKey = 'starship-crawl.quest.preferences.v1';
   let ready = false, supported = false, starting = false, session = null;
   let space = null, layer = null, contextLost = false, begun = false, graphicsStarted = false;
+  let binding = null, projection = null, eyeTarget = null, eyeDepth = null;
+  let depthWidth = 0, depthHeight = 0;
   let lastError = '';
   let watchdog = 0, lastFrameAt = 0, startedAt = 0, trackingReady = false, stopping = false;
   const health = {phase: 'Loading', frames: 0, eyes: 0, poses: 0, controllers: [],
     visibility: 'none', frameMs: 0, framebuffer: '', graphicsStage: '', framebufferStatus: '',
-    startupGlErrors: [], error: '', failurePhase: '', logs: []};
+    renderTarget: '', enabledFeatures: [], startupGlErrors: [], error: '', failurePhase: '', logs: []};
   function report() {
-    el('xr-report').textContent = JSON.stringify({build: 'quest-framebuffer-recovery-2',
+    el('xr-report').textContent = JSON.stringify({build: 'quest-projection-framebuffer-3',
       browser: navigator.userAgent, ...health}, null, 2);
   }
   const message = text => { el('status').textContent = text; report(); };
@@ -74,6 +76,7 @@
       begun = false;
       try { _sc_xr_end(); } catch (error) { health.logs.push(String(error).slice(0, 1000)); }
     }
+    releaseTargets();
     session = space = layer = null; starting = false;
     health.phase = lastError ? 'Stopped with an error' : 'Session ended';
     buttons();
@@ -98,6 +101,80 @@
     HEAPF32.set(pose.transform.matrix, offset + index * 16);
     return 1 << index;
   }
+  function releaseTargets() {
+    if (!contextLost) {
+      if (eyeTarget) GLctx.deleteFramebuffer(eyeTarget);
+      if (eyeDepth) GLctx.deleteRenderbuffer(eyeDepth);
+    }
+    if (projection && projection.destroy) {
+      try { projection.destroy(); } catch (error) { health.logs.push(String(error).slice(0, 1000)); }
+    }
+    binding = projection = eyeTarget = eyeDepth = null;
+    depthWidth = depthHeight = 0;
+  }
+  function createTargets(current) {
+    const scale = preferences().scale;
+    health.enabledFeatures = Array.from(current.enabledFeatures || []);
+    const layersGranted = !current.enabledFeatures || health.enabledFeatures.includes('layers');
+    if (layersGranted && typeof XRWebGLBinding !== 'undefined' &&
+        typeof XRWebGLBinding.prototype.createProjectionLayer === 'function') {
+      try {
+        binding = new XRWebGLBinding(current, GLctx);
+        projection = binding.createProjectionLayer({textureType: 'texture', colorFormat: GLctx.RGBA8,
+          depthFormat: GLctx.DEPTH_COMPONENT24, scaleFactor: scale});
+      } catch (error) {
+        releaseTargets();
+        if (error.name !== 'NotSupportedError') throw error;
+        health.logs.push('Projection layers unavailable: ' + error.message);
+      }
+      if (projection) {
+        eyeTarget = GLctx.createFramebuffer();
+        if (!eyeTarget) throw new Error('Could not allocate the headset projection target.');
+        current.updateRenderState({layers: [projection], depthNear: 0.05, depthFar: 12000});
+        health.renderTarget = 'projection-textures';
+        health.framebuffer = projection.textureWidth + ' × ' + projection.textureHeight;
+        return;
+      }
+    }
+    layer = new XRWebGLLayer(current, GLctx, {alpha: false, antialias: false, depth: true,
+      framebufferScaleFactor: scale});
+    current.updateRenderState({baseLayer: layer, depthNear: 0.05, depthFar: 12000});
+    health.renderTarget = 'base-layer';
+    health.framebuffer = layer.framebufferWidth + ' × ' + layer.framebufferHeight;
+  }
+  function bindProjection(view) {
+    const image = binding.getViewSubImage(projection, view);
+    if (!image || !image.colorTexture)
+      throw new Error('The headset did not provide a ' + view.eye + '-eye projection color texture.');
+    GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, eyeTarget);
+    GLctx.framebufferTexture2D(GLctx.FRAMEBUFFER, GLctx.COLOR_ATTACHMENT0,
+      GLctx.TEXTURE_2D, image.colorTexture, 0);
+    if (image.depthStencilTexture) {
+      GLctx.framebufferTexture2D(GLctx.FRAMEBUFFER, GLctx.DEPTH_ATTACHMENT,
+        GLctx.TEXTURE_2D, image.depthStencilTexture, 0);
+    } else {
+      const width = image.colorTextureWidth || projection.textureWidth;
+      const height = image.colorTextureHeight || projection.textureHeight;
+      if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 ||
+          width > GLctx.getParameter(GLctx.MAX_RENDERBUFFER_SIZE) ||
+          height > GLctx.getParameter(GLctx.MAX_RENDERBUFFER_SIZE))
+        throw new Error('The headset projection size is invalid.');
+      if (!eyeDepth) eyeDepth = GLctx.createRenderbuffer();
+      if (!eyeDepth) throw new Error('Could not allocate headset depth storage.');
+      GLctx.bindRenderbuffer(GLctx.RENDERBUFFER, eyeDepth);
+      if (width !== depthWidth || height !== depthHeight) {
+        GLctx.renderbufferStorage(GLctx.RENDERBUFFER, GLctx.DEPTH_COMPONENT24, width, height);
+        depthWidth = width; depthHeight = height;
+      }
+      GLctx.framebufferRenderbuffer(GLctx.FRAMEBUFFER, GLctx.DEPTH_ATTACHMENT,
+        GLctx.RENDERBUFFER, eyeDepth);
+    }
+    const status = GLctx.checkFramebufferStatus(GLctx.FRAMEBUFFER);
+    health.framebufferStatus = '0x' + status.toString(16);
+    if (status !== GLctx.FRAMEBUFFER_COMPLETE)
+      throw new Error('The projection framebuffer is incomplete (' + health.framebufferStatus + ').');
+    return image.viewport;
+  }
   function xrFrame(time, frame) {
     const current = session;
     if (!current || frame.session !== current || contextLost || stopping) return;
@@ -113,6 +190,10 @@
           'Waiting for headset tracking. Look around in your play area.');
         return;
       }
+      health.poses = 1;
+      health.controllers = Array.from(current.inputSources, input => ({hand: input.handedness,
+        ray: input.targetRayMode, mapping: input.gamepad ? input.gamepad.mapping : 'no gamepad',
+        profiles: Array.from(input.profiles || [])}));
       if (!graphicsStarted) {
         health.graphicsStage = 'Before first XR draw';
         // GL errors are sticky. A setup-time framebuffer error says nothing
@@ -126,14 +207,20 @@
           if (health.startupGlErrors.some(error => error !== '0x506'))
             throw new Error('Graphics setup failed: GL ' + health.startupGlErrors.join(', '));
         }
-        // Opaque XR framebuffers may only be checked/used inside this callback.
-        health.graphicsStage = 'XR framebuffer binding';
-        GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, layer.framebuffer);
-        const status = GLctx.checkFramebufferStatus(GLctx.FRAMEBUFFER);
-        health.framebufferStatus = '0x' + status.toString(16);
-        if (!layer.framebuffer || status !== GLctx.FRAMEBUFFER_COMPLETE)
-          throw new Error('The headset framebuffer is incomplete (' + health.framebufferStatus + ').');
+        if (!projection) {
+          // Opaque XR framebuffers may only be checked/used inside this callback.
+          health.graphicsStage = 'XR framebuffer binding';
+          GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, layer.framebuffer);
+          const status = GLctx.checkFramebufferStatus(GLctx.FRAMEBUFFER);
+          health.framebufferStatus = '0x' + status.toString(16);
+          if (!layer.framebuffer || status !== GLctx.FRAMEBUFFER_COMPLETE)
+            throw new Error('The headset framebuffer is incomplete (' + health.framebufferStatus + ').');
+        }
         graphicsStarted = true;
+      }
+      if (projection) {
+        health.graphicsStage = 'XR projection framebuffer binding';
+        for (const view of pose.views) bindProjection(view);
       }
       const offset = _sc_xr_buffer() >>> 2;
       HEAPF32.set(pose.transform.matrix, offset);
@@ -143,9 +230,6 @@
         if (input.handedness === 'left') left = input;
         if (input.handedness === 'right') right = input;
       }
-      health.controllers = Array.from(current.inputSources, input => ({hand: input.handedness,
-        ray: input.targetRayMode, mapping: input.gamepad ? input.gamepad.mapping : 'no gamepad',
-        profiles: Array.from(input.profiles || [])}));
       valid |= copyPose(frame, left && left.gripSpace, 1, offset);
       valid |= copyPose(frame, right && right.gripSpace, 2, offset);
       valid |= copyPose(frame, right && right.targetRaySpace, 3, offset);
@@ -159,19 +243,23 @@
       health.graphicsStage = 'XR frame preparation';
       const drawable = _sc_xr_frame(time, valid, mask, lx, ly, rx, ry);
       health.poses = valid;
-      // JS owns the opaque runtime target. C draws into this binding; never
-      // register it as an application-owned GL object or retain it after RAF.
-      GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, layer.framebuffer);
+      // C draws into the JS binding. Runtime images never enter Emscripten's
+      // application-owned object table and are used only in this XR callback.
+      if (!projection) GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, layer.framebuffer);
       if (!drawable) {
         phase('Waiting for a usable headset pose. Face forward to calibrate.');
-        GLctx.disable(GLctx.SCISSOR_TEST); GLctx.clearColor(0,0,0,1);
-        GLctx.clear(GLctx.COLOR_BUFFER_BIT | GLctx.DEPTH_BUFFER_BIT);
+        GLctx.disable(GLctx.SCISSOR_TEST); GLctx.depthMask(true); GLctx.clearColor(0,0,0,1);
+        for (const view of projection ? pose.views : [null]) {
+          if (projection) bindProjection(view);
+          GLctx.clear(GLctx.COLOR_BUFFER_BIT | GLctx.DEPTH_BUFFER_BIT);
+        }
         const error = GLctx.getError();
         if (error !== GLctx.NO_ERROR) throw new Error('XR clear failed: GL 0x' + error.toString(16));
         return;
       }
       for (const view of pose.views) {
-        const viewport = layer.getViewport(view);
+        health.graphicsStage = view.eye + ' eye';
+        const viewport = projection ? bindProjection(view) : layer.getViewport(view);
         HEAPF32.set(view.projectionMatrix, offset + 80);
         HEAPF32.set(view.transform.inverse.matrix, offset + 96);
         health.graphicsStage = view.eye + ' eye';
@@ -192,12 +280,18 @@
           'Waiting for both Touch controllers. Hold them in view, release controls, then press A.');
       }
     } catch (error) {
-      if (layer && !contextLost && GLctx.getParameter(GLctx.DRAW_FRAMEBUFFER_BINDING) === layer.framebuffer)
+      const target = projection ? eyeTarget : layer && layer.framebuffer;
+      if (target && !contextLost && GLctx.getParameter(GLctx.DRAW_FRAMEBUFFER_BINDING) === target)
         health.framebufferStatus = '0x' + GLctx.checkFramebufferStatus(GLctx.FRAMEBUFFER).toString(16);
       stopWithError('VR stopped: ' + error.message);
     } finally {
       if (!contextLost) {
         GLctx.disable(GLctx.SCISSOR_TEST);
+        if (projection && eyeTarget) {
+          GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, eyeTarget);
+          GLctx.framebufferTexture2D(GLctx.FRAMEBUFFER, GLctx.COLOR_ATTACHMENT0, GLctx.TEXTURE_2D, null, 0);
+          GLctx.framebufferTexture2D(GLctx.FRAMEBUFFER, GLctx.DEPTH_ATTACHMENT, GLctx.TEXTURE_2D, null, 0);
+        }
         GLctx.bindFramebuffer(GLctx.FRAMEBUFFER, null);
       }
     }
@@ -206,12 +300,13 @@
     if (!ready || !supported || starting || session || contextLost) return;
     starting = true; lastError = ''; stopping = false; trackingReady = false; graphicsStarted = false;
     Object.assign(health, {frames: 0, eyes: 0, poses: 0, controllers: [], frameMs: 0, framebuffer: '',
-      graphicsStage: '', framebufferStatus: '', startupGlErrors: [], error: '', failurePhase: '', logs: []});
+      graphicsStage: '', framebufferStatus: '', renderTarget: '', enabledFeatures: [],
+      startupGlErrors: [], error: '', failurePhase: '', logs: []});
     phase('Requesting VR permission…'); buttons();
     let requested = null;
     try {
       // Request permission directly in the click gesture, before any await.
-      requested = await navigator.xr.requestSession('immersive-vr', {optionalFeatures: ['local-floor']});
+      requested = await navigator.xr.requestSession('immersive-vr', {optionalFeatures: ['local-floor', 'layers']});
       session = requested;
       startedAt = lastFrameAt = performance.now();
       watchdog = setInterval(watchSession, 1000);
@@ -227,10 +322,7 @@
       phase('Preparing headset graphics…');
       await GLctx.makeXRCompatible();
       if (session !== requested || contextLost) throw new Error('VR session ended during setup.');
-      layer = new XRWebGLLayer(requested, GLctx, {alpha: false, antialias: false, depth: true,
-        framebufferScaleFactor: preferences().scale});
-      health.framebuffer = layer.framebufferWidth + ' × ' + layer.framebufferHeight;
-      requested.updateRenderState({baseLayer: layer, depthNear: 0.05, depthFar: 12000});
+      createTargets(requested);
       phase('Preparing headset tracking…');
       try { space = await requested.requestReferenceSpace('local-floor'); }
       catch (_) { space = await requested.requestReferenceSpace('local'); }

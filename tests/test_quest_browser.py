@@ -87,9 +87,103 @@ def import_save(page, name):
     page.wait_for_function("document.getElementById('status').textContent.includes('Save imported')")
 
 
+def projection_checks(page, url):
+    def fresh(settings):
+        page.goto(url+'?seed=713');ready(page)
+        page.evaluate('settings => Object.assign(xrTest, {projectionSupported:false}, settings)', settings)
+
+    def launch():
+        page.locator('#enter').click()
+        page.wait_for_function('!!(xrTest.session && xrTest.session.callback)')
+
+    def ended():
+        page.wait_for_function("!document.getElementById('enter').disabled")
+        assert state(page)['paused'] and not xr_state(page)['active']
+        assert page.evaluate('xrTest.projectionTargets.size') == 0
+        assert page.evaluate('xrTest.runtimeTextureDeletes') == 0
+
+    # Reproduce the physical report with a real framebuffer whose attachments
+    # are absent, rather than returning a synthetic completeness status alone.
+    fresh({'legacyMissingAttachments': True})
+    launch();step(page);ended()
+    report=json.loads(page.locator('#xr-report').text_content())
+    assert report['framebufferStatus']=='0x8cd7' and report['eyes']==0,report
+    (ARTIFACTS/'projection-legacy-missing.json').write_text(json.dumps(report,indent=2)+'\n')
+
+    fresh({'projectionSupported': True, 'legacyMissingAttachments': True})
+    enter(page)
+    report=json.loads(page.locator('#xr-report').text_content())
+    assert report['renderTarget']=='projection-textures' and report['framebufferStatus']=='0x8cd5',report
+    assert page.evaluate("xrTest.requestedOptions.optionalFeatures.includes('layers')")
+    assert page.evaluate('xrTest.legacyLayerCreations')==0
+    capture(page,'quest-projection-stereo')
+    before=xr_state(page);page.evaluate('xrTest.replaceProjectionTextures()');step(page,3)
+    after=xr_state(page)
+    assert after['frames']==before['frames']+3 and after['eyes']==before['eyes']+6,(before,after)
+    capture(page,'quest-projection-replaced-textures')
+    assert page.evaluate('''() => {
+      const gl=xrTest.layer.gl, target=Array.from(xrTest.projectionTargets)[0];
+      gl.bindFramebuffer(gl.FRAMEBUFFER,target);
+      const color=gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
+      const depth=gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);return color===null && depth===null;
+    }''')
+    assert page.evaluate('xrTest.framebufferViolations')==[]
+    (ARTIFACTS/'projection-recovered.json').write_text(json.dumps(report,indent=2)+'\n')
+    page.evaluate('scQuest.end()');ended()
+    assert page.evaluate('xrTest.layer.destroyed')
+    enter(page);page.evaluate('scQuest.end()');ended()
+
+    fresh({'projectionSupported': True, 'projectionWithoutDepth': True,
+           'leftAvailable': False, 'rightAvailable': False})
+    launch();step(page,4)
+    assert xr_state(page)['suspended'] and xr_state(page)['eyes']==8
+    capture(page,'quest-projection-depth-recovery')
+    assert page.evaluate('xrTest.fallbackDepths.size')==1
+    step(page,8)
+    assert page.evaluate('xrTest.fallbackDepths.size')==1
+    page.evaluate('xrTest.leftAvailable=true;xrTest.rightAvailable=true');step(page,2);press(page,'right',4)
+    assert not state(page)['paused']
+    page.evaluate('scQuest.end()');ended()
+    assert page.evaluate('Array.from(xrTest.fallbackDepths).every(buffer => !xrTest.layer.gl.isRenderbuffer(buffer))')
+
+    for settings in ({'projectionSupported': True, 'grantLayers': False},
+                     {'projectionSupported': True, 'projectionRejected': True}):
+        fresh(settings);enter(page)
+        report=json.loads(page.locator('#xr-report').text_content())
+        assert report['renderTarget']=='base-layer' and page.evaluate('xrTest.legacyLayerCreations')==1,report
+        page.evaluate('scQuest.end()');ended()
+
+    for eye in ('left','right'):
+        fresh({'projectionSupported': True, 'missingProjectionEye': eye})
+        before=state(page)['time'];launch();step(page);ended()
+        report=json.loads(page.locator('#xr-report').text_content())
+        assert eye+'-eye projection color texture' in report['error'] and report['frames']==report['eyes']==0,report
+        assert report['poses']==1 and len(report['controllers'])==2,report
+        assert state(page)['time']==before
+        assert not page.locator('#export').is_disabled()
+
+    fresh({'projectionSupported': True});enter(page)
+    before=state(page)['time'];frames=xr_state(page)['frames'];eyes=xr_state(page)['eyes']
+    page.evaluate("xrTest.missingProjectionEye='right'");step(page);ended()
+    report=json.loads(page.locator('#xr-report').text_content())
+    assert 'right-eye projection color texture' in report['error'],report
+    assert report['frames']==frames and report['eyes']==eyes and state(page)['time']==before,report
+
+    fresh({'projectionSupported': True});enter(page)
+    before=state(page)['time'];frames=xr_state(page)['frames']
+    page.evaluate('xrTest.incompleteFrame=true');step(page);ended()
+    report=json.loads(page.locator('#xr-report').text_content())
+    assert report['error'] and report['frames']==frames and state(page)['time']==before,report
+    assert page.evaluate('xrTest.framebufferViolations')==[]
+    page.goto(url+'?seed=713');ready(page)
+    return 'projection stereo with missing opaque attachments, replaced images, depth fallback, controllers, capability fallback, cleanup and invalid-target refusal'
+
+
 def framebuffer_checks(page, url):
     def fresh():
         page.goto(url+'?seed=713');ready(page)
+        page.evaluate('xrTest.projectionSupported=false')
 
     fresh()
     page.evaluate('xrTest.setupFramebufferError=true;xrTest.leftAvailable=false;xrTest.rightAvailable=false')
@@ -245,6 +339,7 @@ def run():
     parser.add_argument('--journeys-only', action='store_true', help='Focus on imported progression/facility journeys during development')
     parser.add_argument('--startup-only', action='store_true', help='Focus on headset startup and recovery regressions')
     parser.add_argument('--intro-only', action='store_true', help='Focus on the earned introductory matrix link')
+    parser.add_argument('--projection-targets', action='store_true', help='Exercise gameplay through granted projection textures')
     args = parser.parse_args()
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(args.site_dir.resolve())))
@@ -264,9 +359,14 @@ def run():
         errors=[]
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.on('console',lambda msg: print('BROWSER',msg.text,flush=True) if msg.type=='error' else None)
-        page.add_init_script(path=str(ROOT/'tests/quest_device.js'))
+        device=(ROOT/'tests/quest_device.js').read_text()
+        if args.projection_targets:
+            device+='\nxrTest.projectionSupported=true;\n'
+        page.add_init_script(script=device)
         page.goto(url+'?seed=713');ready(page)
         if not args.journeys_only and not args.intro_only:
+            results.append(projection_checks(page,url))
+            print('PASS:',results[-1],flush=True)
             results.append(framebuffer_checks(page,url))
             print('PASS:',results[-1],flush=True)
             results.append(startup_checks(page,url))
@@ -287,6 +387,8 @@ def run():
             assert not xr_state(page)['active']
             page.evaluate('xrTest.failLayer=false;xrTest.localFloor=false')
             enter(page)
+            if args.projection_targets:
+                assert page.evaluate('xrTest.layer.projection===true')
             q=xr_state(page); assert q['eyes']==2*q['frames'],q
             assert page.evaluate('xrTest.session.rate')==72
             capture(page,'quest-approach-stereo')
@@ -509,7 +611,9 @@ def run():
         results.append('graphics-loss reload path and usable unsupported-browser launch page')
         assert not errors,errors
         browser.close()
-        (ARTIFACTS/'results.json').write_text(json.dumps({'scope':'journeys' if args.journeys_only else 'full', 'checks':results,'physical_headset_tested':False},indent=2)+'\n')
+        (ARTIFACTS/'results.json').write_text(json.dumps({'scope':'journeys' if args.journeys_only else 'full',
+            'render_target_preference':'projection-textures' if args.projection_targets else 'base-layer',
+            'checks':results,'physical_headset_tested':False},indent=2)+'\n')
         for result in results:print('PASS:',result,flush=True)
     except Exception:
         try:

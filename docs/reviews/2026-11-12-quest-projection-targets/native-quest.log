@@ -1,0 +1,25 @@
+Internal ctest changing into directory: /workspace/starship_crawl/build-coverage-coherent
+Test project /workspace/starship_crawl/build-coverage-coherent
+    Start 1: snapshot_quest
+1/7 Test #1: snapshot_quest ...................   Passed    2.18 sec
+    Start 2: session_quest
+2/7 Test #2: session_quest ....................   Passed    2.06 sec
+    Start 3: quest_tracking_combat
+3/7 Test #3: quest_tracking_combat ............   Passed    0.09 sec
+    Start 4: quest_ordinary_core
+4/7 Test #4: quest_ordinary_core ..............   Passed    9.87 sec
+    Start 5: quest_parity_flat
+5/7 Test #5: quest_parity_flat ................   Passed    0.30 sec
+    Start 6: quest_parity_quest
+6/7 Test #6: quest_parity_quest ...............   Passed    0.33 sec
+    Start 7: quest_parity_identical
+7/7 Test #7: quest_parity_identical ...........   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+architecture    =   4.24 sec*proc (2 tests)
+quest           =  14.83 sec*proc (7 tests)
+unit            =  14.83 sec*proc (7 tests)
+
+Total Test time (real) =  14.84 sec

@@ -19,6 +19,10 @@
     supported: true, denied: false, localFloor: true, headAvailable: true,
     leftAvailable: true, rightAvailable: true, failLayer: false,
     setupFramebufferError: false, setupInvalidEnum: false, incompleteFrame: false,
+    projectionSupported: false, grantLayers: true, projectionWithoutDepth: false, projectionRejected: false,
+    missingProjectionTexture: false, missingProjectionEye: '', legacyMissingAttachments: false,
+    projectionTargets: new Set(), fallbackDepths: new Set(), runtimeTextures: new Set(),
+    runtimeTextureDeletes: 0, legacyLayerCreations: 0, requestedOptions: null,
     failEyeClear: false, failEyeDraw: false,
     frameActive: false, capturing: false, framebufferViolations: [],
     missingPoses: [], emulatedPoses: [],
@@ -30,7 +34,7 @@
         const session=this.session;
         if (!session || !session.callback) throw Error('No scheduled XR frame');
         const callback=session.callback; session.callback=null; this.time+=dt;
-        this.frameActive=true;
+      this.frameActive=true;
         try { callback(this.time, {
           session,
           getViewerPose: () => {
@@ -62,6 +66,8 @@
       // reads/draws still obey the opaque framebuffer's callback lifetime.
       const pixels=new Uint8Array(w*h*4);
       this.capturing=true;
+      if(this.layer.projection)
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.layer.colorTexture,0);
       try { gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,pixels); }
       finally { this.capturing=false; gl.bindFramebuffer(gl.FRAMEBUFFER,previous); }
       const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
@@ -84,11 +90,34 @@
     if(target===this.FRAMEBUFFER||target===this.READ_FRAMEBUFFER)mock.readFramebuffer=buffer;
     return bind.call(this,target,buffer);
   };
+  const attach=proto.framebufferTexture2D, attachDepth=proto.framebufferRenderbuffer;
+  proto.framebufferTexture2D=function(target,attachment,type,texture,level) {
+    const result=attach.call(this,target,attachment,type,texture,level);
+    if(mock.layer&&mock.layer.projection&&mock.runtimeTextures.has(texture)&&
+       mock.drawFramebuffer!==mock.layer.framebuffer)
+      mock.projectionTargets.add(mock.drawFramebuffer);
+    return result;
+  };
+  proto.framebufferRenderbuffer=function(target,attachment,type,buffer) {
+    if(mock.projectionTargets.has(mock.drawFramebuffer)&&buffer)
+      mock.fallbackDepths.add(buffer);
+    return attachDepth.call(this,target,attachment,type,buffer);
+  };
+  const deleteFramebuffer=proto.deleteFramebuffer, deleteTexture=proto.deleteTexture;
+  proto.deleteFramebuffer=function(buffer) {
+    mock.projectionTargets.delete(buffer);
+    return deleteFramebuffer.call(this,buffer);
+  };
+  proto.deleteTexture=function(texture) {
+    if(mock.runtimeTextures.has(texture))mock.runtimeTextureDeletes++;
+    return deleteTexture.call(this,texture);
+  };
+  const xrTarget=buffer=>mock.layer&&(buffer===mock.layer.framebuffer||mock.projectionTargets.has(buffer));
   for(const name of ['clear','drawArrays','readPixels']) {
     const original=proto[name];
     proto[name]=function(...args) {
       const bound=name==='readPixels'?mock.readFramebuffer:mock.drawFramebuffer;
-      if(mock.layer&&bound===mock.layer.framebuffer&&!mock.capturing) {
+      if(xrTarget(bound)&&!mock.capturing) {
         if(!mock.frameActive) {
           mock.framebufferViolations.push(name+' outside XR callback');
           framebufferError(this);return;
@@ -105,12 +134,17 @@
   const status=proto.checkFramebufferStatus;
   proto.checkFramebufferStatus=function(target) {
     const bound=target===this.READ_FRAMEBUFFER?mock.readFramebuffer:mock.drawFramebuffer;
-    if(mock.layer&&bound===mock.layer.framebuffer&&(!mock.frameActive||mock.incompleteFrame))
+    if(xrTarget(bound)&&!mock.capturing&&(!mock.frameActive||mock.incompleteFrame))
       return this.FRAMEBUFFER_UNSUPPORTED;
     return status.call(this,target);
   };
   class Session extends EventTarget {
-    constructor() {super();this.visibilityState='visible';this.supportedFrameRates=[72,90];this.ended=false;}
+    constructor() {
+      super();this.visibilityState='visible';this.supportedFrameRates=[72,90];this.ended=false;
+      this.enabledFeatures=['local-floor'];
+      if(mock.projectionSupported&&mock.grantLayers&&mock.requestedOptions.optionalFeatures.includes('layers'))
+        this.enabledFeatures.push('layers');
+    }
     get inputSources(){return [...(mock.leftAvailable?[mock.leftPad]:[]),...(mock.rightAvailable?[mock.rightPad]:[])];}
     requestReferenceSpace(type) {
       if(type==='local-floor'&&!mock.localFloor)return Promise.reject(Error('no floor'));
@@ -123,8 +157,11 @@
   }
   Object.defineProperty(navigator,'xr',{configurable:true,value:{
     isSessionSupported:()=>Promise.resolve(mock.supported),
-    requestSession:()=>mock.denied?Promise.reject(new DOMException('Permission denied','NotAllowedError')):
-      Promise.resolve(mock.session=new Session())
+    requestSession:(mode,options)=>{
+      mock.requestedOptions=options||{optionalFeatures:[]};
+      return mock.denied?Promise.reject(new DOMException('Permission denied','NotAllowedError')):
+        Promise.resolve(mock.session=new Session());
+    }
   }});
   proto.makeXRCompatible=function(){
     if(mock.setupFramebufferError)framebufferError(this);
@@ -134,6 +171,7 @@
   window.XRWebGLLayer=class {
     constructor(session,gl,options){
       if(mock.failLayer)throw Error('layer setup rejected');
+      mock.legacyLayerCreations++;
       this.gl=gl;this.options=options;
       this.framebufferWidth=1280;this.framebufferHeight=640;
       this.framebuffer=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
@@ -146,9 +184,56 @@
       gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,1280,640);
       gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,depth);
       if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Incomplete test XR framebuffer');
+      if(mock.legacyMissingAttachments) {
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,null,0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,null);
+      }
       mock.layer=this;
       gl.bindFramebuffer(gl.FRAMEBUFFER,null);
     }
     getViewport(view){return {x:view.eye==='left'?0:640,y:0,width:640,height:640};}
   };
+  function projectionTexture(gl,depth=false) {
+    const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
+    gl.texImage2D(gl.TEXTURE_2D,0,depth?gl.DEPTH_COMPONENT24:gl.RGBA8,1280,640,0,
+      depth?gl.DEPTH_COMPONENT:gl.RGBA,depth?gl.UNSIGNED_INT:gl.UNSIGNED_BYTE,null);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+    mock.runtimeTextures.add(texture);
+    return texture;
+  }
+  class ProjectionBinding {
+    constructor(session,gl) {this.session=session;this.gl=gl;}
+    createProjectionLayer(options) {
+      if(!this.session.enabledFeatures.includes('layers'))throw new DOMException('Layers not granted','NotSupportedError');
+      if(mock.projectionRejected)throw new DOMException('Projection format unsupported','NotSupportedError');
+      if(mock.failLayer)throw Error('projection layer setup rejected');
+      if(options.textureType!=='texture')throw Error('Test expects 2D projection textures');
+      const gl=this.gl;
+      const layer={gl,projection:true,options,textureWidth:1280,textureHeight:640,
+        framebufferWidth:1280,framebufferHeight:640,framebuffer:gl.createFramebuffer(),
+        colorTexture:projectionTexture(gl),
+        depthStencilTexture:mock.projectionWithoutDepth?null:projectionTexture(gl,true),
+        destroy(){this.destroyed=true;}};
+      mock.layer=layer;
+      gl.bindFramebuffer(gl.FRAMEBUFFER,layer.framebuffer);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,layer.colorTexture,0);
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+      return layer;
+    }
+    getViewSubImage(layer,view) {
+      if(!mock.frameActive)throw new DOMException('Outside XR callback','InvalidStateError');
+      return {colorTexture:mock.missingProjectionTexture||mock.missingProjectionEye===view.eye?null:layer.colorTexture,
+        depthStencilTexture:layer.depthStencilTexture,
+        colorTextureWidth:1280,colorTextureHeight:640,
+        viewport:{x:view.eye==='left'?0:640,y:0,width:640,height:640}};
+    }
+  }
+  mock.replaceProjectionTextures=()=>{
+    const layer=mock.layer;
+    layer.colorTexture=projectionTexture(layer.gl);
+    if(layer.depthStencilTexture)layer.depthStencilTexture=projectionTexture(layer.gl,true);
+  };
+  Object.defineProperty(window,'XRWebGLBinding',{configurable:true,
+    get:()=>mock.projectionSupported?ProjectionBinding:undefined});
 })();

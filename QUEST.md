@@ -87,15 +87,23 @@ errors. It stays on the page and is not uploaded automatically. Report the text
 along with whether the Meta system menu remained usable. Reload the Quest page
 after a deployment to receive the updated application.
 
-The framebuffer repair identifies itself as **`quest-framebuffer-recovery-2`**
-in that report. It pauses the preview before headset graphics setup and keeps
-the runtime's framebuffer inside the XR callback. A queued setup-time `0x506`
-is recorded separately; entry proceeds only when the current framebuffer is
-complete and both eyes clear/draw without errors. The report now distinguishes
-setup, framebuffer binding, frame preparation and each eye; startup C logs
-distinguish preparation, clear and draw failures. See the
-[framebuffer investigation](docs/reviews/2026-11-09-quest-framebuffer/README.md)
-for the reproduced failure and the remaining hardware uncertainty.
+The current repair identifies itself as **`quest-projection-framebuffer-3`**.
+When WebXR grants projection layers, the report shows
+**`renderTarget: "projection-textures"`**. The game attaches the current eye's
+runtime color/depth textures to its own framebuffer instead of depending on an
+opaque base-layer framebuffer with missing attachments (`0x8cd7`). If no depth
+texture is supplied, it reuses bounded application depth storage. Browsers that
+do not grant or implement projection layers keep the existing **`base-layer`**
+path. The choice is automatic and does not change the ordinary game.
+
+The preview pauses before headset setup. Runtime images are used only in the XR
+callback, detached afterward and never deleted by the application. Invalid
+targets or render errors still stop safely with usable retry/export controls.
+Reports identify the target path, granted features, headset/controller detection,
+setup, binding and eye stages. See the
+[projection repair review](docs/reviews/2026-11-12-quest-projection-targets/README.md)
+and [earlier framebuffer investigation](docs/reviews/2026-11-09-quest-framebuffer/README.md).
+Confirmation on the physical Quest 3 is still required.
 
 The first physical headset report was a black view with unresponsive controls.
 The [startup repair review](docs/reviews/2026-11-08-quest-startup/README.md)
@@ -113,8 +121,9 @@ before clearing browser data or replacing an expedition.
 The launch page imports and exports the normal `.sav` format. Import explicitly
 replaces only the Quest expedition, retains earned capabilities according to
 the existing compatibility rules, and rejects malformed/unsupported files
-transactionally. Generator 14, simulation 1, narrative 3, matrix 1 and save 15
-are unchanged. Older supported saves keep their existing rules and migrations.
+transactionally. This rendering repair retains generator 16, campaign 2, save 17,
+live snapshot 2, simulation 1, narrative 3 and matrix 1. Older supported saves
+keep their existing rules and migrations.
 
 ## Build and distribution
 
